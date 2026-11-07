@@ -218,8 +218,12 @@ export function renderReferenceHomepage() {
         '<header class="v5-lock-signal-heading"><div>' + icon("signal") +
         '<div><h2 id="v5-lock-signal-title">Live Signal <span>V5</span></h2><p>REAL WORK · REAL EVIDENCE</p></div></div><span class="v5-lock-wave" aria-hidden="true"></span></header>' +
         '<a class="v5-lock-spotify v5-lock-evidence" data-v5-signal="spotify" href="/listening/">' +
-          '<span class="v5-lock-music-tile">' + icon("music") + '</span>' +
-          '<span class="v5-lock-music-text"><small>SPOTIFY · PLAYBACK</small><strong>Playback not loaded</strong><span>Awaiting consented source</span></span>' +
+          '<span class="v5-lock-music-tile">' + icon("music") +
+            '<img data-v5-spotify-cover alt="" hidden decoding="async" referrerpolicy="no-referrer"></span>' +
+          '<span class="v5-lock-music-text"><small>SPOTIFY · PLAYBACK</small>' +
+            '<strong data-v5-spotify-title>Playback not loaded</strong>' +
+            '<span data-v5-spotify-artist>Awaiting consented source</span>' +
+            '<progress data-v5-spotify-progress max="1" value="0" aria-label="Verified track playback progress" hidden></progress></span>' +
           '<span class="v5-lock-open" aria-hidden="true">' + icon("arrow") + '</span>' +
         '</a>' +
         '<a class="v5-lock-work v5-lock-evidence" data-v5-signal="work" href="/studio/">' +
