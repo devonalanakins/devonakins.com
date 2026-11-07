@@ -65,6 +65,15 @@ def check_page(page, origin, path, axe):
         assert portrait_box.evaluate("e => Number(getComputedStyle(e).zIndex) >= 0"), (
             page.viewport_size, "approved portrait hidden behind page background")
         assert portrait_box.evaluate("e => e.getBoundingClientRect().width > 80")
+        if page.viewport_size["width"] >= 901:
+            assert page.locator(".v5-locked-hero").evaluate(
+                "e => getComputedStyle(e).backgroundImage.includes('portrait-anevum-transcosmic.webp')"
+            ), "Desktop hero must paint the approved portrait asset"
+        else:
+            assert portrait_box.evaluate(
+                "e => Number(getComputedStyle(e).opacity) > .1"
+            ), "Mobile responsive portrait should remain visible"
+
         if page.viewport_size["width"] <= 360:
             for selector in [".v5-topbar", ".v5-brand", ".v5-lock-search-toggle",
                              ".v5-mobile-menu", ".v5-mobile-menu summary"]:

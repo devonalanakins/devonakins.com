@@ -61,6 +61,24 @@ def main():
                 page.wait_for_timeout(450)
                 file = f"{name}-{width}x{height}.png"
                 page.screenshot(path=str(OUT / file), full_page=True, animations="disabled")
+                # Check the actual browser-rendered image, not merely the
+                # <img> load state. The approved golden viewport has a warm
+                # portrait at this fixed reference pixel; the previous broken
+                # desktop render was a dark empty surface.
+                if name == "home" and width == 1199:
+                    script = (
+                        "import sharp from 'sharp';"
+                        "const pixel = await sharp(process.argv[1])."
+                        "extract({left:550,top:160,width:1,height:1}).raw().toBuffer();"
+                        "process.stdout.write(JSON.stringify([...pixel]));"
+                    )
+                    portrait_sample = json.loads(subprocess.check_output(
+                        ["node", "--input-type=module", "-e", script, str(OUT / file)],
+                        cwd=ROOT, text=True,
+                    ))
+                    assert sum(portrait_sample[:3]) >= 300, (
+                        "Golden screenshot portrait missing or too dark", portrait_sample)
+
                 geometry = page.evaluate("""() => ({
                     overflow: document.documentElement.scrollWidth > window.innerWidth + 1,
                     fullHeight: document.documentElement.scrollHeight,
@@ -69,87 +87,17 @@ def main():
                     spotifyState: document.querySelector('[data-v5-signal="spotify"]')?.textContent?.trim() ?? null,
                     gptState: document.querySelector('[data-v5-signal="gpt"]')?.textContent?.trim() ?? null
                 })""")
-                if name == "home" and width in (1199, 320):
-                    geometry["portraitDiagnostic"] = page.locator(".v5-locked-portrait").evaluate("""element => {
-                        const style = getComputedStyle(element);
-                        const picture = element.querySelector("picture");
-                        const image = element.querySelector("img");
-                        const imgStyle = image ? getComputedStyle(image) : null;
-                        const rect = item => {
-                            if (!item) return null;
-                            const r = item.getBoundingClientRect();
-                            return {x:r.x, y:r.y, width:r.width, height:r.height};
-                        };
-                        const canvas = document.createElement("canvas");
-                        canvas.width = 16; canvas.height = 16;
-                        const ctx = canvas.getContext("2d");
-                        let imageSample = null;
-                        if (ctx && image?.naturalWidth) {
-                            ctx.drawImage(image, 0, 0, 16, 16);
-                            imageSample = [...ctx.getImageData(8, 6, 1, 1).data];
-                        }
-                        const elbox = element.getBoundingClientRect();
-                        const topLayer = document.elementFromPoint(elbox.x + elbox.width / 2, Math.max(2,elbox.y + elbox.height / 2));
-                        return {
-                            computedZIndex: style.zIndex,
-                            computedVisibility: style.visibility,
-                            computedOpacity: style.opacity,
-                            computedMask: style.maskImage,
-                            computedDisplay: style.display,
-                            portraitRect: rect(element),
-                            pictureRect: rect(picture),
-                            imageRect: rect(image),
-                            imageVisibility: imgStyle?.visibility || null,
-                            imageOpacity: imgStyle?.opacity || null,
-                            imageNatural: image ? [image.naturalWidth,image.naturalHeight] : null,
-                            imageSample,
-                            topLayerTag: topLayer?.tagName || null,
-                            topLayerClass: String(topLayer?.className || "").slice(0, 90)
-                        };
-                    }""")
+                assert not geometry["overflow"], (file, "horizontal page overflow")
+                if name == "home" and height >= 568:
+                    for source in ["work", "spotify", "gpt"]:
+                        assert page.locator(f'[data-v5-signal="{source}"]').evaluate(
+                            "e => { const r=e.getBoundingClientRect(); return r.top >= 0 && r.bottom <= innerHeight; }"
+                        ), (file, source, "not in the first viewport")
                 assert not api_requests, "Review screenshots must not call provider APIs"
                 assert not remote_requests, "Review screenshots must not call third parties"
                 assert not page_errors, (file, page_errors)
                 manifest["screenshots"].append({"file": file, "route": PREVIEW + path,
                     "viewport": [width, height], **geometry})
-                if name == "home" and width == 1199:
-                    # Two isolated visual probes, only in the disposable review
-                    # browser. The normal capture/manifest remains untouched.
-                    page.evaluate("""() => {
-                        const source = document.querySelector(".v5-locked-portrait img");
-                        const clone = source.cloneNode(true);
-                        clone.id = "v5-debug-standalone-image";
-                        clone.alt = "";
-                        clone.style.cssText =
-                            "position:fixed!important;left:320px!important;top:65px!important;" +
-                            "width:430px!important;height:430px!important;object-fit:cover!important;" +
-                            "z-index:2147483647!important;mask:none!important;filter:none!important;" +
-                            "opacity:1!important;visibility:visible!important;display:block!important;" +
-                            "transform:none!important;mix-blend-mode:normal!important;" +
-                            "border:3px solid red!important;pointer-events:none!important;";
-                        document.body.appendChild(clone);
-                    }""")
-                    page.screenshot(path=str(OUT / "DIAGNOSTIC-standalone-photo.png"), full_page=False)
-                    page.evaluate("""() => {
-                        document.querySelector("#v5-debug-standalone-image")?.remove();
-                        const box = document.querySelector(".v5-locked-portrait");
-                        const img = box?.querySelector("img");
-                        box?.style.setProperty("z-index", "2147483647", "important");
-                        box?.style.setProperty("mask-image", "none", "important");
-                        box?.style.setProperty("isolation", "auto", "important");
-                        box?.style.setProperty("opacity", "1", "important");
-                        if (img) {
-                            img.style.cssText +=
-                                "filter:none!important;mask:none!important;opacity:1!important;" +
-                                "position:relative!important;z-index:2147483647!important;";
-                        }
-                        const style = document.createElement("style");
-                        style.textContent =
-                            ".v5-locked-portrait::after{display:none!important}" +
-                            ".v5-locked-hero::before{display:none!important}";
-                        document.head.appendChild(style);
-                    }""")
-                    page.screenshot(path=str(OUT / "DIAGNOSTIC-front-portrait.png"), full_page=False)
                 context.close()
         finally:
             browser.close()
