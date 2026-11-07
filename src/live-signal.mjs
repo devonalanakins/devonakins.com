@@ -37,6 +37,7 @@ const enabled = (env, o) =>
 export function createLiveSignal({
   readListening,
   readGithub,
+  readGpt = async () => null,
   clock = Date.now,
 }) {
   return async (env = {}) => {
@@ -91,6 +92,21 @@ export function createLiveSignal({
         final.revision !== before.revision ||
         final.editor_generation !== before.editor_generation
       )
+        return base();
+      if (env.GPT_USAGE_PUBLIC_RELEASE_APPROVED === "true") {
+        try {
+          const gpt = await readGpt(env);
+          if (gpt?.state === "observed" &&
+              gpt.scope === "work-codex" &&
+              ["recent","stale"].includes(gpt.freshness))
+            result.gpt = gpt;
+        } catch { /* Never infer unobserved GPT usage. */ }
+      }
+      // A privacy stop during a slow source read must always win.
+      const finalAfterGpt = await presenceRow(env);
+      if (!enabled(env,finalAfterGpt) ||
+          finalAfterGpt.revision !== before.revision ||
+          finalAfterGpt.editor_generation !== before.editor_generation)
         return base();
       result.asOf = new Date(clock()).toISOString();
       return result;
