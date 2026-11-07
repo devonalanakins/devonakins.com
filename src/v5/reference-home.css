@@ -321,3 +321,7 @@
  .v5-lock-profile-link{display:none}
  .v5-lock-search-panel{right:12px;top:62px}
 }
+
+
+.v5-lock-source-link{min-height:44px}
+@media(max-width:340px){.v5-locked-signal{min-height:0}}
