@@ -51,7 +51,7 @@ function fixture() {
 test('additive metric table starts empty without mutating existing owner privacy state',async()=>{
   const f=fixture();
   assert.equal(f.sql.prepare('SELECT COUNT(*) AS n FROM gpt_owner_metrics').get().n,0);
-  assert.deepEqual(f.sql.prepare('SELECT id,public_enabled,private_work FROM presence_state').get(),{id:1,public_enabled:0,private_work:0});
+  assert.deepEqual({...f.sql.prepare('SELECT id,public_enabled,private_work FROM presence_state').get()},{id:1,public_enabled:0,private_work:0});
   const data=await (await f.owner()).json();
   assert.deepEqual(data.observations,[]);
   assert.equal(data.publishingAllowed,false);
