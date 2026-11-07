@@ -26,6 +26,9 @@ const MAX_BODY_BYTES = 1024;
 // background computer, database of conversations, or new credentials required.
 // Old standalone KV experiments remain compatible when D1 is absent.
 function observationStore(env, at) {
+  const legacy = env?.GPT_USAGE_STORE;
+  if (legacy && typeof legacy.get === "function" &&
+      typeof legacy.put === "function") return legacy;
   const db = env?.LISTENING_DB;
   if (db && typeof db.prepare === "function") {
     return {
@@ -57,9 +60,7 @@ function observationStore(env, at) {
       },
     };
   }
-  const legacy = env?.GPT_USAGE_STORE;
-  return legacy && typeof legacy.get === "function" &&
-    typeof legacy.put === "function" ? legacy : null;
+  return null;
 }
 const metrics = Object.freeze({
   work_codex_credits_used: "credits",
@@ -183,6 +184,21 @@ async function validBearer(request, expected) {
   return mismatch === 0;
 }
 
+// Stop-all and private-work preference must also hide the standalone
+// /latest endpoint. A Worker release flag alone is not owner permission.
+async function publicObservationConsent(env) {
+  if (env.PRESENCE_ENABLED !== "true" ||
+      env.PRESENCE_PUBLIC_RELEASE_APPROVED !== "true" ||
+      typeof env.LISTENING_DB?.prepare !== "function") return null;
+  try {
+    const row = await env.LISTENING_DB.prepare(
+      "SELECT revision, public_enabled, private_work FROM presence_state WHERE id=1",
+    ).first();
+    return row?.public_enabled === 1 && row?.private_work === 0 &&
+      Number.isSafeInteger(row.revision) ? row.revision : null;
+  } catch { return null; }
+}
+
 /** Public projection contains only the one approved numeric observation. */
 export function projectObservation(stored, at = new Date()) {
   const valid = validateStored(stored,at);
@@ -252,6 +268,8 @@ export async function handleObservationRequest(
     if (env.GPT_USAGE_READ_ENABLED !== "true" ||
         env.GPT_USAGE_PUBLIC_RELEASE_APPROVED !== "true")
       return disabledResponse(securityHeaders);
+    const beforeConsent = await publicObservationConsent(env);
+    if (beforeConsent === null) return disabledResponse(securityHeaders);
     if (!["GET","HEAD"].includes(request.method))
       return json({error:"Method not allowed"},405,securityHeaders,
         {Allow:"GET, HEAD"});
@@ -262,6 +280,9 @@ export async function handleObservationRequest(
       }});
     try {
       const raw=await store.get(STORAGE_KEY,"text");
+      // Re-check owner consent after the asynchronous KV/D1 fetch.
+      if (await publicObservationConsent(env) !== beforeConsent)
+        return disabledResponse(securityHeaders);
       if (raw===null) return json({
         version:1,status:"no-data",observation:null,
       },200,securityHeaders);
