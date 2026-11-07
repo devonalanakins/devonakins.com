@@ -126,8 +126,11 @@ if (field && publicPreviewButton) {
       if (entry?.active) node.dataset.v5Verified = entry.active.kind;
       else delete node.dataset.v5Verified;
     }
-    const active = Object.entries(projection.nodes)
-      .flatMap(([slug, entry]) => entry?.active ? [{slug, ...entry.active}] : [])
+    const active = Object.entries(
+      projection.nodes as Record<string, {
+        active?: { kind: string; source: string; at: string } | null;
+      }>,
+    ).flatMap(([slug, entry]) => entry?.active ? [{ slug, ...entry.active }] : [])
       .sort((a, b) =>
         (a.kind === "editor" ? -1 : 0) - (b.kind === "editor" ? -1 : 0) ||
         Date.parse(b.at) - Date.parse(a.at),
