@@ -164,15 +164,20 @@ export function startLiveSignal(onPlayback: (data: unknown) => void) {
       : "GPT analytics · Not connected");
     const recordedPanel = document.querySelector<HTMLElement>("#gpt-observation-panel");
     if (recordedPanel) {
-      if (validGpt) recordedPanel.dataset.source = "v4-snapshot";
-      else delete recordedPanel.dataset.source;
-      recordedPanel.hidden = !validGpt;
       if (validGpt) {
+        recordedPanel.dataset.source = "v4-snapshot";
+        recordedPanel.hidden = false;
         text("#gpt-observation-value",gptCount + " " + def.unit);
         text("#gpt-observation-state",
           def.label + " · " + (g.freshness === "historical" ? "Historical" : "Recent") +
           " · Owner recorded; provider update unverified");
         text("#gpt-observation-age","Captured " + age(g.asOf,at));
+      } else if (recordedPanel.dataset.source === "v4-snapshot") {
+        // An approved V4 reading was revoked or became unavailable.
+        // Never hide the older, separately gated observation bridge
+        // when it owns this panel instead.
+        delete recordedPanel.dataset.source;
+        recordedPanel.hidden = true;
       }
     }
     const playback = v?.spotify || {
