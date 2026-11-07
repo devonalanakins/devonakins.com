@@ -7,6 +7,7 @@ constitute a production source-connection acceptance test.
 """
 from datetime import datetime, timedelta, timezone
 import json
+import urllib.request
 
 from playwright.sync_api import sync_playwright
 from v5_browser_acceptance import PREVIEW, server
@@ -138,11 +139,68 @@ def run():
             assert page.locator("[data-v5-field-node][data-v5-verified]").count() == 0
             assert not blocked, "No other API or external URL should be requested"
             assert page.evaluate("document.documentElement.scrollWidth <= innerWidth + 1")
+
+            # Synthetic release-renderer acceptance, NOT a live deployment.
+            # The verified preview HTML is served at the site root with a
+            # deliberate server-side release marker; no query flag can do this.
+            with urllib.request.urlopen(origin + PREVIEW, timeout=5) as response:
+                release_html = response.read().decode("utf-8")
+            preview_marker = 'data-v5-signal-mode="preview"'
+            assert preview_marker in release_html
+            release_html = release_html.replace(
+                preview_marker, 'data-v5-signal-mode="released-v5"', 1,
+            )
+            release_context = browser.new_context(
+                viewport={"width": 1199, "height": 1312},
+            )
+            release_page = release_context.new_page()
+            release_calls = []
+            release_blocked = []
+            def release_route(route):
+                url = route.request.url
+                if url == origin + "/":
+                    route.fulfill(
+                        status=200, content_type="text/html", body=release_html,
+                    )
+                elif url == origin + "/api/activity/v4":
+                    release_calls.append(url)
+                    route.fulfill(
+                        status=200, content_type="application/json",
+                        body=json.dumps(active),
+                    )
+                elif "/api/" in url or not url.startswith(origin + "/"):
+                    release_blocked.append(url)
+                    route.abort()
+                else:
+                    route.continue_()
+            release_page.route("**/*", release_route)
+            try:
+                assert release_page.goto(
+                    origin + "/", wait_until="networkidle",
+                ).status == 200
+                release_page.wait_for_function(
+                    "() => document.querySelector('[data-v5-work-summary]')"
+                    "?.textContent === 'Mizvo'",
+                    timeout=10000,
+                )
+                assert len(release_calls) == 1, (
+                    "Released homepage should start one V4 reader automatically"
+                )
+                assert release_page.locator(
+                    "[data-v5-preview-connect]"
+                ).is_hidden(), "No preview control on automatic released mode"
+                assert release_page.locator(
+                    'a[data-v5-field-slug="mizvo"]'
+                ).get_attribute("data-v5-verified") == "editor"
+                assert not release_blocked, release_blocked
+            finally:
+                release_context.close()
         finally:
             context.close()
             browser.close()
-    print("V5 public V4 source browser gate passed: opt-in, single reader, editor,"
-          " independent task, approved history, revocation and failure clearing.")
+    print("V5 public source browser gate passed: opt-in, single reader, editor,"
+          " independent task, approved history, revocation, failure clearing,"
+          " and synthetic released-home automatic startup.")
 
 
 if __name__ == "__main__":
