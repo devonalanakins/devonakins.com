@@ -1,0 +1,106 @@
+{
+  "schema": "devonakins-living-mind-v5/design-lock-v1",
+  "decision_date": "2026-11-07",
+  "state": "visual-target-locked--build-pending",
+  "owner": "devonakins.com",
+  "privacy": "private source render references; do not deploy reference images or invented values",
+  "rule": "Follow PRIMARY references by page, retain actual portrait and verified data; do not use concept mock states as facts.",
+  "assets": [
+    {
+      "file": "reference-images/01-homepage-primary.png",
+      "role": "home",
+      "authority": "PRIMARY",
+      "width": 1672,
+      "height": 941,
+      "size_bytes": 2189377,
+      "sha256": "6a692b83a2f9cad4a7c0ccae3193309ca07ce02b0381a4e53b258fb4fe8add1f",
+      "user_approved_reference": true,
+      "real_production_screenshot": false,
+      "data_authority": false
+    },
+    {
+      "file": "reference-images/02-signal-field-primary.png",
+      "role": "studio_3d",
+      "authority": "PRIMARY",
+      "width": 1672,
+      "height": 941,
+      "size_bytes": 2420215,
+      "sha256": "15b98589c760abda3ef1c0552fdd44d6eca21597dc64895ee5258f76f7f2cf05",
+      "user_approved_reference": true,
+      "real_production_screenshot": false,
+      "data_authority": false
+    },
+    {
+      "file": "reference-images/03-full-site-concept-board.png",
+      "role": "secondary_pages",
+      "authority": "PRIMARY",
+      "width": 1536,
+      "height": 1024,
+      "size_bytes": 2437016,
+      "sha256": "167989d18a604921253c65a22cdee6c0f576f795aa67ccd123aa47a0f802745d",
+      "user_approved_reference": true,
+      "real_production_screenshot": false,
+      "data_authority": false
+    },
+    {
+      "file": "reference-images/04-responsive-system-board.png",
+      "role": "responsive",
+      "authority": "PRIMARY",
+      "width": 1536,
+      "height": 1024,
+      "size_bytes": 2419510,
+      "sha256": "1d816cc2a43bee6bebff2162ae3da06e781b719b54993edbc607bfc000c159c1",
+      "user_approved_reference": true,
+      "real_production_screenshot": false,
+      "data_authority": false
+    },
+    {
+      "file": "reference-images/05-homepage-alternate.png",
+      "role": "home_alt",
+      "authority": "SUPPORTING",
+      "width": 1672,
+      "height": 941,
+      "size_bytes": 2122555,
+      "sha256": "fc55bc6d41e76e594096069264f205d7014934c1f19edfde9f8042a3ff7f4ab6",
+      "user_approved_reference": true,
+      "real_production_screenshot": false,
+      "data_authority": false
+    },
+    {
+      "file": "reference-images/06-signal-field-inspector-alternate.png",
+      "role": "inspector_alt",
+      "authority": "SUPPORTING",
+      "width": 1672,
+      "height": 941,
+      "size_bytes": 1980468,
+      "sha256": "5b5b4b343dc1e1314415841505b83fae10ff7e74b2ccf07b89dbcd6962610ac8",
+      "user_approved_reference": true,
+      "real_production_screenshot": false,
+      "data_authority": false
+    },
+    {
+      "file": "reference-images/07-ecosystem-organism-alternate.png",
+      "role": "organic_geometry_alt",
+      "authority": "SUPPORTING",
+      "width": 1672,
+      "height": 941,
+      "size_bytes": 2643668,
+      "sha256": "3efe80072bfd30c5c6e927a9b9162dacd02fb7044a1f6b4ecedd297af8cf5dd5",
+      "user_approved_reference": true,
+      "real_production_screenshot": false,
+      "data_authority": false
+    },
+    {
+      "file": "reference-images/08-ecosystem-pages-alternate.png",
+      "role": "secondary_alt",
+      "authority": "SUPPORTING",
+      "width": 1536,
+      "height": 1024,
+      "size_bytes": 2389932,
+      "sha256": "bb7032f69576b44a3127763434e873ffa61525476f7fe5740c465965b61eabee",
+      "user_approved_reference": true,
+      "real_production_screenshot": false,
+      "data_authority": false
+    }
+  ]
+}
