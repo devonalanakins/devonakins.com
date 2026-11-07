@@ -36,6 +36,7 @@ test("locked screenshot home remains confined to dev-only preview and source-saf
   assert.match(document, /<main id="v5-main" tabindex="-1">/);
   assert.match(document, /noindex,nofollow,noarchive/);
   assert.match(document, /data-mobile-menu/);
+  assert.ok(document.indexOf('class="v5-preview-banner"') > document.indexOf("</footer>"), "homepage preview notice must not displace live-first viewport");
   assert.match(document, /Not loaded|not loaded|not verified|NOT VERIFIED/);
   assert.doesNotMatch(document, /<iframe|<canvas|<script[^>]+src="https:|fetch\(|\/owner\/|\/api\//);
   for (const key of ["projects", "writing", "knowledge"]) {
