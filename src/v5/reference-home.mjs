@@ -73,11 +73,11 @@ function projectArtwork(index) {
   ];
   const [dark, bright, shade] = palettes[index] || palettes[0];
   return '<svg class="v5-lock-project-art" viewBox="0 0 300 180" preserveAspectRatio="xMidYMid slice" aria-hidden="true" focusable="false">' +
-    '<defs><linearGradient id="v5art-a" x1="0" x2="1" y1="1" y2="0"><stop stop-color="' + dark + '" stop-opacity=".86"/><stop offset=".6" stop-color="' +
+    '<defs><linearGradient id="v5art-a-${index}" x1="0" x2="1" y1="1" y2="0"><stop stop-color="' + dark + '" stop-opacity=".86"/><stop offset=".6" stop-color="' +
     shade + '" stop-opacity=".39"/><stop offset="1" stop-color="' + bright + '" stop-opacity=".21"/></linearGradient>' +
-    '<radialGradient id="v5art-b" cx=".74" cy=".8" r=".67"><stop stop-color="' + bright + '" stop-opacity=".58"/><stop offset="1" stop-color="' + dark + '" stop-opacity="0"/></radialGradient></defs>' +
-    '<rect width="300" height="180" fill="url(#v5art-b)"/>' +
-    '<g fill="none" stroke="' + bright + '" stroke-width="1.5" opacity=".73">' + scenePaths[index] + '</g>' +
+    '<radialGradient id="v5art-b-${index}" cx=".74" cy=".8" r=".67"><stop stop-color="' + bright + '" stop-opacity=".58"/><stop offset="1" stop-color="' + dark + '" stop-opacity="0"/></radialGradient></defs>' +
+    '<rect width="300" height="180" fill="url(#v5art-b-${index})"/>' +
+    '<g fill="none" stroke="' + bright + '" stroke-width="1.5" opacity=".73">' + scenePaths[index].replaceAll('url(#v5art-a)', 'url(#v5art-a-' + index + ')') + '</g>' +
     Array.from({length:14},(_,i)=>'<circle cx="'+((i*73+17)%300)+'" cy="'+((i*41+9)%180)+'" r="'+(i%4===0?1.5:.65)+'" fill="'+bright+'" opacity="'+(.2+(i%5)*.1)+'"/>').join("") +
     '</svg>';
 }
