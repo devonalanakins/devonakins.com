@@ -494,3 +494,34 @@
   .v5-locked-hero::before,
   .v5-locked-portrait::after { display: none; }
 }
+
+
+/* Desktop compositor fallback: use the approved first-party photographic
+ * asset as a dedicated hero background layer. This is NOT a screenshot of
+ * the website. The real <picture> remains in semantic DOM for its alt text,
+ * with mobile continuing to render its optimized source normally. */
+@media (min-width: 901px) {
+  .v5-locked-hero {
+    background-image:
+      linear-gradient(90deg,
+        #030c12 0%, #030c12d9 12%, #030c1240 24%,
+        transparent 34%, transparent 64%, #030c126b 81%, #030c12 100%),
+      linear-gradient(0deg, #030a0f 0%, transparent 28%),
+      url("/src/v5/assets/portrait-anevum-transcosmic.webp"),
+      radial-gradient(ellipse 54% 70% at 48% 28%, #6e67734a, transparent 82%);
+    background-size:
+      100% 100%,
+      100% 100%,
+      clamp(530px, 48vw, 660px) auto,
+      100% 100%;
+    background-position:
+      center,
+      center,
+      50% -20px,
+      center;
+    background-repeat: no-repeat;
+  }
+  /* Avoid duplicate pixels from Chromium's unstable overlapping <picture>
+   * layer; it remains accessible and independently decodes in browser tests. */
+  .v5-locked-portrait { opacity: 0; }
+}
