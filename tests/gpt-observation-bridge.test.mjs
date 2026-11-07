@@ -28,6 +28,7 @@ function mockStore(){
 const env=(store,read=true,write=true)=>({
   GPT_USAGE_STORE:store,
   GPT_USAGE_READ_ENABLED:read?"true":"false",
+  GPT_USAGE_PUBLIC_RELEASE_APPROVED:"true",
   GPT_USAGE_WRITE_ENABLED:write?"true":"false",
   GPT_USAGE_INGEST_SECRET:secret,
 });
