@@ -434,3 +434,28 @@
     padding-inline: 7px;
   }
 }
+
+
+/* Desktop portrait rendering compatibility: composite image directly rather
+ * than masking its stacking context. The fade belongs in the overlay, while
+ * the source image remains visible, accessible and first-party. */
+@media (min-width: 901px) {
+  .v5-locked-portrait {
+    z-index: 2;
+    mask-image: none;
+    -webkit-mask-image: none;
+  }
+  .v5-locked-portrait::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background:
+      linear-gradient(90deg, #071017 0%, transparent 20%, transparent 79%, #030c11 100%),
+      linear-gradient(0deg, #03090e 0%, transparent 32%);
+    box-shadow: none;
+    pointer-events: none;
+  }
+  .v5-locked-identity { z-index: 3; }
+  .v5-locked-rail { z-index: 4; }
+  .v5-locked-signal { z-index: 5; }
+}
