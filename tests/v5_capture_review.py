@@ -126,6 +126,10 @@ def main():
                     assert "AGPL review build" in panel.locator("[data-v5-field-status]").inner_text()
                     assert node.get_attribute("aria-expanded") == "true"
                     open_file = f"inspector-mizvo-{width}x{height}.png"
+                    # Scroll to the document origin before full-page capture: a
+                    # fixed, offscreen skip link can otherwise appear mid-page
+                    # because Chromium composes it relative to current scroll.
+                    page.evaluate("window.scrollTo(0, 0)")
                     page.screenshot(path=str(OUT / open_file), full_page=True, animations="disabled")
                     assert page.evaluate("document.documentElement.scrollWidth <= innerWidth + 1")
                     assert not api_requests and not remote_requests and not page_errors
