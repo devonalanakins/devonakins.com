@@ -88,6 +88,22 @@ def main():
                     gptState: document.querySelector('[data-v5-signal="gpt"]')?.textContent?.trim() ?? null
                 })""")
                 assert not geometry["overflow"], (file, "horizontal page overflow")
+
+                if name == "home":
+                    assert page.locator(".v5-lock-field .v5-lock-beam").count() == 8
+                    if width >= 1199:
+                        assert geometry["activeWebGL"], (
+                            file, "desktop screenshot must capture actual GPU terrain")
+                        assert page.locator(".v5-lock-terrain-canvas").evaluate(
+                            "e => e.width > 300 && e.height > 80"
+                        ), (file, "WebGL canvas did not render")
+                    else:
+                        assert not geometry["activeWebGL"], (
+                            file, "phone should use SVG/DOM fallback")
+                        assert page.locator(".v5-lock-terrain-wire").evaluate(
+                            "e => e.getBoundingClientRect().width >= innerWidth * .9"
+                        ), (file, "phone SVG field is missing")
+
                 if name == "home" and height >= 568:
                     for source in ["work", "spotify", "gpt"]:
                         assert page.locator(f'[data-v5-signal="{source}"]').evaluate(

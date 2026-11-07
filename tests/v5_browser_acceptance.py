@@ -66,6 +66,16 @@ def check_page(page, origin, path, axe):
             "return art.width >= card.width * .9 && art.height >= card.height * .9; })"
         ), (page.viewport_size, "project illustration too small")
         assert page.locator(".v5-lock-project-brand").count() == 5
+
+        field = page.locator(".v5-lock-field")
+        assert field.locator(".v5-lock-beam").count() == 8
+        assert "Static project composition" in field.inner_text()
+        assert field.locator(".v5-lock-terrain-wire").evaluate("""svg => {
+            const rect=svg.getBoundingClientRect();
+            const parent=svg.closest('.v5-lock-terrain').getBoundingClientRect();
+            return rect.width >= parent.width * .95 && rect.height >= parent.height * .95;
+        }"""), "SVG fallback field is collapsed"
+
         assert page.locator(".v5-lock-triple .v5-lock-panel").count() == 3
         assert page.locator(".v5-lock-top-nav a").count() == 7
         assert page.locator("[data-v5-search-toggle]").count() == 1
