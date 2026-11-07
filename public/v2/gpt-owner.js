@@ -101,6 +101,27 @@
       updateButton();
     }
   }
+  async function clear() {
+    if (!available || busy ||
+        !window.confirm("Clear the private GPT observation? This cannot be undone.")) return;
+    busy = true;
+    updateButton();
+    try {
+      const result = await request("DELETE");
+      if (result.cleared !== true) throw Error("Clear was not confirmed.");
+      reviewed.checked = false;
+      value.value = "";
+      busy = false;
+      await refresh();
+      notice.textContent = "Private observation cleared.";
+    } catch (error) {
+      notice.textContent = error.message;
+      busy = false;
+    } finally {
+      updateButton();
+    }
+  }
+  byId("gpt-owner-clear").addEventListener("click", () => void clear());
   metric.addEventListener("change", updateButton);
   value.addEventListener("input", updateButton);
   reviewed.addEventListener("change", updateButton);
