@@ -122,12 +122,19 @@ def run():
             state["mode"] = "failed"
             before = len(calls)
             page.evaluate("document.dispatchEvent(new Event('visibilitychange'))")
+            # The V4 reader intentionally clears the UI *before* refetch.
+            # Wait for the failed network request as separate evidence so
+            # a local reset cannot be mistaken for a tested transport failure.
+            for _ in range(50):
+                if len(calls) > before:
+                    break
+                page.wait_for_timeout(100)
+            assert len(calls) > before, "Expected a second V4 request"
             page.wait_for_function(
                 "() => document.querySelector('[data-v5-preview-source-state]')"
                 "?.textContent === 'Public source unavailable, disabled or stale'",
                 timeout=10000,
             )
-            assert len(calls) > before
             assert page.locator("[data-v5-field-node][data-v5-verified]").count() == 0
             assert not blocked, "No other API or external URL should be requested"
             assert page.evaluate("document.documentElement.scrollWidth <= innerWidth + 1")
