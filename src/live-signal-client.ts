@@ -132,9 +132,35 @@ export function startLiveSignal(onPlayback: (data: unknown) => void) {
         "data-active",
         editor ? "editor" : active.length ? "remote" : "quiet",
       );
-    // GPT counts stay disconnected until a supported, scoped publication source is connected.
-    text("[data-signal-gpt]", "—");
-    text("[data-signal-gpt-detail]", "Work / Codex · Not connected");
+    // This is a dated owner-reviewed observation, not an OpenAI live token API.
+    // The site can re-read it frequently without pretending the source updated.
+    const gpt = v?.gpt;
+    const metrics: Record<string, { label: string; unit: string }> = {
+      work_codex_credits_used: { label: "Credits used", unit: "credits" },
+      work_codex_credits_remaining: { label: "Credits left", unit: "credits" },
+      work_codex_used_percent: { label: "Used", unit: "percent" },
+      work_codex_remaining_percent: { label: "Remaining", unit: "percent" },
+    };
+    const type = typeof gpt?.metric === "string" ? metrics[gpt.metric] : null;
+    const asOf = typeof gpt?.asOf === "string" ? Date.parse(gpt.asOf) : NaN;
+    const observed = gpt?.state === "observed" &&
+      gpt?.scope === "work-codex" &&
+      ["recent", "stale"].includes(gpt?.freshness) &&
+      ["owner-reviewed-dashboard", "user-selected-visible-usage-text"].includes(gpt?.source) &&
+      !!type && gpt?.unit === type.unit &&
+      typeof gpt?.count === "number" && Number.isFinite(gpt.count) &&
+      gpt.count >= 0 && gpt.count <= (type.unit === "percent" ? 100 : 1000000) &&
+      Number.isFinite(asOf) && asOf <= at + 60000;
+    const display = observed
+      ? new Intl.NumberFormat("en-US", { maximumFractionDigits: 1 }).format(gpt.count) +
+        (type!.unit === "percent" ? "%" : "")
+      : "—";
+    const caption = observed
+      ? type!.label + " · " + age(gpt.asOf, at) +
+        (gpt.freshness === "stale" ? " · Dated" : " · Observed")
+      : "Work / Codex · Not connected";
+    text("[data-signal-gpt]", display);
+    text("[data-signal-gpt-detail]", caption);
     const playback = v?.spotify || {
       version: 1,
       mode: "unavailable",
