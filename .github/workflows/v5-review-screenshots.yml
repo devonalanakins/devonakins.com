@@ -1,0 +1,37 @@
+name: V5 screenshot review
+on:
+  push:
+    branches:
+      - feat/v5-locked-home-screenshot-shell
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  capture:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - run: npm ci
+      - run: node scripts/pages.mjs
+      - run: python3 -m pip install --disable-pip-version-check playwright==1.57.0
+      - run: python3 -m playwright install --with-deps chromium
+      - name: Capture actual V5 PR screens (no provider requests)
+        run: python3 tests/v5_capture_review.py
+      - name: Upload V5 review screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: v5-exact-head-review
+          path: v5-review-screenshots/
+          if-no-files-found: warn
+          retention-days: 14
