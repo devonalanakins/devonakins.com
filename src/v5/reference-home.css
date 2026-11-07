@@ -357,3 +357,80 @@
 @media(prefers-reduced-motion:reduce){
   .v5-lock-project-art{filter:none}
 }
+
+
+/* V5 fidelity pass R2: DOM-layer correction for the approved portrait.
+ * The old z-index:-1 placed the image behind .v5-locked-home's painted
+ * background on desktop. All public visual/status components stay semantic. */
+.v5-locked-hero::before {
+  z-index: 0;
+  background:
+    radial-gradient(ellipse 42% 70% at 51% 29%, #d78d6542, transparent 78%),
+    radial-gradient(ellipse 56% 84% at 55% 35%, #344b615c, transparent 82%),
+    radial-gradient(ellipse 55% 58% at 62% 53%, #845f8130, transparent 85%);
+}
+.v5-locked-portrait {
+  z-index: 1;
+  isolation: isolate;
+}
+.v5-locked-portrait::after {
+  pointer-events: none;
+  z-index: 1;
+}
+.v5-locked-portrait picture {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.v5-locked-portrait picture img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 23%;
+}
+.v5-locked-identity { z-index: 2; }
+.v5-locked-rail { z-index: 3; }
+.v5-locked-signal { z-index: 4; }
+
+/* Narrow-phone header: keep all three independent controls, not a
+ * clipped horizontal page or removed navigation. */
+@media (max-width: 360px) {
+  .v5-frame:has(.v5-locked-home) .v5-topbar {
+    box-sizing: border-box;
+    max-width: 100%;
+    min-width: 0;
+    padding-inline: 9px;
+    column-gap: 5px;
+  }
+  .v5-frame:has(.v5-locked-home) .v5-topbar .v5-brand {
+    flex: 1 1 auto;
+    min-width: 0;
+    gap: 5px;
+  }
+  .v5-frame:has(.v5-locked-home) .v5-topbar .v5-brand img {
+    flex: 0 0 24px;
+    width: 24px;
+    height: 24px;
+  }
+  .v5-frame:has(.v5-locked-home) .v5-topbar .v5-brand > span {
+    min-width: 0;
+    white-space: nowrap;
+    font-size: 9px;
+    letter-spacing: .055em;
+  }
+  .v5-frame:has(.v5-locked-home) .v5-topbar .v5-brand small {
+    display: none;
+  }
+  .v5-frame:has(.v5-locked-home) .v5-topbar .v5-lock-search-toggle {
+    flex: 0 0 44px;
+    min-width: 44px;
+  }
+  .v5-frame:has(.v5-locked-home) .v5-topbar .v5-mobile-menu {
+    flex: 0 0 60px;
+  }
+  .v5-frame:has(.v5-locked-home) .v5-topbar .v5-mobile-menu summary {
+    min-width: 60px;
+    padding-inline: 7px;
+  }
+}
