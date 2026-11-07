@@ -19,12 +19,13 @@ const database = {
   name: "devonakins-listening-private",
   read_replication: { mode: "disabled" },
 };
-const gates = [
+const publishedGates = [
   "PRESENCE_PUBLIC_RELEASE_APPROVED",
   "LISTENING_PUBLIC_RELEASE_APPROVED",
-  "GPT_USAGE_READ_ENABLED",
-  "GPT_USAGE_WRITE_ENABLED",
+  "GPT_SNAPSHOT_PUBLIC_RELEASE_APPROVED",
 ];
+const disabledGates = ["GPT_USAGE_READ_ENABLED", "GPT_USAGE_WRITE_ENABLED"];
+const gates = [...publishedGates, ...disabledGates];
 const settings = () => ({
   bindings: [
     { type: "d1", name: "LISTENING_DB", id },
@@ -52,7 +53,7 @@ const provider = (url) => {
 };
 const clean = (config) => JSON.parse(config.replace(/,\s*([}\]])/g, "$1"));
 
-test("private release retains active owner/Spotify vars, dedicated D1, and closed gates without exporting encryption secret", () => {
+test("release retains owner/Spotify vars, dedicated D1, and deployment-scoped gates without exporting encryption secret", () => {
   const config = privateDeploymentConfig(base, settings(), database);
   const parsed = clean(config);
   assert.equal(parsed.name, "devonakins-personal");
@@ -68,7 +69,7 @@ test("private release retains active owner/Spotify vars, dedicated D1, and close
   assert.doesNotMatch(config, /LISTENING_TOKEN_KEY|synthetic-ci-credential/);
 });
 
-test("foreign database, extra bindings, missing key, duplicate vars and public disclosure reject release", () => {
+test("foreign database, extra bindings, missing key, duplicate vars and unsupported usage disclosure reject release", () => {
   assert.throws(() =>
     privateDeploymentConfig(base, settings(), {
       ...database, name: "other-project",
@@ -85,9 +86,27 @@ test("foreign database, extra bindings, missing key, duplicate vars and public d
   const key = settings();
   key.bindings = key.bindings.filter(b => b.type !== "secret_text");
   assert.throws(() => privateDeploymentConfig(base, key, database));
-  const exposed = settings();
-  exposed.bindings.find(b => b.name === "PRESENCE_PUBLIC_RELEASE_APPROVED").text = "true";
-  assert.throws(() => privateDeploymentConfig(base, exposed, database));
+  const approved = settings();
+  for (const name of publishedGates)
+    approved.bindings.find(b => b.name === name).text = "true";
+  const enabled = clean(privateDeploymentConfig(base, approved, database));
+  for (const name of publishedGates)
+    assert.equal(enabled.vars[name], "true", "must preserve specifically approved public setting");
+  for (const name of disabledGates)
+    assert.equal(enabled.vars[name], "false");
+  const noGpt = settings();
+  noGpt.bindings = noGpt.bindings.filter(b => b.name !== "GPT_SNAPSHOT_PUBLIC_RELEASE_APPROVED");
+  const fallback = clean(privateDeploymentConfig(base, noGpt, database));
+  assert.equal(fallback.vars.GPT_SNAPSHOT_PUBLIC_RELEASE_APPROVED, "false");
+  const unsupported = settings();
+  unsupported.bindings.find(b => b.name === "GPT_USAGE_READ_ENABLED").text = "true";
+  assert.throws(() => privateDeploymentConfig(base, unsupported, database));
+  const invalid = settings();
+  invalid.bindings.find(b => b.name === "PRESENCE_PUBLIC_RELEASE_APPROVED").text = "maybe";
+  assert.throws(() => privateDeploymentConfig(base, invalid, database));
+  const wrongType = settings();
+  wrongType.bindings.find(b => b.name === "PRESENCE_PUBLIC_RELEASE_APPROVED").type = "secret_text";
+  assert.throws(() => privateDeploymentConfig(base, wrongType, database));
   const duplicate = settings();
   duplicate.bindings.push({ type: "plain_text", name: "SPOTIFY_CLIENT_ID", text: "duplicate" });
   assert.throws(() => privateDeploymentConfig(base, duplicate, database));
