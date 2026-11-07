@@ -47,4 +47,14 @@ document.addEventListener("pointerdown", (event) => {
   ) setSearchOpen(false);
 });
 
+
+const terrain = document.querySelector<HTMLElement>(".v5-lock-terrain");
+if (terrain && window.innerWidth > 600) {
+  // The GPU is an enhancement to the true semantic HTML markers, never a data
+  // source. A failed WebGL import or context retains the SVG fallback.
+  void import("./terrain-3d").then(({ mountDecorativeTerrain }) => {
+    mountDecorativeTerrain(terrain);
+  }).catch(() => {});
+}
+
 export {};
