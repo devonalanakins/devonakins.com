@@ -647,3 +647,80 @@
 @media (prefers-reduced-motion: reduce) {
   .v5-locked-home svg.v5-lock-project-art { filter: none; }
 }
+
+
+/* V5 Field R4 — the approved deep-world palette. Atmospheric glows are
+ * structural decoration; no "live" event state is inferred from them.
+ * Underpowered/no-WebGL devices retain a complete SVG / DOM fallback. */
+.v5-lock-field {
+  background:
+    radial-gradient(ellipse 28% 66% at 53% 66%, #eb9e5c42, transparent 87%),
+    radial-gradient(ellipse 44% 48% at 44% 87%, #1ac9dd44, transparent 86%),
+    radial-gradient(ellipse 44% 46% at 81% 79%, #206cd347, transparent 84%),
+    radial-gradient(ellipse 27% 45% at 12% 74%, #30a9db3b, transparent 85%),
+    linear-gradient(180deg, #03090ed4, #071820d2 63%, #020708fa);
+  box-shadow: inset 0 20px 44px #0005, inset 0 -25px 35px #02080b;
+}
+.v5-lock-terrain {
+  isolation: isolate;
+  background:
+    radial-gradient(ellipse 21% 40% at 52% 67%, #fdb87852, transparent 94%),
+    radial-gradient(ellipse 45% 46% at 41% 92%, #2dffff2b, transparent 85%);
+}
+.v5-lock-terrain::before { z-index: 0; opacity: .36; }
+.v5-lock-terrain::after {
+  content: "";
+  position: absolute;
+  inset: 16% 0 0;
+  pointer-events: none;
+  z-index: 0;
+  background:
+    radial-gradient(ellipse 12% 45% at 51% 33%, #e9a45a39, transparent 84%),
+    radial-gradient(ellipse 30% 28% at 43% 82%, #59e9ee30, transparent 93%);
+  filter: blur(6px);
+}
+.v5-locked-home svg.v5-lock-terrain-wire {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  opacity: .68;
+  z-index: 1;
+  pointer-events: none;
+  filter: drop-shadow(0 0 4px #70e5e8b8);
+}
+.v5-lock-terrain[data-webgl="ready"] svg.v5-lock-terrain-wire {
+  opacity: .13;
+}
+.v5-lock-terrain-canvas {
+  z-index: 1;
+  mix-blend-mode: screen;
+}
+.v5-lock-beam {
+  z-index: 2;
+}
+.v5-lock-beam-line {
+  width: 2px;
+  height: 64px;
+  background: linear-gradient(180deg, currentColor, currentColor 18%, transparent);
+  box-shadow: 0 0 17px currentColor, 0 0 31px currentColor;
+}
+.v5-lock-beam-dot {
+  width: 8px;
+  height: 8px;
+  box-shadow: 0 0 10px 3px currentColor, 0 0 24px currentColor;
+}
+.v5-lock-beam-label {
+  border-color: #497781a8;
+  background: #061118ee;
+  box-shadow: 0 0 13px #000b, inset 0 0 6px #d7ffff13;
+}
+@media (max-width: 600px) {
+  .v5-lock-terrain::after { filter: none; }
+  .v5-lock-beam-line { height: 48px; }
+  .v5-locked-home svg.v5-lock-terrain-wire { filter: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .v5-lock-terrain-canvas { animation: none; }
+}
