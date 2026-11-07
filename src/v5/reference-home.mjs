@@ -42,11 +42,51 @@ const navRail = [
   ["Writing", "pencil", "/__v5_preview__/writing/"],
   ["Socials", "user", "/contact/"],
 ];
+
+function projectArtwork(index) {
+  // Five first-party illustrated environments matched to the approved image.
+  // Deliberately atmospheric: no bars, heights, pulses or symbols imply
+  // project readiness, verified progress or market price data.
+  const scenePaths = [
+    // Mizvo: sculpted violet ecosystem ridges.
+    '<path d="M0 126 Q43 84 88 129 T190 113 T300 106 L300 180 H0Z" fill="url(#v5art-a)"/>' +
+    '<path d="M-20 141 Q47 70 93 134 T188 119 T330 109M-10 156 Q53 92 96 150 T193 138 T330 129M-10 164 Q55 114 100 161 T204 152 T320 143"/>',
+    // Rhen: warm systems horizon / multiple crossing trajectories.
+    '<path d="M0 163 C70 136 113 107 178 119 S269 127 315 67M0 155 Q99 160 142 89 T319 108M-10 175 C65 141 96 155 153 125 T310 157"/>' +
+    '<circle cx="238" cy="68" r="6" fill="#ffd6a0" stroke="none"/>',
+    // Merit: precise cyan luminous engineering loops.
+    '<path d="M-14 120 Q80 65 145 142 T316 126M-14 130 Q78 79 145 151 T316 135M-14 144 Q74 104 149 165 T316 155"/>' +
+    '<path d="M36 148 91 91l63 67 52-52 75 55M66 157l27-25 35 22" stroke-dasharray="5 5"/>',
+    // Vesper: amber monolithic geometry, neutral market metaphor.
+    '<path d="M0 178 0 157 31 157 31 139 52 139 52 171 74 171 74 122 96 122 96 171 116 171 116 92 132 92 132 167 145 167 145 113 172 113 172 171 198 171 198 72 212 72 212 160 236 160 236 103 248 103 248 171 272 171 272 120 294 120 294 178Z" fill="url(#v5art-a)"/>' +
+    '<path d="M0 154 48 148 75 133 109 143 141 107 169 128 211 85 245 106 280 83 300 65"/>',
+    // Squelch: sculptural four-channel violet/fuchsia signal waves.
+    '<path d="M-20 151 C15 150 17 84 40 94 S70 179 93 147 S132 53 154 126 S184 175 207 116 S259 77 320 148M-20 161 C17 157 20 101 46 107 S76 187 98 158 S137 75 155 138 S188 184 211 130 S254 98 320 158"/>' +
+    '<path d="M33 115v-34M41 125v-51M50 139v-72M58 126v-53M66 144v-60M74 132v-34M84 145v-52" stroke-width="2"/>',
+  ];
+  const palettes = [
+    ["#1d0b46", "#9c5df9", "#5d3bd1"],
+    ["#261102", "#ffc078", "#bd6a2c"],
+    ["#041c30", "#62f8ff", "#178fb0"],
+    ["#221002", "#f0b66f", "#ad7528"],
+    ["#200528", "#ff83f0", "#863deb"],
+  ];
+  const [dark, bright, shade] = palettes[index] || palettes[0];
+  return '<svg class="v5-lock-project-art" viewBox="0 0 300 180" preserveAspectRatio="xMidYMid slice" aria-hidden="true" focusable="false">' +
+    '<defs><linearGradient id="v5art-a" x1="0" x2="1" y1="1" y2="0"><stop stop-color="' + dark + '" stop-opacity=".86"/><stop offset=".6" stop-color="' +
+    shade + '" stop-opacity=".39"/><stop offset="1" stop-color="' + bright + '" stop-opacity=".21"/></linearGradient>' +
+    '<radialGradient id="v5art-b" cx=".74" cy=".8" r=".67"><stop stop-color="' + bright + '" stop-opacity=".58"/><stop offset="1" stop-color="' + dark + '" stop-opacity="0"/></radialGradient></defs>' +
+    '<rect width="300" height="180" fill="url(#v5art-b)"/>' +
+    '<g fill="none" stroke="' + bright + '" stroke-width="1.5" opacity=".73">' + scenePaths[index] + '</g>' +
+    Array.from({length:14},(_,i)=>'<circle cx="'+((i*73+17)%300)+'" cy="'+((i*41+9)%180)+'" r="'+(i%4===0?1.5:.65)+'" fill="'+bright+'" opacity="'+(.2+(i%5)*.1)+'"/>').join("") +
+    '</svg>';
+}
+
 function featuredProject(slug, number) {
   const entry = bySlug(slug);
   if (!entry) return "";
   return '<a class="v5-lock-project v5-lock-project-' + number + '" href="' +
-    projectHref(slug) + '">' +
+    projectHref(slug) + '">' + projectArtwork(number) +
     '<img class="v5-lock-wordmark" src="/v2/identity/' +
     identitySlug(slug) + '.svg" alt="" loading="lazy">' +
     '<h3>' + escapeHtml(entry.title) + '</h3>' +
