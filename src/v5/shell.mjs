@@ -137,11 +137,13 @@ export function renderV5Preview(key = "home") {
     throw new Error("Unknown V5 preview page");
   const nav = (className) =>
     `<nav class="${className}" aria-label="${className === "v5-desktop-nav" ? "Primary" : "Mobile"}">${previewPages.map((page) => `<a href="${page.path}"${key === page.key ? ' aria-current="page"' : ""}>${page.label}</a>`).join("")}</nav>`;
+  const previewNotice = `<aside class="v5-preview-banner" aria-label="Preview notice"><span>DESIGN PREVIEW · V5</span><span>Development only · live sources not loaded</span><a href="/">Current website <span aria-hidden="true">↗</span></a></aside>`;
   return `<!doctype html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow,noarchive"><meta name="description" content="Development-only Living Mind V5 layout preview. Live data is not connected."><title>${previewPages.find((page) => page.key === key).label} — Living Mind V5 Preview</title><link rel="icon" href="/brand-mark-mono.svg"><link rel="stylesheet" href="/src/v5/shell.css">${key === "home" ? '<link rel="stylesheet" href="/src/v5/reference-home.css">' : ""}<script type="module" src="/src/v5/client.ts"></script></head>
   <body><a class="v5-skip" href="#v5-main">Skip to content</a><div class="v5-frame">
-    <aside class="v5-preview-banner" aria-label="Preview notice"><span>DESIGN PREVIEW · V5</span><span>Development only · live sources not loaded</span><a href="/">Current website <span aria-hidden="true">↗</span></a></aside>
+    ${key === "home" ? "" : previewNotice}
     <header class="v5-topbar"><a class="v5-brand" href="${PREVIEW_ROOT}" aria-label="Devon Akins home"><img src="/brand-mark-mono.svg" alt="" width="34" height="34"><span>DEVONAKINS.COM<small>SOFTWARE · WORLDS · POSSIBILITIES</small></span></a>${key === "home" ? renderReferenceNav() : nav("v5-desktop-nav")}<details class="v5-mobile-menu" data-mobile-menu><summary>Menu</summary>${nav("v5-mobile-nav")}</details></header>
     <main id="v5-main" tabindex="-1">${key === "home" ? renderReferenceHomepage() : secondary(key)}</main>
     <footer class="v5-footer"><a href="${PREVIEW_ROOT}">The Living Mind <span>V5</span></a><p>Original work. Open questions. A growing body of ideas.</p><nav aria-label="More"><a href="/listening/">Listening</a><a href="/gpt/">GPT captures</a><a href="/contact/">Contact</a></nav></footer>
+    ${key === "home" ? previewNotice : ""}
   </div></body></html>`;
 }
