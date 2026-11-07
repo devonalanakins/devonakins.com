@@ -152,6 +152,7 @@ function fieldInspector() {
     '<p class="v5-field-inspector-summary" data-v5-field-summary></p>' +
     '<p class="v5-field-inspector-status"><span>PORTFOLIO STATUS</span><strong data-v5-field-status></strong></p>' +
     '<p class="v5-field-inspector-source" data-v5-field-source></p>' +
+    '<p class="v5-field-inspector-evidence" data-v5-field-evidence hidden></p>' +
     '<p class="v5-field-inspector-boundary">No verified inter-project dependencies are published here.</p>' +
     '<a class="v5-field-inspector-open" data-v5-field-open href="/__v5_preview__/projects/">Open public page →</a>' +
     '</aside>';
@@ -223,8 +224,8 @@ export function renderReferenceHomepage() {
         '</a>' +
         '<a class="v5-lock-work v5-lock-evidence" data-v5-signal="work" href="/studio/">' +
           '<span class="v5-lock-panel-title">' + icon("code") + ' Current Work Session <small>NOT VERIFIED</small></span>' +
-          '<span class="v5-lock-no-work">No fresh, verified work session</span>' +
-          '<span class="v5-lock-work-hint">Editor / GitHub / participating agent sources are separate</span>' +
+          '<span class="v5-lock-no-work" data-v5-work-summary>No fresh, verified work session</span>' +
+          '<span class="v5-lock-work-hint" data-v5-work-provenance>Editor / GitHub / participating agent sources are separate</span>' +
         '</a>' +
         '<section class="v5-lock-metrics" aria-label="Evidence-based activity metrics">' +
           '<header class="v5-lock-panel-title">' + icon("signal") + ' Live Metrics <small>PROVENANCE REQUIRED</small></header>' +
@@ -242,7 +243,7 @@ export function renderReferenceHomepage() {
       '<div class="v5-lock-project-grid">' + cards + '</div>' +
     '</section>' +
     '<div class="v5-lock-triple">' +
-      '<section class="v5-lock-panel" aria-labelledby="v5-lock-github-title"><h2 id="v5-lock-github-title">' + icon("github") + ' GitHub Activity <small>PROVIDER-SOURCED</small></h2><p class="v5-lock-empty">Waiting for verified, allowlisted GitHub events.</p><a href="https://github.com/devonalanakins">View GitHub →</a></section>' +
+      '<section class="v5-lock-panel" aria-labelledby="v5-lock-github-title"><h2 id="v5-lock-github-title">' + icon("github") + ' GitHub Activity <small>PROVIDER-SOURCED</small></h2><p class="v5-lock-empty" data-v5-github-summary>Waiting for verified, allowlisted GitHub events.</p><a href="https://github.com/devonalanakins">View GitHub →</a></section>' +
       '<section class="v5-lock-panel" aria-labelledby="v5-lock-threads-title"><h2 id="v5-lock-threads-title">' + icon("nodes") + ' Threads Feed <small>CONNECTION PENDING</small></h2><p class="v5-lock-empty">Public Threads posts will appear only through a permitted integration after account authorization and publication review.</p><a href="/contact/">Public social profiles →</a></section>' +
       '<section class="v5-lock-panel" aria-labelledby="v5-lock-gpt-title"><h2 id="v5-lock-gpt-title">' + icon("signal") + ' GPT Analytics <small>MANUAL CAPTURES</small></h2><p class="v5-lock-empty">Owner-recorded values will display here with their capture date. No automated token total is claimed.</p><a href="/gpt/">View GPT profile →</a></section>' +
     '</div>' +
