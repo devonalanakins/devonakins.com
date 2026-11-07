@@ -12,12 +12,19 @@ export class PrivatePreflightFailure extends Error {
   }
 }
 
-const privateGates = [
+// Public release flags may be enabled only by a separately authorized owner
+// operation. Preserve the *deployed* values verbatim; source code never enables
+// these flags on its own. Unsupported GPT usage APIs remain permanently gated.
+const publicationGates = [
   "PRESENCE_PUBLIC_RELEASE_APPROVED",
   "LISTENING_PUBLIC_RELEASE_APPROVED",
+  "GPT_SNAPSHOT_PUBLIC_RELEASE_APPROVED",
+];
+const disabledGates = [
   "GPT_USAGE_READ_ENABLED",
   "GPT_USAGE_WRITE_ENABLED",
 ];
+
 const plainNames = new Set([
   "LISTENING_OWNER_EMAIL",
   "LISTENING_ACCESS_AUD",
@@ -26,7 +33,8 @@ const plainNames = new Set([
   "PRESENCE_ENABLED",
   "PRESENCE_EDITOR_ENABLED",
   "LISTENING_COLLECTIONS_ENABLED",
-  ...privateGates,
+  ...publicationGates,
+  ...disabledGates,
 ]);
 export function privateDeploymentConfig(base, settings, database) {
   const bindings = settings?.bindings;
@@ -83,10 +91,16 @@ export function privateDeploymentConfig(base, settings, database) {
     )
       throw Error("Owner identity configuration required");
   }
-  for (const name of privateGates) {
+  for (const name of publicationGates) {
     const value = bindings.find((b) => b.name === name);
-    if (value && value.text !== "false")
-      throw Error("Private deployment requires disclosure gates off");
+    if (value && (value.type !== "plain_text" ||
+        !["true", "false"].includes(value.text)))
+      throw Error("Unexpected public release configuration");
+  }
+  for (const name of disabledGates) {
+    const value = bindings.find((b) => b.name === name);
+    if (value && (value.type !== "plain_text" || value.text !== "false"))
+      throw Error("Unsupported usage publishing cannot be enabled by this release");
   }
   if (
     !base.includes('"name": "devonakins-personal"') ||
@@ -103,7 +117,9 @@ export function privateDeploymentConfig(base, settings, database) {
     bindings.filter((b) => b.type === "plain_text")
       .map((b) => [b.name, b.text]),
   );
-  for (const name of privateGates) vars[name] = "false";
+  for (const name of publicationGates)
+    vars[name] = bindings.find((b) => b.name === name)?.text || "false";
+  for (const name of disabledGates) vars[name] = "false";
   const extra = {
     d1_databases: [
       {
@@ -202,7 +218,7 @@ if (
   preparePrivateDeployment()
     .then(() =>
       console.log(
-        "Private deployment configuration prepared; sharing remains off.",
+        "Private deployment configuration prepared; verified live disclosure flags preserved.",
       ),
     )
     .catch((error) => {
@@ -213,7 +229,7 @@ if (
         : "";
       console.error(
         "Private deployment preflight failed." + code +
-        " Verify the dedicated runtime binding, owner settings, disclosure gates and CI permissions.",
+        " Verify the dedicated runtime binding, owner settings, release flags and CI permissions.",
       );
       process.exitCode = 1;
     });
