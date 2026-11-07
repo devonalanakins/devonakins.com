@@ -162,22 +162,21 @@ export function startLiveSignal(onPlayback: (data: unknown) => void) {
     text("[data-signal-gpt-detail]", validGpt
       ? def.label + " · owner capture " + age(g.asOf,at)
       : "GPT analytics · Not connected");
-    const recordedPanel = document.querySelector<HTMLElement>("#gpt-observation-panel");
-    if (recordedPanel) {
+    // The legacy Work/Codex observation bridge independently owns
+    // #gpt-observation-panel. A V4 snapshot must NEVER hide or overwrite it.
+    // Keep V4's separately consented metrics in their own panel.
+    const v4Panel = document.querySelector<HTMLElement>("#gpt-v4-snapshot-panel");
+    if (v4Panel) {
+      v4Panel.hidden = !validGpt;
       if (validGpt) {
-        recordedPanel.dataset.source = "v4-snapshot";
-        recordedPanel.hidden = false;
-        text("#gpt-observation-value",gptCount + " " + def.unit);
-        text("#gpt-observation-state",
+        v4Panel.dataset.freshness = g.freshness;
+        text("#gpt-v4-snapshot-value",gptCount + " " + def.unit);
+        text("#gpt-v4-snapshot-state",
           def.label + " · " + (g.freshness === "historical" ? "Historical" : "Recent") +
           " · Owner recorded; provider update unverified");
-        text("#gpt-observation-age","Captured " + age(g.asOf,at));
-      } else if (recordedPanel.dataset.source === "v4-snapshot") {
-        // An approved V4 reading was revoked or became unavailable.
-        // Never hide the older, separately gated observation bridge
-        // when it owns this panel instead.
-        delete recordedPanel.dataset.source;
-        recordedPanel.hidden = true;
+        text("#gpt-v4-snapshot-age","Captured " + age(g.asOf,at));
+      } else {
+        delete v4Panel.dataset.freshness;
       }
     }
     const playback = v?.spotify || {
