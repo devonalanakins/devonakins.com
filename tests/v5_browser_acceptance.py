@@ -204,8 +204,8 @@ def main():
                             field_node.focus()
                             page.keyboard.press("Enter")
                             assert page.locator("#v5-field-inspector").is_visible()
-                            assert page.locator("[data-v5-field-title]").inner_text() == "Mizvo"
-                            assert "AGPL review build" in page.locator("[data-v5-field-status]").inner_text()
+                            assert page.locator("#v5-field-inspector [data-v5-field-title]").inner_text() == "Mizvo"
+                            assert "AGPL review build" in page.locator("#v5-field-inspector [data-v5-field-status]").inner_text()
                             assert page.locator("[data-v5-field-open]").get_attribute("href").endswith("/work/mizvo/")
                             assert field_node.get_attribute("aria-expanded") == "true"
                             page.keyboard.press("Escape")
