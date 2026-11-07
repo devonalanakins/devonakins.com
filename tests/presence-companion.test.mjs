@@ -12,7 +12,7 @@ const key = "devon-presence-pairing-v1";
 const pairing = () => ({
   token: "T".repeat(43),
   expiresAt: new Date(start + 3600000).toISOString(),
-  projects: [],
+  projects: ["merit"],
 });
 const deferred = () => {
   let resolve;
@@ -22,8 +22,15 @@ const deferred = () => {
   return { promise, resolve };
 };
 const settle = () => new Promise((resolve) => setImmediate(resolve));
-function companion({ transport, readSecret, storeSecret, deleteSecret, globals = new Map() } = {}) {
+function companion({ transport, readSecret, storeSecret, deleteSecret, globals = new Map(),
+  remote = "https://github.com/devonalanakins/merit.git", catalog, gitActivation,
+} = {}) {
   let edit;
+  let tick;
+  let time = start;
+  let scheme = "file";
+  let catalogReads = 0;
+  const git = {getAPI: () => ({ getRepository: () => ({state:{remotes:[{name:"origin",fetchUrl:remote}]}}) })};
   let disposed = false;
   const secretValues = new Map();
   const signals = [];
@@ -41,10 +48,14 @@ function companion({ transport, readSecret, storeSecret, deleteSecret, globals =
   };
   const api = {
     StatusBarAlignment: { Right: 1 },
+    extensions: {getExtension: () => gitActivation
+      ? {isActive:false,activate:async()=>{await gitActivation;return git;}}
+      : {isActive:true,exports:git}},
     window: {
       state: { focused: true },
       createStatusBarItem: () => status,
       showInputBox: async () => "P".repeat(43),
+      showQuickPick: async items => items[0],
       showInformationMessage: async () => {},
       showErrorMessage: async (value) => {
         errors.push(value);
@@ -91,11 +102,18 @@ function companion({ transport, readSecret, storeSecret, deleteSecret, globals =
   };
   vm.runInNewContext(source, sandbox);
   const client = sandbox.exports.createCompanion(api, context, {
-    clock: () => start,
-    setTimer: () => 1,
+    clock: () => time,
+    setTimer: fn => {tick=fn;return 1;},
     clearTimer() {},
     async fetcher(url, init) {
-      const body = JSON.parse(init.body);
+      const body = init.body === undefined ? undefined : JSON.parse(init.body);
+      if (url.endsWith("/catalog")) {
+        catalogReads++;
+        return catalog ? catalog(url, init, time) : Response.json({
+          version:1,repositories:[{owner:"devonalanakins",name:"merit",projectSlug:"merit"}],
+          expiresAt:new Date(time+300000).toISOString(),
+        });
+      }
       if (url.endsWith("/heartbeat")) signals.push(body);
       if (transport) return transport(url, init, body);
       return Response.json(
@@ -109,13 +127,15 @@ function companion({ transport, readSecret, storeSecret, deleteSecret, globals =
     secretValues,
     texts,
     errors,
-    edit() {
-      edit({
-        contentChanges: [{}],
-        get document() {
-          throw Error("private document must not be read");
-        },
-      });
+    setRemote(value) {remote=value;},
+    setScheme(value) {scheme=value;},
+    advance(value) {time+=value;},
+    focus(value) {api.window.state.focused=value;},
+    trust(value) {api.workspace.isTrusted=value;},
+    tick: () => tick(),
+    catalogReads: () => catalogReads,
+    edit(changes = [{}]) {
+      edit({contentChanges: changes,document:{uri:{scheme},getText(){throw Error("document text must not be read");}}});
     },
     async pairAndResume() {
       await client.ready;
@@ -288,9 +308,120 @@ test("credential deletion failure is visible and Forget Pairing can be retried",
 
 test("explicit sharing consent survives restart; pause persists and startup never invents an edit",async()=>{
  const globals=new Map([["sharingEnabled",true]]);
- const saved=JSON.stringify({token:"T".repeat(43),expires:start+3600000,projects:[]});
+ const saved=JSON.stringify({token:"T".repeat(43),expires:start+3600000,projects:["merit"]});
  const first=companion({globals,readSecret:async()=>saved});await first.client.ready;
  assert.equal(first.signals.length,0);first.edit();await settle();assert.equal(first.signals[0].active,true);
  await first.client.actions.pause();assert.equal(globals.get("sharingEnabled"),false);first.client.dispose();
  const second=companion({globals,readSecret:async()=>saved});await second.client.ready;second.edit();await settle();assert.equal(second.signals.length,0);second.client.dispose();
+});
+
+
+test("one pairing recognizes authenticated approved repository mappings without a local registry", async () => {
+  const requests=[];
+  const f=companion({catalog:async(url,init,time)=>{
+    requests.push({url,init});
+    return Response.json({version:1,repositories:[
+      {owner:"devonalanakins",name:"future-research-module",projectSlug:"merit"},
+      {owner:"devonalanakins",name:"anevum-web",projectSlug:"anevum"},
+    ],expiresAt:new Date(time+300000).toISOString()});
+  }});
+  await f.pairAndResume();
+  assert.equal(f.signals.length,0,"pairing, opening and resuming do not manufacture edits");
+  f.setRemote("git@github.com:devonalanakins/future-research-module.git");
+  f.edit();await settle();assert.equal(f.signals.at(-1).projectSlug,"merit");
+  f.advance(60001);f.setRemote("ssh://git@github.com/devonalanakins/anevum-web.git");
+  f.edit();await settle();assert.equal(f.signals.at(-1).projectSlug,"anevum");
+  f.advance(60001);f.setRemote("https://github.com/devonalanakins/anevum.git");
+  f.edit();await settle();assert.equal(f.signals.at(-1).active,false,"anevum is not anevum-web");
+  assert.ok(requests.every(r=>r.init.method==="GET"&&r.init.body===undefined&&r.init.credentials==="omit"&&r.init.redirect==="error"));
+  assert.ok(requests.every(r=>r.init.headers.Authorization==="Bearer "+"T".repeat(43)));
+  assert.ok(!JSON.stringify(f.signals).includes("future-research-module"),"raw repository identity remains local");
+  f.client.dispose();
+});
+
+test("unknown, forged, virtual and untrusted repositories never create an active signal", async () => {
+  const f=companion();await f.pairAndResume();
+  for(const remote of [
+    "https://github.com/devonalanakins/private-client.git",
+    "https://github.com.attacker.invalid/devonalanakins/merit.git",
+    "https://github.com/devonalanakins/merit.git/../private",
+    "https://github.com/another-owner/merit.git",
+    "https://attacker@github.com/devonalanakins/merit.git",
+    "git@github.com:devonalanakins/merit.git#private",
+    "https://github.com/devonalanakins/__proto__",
+  ]) {f.setRemote(remote);f.edit();await settle();}
+  assert.equal(f.signals.length,0);
+  f.setRemote("https://github.com/devonalanakins/merit.git");
+  f.setScheme("untitled");f.edit();await settle();assert.equal(f.signals.length,0);
+  f.setScheme("file");f.trust(false);f.edit();await settle();assert.equal(f.signals.length,0);
+  f.trust(true);f.edit([]);await settle();assert.equal(f.signals.length,0);
+  f.focus(false);f.edit();await settle();assert.equal(f.signals.length,0);
+  f.focus(true);f.edit();await settle();assert.equal(f.signals.at(-1).active,true);
+  f.client.dispose();
+});
+
+test("private-repository edit fences a pending public response and then clears public activity", async () => {
+  const active=deferred();
+  const f=companion({async transport(url,init,body){
+    if(url.endsWith("/claim"))return Response.json(pairing());
+    if(body.active)await active.promise;
+    return Response.json({accepted:true});
+  }});
+  await f.pairAndResume();f.edit();
+  f.setRemote("https://github.com/devonalanakins/private-client.git");
+  f.edit();active.resolve();await settle();await settle();
+  assert.deepEqual(f.signals.map(s=>s.active),[true,false]);
+  assert.equal(f.signals.at(-1).projectSlug,null);
+  assert.ok(!f.texts.slice(f.texts.lastIndexOf("Presence: private repository; not sharing")).includes("Presence: editor active"));
+  f.client.dispose();
+});
+
+test("Git activation is awaited and an idle timer never renews an edit", async () => {
+  const git=deferred();const f=companion({gitActivation:git.promise});
+  let ready=false;void f.client.ready.then(()=>{ready=true;});await settle();assert.equal(ready,false);
+  git.resolve();await f.pairAndResume();f.edit();await settle();
+  assert.equal(f.signals.length,1);const captured=f.signals[0].observedAt;
+  f.advance(60000);f.tick();await settle();assert.equal(f.signals.length,1);
+  f.advance(60001);f.tick();await settle();assert.equal(f.signals.at(-1).active,false);
+  assert.equal(f.signals[0].observedAt,captured);
+  f.client.dispose();
+});
+
+test("catalog expiry or revocation fails closed without replaying a previous edit", async () => {
+  let allowed=true;
+  const f=companion({catalog:async(url,init,time)=>allowed?Response.json({
+    version:1,repositories:[{owner:"devonalanakins",name:"merit",projectSlug:"merit"}],expiresAt:new Date(time+300000).toISOString(),
+  }):Response.json({error:"Editor authentication required"},{status:401})});
+  await f.pairAndResume();f.edit();await settle();allowed=false;
+  f.advance(300001);f.tick();await settle();await settle();
+  assert.equal(f.signals.at(-1).active,false);const stopped=f.signals.length;
+  f.advance(60001);f.edit();await settle();assert.equal(f.signals.length,stopped);
+  allowed=true;f.tick();await settle();assert.equal(f.signals.length,stopped,"catalog refresh cannot manufacture a new edit");
+  f.advance(60001);f.edit();await settle();assert.equal(f.signals.at(-1).active,true);
+  f.client.dispose();
+});
+
+test("malformed or ambiguous catalogs cannot approve repository edits", async () => {
+  for(const repositories of [
+    [{owner:"devonalanakins",name:"merit",projectSlug:"merit"},{owner:"devonalanakins",name:"merit",projectSlug:"rhen"}],
+    [{owner:"https://github.com/devonalanakins",name:"merit",projectSlug:"merit"}],
+    [{owner:"devonalanakins",name:"merit",projectSlug:"../../private"}],
+  ]){
+    const f=companion({catalog:async(url,init,time)=>Response.json({version:1,repositories,expiresAt:new Date(time+300000).toISOString()})});
+    await f.pairAndResume();f.edit();await settle();assert.equal(f.signals.length,0);f.client.dispose();
+  }
+});
+
+
+test("a disconnected heartbeat is throttled across new edits while pause remains immediate", async()=>{
+  const f=companion({async transport(url,init,body){
+    if(url.endsWith("/claim"))return Response.json(pairing());
+    if(body.active)throw Error("offline");
+    return Response.json({accepted:true});
+  }});
+  await f.pairAndResume();f.edit();await settle();
+  for(let i=0;i<10;i++){f.advance(1000);f.edit();await settle();}
+  assert.equal(f.signals.length,1);
+  await f.client.actions.pause();assert.equal(f.signals.at(-1).active,false);
+  f.client.dispose();
 });

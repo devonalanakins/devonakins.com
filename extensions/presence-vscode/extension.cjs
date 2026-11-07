@@ -1,4 +1,4 @@
-/** Git remotes are matched locally to a fixed public catalog; only its approved slug leaves the editor. */
+/** Trusted Git metadata stays local; only an owner-approved project slug and edit time leave the editor. */
 const vscode = require("vscode");
 const ORIGIN = "https://devonakins.com";
 const SECRET = "devon-presence-pairing-v1";
@@ -27,7 +27,11 @@ function createCompanion(
     secretOperations = Promise.resolve(),
     project = null,
     automaticProject = true,
-    projects = [];
+    gitApi = null,
+    projects = [],
+    repositoryCatalog = new Map(),
+    catalogExpires = 0,
+    catalogInFlight = null;
   const status = api.window.createStatusBarItem(
     api.StatusBarAlignment.Right,
     1,
@@ -44,9 +48,9 @@ function createCompanion(
     secretOperations = next.catch(() => {});
     return next;
   };
-  async function post(path, body, bearer) {
+  async function post(path, body, bearer, method = "POST") {
     const response = await fetcher(ORIGIN + path, {
-      method: "POST",
+      method,
       credentials: "omit",
       redirect: "error",
       headers: {
@@ -54,7 +58,7 @@ function createCompanion(
         Accept: "application/json",
         ...(bearer ? { Authorization: "Bearer " + bearer } : {}),
       },
-      body: JSON.stringify(body),
+      ...(body === undefined ? {} : { body: JSON.stringify(body) }),
       signal: AbortSignal.timeout(8000),
     });
     if (
@@ -79,6 +83,8 @@ function createCompanion(
       (active &&
         (!enabled ||
           inFlight ||
+          !project ||
+          catalogExpires <= clock() ||
           !lastEdit ||
           lastEdit <= Math.max(lastSharedEdit, lastObserved)))
     )
@@ -87,6 +93,9 @@ function createCompanion(
     // millisecond as the last edit. Only stop signals may advance by one ms.
     const observed = active ? lastEdit : Math.max(clock(), lastObserved + 1);
     lastObserved = observed;
+    // Throttle failed active requests as well as successful ones. A disconnected
+    // source must not retry once per keystroke; stop signals remain immediate.
+    if (active) lastSent = clock();
     const current = () =>
       !disposed && generation === currentGeneration && token === bearer;
     const request = (async () => {
@@ -119,39 +128,88 @@ function createCompanion(
       if (inFlight === request) inFlight = null;
     }
   }
-  const publicRepos = {
-    "devonakins.com": "devonakins-com",
-    merit: "merit",
-    rhen: "rhen",
-    mizvo: "mizvo",
-    "devon-station": "devonstation",
-    squelch: "squelch",
-    "anevum-web": "anevum",
-    brandicade: "brandicade",
-    vesper: "vesper",
-    knowledge: "knowledge",
-  };
+  async function refreshCatalog() {
+    if (catalogInFlight) return catalogInFlight;
+    const bearer = token;
+    if (!bearer || disposed || expires <= clock()) return false;
+    const request = (async () => {
+      try {
+        const data = await post("/api/presence/editor/catalog", undefined, bearer, "GET");
+        const until = Date.parse(data.expiresAt);
+        if (data.version !== 1 || !Array.isArray(data.repositories) ||
+            data.repositories.length > 500 || !Number.isFinite(until) ||
+            until <= clock() || until > clock() + 310000)
+          throw Error("Invalid approved repository catalog");
+        const next = new Map();
+        for (const entry of data.repositories) {
+          if (!entry || typeof entry.owner !== "string" ||
+              !/^[a-z0-9](?:[a-z0-9-]{0,38})$/.test(entry.owner) ||
+              typeof entry.name !== "string" || !/^[a-z0-9_.-]{1,100}$/.test(entry.name) ||
+              typeof entry.projectSlug !== "string" || !/^[a-z0-9-]{1,40}$/.test(entry.projectSlug))
+            throw Error("Invalid approved repository catalog");
+          const identity = entry.owner + "/" + entry.name;
+          if (next.has(identity)) throw Error("Ambiguous approved repository catalog");
+          next.set(identity, entry.projectSlug);
+        }
+        if (disposed || token !== bearer) return false;
+        repositoryCatalog = next;
+        catalogExpires = until;
+        return true;
+      } catch {
+        if (!disposed && token === bearer) {
+          repositoryCatalog = new Map();
+          catalogExpires = 0;
+          if (enabled) suspendUnknownProject("repository catalog unavailable; not sharing");
+        }
+        return false;
+      }
+    })();
+    catalogInFlight = request;
+    try { return await request; }
+    finally { if (catalogInFlight === request) catalogInFlight = null; }
+  }
+  async function initializeGit() {
+    // The presence extension can activate before the built-in Git extension.
+    // Wait for its documented API instead of silently treating every edit as
+    // generic public activity when Git has not activated yet.
+    try {
+      const extension = api.extensions?.getExtension("vscode.git");
+      if (!extension) return;
+      const exported = extension.isActive === false
+        ? await extension.activate()
+        : extension.exports;
+      if (!disposed) gitApi = exported?.getAPI(1) || null;
+    } catch {
+      gitApi = null;
+    }
+  }
   function detectedProject(event) {
     try {
-      const git = api.extensions
-        ?.getExtension("vscode.git")
-        ?.exports?.getAPI(1);
-      if (!git) return null;
-      const document = event.document;
-      const repo = document?.uri && git.getRepository(document.uri);
-      const remote = repo?.state.remotes.find(
-        (r) => r.name === "origin",
-      )?.fetchUrl;
+      if (api.workspace.isTrusted === false || !gitApi || catalogExpires <= clock()) return null;
+      const uri = event.document?.uri;
+      // Untitled buffers, SCM inputs and virtual documents are not repo edits.
+      if (!uri || !["file", "vscode-remote"].includes(uri.scheme)) return null;
+      const repo = gitApi.getRepository(uri);
+      const remotes = repo?.state?.remotes;
+      if (!Array.isArray(remotes)) return null;
+      const origin = remotes.filter((remote) => remote.name === "origin");
+      if (origin.length !== 1) return null;
+      const remote = origin[0].fetchUrl;
       if (typeof remote !== "string") return null;
       const match =
-        /^(?:https:\/\/github\.com\/|git@github\.com:|ssh:\/\/git@github\.com\/)devonalanakins\/([a-z0-9.-]+?)(?:\.git)?$/.exec(
-          remote,
-        );
-      const slug = match && publicRepos[match[1]];
-      return slug && projects.includes(slug) ? slug : null;
+        /^(?:https:\/\/github\.com\/|git@github\.com:|ssh:\/\/git@github\.com\/)([a-z0-9-]+)\/([a-z0-9_.-]+?)(?:\.git)?$/i.exec(remote);
+      return match ? repositoryCatalog.get((match[1] + "/" + match[2]).toLowerCase()) || null : null;
     } catch {
       return null;
     }
+  }
+  function suspendUnknownProject(message = "private repository; not sharing") {
+    const hadActivity = !!lastEdit || !!inFlight;
+    generation++;
+    project = null;
+    lastEdit = 0;
+    say(message);
+    if (hadActivity) void send(false);
   }
   const actions = {
     async pair() {
@@ -216,6 +274,10 @@ function createCompanion(
         if (disposed || generation !== currentGeneration) return;
         lastSharedEdit = 0;
         lastObserved = 0;
+        repositoryCatalog = new Map();
+        catalogExpires = 0;
+        await refreshCatalog();
+        if (disposed || generation !== currentGeneration) return;
         say("paired, paused");
         await api.window.showInformationMessage(
           "Paired. Enable editor activity in the private website controls, then choose Resume Sharing here.",
@@ -234,19 +296,16 @@ function createCompanion(
       const choice = await api.window.showQuickPick(
         [
           { label: "Automatic from approved GitHub repository", slug: "auto" },
-          { label: "No public project", slug: null },
-          ...projects.map((slug) => ({ label: slug, slug })),
+          { label: "Keep all repository edits private", slug: null },
         ],
-        {
-          placeHolder:
-            "Automatically match an approved public repository, or explicitly override it.",
-        },
+        { placeHolder: "Only edits in an approved GitHub repository can be shared." },
       );
       if (choice) {
         automaticProject = choice.slug === "auto";
-        project = automaticProject ? null : choice.slug;
         await context.globalState.update("automaticProject", automaticProject);
-        await context.globalState.update("publicProject", project);
+        // Remove a legacy project-name override; it cannot establish repo identity.
+        await context.globalState.update("publicProject", undefined);
+        suspendUnknownProject();
       }
     },
     async resume() {
@@ -265,9 +324,11 @@ function createCompanion(
       }
       if (disposed || forgetting || generation !== currentGeneration || !token)
         return;
+      const catalogReady = await refreshCatalog();
+      if (disposed || forgetting || generation !== currentGeneration || !token) return;
       enabled = true;
       lastEdit = 0;
-      say("waiting for edit");
+      say(catalogReady ? "waiting for approved repository edit" : "repository catalog unavailable; not sharing");
     },
     async pause() {
       if (disposed || forgetting) return;
@@ -297,6 +358,8 @@ function createCompanion(
       await send(false);
       token = null;
       expires = 0;
+      repositoryCatalog = new Map();
+      catalogExpires = 0;
       try {
         await changeSecret(() =>
           context.globalState.update("sharingEnabled", false),
@@ -319,11 +382,15 @@ function createCompanion(
   subscriptions.push(
     api.workspace.onDidChangeTextDocument((event) => {
       // Metadata stays local: map the edited document to an approved remote. Never inspect text or send paths.
-      if (enabled && api.window.state.focused && event.contentChanges.length) {
-        if (automaticProject) project = detectedProject(event);
-        lastEdit = clock();
-        if (clock() - lastSent >= 60000) void send(true);
+      if (!enabled || !api.window.state.focused || !event.contentChanges.length) return;
+      const detected = automaticProject ? detectedProject(event) : null;
+      if (!detected) {
+        suspendUnknownProject();
+        return;
       }
+      project = detected;
+      lastEdit = clock();
+      if (clock() - lastSent >= 60000) void send(true);
     }),
   );
   const timer = setTimer(() => {
@@ -335,6 +402,12 @@ function createCompanion(
       say("pairing expired");
       return;
     }
+    if (catalogExpires <= clock()) {
+      if (lastEdit) suspendUnknownProject();
+      void refreshCatalog();
+      return;
+    }
+    if (catalogExpires - clock() <= 60000) void refreshCatalog();
     if (
       lastEdit &&
       api.window.state.focused &&
@@ -367,11 +440,14 @@ function createCompanion(
         projects = data.projects;
         automaticProject =
           context.globalState.get("automaticProject") !== false;
-        const saved = context.globalState.get("publicProject");
-        project = !automaticProject && projects.includes(saved) ? saved : null;
+        // Previous versions allowed an arbitrary selected project. Identity is
+        // now always established by the edited document's Git repository.
+        project = null;
         enabled = context.globalState.get("sharingEnabled") === true;
         lastEdit = 0;
-        say(enabled ? "waiting for edit" : "paired, paused");
+        await refreshCatalog();
+        if (disposed || generation !== currentGeneration) return;
+        say(enabled ? "waiting for approved repository edit" : "paired, paused");
       }
     } catch {
       if (generation === currentGeneration) say("pairing required");
@@ -386,7 +462,7 @@ function createCompanion(
     status.dispose();
   };
   context.subscriptions.push({ dispose });
-  return { actions, ready: restore(), dispose };
+  return { actions, ready: Promise.all([restore(), initializeGit()]), dispose };
 }
 exports.createCompanion = createCompanion;
 exports.activate = (context) => {

@@ -11,6 +11,7 @@ import {presenceResponse} from './spotify-presence.mjs';
 import {createActivityTasksApi} from './activity-tasks.mjs';
 import {createLiveSignal} from './live-signal.mjs';
 import {createGptSnapshotOwnerApi} from './gpt-snapshots.mjs';
+import {createGithubIntegration,createGithubEditorCatalog} from './github-integration.mjs';
 import {projectActivityHistory,validActivityHistory} from './activity-history.mjs';
 
 export const securityHeaders = {
@@ -31,6 +32,8 @@ export function createHandler(assets, release, options = {}) {
   const decoded = new Map();
   let activityHistory = [];
   const taskApi=createActivityTasksApi({clock:()=> (options.now || (()=>new Date()))().getTime()});
+  const githubIntegration=createGithubIntegration({clock:()=> (options.now || (()=>new Date()))().getTime(),githubFetch:options.githubFetch || fetch});
+  const githubEditorCatalog=createGithubEditorCatalog({clock:()=> (options.now || (()=>new Date()))().getTime()});
   const gptOwnerApi=createGptSnapshotOwnerApi({clock:()=> (options.now || (()=>new Date()))().getTime()});
   const readDbPresence = createD1PresenceReader();
   const ownerApi = createListeningOwnerApi();
@@ -188,6 +191,8 @@ export function createHandler(assets, release, options = {}) {
         return handleObservationRequest(request, env, now(), securityHeaders);
       if(url.pathname==='/owner/gpt' || url.pathname==='/owner/gpt/' || (url.pathname==='/api/presence/owner' && url.search==='?channel=gpt')) return secured(await gptOwnerApi(request,env,ctx));
       if(url.pathname.startsWith('/api/activity/tasks/') || (url.pathname==='/api/presence/owner' && url.search==='?channel=tasks')) return secured(await taskApi(request,env,ctx));
+      if(url.pathname==='/owner/github'||url.pathname==='/owner/github/'||url.pathname==='/api/activity/github/webhook'||(url.pathname==='/api/presence/owner'&&url.search==='?channel=github'))return secured(await githubIntegration(request,env,ctx));
+      if(url.pathname==='/api/presence/editor/catalog')return secured(await githubEditorCatalog(request,env,ctx));
       if(url.pathname.startsWith('/api/presence/editor/'))return secured(await editorApi(request,env,ctx));
       if(url.pathname.startsWith('/api/presence/cloud/') || (url.pathname === '/api/presence/owner' && url.search === '?channel=cloud'))
         return secured(await cloudApi(request,env,ctx));
