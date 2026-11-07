@@ -69,6 +69,44 @@ def main():
                     spotifyState: document.querySelector('[data-v5-signal="spotify"]')?.textContent?.trim() ?? null,
                     gptState: document.querySelector('[data-v5-signal="gpt"]')?.textContent?.trim() ?? null
                 })""")
+                if name == "home" and width in (1199, 320):
+                    geometry["portraitDiagnostic"] = page.locator(".v5-locked-portrait").evaluate("""element => {
+                        const style = getComputedStyle(element);
+                        const picture = element.querySelector("picture");
+                        const image = element.querySelector("img");
+                        const imgStyle = image ? getComputedStyle(image) : null;
+                        const rect = item => {
+                            if (!item) return null;
+                            const r = item.getBoundingClientRect();
+                            return {x:r.x, y:r.y, width:r.width, height:r.height};
+                        };
+                        const canvas = document.createElement("canvas");
+                        canvas.width = 16; canvas.height = 16;
+                        const ctx = canvas.getContext("2d");
+                        let imageSample = null;
+                        if (ctx && image?.naturalWidth) {
+                            ctx.drawImage(image, 0, 0, 16, 16);
+                            imageSample = [...ctx.getImageData(8, 6, 1, 1).data];
+                        }
+                        const elbox = element.getBoundingClientRect();
+                        const topLayer = document.elementFromPoint(elbox.x + elbox.width / 2, Math.max(2,elbox.y + elbox.height / 2));
+                        return {
+                            computedZIndex: style.zIndex,
+                            computedVisibility: style.visibility,
+                            computedOpacity: style.opacity,
+                            computedMask: style.maskImage,
+                            computedDisplay: style.display,
+                            portraitRect: rect(element),
+                            pictureRect: rect(picture),
+                            imageRect: rect(image),
+                            imageVisibility: imgStyle?.visibility || null,
+                            imageOpacity: imgStyle?.opacity || null,
+                            imageNatural: image ? [image.naturalWidth,image.naturalHeight] : null,
+                            imageSample,
+                            topLayerTag: topLayer?.tagName || null,
+                            topLayerClass: String(topLayer?.className || "").slice(0, 90)
+                        };
+                    }""")
                 assert not api_requests, "Review screenshots must not call provider APIs"
                 assert not remote_requests, "Review screenshots must not call third parties"
                 assert not page_errors, (file, page_errors)
