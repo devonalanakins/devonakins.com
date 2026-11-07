@@ -60,6 +60,6 @@ test("locked CSS includes responsive screenshot geometry and reduced-motion guar
   assert.match(css, /min-height:44px/);
   assert.match(css, /v5-lock-terrain-canvas/);
   assert.match(css, /v5-lock-project-art/);
-  assert.match(css, /svg\\.v5-lock-project-art\\s*\\{/);
+  assert.match(css, /svg\.v5-lock-project-art\s*\{/);
   assert.match(css, /v5-lock-project-brand/);
 });
