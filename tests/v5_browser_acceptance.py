@@ -15,7 +15,7 @@ from playwright.sync_api import sync_playwright
 ROOT = Path(__file__).resolve().parents[1]
 PREVIEW = "/__v5_preview__/"
 PAGES = ["", "field/", "projects/", "writing/", "research/", "knowledge/", "about/"]
-VIEWPORTS = [(1440, 900), (1024, 768), (768, 900), (390, 844), (375, 667), (320, 568), (844, 320)]
+VIEWPORTS = [(1440, 900), (1280, 800), (1024, 768), (768, 900), (390, 844), (375, 667), (320, 568), (844, 320)]
 
 @contextmanager
 def server(enabled):
@@ -59,7 +59,12 @@ def check_page(page, origin, path, axe):
     assert page.evaluate("document.documentElement.scrollWidth <= innerWidth + 1"), (path, "horizontal overflow")
     assert page.locator("a[href='https://github.com/devonalanakins']").count() <= 1
     if not path:
-        assert page.locator(".v5-portrait img").evaluate("e => e.complete && e.naturalWidth > 0")
+        assert page.locator(".v5-portrait picture source").count() == 1
+        portrait = page.locator(".v5-portrait img")
+        assert portrait.evaluate("e => e.complete && e.naturalWidth === (innerWidth <= 600 ? 768 : 1122) && e.naturalHeight > 0"), (path, page.viewport_size, "approved responsive portrait failed to decode")
+        assert portrait.get_attribute("alt").startswith("Cinematic portrait artwork of Devon Akins")
+        assert page.locator(".v5-portrait picture").evaluate("e => e.getBoundingClientRect().height > 0")
+
         if page.viewport_size["height"] >= 568:
             for source in ["work", "spotify", "gpt"]:
                 assert page.locator(f'[data-v5-signal="{source}"]').evaluate("e => { const r=e.getBoundingClientRect(); return r.top >= 0 && r.bottom <= innerHeight; }"), (page.viewport_size, source, "below first viewport")
