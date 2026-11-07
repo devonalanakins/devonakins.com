@@ -164,6 +164,8 @@ export function startLiveSignal(onPlayback: (data: unknown) => void) {
       : "GPT analytics · Not connected");
     const recordedPanel = document.querySelector<HTMLElement>("#gpt-observation-panel");
     if (recordedPanel) {
+      if (validGpt) recordedPanel.dataset.source = "v4-snapshot";
+      else delete recordedPanel.dataset.source;
       recordedPanel.hidden = !validGpt;
       if (validGpt) {
         text("#gpt-observation-value",gptCount + " " + def.unit);
