@@ -49,9 +49,12 @@ function timestamp(iso, now, ttl) {
     now - t >= 0 && now - t < ttl ? t : null;
 }
 function taskExpiry(task, observed, now) {
-  const expire = timestamp(task.expiresAt, now, EXPIRE_MS + MAX_FUTURE_MS);
-  return expire !== null && expire > now && expire > observed &&
-    expire <= observed + EXPIRE_MS ? task.expiresAt : null;
+  if (typeof task.expiresAt !== "string" || task.expiresAt.length > 36) return null;
+  const expire = Date.parse(task.expiresAt);
+  return Number.isFinite(expire) &&
+    new Date(expire).toISOString() === task.expiresAt &&
+    expire > now && expire > observed && expire <= observed + EXPIRE_MS
+    ? task.expiresAt : null;
 }
 function knownProject(name) {
   return typeof name === "string" ? PUBLIC_PROJECT_NAMES.get(name) || null : null;
