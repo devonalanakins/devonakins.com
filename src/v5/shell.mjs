@@ -1,4 +1,5 @@
 import { projects } from "../content.mjs";
+import { FIELD_CATALOG } from "../signal-field-model.mjs";
 
 export const PREVIEW_ROOT = "/__v5_preview__/";
 export const previewPages = [
@@ -65,6 +66,29 @@ function fieldComposition() {
     <div class="v5-project-orbits">${catalog.map((project, index) => `<a class="v5-orbit v5-orbit-${index}" href="${projectLink(project)}">${lockup(project)}<span>${esc(project.label)}</span></a>`).join("")}</div>
   </div>`;
 }
+function atlasCatalog() {
+  const routeOverride = { rhen: "/work/rhen-language/", knowledge: "/source/", "devonakins-com": "/" };
+  const entries = FIELD_CATALOG.map((node) => {
+    const publicSlug = node.slug === "rhen" ? "rhen-language" : node.slug;
+    const project = projects.find((item) => item.slug === publicSlug);
+    const url = project ? projectLink(project) : routeOverride[node.slug];
+    const description = project?.summary || "Approved public catalog identity. No service integration or public activity reporter is verified in this preview.";
+    return `<details data-v5-atlas-node="${esc(node.slug)}"><summary>${esc(node.label)}</summary><p>${esc(description)}</p><a class="v5-text-link" href="${esc(url)}">Read public context <span aria-hidden="true">↗</span></a></details>`;
+  }).join("");
+  return `<section class="v5-atlas-shell" data-v5-atlas aria-label="Public systems atlas">
+    <div class="v5-atlas-viewport">
+      <div class="v5-atlas-host" data-v5-atlas-host aria-hidden="true"></div>
+      <div class="v5-atlas-legend" aria-hidden="true"><span>DA · PUBLIC SYSTEMS CATALOG</span><span>Orientation is decorative · selected project identity is real</span></div>
+    </div>
+    <aside class="v5-atlas-index" aria-label="Approved public project identities">
+      <p class="v5-eyebrow">VERIFIED PUBLIC IDENTITY LIST</p>
+      <h2>Explore the structure.</h2>
+      <p data-v5-atlas-status role="status">3D display is optional. The project index works without JavaScript or graphics.</p>
+      <p class="v5-atlas-caveat">Every line means only that a project belongs in this approved public catalog. Lines do not represent code dependencies, integration, deployment, active work, or private Knowledge data. No live source is loaded.</p>
+      <div class="v5-atlas-details">${entries}</div>
+    </aside>
+  </section>`;
+}
 function ribbon() {
   return `<section class="v5-ribbon" aria-label="Work, Spotify and GPT sources">
     <div class="v5-ribbon-label"><span class="v5-status-ring" aria-hidden="true"></span>LIVE SIGNAL<span>Independent sources</span></div>
@@ -116,9 +140,8 @@ function secondary(key) {
     return `${heading("THE WORKSHOP", "Projects & systems", "Original software, creative worlds and practical tools. Status descriptions come from the existing public portfolio; they are not live telemetry.")}
     <div class="v5-cards v5-project-grid">${catalog.map(projectCard).join("")}</div>`;
   if (key === "field")
-    return `${heading("THE SIGNAL FIELD", "A connected body of work.", "Explore the existing public project identities. This first preview is a static composition; the semantic 3D atlas, inspector and replay are not implemented yet.")}
-    <section class="v5-field-stage" aria-label="Static project composition">${fieldComposition()}</section><p class="v5-art-note">Decorative geometry · project links lead to the current portfolio</p>
-    ${ribbon()}<section class="v5-card v5-reading"><h2>Structure needs evidence.</h2><p>The future atlas will distinguish enduring project structure from temporary activity. A project being listed here does not mean its reporter is connected or that it is currently running.</p><a class="v5-text-link" href="/studio/">View the current Live Studio <span aria-hidden="true">↗</span></a></section>`;
+    return `${heading("THE SIGNAL FIELD", "A public systems atlas.", "Explore ten approved public project identities in three dimensions. Identity and catalog membership are real; runtime integrations, historical replay and software dependencies are not claimed.")}
+    ${atlasCatalog()}${ribbon()}<section class="v5-card v5-reading"><h2>Evidence before effects.</h2><p>This preview is a deterministic semantic catalog, not yet a source-connected activity map or persistent historical replay. A project listed here does not mean its reporter is connected or currently running.</p><a class="v5-text-link" href="/studio/">View the current Live Studio <span aria-hidden="true">↗</span></a></section>`;
   if (key === "writing")
     return `${heading("ORIGINAL WORKS", "Stories. Worlds. Possibilities.", "Writing, revision and the worlds behind the pages.")}
     <section class="v5-card v5-reading"><p class="v5-eyebrow">BOOKS & MANUSCRIPTS</p><h2>Making room for the story.</h2><p>${esc(projects.find((p) => p.slug === "writing").description)}</p><a class="v5-text-link" href="/work/writing/">Books & writing <span aria-hidden="true">↗</span></a></section>`;
