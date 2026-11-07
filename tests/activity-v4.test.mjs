@@ -100,3 +100,39 @@ test('a repository switch cannot report under a differently scoped workspace sou
  const f=fixture(),s=await f.source('merit');const r=await f.api(f.req('/api/activity/tasks/start','POST',{version:1,projectSlug:'rhen'},s.token),f.env);assert.equal(r.status,409);assert.equal(f.sql.prepare('SELECT COUNT(*) n FROM activity_tasks').get().n,0);
  const good=await f.api(f.req('/api/activity/tasks/start','POST',{version:1,projectSlug:'merit'},s.token),f.env);assert.equal(good.status,200);
 });
+
+test('GPT ribbon observation requires two GPT release gates and the owner public-presence opt-in',async()=>{
+ const f=fixture();let reads=0;const reading={
+   state:'observed',scope:'work-codex',metric:'work_codex_credits_remaining',
+   count:12.5,unit:'credits',asOf:new Date(f.clock()).toISOString(),
+   source:'owner-reviewed-dashboard',freshness:'recent',period:null,
+ };
+ const read=createLiveSignal({clock:f.clock,readGithub:async()=>[],readListening:async()=>Response.json({version:1,mode:'hidden',detailsVisible:false}),
+   readGpt:async()=>{reads++;return reading;}});
+ f.env.GPT_USAGE_PUBLIC_RELEASE_APPROVED='true';
+ assert.equal((await read(f.env)).gpt.count,null);
+ assert.equal(reads,0);
+ f.publish();
+ assert.equal((await read(f.env)).gpt.count,12.5);
+ assert.equal(reads,1);
+ f.sql.exec('UPDATE presence_state SET private_work=1,revision=revision+1');
+ assert.equal((await read(f.env)).gpt.count,null);
+ f.sql.exec('UPDATE presence_state SET private_work=0,revision=revision+1');
+ f.env.GPT_USAGE_PUBLIC_RELEASE_APPROVED='false';
+ assert.equal((await read(f.env)).gpt.count,null);
+});
+
+test('owner privacy stop during a delayed GPT read must hide the in-flight observation',async()=>{
+ const f=fixture();f.publish();f.env.GPT_USAGE_PUBLIC_RELEASE_APPROVED='true';
+ let enter,complete;
+ const started=new Promise(resolve=>enter=resolve);
+ const read=createLiveSignal({clock:f.clock,readGithub:async()=>[],readListening:async()=>Response.json({version:1,mode:'hidden',detailsVisible:false}),
+   readGpt:async()=>{enter();return new Promise(resolve=>complete=resolve);}});
+ const pending=read(f.env);
+ await started;
+ f.sql.exec('UPDATE presence_state SET public_enabled=0,revision=revision+1');
+ complete({state:'observed',scope:'work-codex',metric:'work_codex_credits_remaining',
+   count:999,unit:'credits',asOf:new Date(f.clock()).toISOString(),
+   source:'owner-reviewed-dashboard',freshness:'recent'});
+ const result=await pending;assert.equal(result.gpt.count,null);assert.equal(result.work.visibility,'hidden');
+});
