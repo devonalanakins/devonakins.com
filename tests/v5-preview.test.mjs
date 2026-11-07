@@ -77,7 +77,7 @@ test("V5 preview is opt-in, exact-route only and never intercepts current routes
 test("all seven preview pages retain semantic navigation and source-qualified empty states", () => {
   for (const page of previewPages) {
     const html = renderV5Preview(page.key);
-    assert.match(html, /<html lang="en">/);
+    assert.match(html, /<html lang="en" data-v5-signal-mode="preview">/);
     assert.match(html, /<main id="v5-main" tabindex="-1">/);
     assert.match(html, /<details[^>]*data-mobile-menu/);
     assert.ok(html.includes(`href="${page.path}" aria-current="page"`));
