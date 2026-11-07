@@ -248,3 +248,39 @@
 @media(prefers-reduced-motion:reduce){
  .v5-locked-home a,.v5-lock-terrain-wire{transition:none!important;animation:none!important}
 }
+
+
+/* Interaction geometry: keep 44px hit targets even where the artwork uses
+ * compact icons and small labels. */
+.v5-locked-home a{min-height:44px}
+.v5-locked-socials a{width:44px;height:44px}
+.v5-lock-heading > a,.v5-lock-panel > a,.v5-lock-field-cta{
+  display:inline-flex;align-items:center;min-height:44px
+}
+.v5-locked-session-link{min-height:44px}
+@media(max-width:600px){
+  .v5-locked-session-link,.v5-locked-identity-small{display:none}
+}
+@media(max-width:420px){
+  .v5-locked-hero{height:625px}
+  .v5-locked-identity{height:245px}
+  .v5-locked-identity h1{font-size:26px}
+  .v5-locked-signal{top:253px}
+  .v5-lock-spotify{min-height:64px}
+  .v5-lock-work{min-height:68px}
+  .v5-lock-metrics{min-height:88px}
+  .v5-lock-metric-grid a{min-height:51px}
+}
+@media(max-width:340px){
+  .v5-locked-hero{height:555px}
+  .v5-locked-portrait{height:236px}
+  .v5-locked-identity h1{font-size:22px}
+  .v5-locked-identity .v5-locked-manifesto{display:none}
+  .v5-locked-identity .v5-locked-accent{margin:7px 0}
+  .v5-locked-socials a{width:44px;height:44px}
+  .v5-locked-signal{top:188px}
+  .v5-lock-spotify{min-height:58px}
+  .v5-lock-work{min-height:63px}
+  .v5-lock-metrics{min-height:85px}
+  .v5-lock-metric-grid a{min-height:51px}
+}
