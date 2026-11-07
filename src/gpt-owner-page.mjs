@@ -1,6 +1,6 @@
 /** Access-only owner recording screen. Never embeds source observations in HTML. */
 export function renderGptOwner() {
-  return \`<!doctype html><html lang="en"><head>
+  return `<!doctype html><html lang="en"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="robots" content="noindex,nofollow,noarchive"><meta name="referrer" content="no-referrer">
 <title>GPT Analytics — Devon Alan Akins</title>
@@ -49,5 +49,5 @@ export function renderGptOwner() {
   </section>
   <p class="fine">Owner access is verified through Cloudflare Access. Missing sources remain disconnected, not zero.</p>
 </main>
-<script src="/v2/gpt-owner.js" defer></script></body></html>\`;
+<script src="/v2/gpt-owner.js" defer></script></body></html>`;
 }
