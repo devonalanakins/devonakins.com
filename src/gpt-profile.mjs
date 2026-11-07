@@ -138,6 +138,20 @@ export function renderPublicGptProfile(input) {
         '</p></article>').join("") + '</div>'
     : '<p class="gpt-empty">No integrations listed in the current snapshot.</p>';
   const observationMarkup = `
+    <section class="gpt-section gpt-observation-panel" id="gpt-v4-snapshot-panel"
+      aria-labelledby="gpt-v4-snapshot-heading" hidden>
+      <div class="gpt-live-kicker">OWNER-REVIEWED / PERIODIC OBSERVATION</div>
+      <header class="gpt-live-heading">
+        <div><span class="gpt-section-index">00 / SNAPSHOT</span>
+          <h2 id="gpt-v4-snapshot-heading">Latest approved capture.</h2>
+          <p>Not an account-wide live feed. Each approved metric retains its original capture time and reported scope.</p>
+        </div>
+      </header>
+      <strong id="gpt-v4-snapshot-value" class="gpt-observation-value" aria-live="off">—</strong>
+      <p id="gpt-v4-snapshot-state" role="status" aria-live="polite"></p>
+      <p id="gpt-v4-snapshot-age" class="gpt-observation-age" aria-live="off"></p>
+      <p class="gpt-observation-disclosure">New values appear only after a source observation is recorded. Refreshing this page does not create new ChatGPT usage.</p>
+    </section>
     <section class="gpt-section gpt-observation-panel" id="gpt-observation-panel"
       aria-labelledby="gpt-observation-heading" hidden>
       <div class="gpt-live-kicker">OWNER-APPROVED / VISIBLE-METRIC OBSERVATION</div>
@@ -145,16 +159,16 @@ export function renderPublicGptProfile(input) {
         <div>
           <span class="gpt-section-index">00 / CAPTURE</span>
           <h2 id="gpt-observation-heading">Latest recorded measurement.</h2>
-          <p>One opted-in Work/Codex credits reading. This is not the historical token total,
-            regular Chat usage, or proof that OpenAI has refreshed its source.</p>
+          <p>One explicitly approved owner-captured measurement, separate from the dated archive.
+            The time of capture is not proof that OpenAI refreshed its source.</p>
         </div>
       </header>
       <strong id="gpt-observation-value" class="gpt-observation-value" aria-live="off">—</strong>
       <p id="gpt-observation-state" role="status" aria-live="polite"></p>
       <p id="gpt-observation-age" class="gpt-observation-age" aria-live="off"></p>
-      <p class="gpt-observation-disclosure">The site keeps the last approved observation while
-        the collector is offline. Collection requires a separate authorized source and does
-        not continue when that source stops. Last source update: unknown.</p>
+      <p class="gpt-observation-disclosure">Owner-recorded readings remain dated and distinct from real-time usage.
+        The five-minute website refresh checks for new observations but never invents new data.
+        Last source update: unknown.</p>
     </section>`;
   const publicActivityMarkup = `
     <section class="gpt-section gpt-live-panel" aria-labelledby="gpt-public-development-heading">

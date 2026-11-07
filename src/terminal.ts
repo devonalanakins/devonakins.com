@@ -285,7 +285,9 @@ function validObservationApi(input: unknown): GptObservation | null {
   return r as GptObservation;
 }
 function renderObservation() {
-  if (!observationPanel) return;
+  // The approved V4 snapshot owns this panel while it is active. The earlier
+  // opt-in standalone observation bridge must not hide or overwrite it.
+  if (!observationPanel || observationPanel.dataset.source === "v4-snapshot") return;
   if (!lastObservation) {
     observationPanel.hidden = true;
     return;
@@ -312,7 +314,7 @@ function renderObservation() {
       Math.floor(ageSeconds/60)+" minutes") + " ago · OpenAI update time unknown.";
 }
 async function checkObservation() {
-  if (!observationPanel || observationBusy || document.hidden) return;
+  if (!observationPanel || observationPanel.dataset.source === "v4-snapshot" || observationBusy || document.hidden) return;
   observationBusy=true;
   lastObservationFetch=Date.now();
   try {

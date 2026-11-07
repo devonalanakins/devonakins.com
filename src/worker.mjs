@@ -10,6 +10,7 @@ import {presenceResponse} from './spotify-presence.mjs';
 
 import {createActivityTasksApi} from './activity-tasks.mjs';
 import {createLiveSignal} from './live-signal.mjs';
+import {createGptSnapshotOwnerApi} from './gpt-snapshots.mjs';
 import {projectActivityHistory,validActivityHistory} from './activity-history.mjs';
 
 export const securityHeaders = {
@@ -30,6 +31,7 @@ export function createHandler(assets, release, options = {}) {
   const decoded = new Map();
   let activityHistory = [];
   const taskApi=createActivityTasksApi({clock:()=> (options.now || (()=>new Date()))().getTime()});
+  const gptOwnerApi=createGptSnapshotOwnerApi({clock:()=> (options.now || (()=>new Date()))().getTime()});
   const readDbPresence = createD1PresenceReader();
   const ownerApi = createListeningOwnerApi();
   const presenceOwnerApi = createPresenceOwnerApi({readListening:readDbPresence,clock: () => (options.now || (()=>new Date()))().getTime()});
@@ -184,6 +186,7 @@ export function createHandler(assets, release, options = {}) {
       // merely with a hidden UI route. No Access identity = no account action.
       if (url.pathname === OBSERVATION_READ_PATH || url.pathname === OBSERVATION_WRITE_PATH)
         return handleObservationRequest(request, env, now(), securityHeaders);
+      if(url.pathname==='/owner/gpt' || url.pathname==='/owner/gpt/' || (url.pathname==='/api/presence/owner' && url.search==='?channel=gpt')) return secured(await gptOwnerApi(request,env,ctx));
       if(url.pathname.startsWith('/api/activity/tasks/') || (url.pathname==='/api/presence/owner' && url.search==='?channel=tasks')) return secured(await taskApi(request,env,ctx));
       if(url.pathname.startsWith('/api/presence/editor/'))return secured(await editorApi(request,env,ctx));
       if(url.pathname.startsWith('/api/presence/cloud/') || (url.pathname === '/api/presence/owner' && url.search === '?channel=cloud'))

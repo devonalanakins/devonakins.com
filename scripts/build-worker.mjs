@@ -66,6 +66,7 @@ for (const module of [
   "listening-owner-core", "listening-oauth-start", "listening-oauth-callback",
   "listening-owner-api", "listening-playback-probe", "listening-d1-presence",
   "presence-model", "presence-api", "presence-owner-page", "gpt-observation-bridge",
+  "gpt-snapshots", "gpt-owner-page",
   "presence-preferences", "presence-editor-api",
   "cloud-presence-model", "cloud-presence-api", "activity-tasks", "live-signal", "activity-history",
   "listening-collections",
