@@ -68,6 +68,13 @@ def check_page(page, origin, path, axe):
         if page.viewport_size["height"] >= 568:
             for source in ["work", "spotify", "gpt"]:
                 assert page.locator(f'[data-v5-signal="{source}"]').evaluate("e => { const r=e.getBoundingClientRect(); return r.top >= 0 && r.bottom <= innerHeight; }"), (page.viewport_size, source, "below first viewport")
+    if path == "field/":
+        assert page.locator("[data-v5-atlas-node]").count() == 10
+        assert page.locator("[data-v5-atlas-status]").count() == 1
+        assert page.locator("[data-v5-atlas-node='merit'] summary").is_visible()
+        page.locator("[data-v5-atlas-node='merit'] summary").click()
+        assert page.locator("[data-v5-atlas-node='merit']").get_attribute("open") is not None
+        assert page.locator("[data-v5-atlas-node='merit'] a").get_attribute("href") == "/work/merit/"
     targets = page.locator("a:visible, summary:visible").evaluate_all("es => es.filter(e => !e.classList.contains('v5-skip')).filter(e => e.getBoundingClientRect().height < 43).map(e => ({text:e.textContent, h:e.getBoundingClientRect().height}))")
     assert not targets, (path, "small touch targets", targets)
     page.add_script_tag(content=axe)

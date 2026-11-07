@@ -100,6 +100,13 @@ test("all seven preview pages retain semantic navigation and source-qualified em
     /Static project composition · no activity or dependency claims/,
   );
   assert.doesNotMatch(home, /696464828|2700000000|all systems healthy/i);
+  const field = renderV5Preview("field");
+  assert.match(field, /data-v5-atlas/);
+  assert.match(field, /data-v5-atlas-status/);
+  assert.match(field, /data-v5-atlas-node="merit"/);
+  assert.match(field, /data-v5-atlas-node="knowledge"/);
+  assert.match(field, /lines do not represent code dependencies/i);
+  assert.doesNotMatch(field, /private-client|pretend-active/i);
   assert.throws(() => renderV5Preview("../owner"));
 });
 test("production Worker and compiled assets exclude V5 even when the preview flag is set", async () => {
