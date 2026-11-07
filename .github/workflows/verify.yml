@@ -89,6 +89,9 @@ jobs:
       - name: Verify private GPT batch form with synthetic records (PR only)
         if: github.event_name == 'pull_request'
         run: python3 tests/gpt_owner_acceptance.py
+      - name: Verify development-only V5 shell and publication fence (PR only)
+        if: github.event_name == 'pull_request'
+        run: python3 tests/v5_browser_acceptance.py --out browser-qa/v5
       - name: Verify private repository controls with synthetic inventory (PR only)
         if: github.event_name == 'pull_request'
         run: python3 tests/github_owner_acceptance.py

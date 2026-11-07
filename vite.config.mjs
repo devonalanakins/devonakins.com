@@ -1,6 +1,7 @@
 import { defineConfig } from "vite";
 import { resolve } from "node:path";
 import { pages, projects } from "./src/content.mjs";
+import { v5PreviewPlugin } from "./src/v5/preview-plugin.mjs";
 const paths = [
   ...pages.map((p) => p.path),
   ...projects.map((p) => `/work/${p.slug}/`),
@@ -8,6 +9,7 @@ const paths = [
   "/v2/", // Isolated immersive preview, not the production homepage.
 ];
 export default defineConfig({
+  plugins: [v5PreviewPlugin()],
   build: {
     target: "es2022",
     // Keep legacy site styles out of the portrait interface. Its global

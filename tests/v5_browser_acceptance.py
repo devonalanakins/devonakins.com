@@ -1,0 +1,161 @@
+#!/usr/bin/env python3
+"""Development-only V5 shell: real HTTP, no live providers or credentials."""
+import argparse
+from contextlib import contextmanager
+import json
+import os
+from pathlib import Path
+import socket
+import subprocess
+import time
+import urllib.error
+import urllib.request
+from playwright.sync_api import sync_playwright
+
+ROOT = Path(__file__).resolve().parents[1]
+PREVIEW = "/__v5_preview__/"
+PAGES = ["", "field/", "projects/", "writing/", "research/", "knowledge/", "about/"]
+VIEWPORTS = [(1440, 900), (1024, 768), (768, 900), (390, 844), (375, 667), (320, 568), (844, 320)]
+
+@contextmanager
+def server(enabled):
+    with socket.socket() as reserve:
+        reserve.bind(("127.0.0.1", 0))
+        port = reserve.getsockname()[1]
+    env = dict(os.environ)
+    env["V5_PREVIEW"] = "1" if enabled else "0"
+    # Loopback avoids Vite enumerating unavailable container network interfaces.
+    process = subprocess.Popen(["node", "node_modules/vite/bin/vite.js", "--host", "127.0.0.1", "--port", str(port), "--strictPort"], cwd=ROOT, env=env, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)
+    origin = f"http://127.0.0.1:{port}"
+    try:
+        for _ in range(100):
+            if process.poll() is not None:
+                raise AssertionError("Vite failed: " + process.stderr.read().decode())
+            try:
+                urllib.request.urlopen(origin + "/", timeout=1).close()
+                break
+            except (OSError, urllib.error.URLError):
+                time.sleep(.1)
+        else:
+            raise AssertionError("Vite did not become ready")
+        yield origin
+    finally:
+        process.terminate()
+        try:
+            process.wait(timeout=5)
+        except subprocess.TimeoutExpired:
+            process.kill()
+            process.wait()
+        process.stderr.close()
+
+
+def check_page(page, origin, path, axe):
+    response = page.goto(origin + PREVIEW + path, wait_until="networkidle")
+    assert response.status == 200
+    assert "noindex" in response.headers.get("x-robots-tag", "")
+    assert response.headers.get("cache-control") == "no-store"
+    assert page.locator("h1").count() == 1
+    assert page.locator("nav a[aria-current=page]:visible").count() in [0, 1]
+    assert page.evaluate("document.documentElement.scrollWidth <= innerWidth + 1"), (path, "horizontal overflow")
+    assert page.locator("a[href='https://github.com/devonalanakins']").count() <= 1
+    if not path:
+        assert page.locator(".v5-portrait img").evaluate("e => e.complete && e.naturalWidth > 0")
+        if page.viewport_size["height"] >= 568:
+            for source in ["work", "spotify", "gpt"]:
+                assert page.locator(f'[data-v5-signal="{source}"]').evaluate("e => { const r=e.getBoundingClientRect(); return r.top >= 0 && r.bottom <= innerHeight; }"), (page.viewport_size, source, "below first viewport")
+    targets = page.locator("a:visible, summary:visible").evaluate_all("es => es.filter(e => !e.classList.contains('v5-skip')).filter(e => e.getBoundingClientRect().height < 43).map(e => ({text:e.textContent, h:e.getBoundingClientRect().height}))")
+    assert not targets, (path, "small touch targets", targets)
+    page.add_script_tag(content=axe)
+    violations = page.evaluate("""async () => (await axe.run(document, {runOnly:{type:'tag',values:['wcag2a','wcag2aa','wcag21aa','wcag22aa']}})).violations.map(v=>({id:v.id,nodes:v.nodes.map(n=>n.target)}))""")
+    assert not violations, (path, violations)
+
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--out", default=".artifacts/v5-preview")
+    parser.add_argument("--engines", nargs="+", choices=["chromium", "webkit"], default=["chromium", "webkit"])
+    parser.add_argument("--chromium-executable", default=None)
+    parser.add_argument("--fresh-browser-per-case", action="store_true", help="For constrained single-process browser runtimes")
+    args = parser.parse_args()
+    output = ROOT / args.out
+    output.mkdir(parents=True, exist_ok=True)
+    axe = (ROOT / "node_modules/axe-core/axe.min.js").read_text()
+    results = []
+    with server(False) as origin:
+        for path in PAGES:
+            try:
+                urllib.request.urlopen(origin + PREVIEW + path)
+                raise AssertionError("Disabled preview was exposed")
+            except urllib.error.HTTPError as error:
+                assert error.code == 404
+    with server(True) as origin, sync_playwright() as playwright:
+        for engine in args.engines:
+            options = {"executable_path": args.chromium_executable} if engine == "chromium" and args.chromium_executable else {}
+            browser = getattr(playwright, engine).launch(**options)
+            try:
+                for width, height in VIEWPORTS:
+                    for motion in ["reduce", "no-preference"] if (width, height) in [(390, 844), (1440, 900)] else ["reduce"]:
+                        context = browser.new_context(viewport={"width": width, "height": height}, reduced_motion=motion)
+                        page = context.new_page()
+                        errors, api, external = [], [], []
+                        page.on("pageerror", lambda error: errors.append(str(error)))
+                        def route_request(route):
+                            url = route.request.url
+                            if "/api/" in url:
+                                api.append(url)
+                            if not url.startswith(origin + "/"):
+                                external.append(url)
+                                route.abort()
+                            else:
+                                route.continue_()
+                        page.route("**/*", route_request)
+                        try:
+                            for path in PAGES:
+                                check_page(page, origin, path, axe)
+                            page.goto(origin + PREVIEW, wait_until="networkidle")
+                            if width <= 900:
+                                page.locator("summary").click()
+                                assert page.locator(".v5-mobile-nav").is_visible()
+                                page.keyboard.press("Escape")
+                                assert page.locator(".v5-mobile-nav").is_hidden()
+                                assert page.locator("summary").evaluate("e => e === document.activeElement")
+                                page.locator("summary").click()
+                                page.locator(".v5-mobile-nav a").filter(has_text="Projects").click()
+                                assert page.url.endswith("projects/")
+                            else:
+                                page.locator(".v5-desktop-nav a").filter(has_text="Projects").click()
+                                assert page.url.endswith("projects/")
+                            page.goto(origin + PREVIEW, wait_until="networkidle")
+                            page.screenshot(path=str(output / f"{engine}-{width}x{height}-{motion}.png"), full_page=True)
+                            page.keyboard.press("Tab")
+                            assert page.locator(".v5-skip").evaluate("e => e === document.activeElement")
+                            page.keyboard.press("Enter")
+                            assert page.locator("main").evaluate("e => e === document.activeElement")
+                            assert not errors, errors
+                            assert not api, api
+                            assert not external, external
+                            results.append({"engine": engine, "viewport": [width, height], "motion": motion, "routes": len(PAGES), "result": "pass"})
+                        except Exception:
+                            page.screenshot(path=str(output / f"FAILED-{engine}-{width}x{height}.png"), full_page=True)
+                            raise
+                        finally:
+                            context.close()
+                            if args.fresh_browser_per_case:
+                                browser.close()
+                                browser = getattr(playwright, engine).launch(**options)
+                context = browser.new_context(viewport={"width": 390, "height": 844}, java_script_enabled=False)
+                page = context.new_page()
+                for path in PAGES:
+                    assert page.goto(origin + PREVIEW + path).status == 200
+                    assert page.locator("h1").is_visible()
+                page.locator("summary").click()
+                page.locator(".v5-mobile-nav a").filter(has_text="Writing").click()
+                assert page.url.endswith("writing/")
+                context.close()
+            finally:
+                browser.close()
+    (output / "report.json").write_text(json.dumps(results, indent=2))
+    print(f"V5 acceptance passed: {len(results)} engine/viewport/motion cases; seven routes each, no-JS, WCAG, navigation, zero API/provider requests.")
+
+if __name__ == "__main__":
+    main()
