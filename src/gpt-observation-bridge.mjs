@@ -320,8 +320,18 @@ export async function handleOwnerObservationRequest(
       return unavailableResponse(securityHeaders);
     }
   }
+  if (request.method === "DELETE") {
+    if (!validOwnerOrigin(request))
+      return json({error:"Cross-site operation denied"},403,securityHeaders);
+    if (typeof store.delete !== "function")
+      return unavailableResponse(securityHeaders);
+    try {
+      await store.delete(STORAGE_KEY);
+      return json({cleared:true},200,securityHeaders);
+    } catch { return unavailableResponse(securityHeaders); }
+  }
   if (request.method !== "POST")
-    return json({error:"Method not allowed"},405,securityHeaders,{Allow:"GET, POST"});
+    return json({error:"Method not allowed"},405,securityHeaders,{Allow:"GET, POST, DELETE"});
   // Owner-initiated capture uses the already protected private D1; it does
   // not enable bearer ingestion or publication. Legacy KV requires write gate.
   if (env.PRESENCE_ENABLED !== "true" &&
