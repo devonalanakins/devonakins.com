@@ -38,6 +38,16 @@ def run():
                 "expiresAt": stamp(now + timedelta(seconds=85)),
             }],
         },
+        "spotify": {
+            "version": 1, "mode": "playing", "detailsVisible": True,
+            "updatedAt": stamp(now - timedelta(seconds=7)),
+            "track": {
+                "title": "Fixture Track", "artist": "Fixture Artist",
+                "album": "Test", "image": None,
+                "url": "https://open.spotify.com/track/AbCdEfGhIjKlMnOpQrStUv",
+            },
+            "playback": {"durationMs": 240000, "progressMs": 35000},
+        },
         "recent": [{
             "project": "Mizvo", "projectSlug": "mizvo", "kind": "Commit",
             "at": stamp(now - timedelta(seconds=30)),
@@ -49,6 +59,7 @@ def run():
         "work": {"visibility": "hidden", "source": "none", "state": "not-broadcasting"},
         "remote": {"visibility": "hidden", "tasks": []},
         "recent": [],
+        "spotify": {"version": 1, "mode": "hidden", "detailsVisible": False},
     }
 
     with server(True) as origin, sync_playwright() as playwright:
@@ -94,6 +105,12 @@ def run():
             assert "Public GitHub history" in page.locator(
                 "[data-v5-github-summary]"
             ).inner_text()
+            assert page.locator("[data-v5-spotify-title]").inner_text() == "Fixture Track"
+            assert page.locator("[data-v5-spotify-artist]").inner_text() == "Fixture Artist"
+            assert page.locator("[data-v5-spotify-progress]").is_visible()
+            assert page.locator(".v5-lock-spotify").get_attribute("href").startswith(
+                "https://open.spotify.com/track/"
+            )
 
             page.locator('a[data-v5-field-slug="mizvo"]').click()
             assert page.locator("#v5-field-inspector").is_visible()
@@ -117,6 +134,9 @@ def run():
             assert "No approved public GitHub history" in page.locator(
                 "[data-v5-github-summary]"
             ).inner_text()
+            assert page.locator("[data-v5-spotify-title]").inner_text() == "Listening privately"
+            assert page.locator("[data-v5-spotify-progress]").is_hidden()
+            assert page.locator(".v5-lock-spotify").get_attribute("href") == "/listening/"
 
             # Transport failure must also remain quiet, not restore stale
             # work from earlier successful responses.
