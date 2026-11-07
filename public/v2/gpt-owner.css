@@ -1,0 +1,14 @@
+/* Owner-only GPT capture: follows the existing warm-charcoal control-room system. */
+.gpt-field{display:block;color:#cddde6;font-size:13px;font-weight:650;margin:16px 0 8px}
+#gpt-metric,#gpt-value{width:100%;max-width:100%;box-sizing:border-box;min-height:48px;border:1px solid rgba(166,192,211,.36);border-radius:12px;padding:12px;background:#111e29;color:#f1f5f7;font:inherit}
+#gpt-metric:focus-visible,#gpt-value:focus-visible,.gpt-record-row button:focus-visible{outline:2px solid #ddb394;outline-offset:3px}
+.gpt-record-card{margin-top:22px}
+.gpt-record-list{display:grid;gap:12px;margin-top:15px}
+.gpt-record-row{padding:18px;border-radius:16px;border:1px solid rgba(174,195,212,.18);background:rgba(10,22,33,.60)}
+.gpt-record-value{display:flex;justify-content:space-between;flex-wrap:wrap;align-items:baseline;gap:8px 16px}
+.gpt-record-value strong{font-weight:650;font-size:15px;color:#e5edf2}
+.gpt-record-value span{font-variant-numeric:tabular-nums;font-weight:680;font-size:clamp(16px,3vw,22px);color:#f4d2b9}
+.gpt-record-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:13px}
+.gpt-record-actions button{min-height:44px}
+.gpt-record-actions button:disabled{opacity:.45;cursor:not-allowed}
+@media(max-width:520px){.gpt-record-row{padding:14px}.gpt-record-actions button{flex:1}}
