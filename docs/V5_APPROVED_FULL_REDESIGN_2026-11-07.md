@@ -9,7 +9,7 @@ Production address: https://devonakins.com
 
 ### Superseding decision
 
-The owner explicitly approves a **full visual and information-architecture redesign** of the existing personal website to match the eight generated concept references archived in this build kit. The prior instruction to avoid major redesigns is SUPERSEDED for visual treatment and information architecture. Previous commitments to truthful live data, retained working functionality, the real user portrait, privacy, continuity, and protected deployment are **not** superseded.
+The owner explicitly approves a **full visual and information-architecture redesign** of the existing personal website to match the eight generated concept references archived in this build kit. The prior instruction to avoid major redesigns is SUPERSEDED for visual treatment and information architecture. Previous commitments to truthful live data, retained working functionality, the approved V5 portrait artwork, preserved original V4 portrait assets, privacy, continuity, and protected deployment are **not** superseded.
 
 This is a redesign of the existing application, not a rewrite from scratch, a domain migration, or a new repository. Preserve version history, valid routes, security, integrations, and workflows. Implement in reviewable branches/PRs and stage the coordinated visual cutover behind a feature or preview gate. Do not silently ship speculative mock states.
 
@@ -53,7 +53,7 @@ The public **Knowledge** area is a curated, approved publication of safe topics 
 ### Page-by-page product requirements
 
 **Home (highest fidelity priority).**
-- Keep actual crossed-arms portrait from existing site as primary photographic identity; do not substitute generated faces from concept renders. Editorial typography, refined glow, restrained volumetric depth.
+- **Superseding portrait decision (2026-11-07):** Use the exact owner-approved `09-v5-portrait-anevum-transcosmic-APPROVED.png` (or matched optimized desktop/mobile WebPs) for V5. This is explicitly approved cinematic AI-assisted portrait artwork, not a documentary photograph. It depicts natural slim proportions, a dark Anevum/Transcosmic eclipse shirt, fitted dark jeans and relaxed pose. No necklaces, trouser chains, baggy cargo pants, professional jackets/costumes or arbitrary waveform shirt. The original crossed-arms V4 image remains untouched for continuity and rollback. Never substitute generic faces from unrelated generated concept boards. Editorial typography, refined glow, restrained volumetric depth.
 - Show the three real data categories Work, Spotify, and GPT in the first desktop/mobile viewport without requiring scroll; statuses independently source-qualified.
 - Hero uses a compact spatial slice of approved project field in negative space, not dense inspector tooling. Include a prominent but elegant "Explore Signal Field" affordance, Work/Writing entry points, accurate social links and introductory copy.
 - If live channels are missing, show honest quiet, disconnected, stale or private states. Do not fill with invented counters. Spotify-only playback never labels coding as active; GitHub pushes are not current editor activity.

@@ -4,7 +4,7 @@
   "state": "visual-target-locked--build-pending",
   "owner": "devonakins.com",
   "privacy": "private source render references; do not deploy reference images or invented values",
-  "rule": "Follow PRIMARY references by page, retain actual portrait and verified data; do not use concept mock states as facts.",
+  "rule": "Follow the eight PRIMARY visual references by page, plus the later exact owner-approved Anevum/Transcosmic V5 portrait override. Preserve the original V4 crossed-arms assets and verified data; concept mock states are not facts.",
   "assets": [
     {
       "file": "reference-images/01-homepage-primary.png",
@@ -102,5 +102,17 @@
       "real_production_screenshot": false,
       "data_authority": false
     }
-  ]
+  ],
+  "approved_portrait_override": {
+    "decision_date": "2026-11-07",
+    "original_file": "09-v5-portrait-anevum-transcosmic-APPROVED.png",
+    "original_sha256": "99d3e63005e8dd831936f1f671e529d680ef306d250c3af6d5ae7c2cedf2b697",
+    "original_width": 1122,
+    "original_height": 1402,
+    "desktop_webp_sha256": "a525b3544a5f1185ea0eb2e9a5b4efefccc3dd354f765c8ee6e55e3abb8fac67",
+    "mobile_webp_sha256": "60132ebb0f4b27910b7d860f31fed1f9c9b77bf4fa726233b1d259baf3a0336e",
+    "asset_location": "/Main Website/Living Mind V5 - Approved Designs 2026-11-07/",
+    "v4_crossed_arms": "retained-for-V4-and-rollback",
+    "artwork_not_documentary_photo": true
+  }
 }
