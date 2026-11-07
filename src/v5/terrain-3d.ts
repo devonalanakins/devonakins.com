@@ -1,117 +1,233 @@
 import {
-  AmbientLight, BufferAttribute, BufferGeometry, Color, DoubleSide,
-  FogExp2, Group, Line, LineBasicMaterial, Mesh, MeshBasicMaterial,
-  PerspectiveCamera, PlaneGeometry, PointLight, Scene, SphereGeometry,
+  AdditiveBlending, AmbientLight, BufferAttribute, BufferGeometry, Color,
+  DoubleSide, FogExp2, Group, Line, LineBasicMaterial, Mesh,
+  MeshBasicMaterial, MeshPhongMaterial, PerspectiveCamera, PlaneGeometry,
+  PointLight, Points, PointsMaterial, Scene, SphereGeometry, TorusGeometry,
   WebGLRenderer,
 } from "three";
 
-// Deterministic *decorative* 3D terrain for the screenshot's lower Signal
-// Field. No event is drawn or inferred from this geometry. Durable graph
-// entities/evidence arrive in a separate reviewed integration slice.
+// This is a deterministic, visual-only rendering of the *approved public*
+// project names, NOT a representation of work, dependency edges, health, or
+// platform usage. No activity enters this renderer before it is observed,
+// consented, scoped and approved by the existing public signal projection.
 const terrainAnchors = [
   [-12.8, 1.9, 0x46e4fb], [-9.5, 2.3, 0xb995ff],
   [-5.8, 2.0, 0x60e7cc], [0.0, 3.45, 0xffb979],
   [4.6, 1.9, 0xffae65], [8.2, 1.95, 0xe8bc85],
   [11.4, 1.75, 0x70baff], [14.1, 2.2, 0xfa83ed],
 ] as const;
+type Point3 = [number, number, number];
+
 const mountainHeight = (x: number, z: number) => {
-  let height = -0.55 +
-    0.28 * Math.sin(x * 0.8 + z * 0.3) +
-    0.15 * Math.sin(x * 1.8 - z * 1.1);
+  let height = -0.58 +
+    0.29 * Math.sin(x * 0.8 + z * 0.3) +
+    0.16 * Math.sin(x * 1.8 - z * 1.1);
   for (const [centerX, peak] of terrainAnchors) {
     const dx = x - centerX;
     const radius = 1.2 + 0.25 * Math.cos(centerX);
-    const dz = z * 0.9 + Math.sin(centerX * .8) * .6;
+    const dz = z * .9 + Math.sin(centerX * .8) * .6;
     height += peak * Math.exp(-(dx * dx / (radius * radius * 2.9) + dz * dz / 12));
   }
-  height += 0.23 * Math.cos(x * .5) * Math.exp(-Math.abs(z) / 7);
+  height += .23 * Math.cos(x * .5) * Math.exp(-Math.abs(z) / 7);
   return height;
 };
-const addLine = (
-  group: Group,
-  points: Array<[number, number, number]>,
-  color: number,
-  opacity: number,
-) => {
-  const positions = new Float32Array(points.flat());
+
+function addLine(
+  group: Group, points: Point3[], color: number, opacity: number,
+) {
   const geometry = new BufferGeometry();
-  geometry.setAttribute("position", new BufferAttribute(positions, 3));
+  geometry.setAttribute("position", new BufferAttribute(new Float32Array(points.flat()), 3));
   const line = new Line(geometry, new LineBasicMaterial({
-    color, transparent: true, opacity,
-    depthWrite: false,
+    color, transparent: true, opacity, depthWrite: false,
+    blending: AdditiveBlending,
   }));
   group.add(line);
-  return line;
-};
+}
+function coloredContour(group: Group, points: Point3[], opacity: number) {
+  const positions = new Float32Array(points.flat());
+  const colors = new Float32Array(points.length * 3);
+  const teal = new Color(0x34b9d2);
+  const gold = new Color(0xffbc7a);
+  for (let i = 0; i < points.length; i++) {
+    const x = points[i][0];
+    const height = points[i][1];
+    const warm = Math.max(0, Math.min(1,
+      .45 * Math.exp(-x * x / 62) + .2 * Math.max(0, height),
+    ));
+    const col = teal.clone().lerp(gold, warm);
+    colors.set([col.r, col.g, col.b], i * 3);
+  }
+  const geometry = new BufferGeometry();
+  geometry.setAttribute("position", new BufferAttribute(positions, 3));
+  geometry.setAttribute("color", new BufferAttribute(colors, 3));
+  group.add(new Line(geometry, new LineBasicMaterial({
+    vertexColors: true, transparent: true, opacity, depthWrite: false,
+    blending: AdditiveBlending,
+  })));
+}
+
+// Stable, explicitly decorative material positions: no random event traffic,
+// simulated contributors, work pulses or inferred inter-project dependencies.
+function addStars(field: Group) {
+  const coordinates = new Float32Array(270 * 3);
+  const colors = new Float32Array(270 * 3);
+  for (let n = 0; n < 270; n++) {
+    const x = -16.5 + ((n * 149 + 13) % 331) / 10;
+    const z = -8.8 + ((n * 83 + 17) % 177) / 10;
+    const h = mountainHeight(x, z) + .08 + (n % 5) * .038;
+    coordinates.set([x, h, z], n * 3);
+    const tint = new Color(n % 7 === 0 ? 0xffd79e : n % 4 === 0 ? 0x8cf3f0 : 0x367f97);
+    colors.set([tint.r, tint.g, tint.b], n * 3);
+  }
+  const geometry = new BufferGeometry();
+  geometry.setAttribute("position", new BufferAttribute(coordinates, 3));
+  geometry.setAttribute("color", new BufferAttribute(colors, 3));
+  field.add(new Points(geometry, new PointsMaterial({
+    size: .095, sizeAttenuation: true, vertexColors: true,
+    transparent: true, opacity: .86, depthWrite: false,
+    blending: AdditiveBlending,
+  })));
+}
+function addRings(field: Group, x: number, y: number, color: number, central: boolean) {
+  const radii = central ? [.48, .84, 1.28, 1.72] : [.34, .67];
+  for (let i = 0; i < radii.length; i++) {
+    const radius = radii[i];
+    const points: Point3[] = [];
+    for (let j = 0; j <= 96; j++) {
+      const a = (j / 96) * Math.PI * 2;
+      const rx = x + Math.cos(a) * radius;
+      const rz = Math.sin(a) * radius * .72;
+      points.push([rx, mountainHeight(rx, rz) + .11, rz]);
+    }
+    addLine(field, points, color, central ? .7 - i * .085 : .46 - i * .08);
+  }
+  // Elevated orbital bands are static architectural identifiers.
+  const levels = central ? [.8, 1.65, 2.5] : [1.2];
+  for (const [i, level] of levels.entries()) {
+    const torus = new Mesh(new TorusGeometry(
+      central ? .8 + i * .16 : .44, central ? .022 : .015,
+      6, 70,
+    ), new MeshBasicMaterial({
+      color, transparent: true, opacity: central ? .74 : .37,
+      depthWrite: false, blending: AdditiveBlending,
+    }));
+    torus.rotation.x = Math.PI / 2;
+    torus.position.set(x, y + level, 0);
+    field.add(torus);
+  }
+}
+function addStructures(field: Group) {
+  const markerGeometry = new SphereGeometry(.13, 12, 8);
+  const haloGeometry = new SphereGeometry(.36, 12, 8);
+  for (const [x, , color] of terrainAnchors) {
+    const y = mountainHeight(x, 0);
+    const central = x === 0;
+    const dot = new Mesh(markerGeometry, new MeshBasicMaterial({ color }));
+    dot.position.set(x, y + .1, 0);
+    field.add(dot);
+    const glow = new Mesh(haloGeometry, new MeshBasicMaterial({
+      color, transparent: true, opacity: .12,
+      depthWrite: false, blending: AdditiveBlending,
+    }));
+    glow.position.set(x, y + .1, 0);
+    field.add(glow);
+    addLine(field, [[x, y + .12, 0], [x, y + (central ? 4.5 : 2.5), 0]],
+      color, central ? .87 : .64);
+    addRings(field, x, y, color, central);
+    // Small silhouetted static structures establish the city-like depth of
+    // the reference without inventing application state or relationships.
+    for (let n = 0; n < (central ? 18 : 8); n++) {
+      const offsetX = Math.sin(n * 2.73 + x) * (central ? 1.35 : .78);
+      const offsetZ = Math.cos(n * 1.9 + x) * (central ? 1.12 : .65);
+      const xx = x + offsetX;
+      const baseline = mountainHeight(xx, offsetZ);
+      const height = .21 + ((n * 7 + 3) % 11) * (central ? .16 : .095);
+      addLine(field, [
+        [xx, baseline, offsetZ], [xx, baseline + height, offsetZ],
+      ], color, central ? .38 : .25);
+    }
+  }
+}
 function createField(scene: Scene) {
   const field = new Group();
-  const xSegments = 92;
-  const zSegments = 32;
+  const xSegments = 112;
+  const zSegments = 40;
   const halfX = 17;
   const halfZ = 9;
-  // Render actual triangulated surfaces with subtly lit layers; the wire
-  // lines remain readable in transparent/low-power fallback screenshots.
+  // An actual volumetric mesh with spectral contour wires. No animation is
+  // inferred from static decorative geometry, and no external data is fetched.
   const geometry = new PlaneGeometry(halfX * 2, halfZ * 2, xSegments, zSegments);
   geometry.rotateX(-Math.PI / 2);
   const position = geometry.attributes.position;
-  for (let index = 0; index < position.count; index++) {
-    const x = position.getX(index);
-    const z = position.getZ(index);
-    position.setY(index, mountainHeight(x, z));
+  for (let i = 0; i < position.count; i++) {
+    const x = position.getX(i);
+    const z = position.getZ(i);
+    position.setY(i, mountainHeight(x, z));
   }
   position.needsUpdate = true;
   geometry.computeVertexNormals();
-  const fill = new Mesh(geometry, new MeshBasicMaterial({
-    color: 0x073038, opacity: .32, transparent: true,
-    depthWrite: false, side: DoubleSide,
-  }));
-  field.add(fill);
+  field.add(new Mesh(geometry, new MeshPhongMaterial({
+    color: 0x07343d, emissive: 0x02171f, specular: 0x32606b,
+    shininess: 24, opacity: .67, transparent: true, side: DoubleSide,
+    depthWrite: false,
+  })));
   for (let z = 0; z <= zSegments; z++) {
-    const coord = -halfZ + (2 * halfZ * z) / zSegments;
-    const points: Array<[number, number, number]> = [];
+    const zz = -halfZ + (2 * halfZ * z) / zSegments;
+    const path: Point3[] = [];
     for (let x = 0; x <= xSegments; x++) {
       const xx = -halfX + (2 * halfX * x) / xSegments;
-      points.push([xx, mountainHeight(xx, coord) + .025, coord]);
+      path.push([xx, mountainHeight(xx, zz) + .035, zz]);
     }
-    addLine(field, points, z % 4 === 0 ? 0x9bd9c1 : 0x38bccc, z % 4 === 0 ? .6 : .3);
+    coloredContour(field, path, z % 4 === 0 ? .77 : .39);
   }
   for (let x = 0; x <= xSegments; x += 2) {
     const xx = -halfX + (2 * halfX * x) / xSegments;
-    const points: Array<[number, number, number]> = [];
+    const path: Point3[] = [];
     for (let z = 0; z <= zSegments; z++) {
       const zz = -halfZ + (2 * halfZ * z) / zSegments;
-      points.push([xx, mountainHeight(xx, zz) + .03, zz]);
+      path.push([xx, mountainHeight(xx, zz) + .045, zz]);
     }
-    addLine(field, points, x % 8 === 0 ? 0xf7b36f : 0x2c8d9e, x % 8 === 0 ? .54 : .28);
+    coloredContour(field, path, x % 8 === 0 ? .58 : .25);
   }
-  const dotGeo = new SphereGeometry(.09, 8, 6);
-  for (const [x, _, color] of terrainAnchors) {
-    const height = mountainHeight(x, 0);
-    const marker = new Mesh(dotGeo, new MeshBasicMaterial({ color }));
-    marker.position.set(x, height + .11, 0);
-    field.add(marker);
-    addLine(field, [[x, height + .08, 0], [x, height + 2.35, 0]], color, .69);
-    const ring = new Group();
-    const samples: Array<[number, number, number]> = [];
-    for (let n = 0; n <= 80; n++) {
-      const a = n / 80 * Math.PI * 2;
-      const rx = x + Math.cos(a) * .6;
-      const rz = Math.sin(a) * .45;
-      samples.push([rx, mountainHeight(rx, rz) + .08, rz]);
+  // Broad, luminous static contours echo the approved landscape's sweeping
+  // ribbons; they are NOT source-event paths.
+  for (const [j, baseZ, color] of [
+    [0, 1.0, 0x49cdd2], [1, 3.3, 0x6cf5f5], [2, -2.5, 0xf1ae73],
+  ] as const) {
+    const path: Point3[] = [];
+    for (let i = 0; i <= 170; i++) {
+      const x = -halfX + (2 * halfX * i) / 170;
+      const z = baseZ + .52 * Math.sin(x * .29 + j);
+      path.push([x, mountainHeight(x, z) + .12, z]);
     }
-    addLine(ring, samples, color, .78);
-    field.add(ring);
+    addLine(field, path, color, j === 1 ? .88 : .63);
   }
+  addStars(field);
+  addStructures(field);
   scene.add(field);
   return field;
 }
+function releaseGeometry(scene: Scene) {
+  scene.traverse((object) => {
+    if (object instanceof Mesh || object instanceof Line || object instanceof Points) {
+      object.geometry.dispose();
+      const material = object.material;
+      if (Array.isArray(material)) material.forEach((item) => item.dispose());
+      else material.dispose();
+    }
+  });
+}
 export function mountDecorativeTerrain(element: HTMLElement) {
-  const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+  const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
   let renderer: WebGLRenderer | null = null;
   let observer: ResizeObserver | null = null;
   let frame: number | null = null;
+  let scene: Scene | null = null;
+  let canvas: HTMLCanvasElement | null = null;
+  let visibilityListener: (() => void) | null = null;
+  let motionListener: (() => void) | null = null;
   try {
-    const canvas = document.createElement("canvas");
+    canvas = document.createElement("canvas");
     canvas.className = "v5-lock-terrain-canvas";
     canvas.setAttribute("aria-hidden", "true");
     canvas.tabIndex = -1;
@@ -124,22 +240,29 @@ export function mountDecorativeTerrain(element: HTMLElement) {
     });
     renderer.setPixelRatio(Math.min(1.5, window.devicePixelRatio || 1));
     renderer.setClearColor(new Color(0x02090c), 0);
-    const scene = new Scene();
-    scene.fog = new FogExp2(0x020b10, .027);
-    scene.add(new AmbientLight(0x7dd7e8, 1));
-    const light = new PointLight(0xf3bb81, 13, 25);
-    light.position.set(0, 7, 4);
+    scene = new Scene();
+    scene.fog = new FogExp2(0x020b10, .017);
+    scene.add(new AmbientLight(0x88dbe8, 1.2));
+    const light = new PointLight(0xf6b87a, 15, 35);
+    light.position.set(0, 7, 3);
     scene.add(light);
-    const camera = new PerspectiveCamera(39, 1, .1, 90);
-    camera.position.set(0, 13, 23);
-    camera.lookAt(0, 0, 0);
+    const camera = new PerspectiveCamera(28, 1, .1, 90);
+    camera.position.set(0, 9.8, 17);
+    camera.lookAt(0, .5, 0);
     createField(scene);
     const resize = () => {
-      if (!renderer) return;
+      if (!renderer || !scene) return;
       const rect = element.getBoundingClientRect();
       if (rect.width < 80 || rect.height < 80) return;
       renderer.setSize(rect.width, rect.height, false);
       camera.aspect = rect.width / rect.height;
+      // Keep the 34-unit landscape visible at both the exact 1199x1312
+      // reference and wider desktop aspect ratios; no simulated animation.
+      const desiredWorldWidth = 41;
+      const distance = 19.8;
+      camera.fov = Math.max(18, Math.min(32,
+        2 * Math.atan(desiredWorldWidth / (2 * distance * camera.aspect)) * 180 / Math.PI,
+      ));
       camera.updateProjectionMatrix();
       renderer.render(scene, camera);
     };
@@ -148,9 +271,7 @@ export function mountDecorativeTerrain(element: HTMLElement) {
     observer = new ResizeObserver(resize);
     observer.observe(element);
     resize();
-    // Geometry remains still until independently sourced activity exists.
-    // This is deliberately not a mock-live waveform or fabricated event pulse.
-    const onVisibility = () => {
+    visibilityListener = () => {
       if (!document.hidden && frame === null) {
         frame = requestAnimationFrame(() => {
           frame = null;
@@ -158,30 +279,31 @@ export function mountDecorativeTerrain(element: HTMLElement) {
         });
       }
     };
-    document.addEventListener("visibilitychange", onVisibility);
-    const motionListener = () => { if (!document.hidden) resize(); };
-    reduceMotion.addEventListener("change", motionListener);
-    const onContextLoss = (event: Event) => {
+    document.addEventListener("visibilitychange", visibilityListener);
+    motionListener = () => { if (!document.hidden) resize(); };
+    reducedMotion.addEventListener("change", motionListener);
+    const lost = (event: Event) => {
       event.preventDefault();
       delete element.dataset.webgl;
-      canvas.hidden = true;
+      if (canvas) canvas.hidden = true;
     };
-    canvas.addEventListener("webglcontextlost", onContextLoss);
+    canvas.addEventListener("webglcontextlost", lost);
     return () => {
       if (frame !== null) cancelAnimationFrame(frame);
-      document.removeEventListener("visibilitychange", onVisibility);
-      reduceMotion.removeEventListener("change", motionListener);
+      if (visibilityListener) document.removeEventListener("visibilitychange", visibilityListener);
+      if (motionListener) reducedMotion.removeEventListener("change", motionListener);
       observer?.disconnect();
+      if (scene) releaseGeometry(scene);
       delete element.dataset.webgl;
       renderer?.dispose();
-      canvas.remove();
+      canvas?.remove();
     };
   } catch {
     observer?.disconnect();
+    if (scene) releaseGeometry(scene);
     renderer?.dispose();
     delete element.dataset.webgl;
-    element.querySelector(".v5-lock-terrain-canvas")?.remove();
-    // Unsupported GPUs retain the existing, informative SVG composition.
+    canvas?.remove();
     return () => {};
   }
 }
