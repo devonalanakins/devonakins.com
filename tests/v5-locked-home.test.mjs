@@ -21,6 +21,9 @@ test("locked V5 screenshot modules occupy one semantic preview home", () => {
   assert.equal((body.match(/data-v5-field-node(?: |\>)/g) || []).length, 8);
   assert.equal((body.match(/aria-controls="v5-field-inspector"/g) || []).length, 8);
   assert.match(body, /No verified inter-project dependencies are published here/);
+  assert.match(body, /data-v5-field-evidence hidden/);
+  assert.match(body, /data-v5-work-summary/);
+  assert.match(body, /data-v5-github-summary/);
   assert.match(body, /Public Knowledge section preview/);
   assert.match(body, /Approved public project catalog/);
   assert.match(body, /data-v5-field-slug="rhen-language"/);
@@ -45,6 +48,7 @@ test("locked screenshot home remains confined to dev-only preview and source-saf
   assert.match(document, /<main id="v5-main" tabindex="-1">/);
   assert.match(document, /noindex,nofollow,noarchive/);
   assert.match(document, /data-mobile-menu/);
+  assert.match(document, /data-v5-preview-connect hidden/);
   assert.ok(document.indexOf('class="v5-preview-banner"') > document.indexOf("</footer>"), "homepage preview notice must not displace live-first viewport");
   assert.match(document, /Not loaded|not loaded|not verified|NOT VERIFIED/);
   assert.doesNotMatch(document, /<iframe|<canvas|<script[^>]+src="https:|fetch\(|\/owner\/|\/api\//);
