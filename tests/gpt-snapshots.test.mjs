@@ -29,6 +29,7 @@ function fixture() {
   }};
   const env={
     LISTENING_DB:db,
+    PRESENCE_ENABLED:'true',
     PRESENCE_PUBLIC_RELEASE_APPROVED:'false',
     GPT_SNAPSHOT_PUBLIC_RELEASE_APPROVED:'false',
     LISTENING_OWNER_EMAIL:'owner@example.test',
@@ -122,6 +123,9 @@ test('private record cannot become public until both release flags, individual o
   assert.equal((await readPublicGptSnapshot(f.env,f.now())).count,null);
   f.sql.exec('UPDATE presence_state SET private_work=0,public_enabled=0,revision=revision+1');
   assert.equal((await readPublicGptSnapshot(f.env,f.now())).count,null);
+  f.sql.exec('UPDATE presence_state SET private_work=0,public_enabled=1,revision=revision+1');
+  f.env.PRESENCE_ENABLED='false';
+  assert.equal((await readPublicGptSnapshot(f.env,f.now())).count,null, 'master presence switch must fail closed');
 });
 test('record correction is observed after five minutes but does not pretend source updated automatically',async()=>{
   const f=fixture();
