@@ -1,0 +1,48 @@
+import test from "node:test";
+import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import { renderReferenceHomepage } from "../src/v5/reference-home.mjs";
+import { renderV5Preview } from "../src/v5/shell.mjs";
+
+test("locked V5 screenshot modules occupy one semantic preview home", () => {
+  const body = renderReferenceHomepage();
+  assert.match(body, /data-v5-exact-reference="2026-11-07"/);
+  assert.match(body, /<h1 id="v5-title">Devon Alan Akins<\/h1>/);
+  assert.equal((body.match(/<h1\b/g) || []).length, 1);
+  for (const name of [
+    "Live Signal", "Current Work Session", "Active Projects",
+    "GitHub Activity", "Threads Feed", "GPT Analytics", "The Signal Field",
+  ]) assert.ok(body.includes(name), name);
+  for (const name of ["Mizvo", "Rhen", "Merit", "Vesper", "Squelch"])
+    assert.ok(body.includes(name), name);
+  for (const source of ["work", "spotify", "gpt"])
+    assert.ok(body.includes('data-v5-signal="' + source + '"'), source);
+  assert.ok(body.includes("Static project composition"));
+  assert.ok(body.includes("PROVENANCE REQUIRED"));
+  assert.doesNotMatch(body, /143\.2M|2\.7B|3\.19B|99\.98%|all core services healthy|42(?:\/42)? tests passed/i);
+});
+test("locked screenshot home remains confined to dev-only preview and source-safe", () => {
+  const document = renderV5Preview("home");
+  assert.match(document, /reference-home\.css/);
+  assert.match(document, /<main id="v5-main" tabindex="-1">/);
+  assert.match(document, /noindex,nofollow,noarchive/);
+  assert.match(document, /data-mobile-menu/);
+  assert.match(document, /Not loaded|not loaded|not verified|NOT VERIFIED/);
+  assert.doesNotMatch(document, /<iframe|<canvas|<script[^>]+src="https:|fetch\(|\/owner\/|\/api\//);
+  for (const key of ["projects", "writing", "knowledge"]) {
+    const secondary = renderV5Preview(key);
+    assert.doesNotMatch(secondary, /reference-home\.css/);
+    assert.doesNotMatch(secondary, /data-v5-exact-reference/);
+  }
+});
+test("locked CSS includes responsive screenshot geometry and reduced-motion guard", () => {
+  const css = readFileSync(new URL("../src/v5/reference-home.css", import.meta.url), "utf8");
+  assert.match(css, /\.v5-locked-hero\s*\{/);
+  assert.match(css, /\.v5-locked-rail\s*\{/);
+  assert.match(css, /\.v5-lock-triple\s*\{/);
+  assert.match(css, /\.v5-lock-terrain\s*\{/);
+  assert.match(css, /max-width:600px/);
+  assert.match(css, /max-width:340px/);
+  assert.match(css, /prefers-reduced-motion:reduce/);
+  assert.match(css, /min-height:44px/);
+});
