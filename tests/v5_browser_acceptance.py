@@ -15,7 +15,7 @@ from playwright.sync_api import sync_playwright
 ROOT = Path(__file__).resolve().parents[1]
 PREVIEW = "/__v5_preview__/"
 PAGES = ["", "field/", "projects/", "writing/", "research/", "knowledge/", "about/"]
-VIEWPORTS = [(1440, 900), (1280, 800), (1024, 768), (768, 900), (390, 844), (375, 667), (320, 568), (844, 320)]
+VIEWPORTS = [(1440, 900), (1199, 1312), (1280, 800), (1024, 768), (768, 900), (390, 844), (375, 667), (320, 568), (844, 320)]
 
 @contextmanager
 def server(enabled):
@@ -55,6 +55,22 @@ def check_page(page, origin, path, axe):
     assert "noindex" in response.headers.get("x-robots-tag", "")
     assert response.headers.get("cache-control") == "no-store"
     assert page.locator("h1").count() == 1
+    if not path and page.locator("[data-v5-exact-reference]").count():
+        assert page.locator(".v5-lock-project-grid .v5-lock-project").count() == 5
+        assert page.locator(".v5-lock-triple .v5-lock-panel").count() == 3
+        assert page.locator(".v5-lock-top-nav a").count() == 7
+        assert page.locator("[data-v5-search-toggle]").count() == 1
+        assert page.locator(".v5-locked-portrait picture img").count() == 1
+        assert page.locator(".v5-locked-rail a").count() == 9
+        if page.viewport_size["width"] >= 1000:
+            rects = page.locator(".v5-locked-hero, .v5-lock-projects, .v5-lock-triple, .v5-lock-field").evaluate_all(
+                "items => items.map(e => { const b=e.getBoundingClientRect(); return {left:b.left,top:b.top,width:b.width,height:b.height}; })"
+            )
+            assert len(rects) == 4
+            assert rects[0]["height"] >= 440
+            assert rects[0]["top"] < rects[1]["top"] < rects[2]["top"] < rects[3]["top"]
+            assert rects[3]["width"] >= page.viewport_size["width"] * .95
+
     assert page.locator("nav a[aria-current=page]:visible").count() in [0, 1]
     assert page.evaluate("document.documentElement.scrollWidth <= innerWidth + 1"), (path, "horizontal overflow")
     github_profile = page.locator("a[href='https://github.com/devonalanakins']")
