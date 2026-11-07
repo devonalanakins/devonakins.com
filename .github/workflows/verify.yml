@@ -52,6 +52,10 @@ jobs:
           if-no-files-found: error
           retention-days: 7
       - run: node --check scripts/verify-live.mjs
+      - run: node --check scripts/verify-public-signal.mjs
+      - name: Verify anonymous public Live Signal (main pushes only)
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: node scripts/verify-public-signal.mjs
 
       - name: Probe actual Worker HTTP behavior in isolated local workerd (PR only)
         if: github.event_name == 'pull_request'

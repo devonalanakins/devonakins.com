@@ -63,19 +63,36 @@ for (const path of ["/work/merit/", "/work/rhen-language/"]) {
   assert.ok(markup.includes('href="' + path + '"'), path + " homepage feature link");
 }
 
-// V4 deployment must preserve private defaults; no account data is published by release.
+// Public gates belong to the live owner configuration, not the repository.
+// A protected release must verify BOTH privacy-off and explicitly published
+// contracts without requiring an owner to disable already approved signals.
 const liveSignalResponse=await request('/api/activity/v4',{cache:'no-store'});
 assert.equal(liveSignalResponse.status,200);
 assert.match(liveSignalResponse.headers.get('cache-control')||'',/no-store/);
 assert.match(liveSignalResponse.headers.get('cdn-cache-control')||'',/no-store/);
 const liveSignal=await liveSignalResponse.json();
 assert.equal(liveSignal.version,4);
-assert.equal(liveSignal.work.visibility,'hidden');
-assert.equal(liveSignal.spotify.mode,'hidden');
-assert.equal(liveSignal.gpt.count,null);
-assert.equal(liveSignal.gpt.state,'disconnected');
-assert.deepEqual(liveSignal.remote.tasks,[]);
-assert.deepEqual(liveSignal.recent,[]);
+assert.ok(['hidden','public'].includes(liveSignal.work?.visibility));
+assert.ok(['hidden','public'].includes(liveSignal.remote?.visibility));
+assert.ok(typeof liveSignal.spotify?.mode === 'string');
+assert.ok(Array.isArray(liveSignal.remote?.tasks) && liveSignal.remote.tasks.length<=16);
+assert.ok(Array.isArray(liveSignal.recent) && liveSignal.recent.length<=8);
+if(liveSignal.remote.visibility==='hidden')
+  assert.deepEqual(liveSignal.remote.tasks,[]);
+else for(const task of liveSignal.remote.tasks) {
+  assert.equal(task.project,'DevonAkins.com');
+  assert.ok(['github-actions','codex','chatgpt-work'].includes(task.source));
+}
+if(liveSignal.gpt?.state==='disconnected') {
+  assert.equal(liveSignal.gpt.count,null);
+} else {
+  assert.equal(liveSignal.gpt.state,'snapshot');
+  assert.match(liveSignal.gpt.metric||'',/^(profile_7d_tokens|profile_lifetime_tokens_approx|profile_7d_messages|profile_streak_days|work_codex_credits_remaining|work_codex_credits_used|business_7d_messages|business_7d_credits_used)$/);
+  assert.ok(Number.isFinite(liveSignal.gpt.count)&&liveSignal.gpt.count>=0);
+  assert.ok(Number.isFinite(Date.parse(liveSignal.gpt.asOf)));
+  assert.ok(['recent','historical'].includes(liveSignal.gpt.freshness));
+  assert.equal(liveSignal.gpt.sourceUpdatedAt,null,'capture must not imply a provider refresh');
+}
 
 // Compare the public snapshot to the exact static artifact included in this
 // build. This verifies both the content and the Worker JSON response type.
