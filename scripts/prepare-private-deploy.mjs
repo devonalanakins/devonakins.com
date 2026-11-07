@@ -1,4 +1,4 @@
-/** Derive an ephemeral release config from the live, approved Worker deployment. */
+/** Derive an ephemeral release config from the live, owner-approved Worker deployment. */
 import { readFile, writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -12,9 +12,15 @@ export class PrivatePreflightFailure extends Error {
   }
 }
 
-const privateGates = [
+// Public metadata disclosure can be retained only when explicitly approved
+// on the currently serving version. Never introduce it from repository code.
+const ownerReleaseGates = [
   "PRESENCE_PUBLIC_RELEASE_APPROVED",
   "LISTENING_PUBLIC_RELEASE_APPROVED",
+  "GPT_SNAPSHOT_PUBLIC_RELEASE_APPROVED",
+];
+// Legacy API read/write gates are *not* the owner-reviewed snapshot feature.
+const privateGates = [
   "GPT_USAGE_READ_ENABLED",
   "GPT_USAGE_WRITE_ENABLED",
 ];
@@ -27,6 +33,7 @@ const plainNames = new Set([
   "PRESENCE_EDITOR_ENABLED",
   "LISTENING_COLLECTIONS_ENABLED",
   ...privateGates,
+  ...ownerReleaseGates,
 ]);
 export function privateDeploymentConfig(base, settings, database) {
   const bindings = settings?.bindings;
@@ -86,7 +93,12 @@ export function privateDeploymentConfig(base, settings, database) {
   for (const name of privateGates) {
     const value = bindings.find((b) => b.name === name);
     if (value && value.text !== "false")
-      throw Error("Private deployment requires disclosure gates off");
+      throw Error("Legacy GPT API access gates must remain off");
+  }
+  for (const name of ownerReleaseGates) {
+    const value = bindings.find((b) => b.name === name);
+    if (value && !["true", "false"].includes(value.text))
+      throw Error("Owner-release gate must be explicitly true or false");
   }
   if (
     !base.includes('"name": "devonakins-personal"') ||
@@ -104,6 +116,9 @@ export function privateDeploymentConfig(base, settings, database) {
       .map((b) => [b.name, b.text]),
   );
   for (const name of privateGates) vars[name] = "false";
+  // Missing public gates are closed. Existing approved gates remain unchanged.
+  for (const name of ownerReleaseGates)
+    if (!(name in vars)) vars[name] = "false";
   const extra = {
     d1_databases: [
       {
@@ -202,7 +217,7 @@ if (
   preparePrivateDeployment()
     .then(() =>
       console.log(
-        "Private deployment configuration prepared; sharing remains off.",
+        "Reviewed deployment configuration prepared; serving owner-release gates preserved.",
       ),
     )
     .catch((error) => {
@@ -213,7 +228,7 @@ if (
         : "";
       console.error(
         "Private deployment preflight failed." + code +
-        " Verify the dedicated runtime binding, owner settings, disclosure gates and CI permissions.",
+        " Verify dedicated runtime bindings, owner approval gates and CI permissions.",
       );
       process.exitCode = 1;
     });

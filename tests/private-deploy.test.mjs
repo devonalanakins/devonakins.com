@@ -19,12 +19,13 @@ const database = {
   name: "devonakins-listening-private",
   read_replication: { mode: "disabled" },
 };
-const gates = [
+const ownerGates = [
   "PRESENCE_PUBLIC_RELEASE_APPROVED",
   "LISTENING_PUBLIC_RELEASE_APPROVED",
-  "GPT_USAGE_READ_ENABLED",
-  "GPT_USAGE_WRITE_ENABLED",
+  "GPT_SNAPSHOT_PUBLIC_RELEASE_APPROVED",
 ];
+const legacyGates = ["GPT_USAGE_READ_ENABLED", "GPT_USAGE_WRITE_ENABLED"];
+const gates = [...ownerGates, ...legacyGates];
 const settings = () => ({
   bindings: [
     { type: "d1", name: "LISTENING_DB", id },
@@ -68,7 +69,7 @@ test("private release retains active owner/Spotify vars, dedicated D1, and close
   assert.doesNotMatch(config, /LISTENING_TOKEN_KEY|synthetic-ci-credential/);
 });
 
-test("foreign database, extra bindings, missing key, duplicate vars and public disclosure reject release", () => {
+test("foreign database, extra bindings, missing key, malformed release gate and legacy data API access reject release", () => {
   assert.throws(() =>
     privateDeploymentConfig(base, settings(), {
       ...database, name: "other-project",
@@ -85,9 +86,21 @@ test("foreign database, extra bindings, missing key, duplicate vars and public d
   const key = settings();
   key.bindings = key.bindings.filter(b => b.type !== "secret_text");
   assert.throws(() => privateDeploymentConfig(base, key, database));
-  const exposed = settings();
-  exposed.bindings.find(b => b.name === "PRESENCE_PUBLIC_RELEASE_APPROVED").text = "true";
-  assert.throws(() => privateDeploymentConfig(base, exposed, database));
+  const published = settings();
+  for (const name of ownerGates) published.bindings.find(b => b.name === name).text = "true";
+  const approved = clean(privateDeploymentConfig(base, published, database));
+  for (const name of ownerGates) assert.equal(approved.vars[name], "true");
+  for (const name of legacyGates) assert.equal(approved.vars[name], "false");
+  const mixed = settings();
+  mixed.bindings.find(b => b.name === "PRESENCE_PUBLIC_RELEASE_APPROVED").text = "true";
+  mixed.bindings.find(b => b.name === "LISTENING_PUBLIC_RELEASE_APPROVED").text = "false";
+  assert.equal(clean(privateDeploymentConfig(base, mixed, database)).vars.PRESENCE_PUBLIC_RELEASE_APPROVED, "true");
+  const malformedGate = settings();
+  malformedGate.bindings.find(b => b.name === "PRESENCE_PUBLIC_RELEASE_APPROVED").text = "approved";
+  assert.throws(() => privateDeploymentConfig(base, malformedGate, database));
+  const legacyExposed = settings();
+  legacyExposed.bindings.find(b => b.name === "GPT_USAGE_READ_ENABLED").text = "true";
+  assert.throws(() => privateDeploymentConfig(base, legacyExposed, database));
   const duplicate = settings();
   duplicate.bindings.push({ type: "plain_text", name: "SPOTIFY_CLIENT_ID", text: "duplicate" });
   assert.throws(() => privateDeploymentConfig(base, duplicate, database));
