@@ -114,6 +114,29 @@ def main():
                 assert not page_errors, (file, page_errors)
                 manifest["screenshots"].append({"file": file, "route": PREVIEW + path,
                     "viewport": [width, height], **geometry})
+                if name == "home" and width in (1199, 390):
+                    # Inspect the *implemented* UI, not an illustrative mockup.
+                    # Keyboard activation also exercises pointer-independent access.
+                    node = page.locator('a[data-v5-field-slug="mizvo"]')
+                    node.focus()
+                    page.keyboard.press("Enter")
+                    panel = page.locator("#v5-field-inspector")
+                    assert panel.is_visible(), (file, "inspector not opened")
+                    assert panel.locator("[data-v5-field-title]").inner_text() == "Mizvo"
+                    assert "AGPL review build" in panel.locator("[data-v5-field-status]").inner_text()
+                    assert node.get_attribute("aria-expanded") == "true"
+                    open_file = f"inspector-mizvo-{width}x{height}.png"
+                    page.screenshot(path=str(OUT / open_file), full_page=True, animations="disabled")
+                    assert page.evaluate("document.documentElement.scrollWidth <= innerWidth + 1")
+                    assert not api_requests and not remote_requests and not page_errors
+                    manifest["screenshots"].append({
+                        "file": open_file, "route": PREVIEW + path,
+                        "viewport": [width, height], "inspector": "mizvo",
+                        "source": "approved public portfolio", "provider_requests": 0
+                    })
+                    page.keyboard.press("Escape")
+                    assert panel.is_hidden()
+                    assert node.get_attribute("aria-expanded") == "false"
                 context.close()
         finally:
             browser.close()
