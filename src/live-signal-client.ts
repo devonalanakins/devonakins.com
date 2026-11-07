@@ -1,3 +1,4 @@
+import {featuredPublicGpt, publicGptReadings} from "./gpt-public-model.mjs";
 // One same-origin read model for the ribbon, feed, soundtrack ticker and Listening.
 type Task = {
   id?: string;
@@ -24,16 +25,6 @@ const sources: Record<string, string> = {
   codex: "Codex task",
   "chatgpt-work": "Work task",
   "github-actions": "Workflow task",
-};
-const gptMetrics: Record<string, { unit: string; scope: string; source: string; label: string; max: number }> = {
-  profile_7d_tokens: { unit: "tokens", scope: "owner-profile", source: "owner-profile-capture", label: "7-day tokens", max: 1e12 },
-  profile_lifetime_tokens_approx: { unit: "tokens", scope: "owner-profile", source: "owner-profile-capture", label: "Approx. total tokens", max: 1e12 },
-  profile_7d_messages: { unit: "messages", scope: "owner-profile", source: "owner-profile-capture", label: "7-day messages", max: 1e9 },
-  profile_streak_days: { unit: "days", scope: "owner-profile", source: "owner-profile-capture", label: "Streak at capture", max: 36500 },
-  work_codex_credits_remaining: { unit: "credits", scope: "work-codex", source: "owner-work-codex-usage", label: "Credits remaining", max: 1e6 },
-  work_codex_credits_used: { unit: "credits", scope: "work-codex", source: "owner-work-codex-usage", label: "Credits used", max: 1e6 },
-  business_7d_messages: { unit: "messages", scope: "business-member", source: "owner-business-analytics", label: "Member messages · 7d", max: 1e9 },
-  business_7d_credits_used: { unit: "credits", scope: "business-member", source: "owner-business-analytics", label: "Member credits · 7d", max: 1e6 },
 };
 const checkpoints: Record<string, string> = {
   testing: "Testing",
@@ -88,6 +79,7 @@ export function startLiveSignal(onPlayback: (data: unknown) => void) {
     busy = false,
     epoch = 0;
   const feedRows = new Map<string, HTMLLIElement>();
+  let readingSignature = "";
   const render = () => {
     const at = Date.now(),
       v = latest?.version === 4 && fresh(latest, at, 65000) ? latest : null;
@@ -145,39 +137,49 @@ export function startLiveSignal(onPlayback: (data: unknown) => void) {
     // Owner-captured GPT observations are not provider-live counts. A five-minute
     // page refresh never advances their capture timestamps.
     const g = v?.gpt;
-    const def = typeof g?.metric === "string" && Object.hasOwn(gptMetrics, g.metric)
-      ? gptMetrics[g.metric] : null;
-    const captureAt = typeof g?.asOf === "string" ? Date.parse(g.asOf) : NaN;
-    const validGpt = g?.state === "snapshot" && def &&
-      g.unit === def.unit && g.scope === def.scope && g.source === def.source &&
-      (g.freshness === "recent" || g.freshness === "historical") &&
-      g.sourceUpdatedAt === null &&
-      typeof g.count === "number" && Number.isFinite(g.count) &&
-      g.count >= 0 && g.count <= def.max &&
-      Number.isFinite(captureAt) && captureAt <= at + 60000 && captureAt > 0;
-    const gptCount = validGpt ? new Intl.NumberFormat("en-US", {
+    const featured = featuredPublicGpt(g, at);
+    const approvedReadings = publicGptReadings(g?.observations, at);
+    const gptCount = featured ? new Intl.NumberFormat("en-US", {
       notation:"compact", maximumFractionDigits:1,
-    }).format(g.count) : "—";
+    }).format(featured.value) : "—";
     text("[data-signal-gpt]", gptCount);
-    text("[data-signal-gpt-detail]", validGpt
-      ? def.label + " · owner capture " + age(g.asOf,at)
-      : "GPT analytics · Not connected");
-    // The legacy Work/Codex observation bridge independently owns
-    // #gpt-observation-panel. A V4 snapshot must NEVER hide or overwrite it.
-    // Keep V4's separately consented metrics in their own panel.
+    text("[data-signal-gpt-detail]", featured
+      ? "7-day tokens · captured " + age(featured.asOf,at)
+      : v ? "7-day tokens · No shared reading" : "7-day tokens · Unavailable");
+    // This owner-approved projection never overwrites the independent legacy bridge.
     const v4Panel = document.querySelector<HTMLElement>("#gpt-v4-snapshot-panel");
     if (v4Panel) {
-      v4Panel.hidden = !validGpt;
-      if (validGpt) {
-        v4Panel.dataset.freshness = g.freshness;
-        text("#gpt-v4-snapshot-value",gptCount + " " + def.unit);
-        text("#gpt-v4-snapshot-state",
-          def.label + " · " + (g.freshness === "historical" ? "Historical" : "Recent") +
-          " · Owner recorded; provider update unverified");
-        text("#gpt-v4-snapshot-age","Captured " + age(g.asOf,at));
-      } else {
-        delete v4Panel.dataset.freshness;
+      v4Panel.dataset.freshness = featured?.freshness || "unavailable";
+      text("#gpt-v4-snapshot-value", featured ? gptCount + " tokens" : "—");
+      text("#gpt-v4-snapshot-state", featured
+        ? "7-day tokens · " + (featured.freshness === "historical" ? "Historical" : "Recent") + " owner capture"
+        : "No shared seven-day token reading.");
+      text("#gpt-v4-snapshot-age", featured
+        ? "Captured " + new Date(featured.asOf).toLocaleString() + " · Provider update unverified"
+        : "");
+      const signature=JSON.stringify(approvedReadings);
+      const list=document.querySelector<HTMLElement>("#gpt-v4-observations");
+      if (list && signature!==readingSignature) {
+        readingSignature=signature;
+        const scopeLabels: Record<string,string> = {
+          "owner-profile":"Personal profile", "work-codex":"Work / Codex", "business-member":"Individual Business usage",
+        };
+        list.replaceChildren(...approvedReadings.map(r=>{
+          const row=document.createElement("article");
+          row.className="gpt-current-reading";
+          row.setAttribute("role","listitem");
+          const scope=document.createElement("small"), label=document.createElement("h3"),
+            amount=document.createElement("strong"), capture=document.createElement("p");
+          scope.textContent=scopeLabels[r.scope];
+          label.textContent=r.label;
+          amount.textContent=new Intl.NumberFormat("en-US",{maximumSignificantDigits:21}).format(r.value)+" "+r.unit;
+          capture.textContent="Captured "+new Date(r.asOf).toLocaleString()+" · "+(r.freshness==="historical"?"Historical":"Recent");
+          row.append(scope,label,amount,capture);
+          return row;
+        }));
       }
+      const empty=document.querySelector<HTMLElement>("#gpt-v4-observations-empty");
+      if(empty) empty.hidden=approvedReadings.length>0;
     }
     const playback = v?.spotify || {
       version: 1,

@@ -140,3 +140,18 @@
 .gpt-observation-disclosure {margin:6px 0 0;color:#9fb4c4;font-size:11px;line-height:1.7;}
 @media(max-width:390px){.gpt-observation-panel{padding:16px 13px;}}
 .gpt-observation-age{font-size:11px;color:#afc3d0;margin:0 0 8px;font-variant-numeric:tabular-nums;line-height:1.55;}
+
+/* Current, independently consented readings precede the immutable dated archive. */
+#gpt-v4-snapshot-panel {border-color:rgba(193,169,211,.4);background:radial-gradient(ellipse at 100% 0,rgba(116,89,143,.17),transparent 60%),linear-gradient(145deg,rgba(21,31,45,.96),rgba(12,19,30,.98));}
+#gpt-v4-snapshot-value {font-size:clamp(40px,7vw,72px);font-weight:500;letter-spacing:-.065em;color:#eadff0;margin-block:12px;}
+#gpt-v4-snapshot-state {font-size:12px;color:#d4c5de;line-height:1.6;}
+.gpt-current-metrics {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:22px 0;}
+.gpt-current-reading {min-width:0;padding:18px;border:1px solid rgba(202,186,219,.2);background:rgba(13,20,30,.7);}
+.gpt-current-reading>small {font-size:10px;color:#c2acd2;letter-spacing:.05em;}
+.gpt-current-reading h3 {font-size:13px;font-weight:500;color:#c7d1dc;line-height:1.5;margin:8px 0 10px;}
+.gpt-current-reading strong {display:block;font-size:clamp(19px,2.5vw,26px);font-weight:530;letter-spacing:-.025em;color:#f0e9f4;overflow-wrap:anywhere;font-variant-numeric:tabular-nums;}
+.gpt-current-reading p {color:#b2c2d0;font-size:11px;line-height:1.6;margin:12px 0 0;}
+.gpt-archive {display:flex;flex-direction:column;gap:28px;border-top:1px solid rgba(205,179,155,.35);padding-top:28px;min-width:0;}
+.gpt-archive>.gpt-section-head {margin-bottom:0;}
+.gpt-archive>.gpt-primary-stat strong {font-size:clamp(40px,7vw,76px);}
+@media(max-width:540px) {.gpt-current-metrics{grid-template-columns:minmax(0,1fr);}.gpt-current-reading{padding:16px;}}

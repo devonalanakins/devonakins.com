@@ -8,10 +8,10 @@ The existing static profile preserves the November 4, 2026 snapshot. A page re-r
 
 The new owner-only page at `/owner/gpt/` provides a practical fallback:
 
-- Enter one actual, visible, nonnegative number you see in your own analytics view.
-- Choose its exact metric type. The server derives its fixed source and scope; no prompts, account identifiers, screenshots, raw exports or free text are stored.
+- Enter any of the eight actual measurements together in the grouped form. Leave fields blank to preserve their values and original capture times.
+- Each field fixes its exact metric type. The server derives its fixed source and scope; no prompts, account identifiers, screenshots, raw exports or free text are stored.
 - The existing private D1 stores one latest observation per supported metric, with a server-side UTC **capture** time, `sourceUpdatedAt: null`, and private-by-default publication state.
-- On public `/api/activity/v4`, the compact GPT ribbon and the detailed GPT profile can show the latest *individually approved* observation. The site already polls Live Signal every 30 seconds; the owner capture page checks saved readings every five minutes. Neither refresh cadence is the rate at which OpenAI provides new data.
+- On public `/api/activity/v4`, the compact GPT ribbon and the detailed GPT profile can show individually approved observations. The headline always means `profile_7d_tokens`; other metrics never replace a missing seven-day reading. The site already polls Live Signal every 30 seconds; the owner capture page checks saved readings every five minutes. Neither refresh cadence is the rate at which OpenAI provides new data.
 - The selected observed value remains explicitly marked *historical* after 24 hours. It is never increased or extrapolated as time passes. If nothing is approved, GPT stays **Not connected**.
 
 ## Supported metrics
@@ -59,3 +59,13 @@ Relevant external documentation:
 - https://help.openai.com/en/articles/11391654-chatgpt-business-release-notes
 - https://github.com/devonalanakins/devonakins.com/issues/36
 
+
+## V5 batch capture contract
+
+Apply additive `0009_gpt_capture_revision.sql` before deploying the V5 owner editor. It preserves existing readings and sharing flags and adds a monotonic revision advanced by insert, correction, sharing changes, and deletion. A code rollback leaves the extra state/triggers in place; do not drop owner observations.
+
+Owner GET returns `version:2`, `revision`, and per-metric observations. POST `{action:"record-batch",revision,measurements:[{metric,value}]}` accepts 1–8 unique approved numeric readings. All statements run in one D1 `batch()` transaction. A named CHECK guard rejects a stale revision or backwards capture clock before writes; database errors roll back every reading and revision change. Invalid batches return 400, conflicts 409, unavailable storage 503. A conflict leaves the form entries intact until the owner refreshes and reviews them. Sharing is independent and never inferred from a save.
+
+Public V4 adds `gpt.observations`, a maximum-eight list containing only individually shared and revalidated readings. Global/private-work gates suppress both headline and list. The original November 4 JSON artifact remains unchanged and is presented as an archive. A disconnected seven-day headline can coexist with other approved metric cards.
+
+Verification: Node SQLite integration covers validation, atomic failure rollback, concurrent editors, sharing races and delete/recreate; `tests/gpt_owner_acceptance.py` covers synthetic Chromium/WebKit forms at 320/390/1440px, omitted fields, conflict recovery, keyboard and axe. Real owner acceptance after the protected release remains separate from synthetic evidence.
