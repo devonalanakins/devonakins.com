@@ -57,6 +57,15 @@ def check_page(page, origin, path, axe):
     assert page.locator("h1").count() == 1
     if not path and page.locator("[data-v5-exact-reference]").count():
         assert page.locator(".v5-lock-project-grid .v5-lock-project").count() == 5
+        # The artwork must be genuinely full-bleed, not collapsed to the
+        # global 21px SVG icon rule.
+        assert page.locator(".v5-lock-project svg.v5-lock-project-art").evaluate_all(
+            "nodes => nodes.length === 5 && nodes.every(svg => { "
+            "const card=svg.closest('.v5-lock-project').getBoundingClientRect();"
+            "const art=svg.getBoundingClientRect();"
+            "return art.width >= card.width * .9 && art.height >= card.height * .9; })"
+        ), (page.viewport_size, "project illustration too small")
+        assert page.locator(".v5-lock-project-brand").count() == 5
         assert page.locator(".v5-lock-triple .v5-lock-panel").count() == 3
         assert page.locator(".v5-lock-top-nav a").count() == 7
         assert page.locator("[data-v5-search-toggle]").count() == 1

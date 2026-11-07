@@ -525,3 +525,125 @@
    * layer; it remains accessible and independently decodes in browser tests. */
   .v5-locked-portrait { opacity: 0; }
 }
+
+
+
+/* Screenshot fidelity: display the original first-party identity mark with
+   the title in one row, and render the full-bleed project illustration at
+   actual card dimensions rather than the inherited 21px UI-icon dimensions. */
+.v5-lock-project {
+  isolation: isolate;
+  border-color: color-mix(in srgb, var(--tile-line, #5de0e7) 28%, #18313d);
+  background-color: #041019;
+  box-shadow:
+    0 0 21px var(--tile-glow, #3b74a544),
+    inset 0 1px 0 #d6f9ff1c,
+    inset 0 -17px 25px #02060ac4,
+    0 10px 16px #0008;
+}
+.v5-locked-home svg.v5-lock-project-art {
+  width: 100%;
+  height: 100%;
+  min-width: 100%;
+  min-height: 100%;
+  display: block;
+  position: absolute;
+  inset: 0;
+  opacity: .97;
+  flex: none;
+  pointer-events: none;
+  filter: drop-shadow(0 0 8px var(--tile-glow, #339ac465));
+}
+.v5-lock-project::before {
+  z-index: 1;
+  background:
+    linear-gradient(90deg, #030b11dd 0%, #05101a71 50%, transparent 90%),
+    linear-gradient(180deg, #03090e25 0%, transparent 27%, #03090e4f 58%, #02060bdb 100%);
+}
+.v5-lock-project::after {
+  z-index: 1;
+  height: 46%;
+  opacity: .85;
+  box-shadow: 0 -2px 24px var(--tile-glow, #3b74a544);
+}
+.v5-lock-project-brand {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 39px;
+  width: 100%;
+}
+.v5-lock-project-mark {
+  display: block;
+  width: 39px;
+  height: 37px;
+  flex: 0 0 39px;
+  overflow: hidden;
+  filter: drop-shadow(0 0 5px var(--tile-line, #9de0f7));
+}
+.v5-lock-project-mark .v5-lock-wordmark {
+  position: static;
+  width: auto;
+  max-width: none;
+  height: 37px;
+  display: block;
+  object-fit: unset;
+  object-position: left center;
+}
+.v5-lock-project-brand h3 {
+  margin: 0;
+  font-size: clamp(15px, 1.43vw, 19px);
+  font-weight: 650;
+  color: #fff;
+  text-shadow: 0 1px 6px #000;
+}
+.v5-lock-project > p {
+  position: relative;
+  z-index: 2;
+  font-size: 10px;
+  line-height: 1.35;
+  max-width: 24ch;
+  margin-top: 3px;
+  margin-bottom: 6px;
+  text-shadow: 0 1px 4px #000;
+}
+.v5-lock-project .v5-lock-state {
+  position: relative;
+  z-index: 2;
+  max-width: 100%;
+  min-height: 22px;
+  display: inline-flex;
+  align-items: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  padding: 3px 8px;
+  background: #061c18e8;
+  border-color: #50b9779e;
+  box-shadow: 0 0 10px #0df68e1e;
+}
+@media (max-width: 600px) {
+  .v5-lock-project {
+    min-height: 131px;
+  }
+  .v5-lock-project-brand {
+    gap: 5px;
+    min-height: 31px;
+  }
+  .v5-lock-project-mark {
+    width: 30px;
+    height: 29px;
+    flex-basis: 30px;
+  }
+  .v5-lock-project-mark .v5-lock-wordmark {
+    height: 29px;
+  }
+  .v5-lock-project-brand h3 {
+    font-size: 16px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .v5-locked-home svg.v5-lock-project-art { filter: none; }
+}

@@ -23,6 +23,9 @@ test("locked V5 screenshot modules occupy one semantic preview home", () => {
   assert.match(body, /portrait-anevum-transcosmic-mobile\.webp/);
   assert.doesNotMatch(body, /crossed-arms\.webp/);
   assert.equal((body.match(/class="v5-lock-project-art"/g) || []).length, 5);
+  assert.equal((body.match(/class="v5-lock-project-brand"/g) || []).length, 5);
+  assert.equal((body.match(/class="v5-lock-project-mark"/g) || []).length, 5);
+  assert.equal((body.match(/class="v5-lock-wordmark"/g) || []).length, 5);
   for (let i = 0; i < 5; i++) {
     assert.ok(body.includes('id="v5art-a-' + i + '"'));
     assert.ok(body.includes('id="v5art-b-' + i + '"'));
@@ -57,4 +60,6 @@ test("locked CSS includes responsive screenshot geometry and reduced-motion guar
   assert.match(css, /min-height:44px/);
   assert.match(css, /v5-lock-terrain-canvas/);
   assert.match(css, /v5-lock-project-art/);
+  assert.match(css, /svg\\.v5-lock-project-art\\s*\\{/);
+  assert.match(css, /v5-lock-project-brand/);
 });

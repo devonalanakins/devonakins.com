@@ -87,9 +87,10 @@ function featuredProject(slug, number) {
   if (!entry) return "";
   return '<a class="v5-lock-project v5-lock-project-' + number + '" href="' +
     projectHref(slug) + '">' + projectArtwork(number) +
+    '<span class="v5-lock-project-brand"><span class="v5-lock-project-mark">' +
     '<img class="v5-lock-wordmark" src="/v2/identity/' +
-    identitySlug(slug) + '.svg" alt="" loading="lazy">' +
-    '<h3>' + escapeHtml(entry.title) + '</h3>' +
+    identitySlug(slug) + '.svg" alt="" loading="lazy"></span>' +
+    '<h3>' + escapeHtml(entry.title) + '</h3></span>' +
     '<p>' + escapeHtml(entry.label || entry.summary) + '</p>' +
     '<span class="v5-lock-state">Portfolio · ' + escapeHtml(entry.status) +
     '</span></a>';
