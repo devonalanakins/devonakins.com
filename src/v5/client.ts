@@ -1,3 +1,4 @@
+import { publicV5ProjectEvidence } from "./public-evidence.mjs";
 const menu = document.querySelector<HTMLDetailsElement>("[data-mobile-menu]");
 menu?.addEventListener("keydown", (event) => {
   if (event.key === "Escape" && menu.open) {
@@ -98,6 +99,96 @@ inspector?.addEventListener("keydown", (event) => {
     closeInspector();
   }
 });
+
+// Preview-only source check. The existing V4 polling client supplies the
+// consent-filtered read model. No additional poller, publisher or owner API.
+const publicPreviewButton = document.querySelector<HTMLButtonElement>("[data-v5-preview-connect]");
+const publicPreviewStatus = document.querySelector<HTMLElement>("[data-v5-preview-source-state]");
+if (field && publicPreviewButton) {
+  publicPreviewButton.hidden = false;
+  let started = false;
+  let latestV4: unknown = null;
+  const relativeAge = (asOf: string, now: number) => {
+    const seconds = Math.max(0, Math.floor((now - Date.parse(asOf)) / 1000));
+    if (seconds < 60) return seconds + "s ago";
+    if (seconds < 3600) return Math.floor(seconds / 60) + "m ago";
+    if (seconds < 86400) return Math.floor(seconds / 3600) + "h ago";
+    return Math.floor(seconds / 86400) + "d ago";
+  };
+  const renderPublicEvidence = (snapshot: unknown, at: number) => {
+    const projection = publicV5ProjectEvidence(snapshot, at);
+    if (publicPreviewStatus) publicPreviewStatus.textContent = projection.available
+      ? "Public V4 source checked · consented evidence only"
+      : "Public source unavailable, disabled or stale";
+
+    for (const node of fieldLinks) {
+      const entry = projection.nodes[node.dataset.v5FieldSlug ?? ""];
+      if (entry?.active) node.dataset.v5Verified = entry.active.kind;
+      else delete node.dataset.v5Verified;
+    }
+    const active = Object.entries(projection.nodes)
+      .flatMap(([slug, entry]) => entry?.active ? [{slug, ...entry.active}] : [])
+      .sort((a, b) =>
+        (a.kind === "editor" ? -1 : 0) - (b.kind === "editor" ? -1 : 0) ||
+        Date.parse(b.at) - Date.parse(a.at),
+      );
+    const summary = document.querySelector<HTMLElement>("[data-v5-work-summary]");
+    const provenance = document.querySelector<HTMLElement>("[data-v5-work-provenance]");
+    const top = active[0];
+    if (summary) summary.textContent = top
+      ? fieldLinks.find(link => link.dataset.v5FieldSlug === top.slug)
+          ?.dataset.v5FieldTitle || "Verified public project"
+      : "No fresh, verified public work";
+    if (provenance) provenance.textContent = top
+      ? top.source + " · " + relativeAge(top.at, at)
+      : projection.available
+        ? "No recent approved editor or runner activity"
+        : "Source unavailable or sharing disabled";
+
+    const recent = projection.recent[0];
+    const github = document.querySelector<HTMLElement>("[data-v5-github-summary]");
+    if (github) github.textContent = recent
+      ? recent.slug + " · " + recent.kind + " · " +
+        relativeAge(recent.at, at) + " · Public GitHub history"
+      : "No approved public GitHub history within the verified window";
+
+    const line = inspector?.querySelector<HTMLElement>("[data-v5-field-evidence]");
+    if (line && selectedFieldLink && inspector && !inspector.hidden) {
+      const info = projection.nodes[selectedFieldLink.dataset.v5FieldSlug ?? ""];
+      const message = info?.active
+        ? info.active.source + " · observed " + relativeAge(info.active.at, at)
+        : info?.lastEvent
+          ? "Public GitHub " + info.lastEvent.kind + " · " +
+            relativeAge(info.lastEvent.at, at) + " · history, not current work"
+          : "";
+      line.hidden = !message;
+      line.textContent = message;
+    }
+  };
+  field.addEventListener("click", (event) => {
+    if (event.target instanceof Element && event.target.closest("[data-v5-field-node]")) {
+      // The existing node handler runs first, without fabricating evidence.
+      renderPublicEvidence(latestV4, Date.now());
+    }
+  });
+  publicPreviewButton.addEventListener("click", async () => {
+    if (started) return;
+    started = true;
+    publicPreviewButton.disabled = true;
+    publicPreviewButton.textContent = "Public source preview enabled";
+    if (publicPreviewStatus) publicPreviewStatus.textContent = "Reading existing public V4 source…";
+    try {
+      const { startLiveSignal } = await import("../live-signal-client");
+      startLiveSignal(() => {}, (snapshot, at) => {
+        latestV4 = snapshot;
+        renderPublicEvidence(snapshot, at);
+      });
+    } catch {
+      if (publicPreviewStatus) publicPreviewStatus.textContent = "Public source preview unavailable";
+    }
+  });
+}
+
 
 const terrain = document.querySelector<HTMLElement>(".v5-lock-terrain");
 if (terrain && window.innerWidth > 600) {
