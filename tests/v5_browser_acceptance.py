@@ -95,11 +95,11 @@ def check_page(page, origin, path, axe):
     else:
         assert github_profile.count() <= 1
     if not path:
-        assert page.locator(".v5-portrait picture source").count() == 1
-        portrait = page.locator(".v5-portrait img")
+        assert page.locator(".v5-locked-portrait picture source").count() == 1
+        portrait = page.locator(".v5-locked-portrait img")
         assert portrait.evaluate("e => e.complete && e.naturalWidth === (innerWidth <= 600 ? 768 : 1122) && e.naturalHeight > 0"), (path, page.viewport_size, "approved responsive portrait failed to decode")
         assert portrait.get_attribute("alt").startswith("Cinematic portrait artwork of Devon Akins")
-        assert page.locator(".v5-portrait picture").evaluate("e => e.getBoundingClientRect().height > 0")
+        assert page.locator(".v5-locked-portrait picture").evaluate("e => e.getBoundingClientRect().height > 0")
 
         if page.viewport_size["height"] >= 568:
             for source in ["work", "spotify", "gpt"]:
