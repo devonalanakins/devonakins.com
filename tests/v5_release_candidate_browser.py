@@ -111,7 +111,7 @@ def main():
                         "data-v5-verified"
                     ) == "editor"
                     assert page.locator(".v5-lock-spotify").inner_text().find(
-                        "Playback not loaded"
+                        "Playback unavailable"
                     ) >= 0, "Do not invent Spotify playback"
                     assert page.evaluate(
                         "document.documentElement.scrollWidth <= innerWidth + 1"
