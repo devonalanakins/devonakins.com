@@ -108,15 +108,53 @@ function terrain() {
       ' 400 ' + (150 + i * 2) + ' T 800 ' + (142 + i * 2) +
       ' T 1199 ' + (100 + i * 3) + '"/>';
   }).join("");
-  const beams = fieldPoints.map(([name, x, y, color]) =>
-    '<span class="v5-lock-beam v5-lock-' + color +
-    '" style="--point-x:' + x + '%;--point-y:' + y +
-    '%"><span class="v5-lock-beam-label">' + escapeHtml(name) +
-    '</span><span class="v5-lock-beam-line"></span><span class="v5-lock-beam-dot"></span></span>',
-  ).join("");
-  return '<div class="v5-lock-terrain" aria-hidden="true">' +
-    '<svg class="v5-lock-terrain-wire" viewBox="0 0 1199 300" preserveAspectRatio="none" fill="none"><g>' +
+  const publicSlugs = [
+    "devonstation", "mizvo", null, "anevum",
+    "rhen-language", "merit", "vesper", "squelch",
+  ];
+  const beams = fieldPoints.map(([name, x, y, color], i) => {
+    const slug = publicSlugs[i];
+    const entry = slug === null ? null : bySlug(slug);
+    if (slug && !entry) return "";
+    const title = entry?.title || "Knowledge";
+    const summary = entry?.summary ||
+      "Public Knowledge section preview. Private wiki records are not exposed.";
+    const status = entry?.status || "Public preview only";
+    const source = entry ? "Approved public project catalog" : "V5 public section";
+    const href = entry ? projectHref(entry.slug) : "/__v5_preview__/knowledge/";
+    const safe = (value) => escapeHtml(value);
+    return '<span class="v5-lock-beam v5-lock-' + color +
+      '" style="--point-x:' + x + '%;--point-y:' + y + '%">' +
+      '<a href="' + href + '" class="v5-lock-beam-link" data-v5-field-node' +
+      ' data-v5-field-slug="' + safe(slug || "knowledge-overview") + '"' +
+      ' data-v5-field-title="' + safe(title) + '"' +
+      ' data-v5-field-summary="' + safe(summary) + '"' +
+      ' data-v5-field-status="' + safe(status) + '"' +
+      ' data-v5-field-source="' + safe(source) + '"' +
+      ' aria-controls="v5-field-inspector" aria-expanded="false"' +
+      ' aria-label="Inspect ' + safe(name) + ' public information">' +
+      '<span class="v5-lock-beam-label">' + safe(name) + '</span></a>' +
+      '<span class="v5-lock-beam-line" aria-hidden="true"></span>' +
+      '<span class="v5-lock-beam-dot" aria-hidden="true"></span></span>';
+  }).join("");
+  return '<div class="v5-lock-terrain" role="group" aria-label="Public project nodes">' +
+    '<svg class="v5-lock-terrain-wire" aria-hidden="true" viewBox="0 0 1199 300" preserveAspectRatio="none" fill="none"><g>' +
     wires + '</g></svg>' + beams + '</div>';
+}
+
+
+function fieldInspector() {
+  return '<aside id="v5-field-inspector" class="v5-field-inspector" hidden' +
+    ' aria-labelledby="v5-field-inspector-title">' +
+    '<div class="v5-field-inspector-top"><span>PUBLIC PROJECT INSPECTOR</span>' +
+    '<button type="button" data-v5-field-close aria-label="Close project inspector">×</button></div>' +
+    '<h3 id="v5-field-inspector-title" data-v5-field-title tabindex="-1"></h3>' +
+    '<p class="v5-field-inspector-summary" data-v5-field-summary></p>' +
+    '<p class="v5-field-inspector-status"><span>PORTFOLIO STATUS</span><strong data-v5-field-status></strong></p>' +
+    '<p class="v5-field-inspector-source" data-v5-field-source></p>' +
+    '<p class="v5-field-inspector-boundary">No verified inter-project dependencies are published here.</p>' +
+    '<a class="v5-field-inspector-open" data-v5-field-open href="/__v5_preview__/projects/">Open public page →</a>' +
+    '</aside>';
 }
 
 export function renderReferenceNav() {
@@ -210,7 +248,7 @@ export function renderReferenceHomepage() {
     '</div>' +
     '<section class="v5-lock-field" aria-labelledby="v5-lock-field-title">' +
       '<header><h2 id="v5-lock-field-title">The Signal Field</h2><p>A living view of everything in motion — verified events only.</p></header>' +
-      terrain() +
+      terrain() + fieldInspector() +
       '<p class="v5-lock-art-disclosure">Static project composition · no activity or dependency claims</p>' +
       '<a class="v5-lock-field-cta" href="/__v5_preview__/field/">Explore the Signal Field →</a>' +
     '</section>' +

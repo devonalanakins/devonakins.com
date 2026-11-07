@@ -18,6 +18,12 @@ test("locked V5 screenshot modules occupy one semantic preview home", () => {
   for (const source of ["work", "spotify", "gpt"])
     assert.ok(body.includes('data-v5-signal="' + source + '"'), source);
   assert.ok(body.includes("Static project composition"));
+  assert.equal((body.match(/data-v5-field-node(?: |\>)/g) || []).length, 8);
+  assert.equal((body.match(/aria-controls="v5-field-inspector"/g) || []).length, 8);
+  assert.match(body, /No verified inter-project dependencies are published here/);
+  assert.match(body, /Public Knowledge section preview/);
+  assert.match(body, /Approved public project catalog/);
+  assert.match(body, /data-v5-field-slug="rhen-language"/);
   assert.ok(body.includes("PROVENANCE REQUIRED"));
   assert.match(body, /portrait-anevum-transcosmic\.webp/);
   assert.match(body, /portrait-anevum-transcosmic-mobile\.webp/);
@@ -62,4 +68,6 @@ test("locked CSS includes responsive screenshot geometry and reduced-motion guar
   assert.match(css, /v5-lock-project-art/);
   assert.match(css, /svg\.v5-lock-project-art\s*\{/);
   assert.match(css, /v5-lock-project-brand/);
+  assert.match(css, /v5-field-inspector\[hidden\]/);
+  assert.match(css, /v5-lock-beam-link/);
 });

@@ -69,6 +69,11 @@ def check_page(page, origin, path, axe):
 
         field = page.locator(".v5-lock-field")
         assert field.locator(".v5-lock-beam").count() == 8
+        assert field.locator("a.v5-lock-beam-link").count() == 8
+        assert field.locator(".v5-field-inspector").is_hidden()
+        assert field.locator("a.v5-lock-beam-link").evaluate_all(
+            "es => es.every(e => e.getBoundingClientRect().height >= 43)"
+        ), "project node touch targets must be at least 44px high"
         assert "Static project composition" in field.inner_text()
         assert field.locator(".v5-lock-terrain-wire").evaluate("""svg => {
             const rect=svg.getBoundingClientRect();
@@ -195,6 +200,18 @@ def main():
                                 page.locator(".v5-desktop-nav a").filter(has_text="Projects").click()
                                 assert page.url.endswith("projects/")
                             page.goto(origin + PREVIEW, wait_until="networkidle")
+                            field_node = page.locator('a[data-v5-field-slug="mizvo"]')
+                            field_node.focus()
+                            page.keyboard.press("Enter")
+                            assert page.locator("#v5-field-inspector").is_visible()
+                            assert page.locator("[data-v5-field-title]").inner_text() == "Mizvo"
+                            assert "AGPL review build" in page.locator("[data-v5-field-status]").inner_text()
+                            assert page.locator("[data-v5-field-open]").get_attribute("href").endswith("/work/mizvo/")
+                            assert field_node.get_attribute("aria-expanded") == "true"
+                            page.keyboard.press("Escape")
+                            assert page.locator("#v5-field-inspector").is_hidden()
+                            assert field_node.get_attribute("aria-expanded") == "false"
+                            assert field_node.evaluate("e => e === document.activeElement")
                             page.screenshot(path=str(output / f"{engine}-{width}x{height}-{motion}.png"), full_page=True)
                             page.keyboard.press("Tab")
                             assert page.locator(".v5-skip").evaluate("e => e === document.activeElement")
@@ -217,6 +234,7 @@ def main():
                 for path in PAGES:
                     assert page.goto(origin + PREVIEW + path).status == 200
                     assert page.locator("h1").is_visible()
+                assert page.locator('a[data-v5-field-slug="mizvo"]').get_attribute("href") == "/work/mizvo/"
                 page.locator("summary").click()
                 page.locator(".v5-mobile-nav a").filter(has_text="Writing").click()
                 assert page.url.endswith("writing/")

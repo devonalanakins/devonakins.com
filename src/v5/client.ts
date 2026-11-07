@@ -48,6 +48,57 @@ document.addEventListener("pointerdown", (event) => {
 });
 
 
+
+// Public catalog metadata is already rendered by the server from approved
+// content. No provider requests, project inference, or private wiki access.
+const field = document.querySelector<HTMLElement>(".v5-lock-field");
+const inspector = field?.querySelector<HTMLElement>("#v5-field-inspector");
+const fieldLinks = Array.from(field?.querySelectorAll<HTMLAnchorElement>("[data-v5-field-node]") ?? []);
+const inspectorClose = inspector?.querySelector<HTMLButtonElement>("[data-v5-field-close]");
+const inspectorTitle = inspector?.querySelector<HTMLElement>("[data-v5-field-title]");
+const inspectorSummary = inspector?.querySelector<HTMLElement>("[data-v5-field-summary]");
+const inspectorStatus = inspector?.querySelector<HTMLElement>("[data-v5-field-status]");
+const inspectorSource = inspector?.querySelector<HTMLElement>("[data-v5-field-source]");
+const inspectorOpen = inspector?.querySelector<HTMLAnchorElement>("[data-v5-field-open]");
+let selectedFieldLink: HTMLAnchorElement | null = null;
+const closeInspector = () => {
+  if (!inspector || inspector.hidden) return;
+  inspector.hidden = true;
+  fieldLinks.forEach(link => link.setAttribute("aria-expanded", "false"));
+  const previouslySelected = selectedFieldLink;
+  selectedFieldLink = null;
+  previouslySelected?.focus();
+};
+field?.addEventListener("click", (event) => {
+  if (!(event instanceof MouseEvent) || !(event.target instanceof Element)) return;
+  const link = event.target.closest<HTMLAnchorElement>("[data-v5-field-node]");
+  if (!link || !field?.contains(link) || !inspector || !inspectorTitle ||
+      !inspectorSummary || !inspectorStatus || !inspectorSource || !inspectorOpen ||
+      event.button !== 0 || event.ctrlKey || event.metaKey || event.altKey ||
+      event.shiftKey || event.defaultPrevented) return;
+  event.preventDefault();
+  if (selectedFieldLink === link && !inspector.hidden) {
+    closeInspector();
+    return;
+  }
+  inspectorTitle.textContent = link.dataset.v5FieldTitle ?? link.textContent?.trim() ?? "";
+  inspectorSummary.textContent = link.dataset.v5FieldSummary ?? "";
+  inspectorStatus.textContent = link.dataset.v5FieldStatus ?? "Not published";
+  inspectorSource.textContent = "SOURCE · " + (link.dataset.v5FieldSource ?? "Public portfolio");
+  inspectorOpen.href = link.href;
+  fieldLinks.forEach(node => node.setAttribute("aria-expanded", node === link ? "true" : "false"));
+  selectedFieldLink = link;
+  inspector.hidden = false;
+  inspectorTitle.focus();
+});
+inspectorClose?.addEventListener("click", closeInspector);
+inspector?.addEventListener("keydown", (event) => {
+  if (event.key === "Escape") {
+    event.preventDefault();
+    closeInspector();
+  }
+});
+
 const terrain = document.querySelector<HTMLElement>(".v5-lock-terrain");
 if (terrain && window.innerWidth > 600) {
   // The GPU is an enhancement to the true semantic HTML markers, never a data
