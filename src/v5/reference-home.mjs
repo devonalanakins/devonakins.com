@@ -77,6 +77,40 @@ function terrain() {
     '<svg class="v5-lock-terrain-wire" viewBox="0 0 1199 300" preserveAspectRatio="none" fill="none"><g>' +
     wires + '</g></svg>' + beams + '</div>';
 }
+
+export function renderReferenceNav() {
+  const items = [
+    ["Home", "/__v5_preview__/"],
+    ["Projects", "/__v5_preview__/projects/"],
+    ["Knowledge", "/__v5_preview__/knowledge/"],
+    ["Anevum", "/work/anevum/"],
+    ["Mizvo", "/work/mizvo/"],
+    ["Writing", "/__v5_preview__/writing/"],
+    ["Media", "/listening/"],
+  ];
+  const nav = '<nav class="v5-desktop-nav v5-lock-top-nav" aria-label="Primary">' +
+    items.map(([label, href], i) =>
+      '<a href="' + href + '"' + (i === 0 ? ' aria-current="page"' : "") +
+      ">" + label + "</a>").join("") + "</nav>";
+  const search = '<button class="v5-lock-search-toggle" type="button" data-v5-search-toggle aria-label="Search public projects" aria-controls="v5-lock-search-panel" aria-expanded="false">' +
+    icon("search") + '</button>' +
+    '<div class="v5-lock-search-panel" id="v5-lock-search-panel" data-v5-search-panel hidden>' +
+      '<label for="v5-lock-search-input">Search public projects</label>' +
+      '<input id="v5-lock-search-input" data-v5-search-input type="search" autocomplete="off" placeholder="Project or system">' +
+      '<ul data-v5-search-items>' +
+      projects.filter((p) => Boolean(p.slug) && Boolean(p.title) && p.status !== "private")
+        .map((p) =>
+          '<li data-v5-search-item data-search-text="' +
+          escapeHtml([p.title, p.label, p.summary].filter(Boolean).join(" ").toLowerCase()) +
+          '"><a href="' + projectHref(p.slug) + '">' + escapeHtml(p.title) + "</a></li>",
+        ).join("") +
+      '</ul><p data-v5-search-empty hidden>No matching public project.</p>' +
+    '</div>';
+  return nav + search + '<a class="v5-lock-profile-link" href="/about/" aria-label="About Devon">' +
+    icon("user") + '</a><a class="v5-lock-source-link" href="/studio/" aria-label="View source state">' +
+    '<span class="v5-lock-source-dot" aria-hidden="true"></span>SOURCES</a>';
+}
+
 export function renderReferenceHomepage() {
   const rail = navRail.map(([label, glyph, href], i) =>
     '<a href="' + href + '"' + (i === 0 ? ' aria-current="location"' : "") +
