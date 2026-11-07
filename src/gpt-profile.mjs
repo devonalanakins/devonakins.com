@@ -138,6 +138,20 @@ export function renderPublicGptProfile(input) {
         '</p></article>').join("") + '</div>'
     : '<p class="gpt-empty">No integrations listed in the current snapshot.</p>';
   const observationMarkup = `
+    <section class="gpt-section gpt-observation-panel" id="gpt-v4-snapshot-panel"
+      aria-labelledby="gpt-v4-snapshot-heading" hidden>
+      <div class="gpt-live-kicker">OWNER-REVIEWED / PERIODIC OBSERVATION</div>
+      <header class="gpt-live-heading">
+        <div><span class="gpt-section-index">00 / SNAPSHOT</span>
+          <h2 id="gpt-v4-snapshot-heading">Latest approved capture.</h2>
+          <p>Not an account-wide live feed. Each approved metric retains its original capture time and reported scope.</p>
+        </div>
+      </header>
+      <strong id="gpt-v4-snapshot-value" class="gpt-observation-value" aria-live="off">—</strong>
+      <p id="gpt-v4-snapshot-state" role="status" aria-live="polite"></p>
+      <p id="gpt-v4-snapshot-age" class="gpt-observation-age" aria-live="off"></p>
+      <p class="gpt-observation-disclosure">New values appear only after a source observation is recorded. Refreshing this page does not create new ChatGPT usage.</p>
+    </section>
     <section class="gpt-section gpt-observation-panel" id="gpt-observation-panel"
       aria-labelledby="gpt-observation-heading" hidden>
       <div class="gpt-live-kicker">OWNER-APPROVED / VISIBLE-METRIC OBSERVATION</div>
