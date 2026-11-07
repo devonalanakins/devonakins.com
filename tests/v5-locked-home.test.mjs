@@ -19,9 +19,9 @@ test("locked V5 screenshot modules occupy one semantic preview home", () => {
     assert.ok(body.includes('data-v5-signal="' + source + '"'), source);
   assert.ok(body.includes("Static project composition"));
   assert.ok(body.includes("PROVENANCE REQUIRED"));
-  assert.match(body, /portrait-anevum-transcosmic\\.webp/);
-  assert.match(body, /portrait-anevum-transcosmic-mobile\\.webp/);
-  assert.doesNotMatch(body, /crossed-arms\\.webp/);
+  assert.match(body, /portrait-anevum-transcosmic\.webp/);
+  assert.match(body, /portrait-anevum-transcosmic-mobile\.webp/);
+  assert.doesNotMatch(body, /crossed-arms\.webp/);
   assert.equal((body.match(/class="v5-lock-project-art"/g) || []).length, 5);
   for (let i = 0; i < 5; i++) {
     assert.ok(body.includes('id="v5art-a-' + i + '"'));
