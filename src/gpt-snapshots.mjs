@@ -27,7 +27,7 @@ export const GPT_OWNER_METRICS = Object.freeze({
 });
 const METRIC_KEYS = Object.keys(GPT_OWNER_METRICS);
 const NO_DATA = Object.freeze({version:1,state:'disconnected',scope:'personal-work-codex',metric:null,period:null,count:null,asOf:null,source:null,freshness:'unavailable'});
-const ownerPath = '/api/gpt/owner';
+const ownerPath = '/api/presence/owner';
 const pagePaths = new Set(['/owner/gpt', '/owner/gpt/']);
 const iso = (at) => new Date(at).toISOString();
 const validMetric = (metric) => typeof metric === 'string' && Object.hasOwn(GPT_OWNER_METRICS,metric);
@@ -103,8 +103,8 @@ export async function readPublicGptSnapshot(env, now=Date.now()) {
 
 export function createGptSnapshotOwnerApi({clock=Date.now}={}) {
   return async (request,env={},ctx={})=>{
-    const path=new URL(request.url).pathname;
-    if (!pagePaths.has(path) && path!==ownerPath) return ownerError('Not found',404);
+    const url=new URL(request.url),path=url.pathname;
+    if (!pagePaths.has(path) && !(path===ownerPath && url.search==='?channel=gpt')) return ownerError('Not found',404);
     if (!(await isListeningOwner(env,ctx))) return ownerError('Owner authentication required',403);
     if (pagePaths.has(path)) {
       if(request.method!=='GET' && request.method!=='HEAD') return ownerError('Method not allowed',405);
