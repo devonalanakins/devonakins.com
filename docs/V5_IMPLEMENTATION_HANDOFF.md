@@ -4,7 +4,7 @@ EXECUTION: ChatGPT Work, verified full-stack engineering. Continue in the existi
 
 AUTHORITATIVE REPOSITORY: https://github.com/devonalanakins/devonakins.com
 MASTER ISSUES: https://github.com/devonalanakins/devonakins.com/issues/60 and https://github.com/devonalanakins/devonakins.com/issues/63
-DESIGN SOURCE OF TRUTH: locked V5 reference image archive + 00_CANONICAL_MASTER_BUILD_BRIEF.md in the DevonAkins.com V5 design package / persistent Library path. The eight reference images are visual targets ONLY; all screenshot statuses/counts, faces, labels and data are illustrative unless independently verified.
+DESIGN SOURCE OF TRUTH: locked V5 reference image archive + 00_CANONICAL_MASTER_BUILD_BRIEF.md in the DevonAkins.com V5 design package / persistent Library path. The eight reference images and the later #10 EXACT-REPRODUCTION-TARGET homepage image are visual targets ONLY; the later #10 governs homepage composition after applying the separate #09 approved portrait; all screenshot statuses/counts, faces, labels and data are illustrative unless independently verified.
 
 MANDATE: Build the approved full redesign with a distinctive portrait-led homepage and deeply interactive, persistent, expanding 3D Signal Field; implement every major site section with the coherent V5 visual language. The earlier "only enhance, never redesign" visual restriction is SUPERSEDED by explicit owner approval. Existing domain, repository, approved Anevum/Transcosmic V5 portrait artwork (with the original crossed-arms V4 assets preserved), working Live Signal V4 event layer, privacy gates, owner-only Access controls, Spotify opt-in, dated GPT captures and Cloudflare release/rollback workflows remain protected.
 

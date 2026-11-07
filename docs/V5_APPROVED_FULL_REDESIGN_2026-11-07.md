@@ -13,6 +13,13 @@ The owner explicitly approves a **full visual and information-architecture redes
 
 This is a redesign of the existing application, not a rewrite from scratch, a domain migration, or a new repository. Preserve version history, valid routes, security, integrations, and workflows. Implement in reviewable branches/PRs and stage the coordinated visual cutover behind a feature or preview gate. Do not silently ship speculative mock states.
 
+
+### Later locked homepage composition — exact reproduction target
+
+The additional owner-approved \`10-v5-homepage-EXACT-REPRODUCTION-TARGET.png\` in the same persistent Library folder is the **latest homepage composition authority** for layout, section density, side rail, first-screen hierarchy, activity panels, project cards, social/feed placement, lower Signal Field viewport and overall atmospheric treatment. It supersedes the earlier \`01-homepage-primary.png\` for detailed homepage layout, while the original eight boards remain useful for other pages and supplementary art direction.
+
+Source-reference SHA-256: \`f0c46cf66f6c8b3e5bff71706a511344438a77f2f010bb3bdcfb17cb25a0c899\` (1199 × 1312 PNG). It is a **concept image**, not a working screenshot or data source. Its different portrait/hoodie, live badges, follower/activity counts, GPT usage, song, geographical text and Threads content are *not* authorized facts. Use the separate exact \`09-v5-portrait-anevum-transcosmic-APPROVED.png\` for V5 identity, preserve privacy-first source truth, and omit or label unavailable all unverified data. Do not display false "LIVE" states to reproduce the picture. This reference is an output target, not a permission to bypass Cloudflare release controls.
+
 ### Design-reference authority and conflict resolution
 
 In `reference-images/`:
