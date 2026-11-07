@@ -1,3 +1,4 @@
+import { isListeningOwner, validOwnerOrigin } from "./listening-owner-core.mjs";
 /**
  * Disabled-by-default, single-record bridge for an explicitly approved
  * Work/Codex *observation*. No OpenAI API, account login, or screen collection.
@@ -13,6 +14,7 @@
  */
 export const OBSERVATION_READ_PATH = "/api/gpt-observation/latest";
 export const OBSERVATION_WRITE_PATH = "/api/gpt-observation/ingest";
+export const OBSERVATION_OWNER_PATH = "/api/gpt-observation/owner";
 const STORAGE_KEY = "owner-approved-work-codex-reading-v1";
 const RETENTION_SECONDS = 30 * 24 * 60 * 60;
 const MIN_WRITE_INTERVAL_MS = 5 * 60_000;
@@ -40,11 +42,14 @@ export function validateObservation(input, at = new Date()) {
       input.version !== 1 || !Object.hasOwn(metrics, input.metric) ||
       input.unit !== metrics[input.metric] || !isNumber(input.value) ||
       input.value > (input.unit === "percent" ? 100 : 1_000_000) ||
-      input.source !== "user-selected-visible-usage-text" ||
+      !((input.source === "user-selected-visible-usage-text" &&
+          isIso(input.lastChangedAt) &&
+          Date.parse(input.lastChangedAt) <= Date.parse(input.observedAt)) ||
+        (input.source === "owner-reviewed-dashboard" &&
+          input.lastChangedAt === null)) ||
       input.scope !== "work-codex" ||
       input.sourceUpdatedAt !== null ||
-      !isIso(input.observedAt) || !isIso(input.lastChangedAt) ||
-      Date.parse(input.lastChangedAt) > Date.parse(input.observedAt) ||
+      !isIso(input.observedAt) ||
       !Number.isFinite(at.getTime())) return null;
   const age = at.getTime() - Date.parse(input.observedAt);
   if (age < -60_000 || age > MAX_OBSERVATION_AGE_MS) return null;
@@ -160,6 +165,33 @@ export function projectObservation(stored, at = new Date()) {
   };
 }
 
+async function acceptObservation(store, reading, at, securityHeaders) {
+  try {
+    const previous=await store.get(STORAGE_KEY,"text");
+    if (previous!==null) {
+      let saved;
+      try { saved=validateStored(JSON.parse(previous),at); }
+      catch { saved=null; }
+      if (!saved) return unavailableResponse(securityHeaders);
+      if (Date.parse(reading.observedAt)<=
+          Date.parse(saved.reading.observedAt)) return json({
+        accepted:false,reason:"outdated-reading",
+      },409,securityHeaders);
+      const since=at.getTime()-Date.parse(saved.receivedAt);
+      if (since<MIN_WRITE_INTERVAL_MS) return json({
+        accepted:false,reason:"write-cooldown",
+      },429,securityHeaders,
+        {"Retry-After":String(Math.ceil((MIN_WRITE_INTERVAL_MS-since)/1000))});
+    }
+    const value={version:1,reading,receivedAt:at.toISOString()};
+    await store.put(STORAGE_KEY,JSON.stringify(value),
+      {expirationTtl:RETENTION_SECONDS});
+    return json({accepted:true,receivedAt:value.receivedAt},202,securityHeaders);
+  } catch {
+    return unavailableResponse(securityHeaders);
+  }
+}
+
 /**
  * The Worker passes env only at request time, never as a module constant.
  * KV is eventually consistent: the monotonic guard below prevents ordinary
@@ -214,28 +246,57 @@ export async function handleObservationRequest(
   const reading=validateObservation(parsed.value,at);
   if (!reading)
     return json({error:"Invalid observation"},400,securityHeaders);
-  try {
-    const previous=await store.get(STORAGE_KEY,"text");
-    if (previous!==null) {
-      let saved;
-      try { saved=validateStored(JSON.parse(previous),at); }
-      catch { saved=null; }
-      if (!saved) return unavailableResponse(securityHeaders);
-      if (Date.parse(reading.observedAt)<=
-          Date.parse(saved.reading.observedAt)) return json({
-        accepted:false,reason:"outdated-reading",
-      },409,securityHeaders);
-      const since=at.getTime()-Date.parse(saved.receivedAt);
-      if (since<MIN_WRITE_INTERVAL_MS) return json({
-        accepted:false,reason:"write-cooldown",
-      },429,securityHeaders,
-        {"Retry-After":String(Math.ceil((MIN_WRITE_INTERVAL_MS-since)/1000))});
-    }
-    const value={version:1,reading,receivedAt:at.toISOString()};
-    await store.put(STORAGE_KEY,JSON.stringify(value),
-      {expirationTtl:RETENTION_SECONDS});
-    return json({accepted:true,receivedAt:value.receivedAt},202,securityHeaders);
-  } catch {
+  return acceptObservation(store,reading,at,securityHeaders);
+}
+
+/**
+ * Owner-only, on-demand capture. The owner reviews an actual Work/Codex
+ * number displayed by OpenAI and enters it here. We record observation time,
+ * NOT an invented provider update time or last-value-change time.
+ */
+export async function handleOwnerObservationRequest(
+  request, env = {}, ctx = {}, at = new Date(), securityHeaders = {},
+) {
+  if (new URL(request.url).pathname !== OBSERVATION_OWNER_PATH)
+    return null;
+  if (!(await isListeningOwner(env, ctx)))
+    return json({ error: "Owner authentication required" },403,securityHeaders);
+  const store = env?.GPT_USAGE_STORE;
+  if (!store || typeof store.get !== "function" ||
+      typeof store.put !== "function")
     return unavailableResponse(securityHeaders);
+  if (request.method === "GET") {
+    try {
+      const raw = await store.get(STORAGE_KEY,"text");
+      if (raw === null)
+        return json({version:1,status:"no-data",observation:null},200,securityHeaders);
+      const observation = projectObservation(JSON.parse(raw),at);
+      return observation
+        ? json({version:1,status:observation.status,observation},200,securityHeaders)
+        : unavailableResponse(securityHeaders);
+    } catch {
+      return unavailableResponse(securityHeaders);
+    }
   }
+  if (request.method !== "POST")
+    return json({error:"Method not allowed"},405,securityHeaders,{Allow:"GET, POST"});
+  if (env.GPT_USAGE_WRITE_ENABLED !== "true")
+    return disabledResponse(securityHeaders);
+  if (!validOwnerOrigin(request))
+    return json({error:"Cross-site operation denied"},403,securityHeaders);
+  const parsed = await readLimitedJson(request);
+  if (parsed.error)
+    return json({error:"Invalid observation request"},parsed.error,securityHeaders);
+  const data = parsed.value;
+  if (!exactKeys(data,["version","metric","value","reviewed"]) ||
+      data.version !== 1 || data.reviewed !== true ||
+      !Object.hasOwn(metrics,data.metric))
+    return json({error:"Invalid owner observation"},400,securityHeaders);
+  const reading = validateObservation({
+    version:1,metric:data.metric,value:data.value,unit:metrics[data.metric],
+    source:"owner-reviewed-dashboard",scope:"work-codex",
+    observedAt:at.toISOString(),lastChangedAt:null,sourceUpdatedAt:null,
+  },at);
+  if (!reading) return json({error:"Invalid observation"},400,securityHeaders);
+  return acceptObservation(store,reading,at,securityHeaders);
 }
