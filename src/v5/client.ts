@@ -1,4 +1,5 @@
 import { publicV5ProjectEvidence } from "./public-evidence.mjs";
+import { publicV5Playback } from "./public-playback.mjs";
 import { publicV5ActivationMode } from "./source-activation.mjs";
 const menu = document.querySelector<HTMLDetailsElement>("[data-mobile-menu]");
 menu?.addEventListener("keydown", (event) => {
@@ -115,6 +116,36 @@ if (field && (publicPreviewButton || activationMode === "automatic")) {
   }
   let started = false;
   let latestV4: unknown = null;
+
+  const spotifyLink = document.querySelector<HTMLAnchorElement>(".v5-lock-spotify");
+  const spotifyTitle = spotifyLink?.querySelector<HTMLElement>("[data-v5-spotify-title]");
+  const spotifyArtist = spotifyLink?.querySelector<HTMLElement>("[data-v5-spotify-artist]");
+  const spotifyCover = spotifyLink?.querySelector<HTMLImageElement>("[data-v5-spotify-cover]");
+  const spotifyProgress = spotifyLink?.querySelector<HTMLProgressElement>("[data-v5-spotify-progress]");
+  const renderSpotify = (value: unknown) => {
+    if (!spotifyLink) return;
+    const details = publicV5Playback(value, Date.now());
+    spotifyLink.dataset.v5SpotifyState = details.state;
+    spotifyLink.href = details.href;
+    if (spotifyTitle) spotifyTitle.textContent = details.title;
+    if (spotifyArtist) spotifyArtist.textContent = details.artist;
+    if (spotifyCover) {
+      if (details.image) {
+        if (spotifyCover.getAttribute("src") !== details.image)
+          spotifyCover.src = details.image;
+        spotifyCover.hidden = false;
+      } else {
+        spotifyCover.hidden = true;
+        spotifyCover.removeAttribute("src");
+      }
+    }
+    if (spotifyProgress) {
+      spotifyProgress.hidden = !details.progress;
+      spotifyProgress.max = details.progress?.max || 1;
+      spotifyProgress.value = details.progress?.value || 0;
+    }
+  };
+
   const relativeAge = (asOf: string, now: number) => {
     const seconds = Math.max(0, Math.floor((now - Date.parse(asOf)) / 1000));
     if (seconds < 60) return seconds + "s ago";
@@ -192,7 +223,7 @@ if (field && (publicPreviewButton || activationMode === "automatic")) {
     if (publicPreviewStatus) publicPreviewStatus.textContent = "Reading existing public V4 source…";
     try {
       const { startLiveSignal } = await import("../live-signal-client");
-      startLiveSignal(() => {}, (snapshot, at) => {
+      startLiveSignal(renderSpotify, (snapshot, at) => {
         latestV4 = snapshot;
         renderPublicEvidence(snapshot, at);
       });
