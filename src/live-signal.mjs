@@ -6,6 +6,7 @@ import {
 } from "./presence-api.mjs";
 import { approvedProjects } from "./presence-preferences.mjs";
 import { publicCloudPresence } from "./cloud-presence-api.mjs";
+import { readPublicGptSnapshot } from "./gpt-snapshots.mjs";
 
 export const disconnectedGpt = () => ({
   state: "disconnected",
@@ -51,6 +52,9 @@ export function createLiveSignal({
       recent: [],
     });
     const result = base();
+    // GPT snapshots have their own owner/metric and server-side release gates.
+    // This does not convert a dated owner observation into live ChatGPT usage.
+    result.gpt = await readPublicGptSnapshot(env, clock());
     // Public GitHub events are history; never an input to current work selection.
     try {
       result.recent = (await readGithub()).slice(0, 8);
