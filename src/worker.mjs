@@ -1,7 +1,7 @@
 import { projectPublicGithubEvents, unavailablePublicGithub, projectPublicTelemetry, validPublicGithubSignal, githubCooldownMs } from "./public-telemetry.mjs";
 import { createD1PresenceReader } from "./listening-d1-presence.mjs";
 import { createListeningOwnerApi } from "./listening-owner-api.mjs";
-import {handleObservationRequest, OBSERVATION_READ_PATH, OBSERVATION_WRITE_PATH} from './gpt-observation-bridge.mjs';
+import {handleObservationRequest, handleOwnerObservationRequest, OBSERVATION_READ_PATH, OBSERVATION_WRITE_PATH, OBSERVATION_OWNER_PATH} from './gpt-observation-bridge.mjs';
 import {createPresenceOwnerApi, publicPresence, listeningDisclosure} from './presence-api.mjs';
 import {createPresenceEditorApi} from './presence-editor-api.mjs';
 import {createCloudPresenceApi, publicCloudPresence} from './cloud-presence-api.mjs';
@@ -142,7 +142,27 @@ export function createHandler(assets, release, options = {}) {
       pendingGithub = null;
     }
   };
-  const liveSignal=createLiveSignal({readListening:readDbPresence,clock:()=>now().getTime(),readGithub:async()=>{await githubSignal(now());return activityHistory;}});
+  const readGpt = async (env) => {
+    // Two independent release/consent gates before reading a personal value.
+    if (env.GPT_USAGE_PUBLIC_RELEASE_APPROVED !== "true" ||
+        env.GPT_USAGE_READ_ENABLED !== "true") return null;
+    const response = await handleObservationRequest(
+      new Request("https://devonakins.com" + OBSERVATION_READ_PATH),
+      env, now(), securityHeaders,
+    );
+    if (!response?.ok) return null;
+    const result = await response.json();
+    const observation = result?.observation;
+    if (!observation || !["recent","stale"].includes(result.status))
+      return null;
+    return {
+      state:"observed",scope:"work-codex",metric:observation.metric,
+      count:observation.value,unit:observation.unit,period:null,
+      asOf:observation.observedAt,source:observation.source,
+      freshness:result.status,
+    };
+  };
+  const liveSignal=createLiveSignal({readListening:readDbPresence,clock:()=>now().getTime(),readGithub:async()=>{await githubSignal(now());return activityHistory;},readGpt});
   const snapshot = async () => {
     if (!historicalSnapshot) {
       historicalSnapshot = (async () => {
@@ -182,6 +202,8 @@ export function createHandler(assets, release, options = {}) {
       }
       // Protect all admin and OAuth endpoints at the Worker boundary, not
       // merely with a hidden UI route. No Access identity = no account action.
+      if (url.pathname === OBSERVATION_OWNER_PATH)
+        return secured(await handleOwnerObservationRequest(request,env,ctx,now(),securityHeaders));
       if (url.pathname === OBSERVATION_READ_PATH || url.pathname === OBSERVATION_WRITE_PATH)
         return handleObservationRequest(request, env, now(), securityHeaders);
       if(url.pathname.startsWith('/api/activity/tasks/') || (url.pathname==='/api/presence/owner' && url.search==='?channel=tasks')) return secured(await taskApi(request,env,ctx));
