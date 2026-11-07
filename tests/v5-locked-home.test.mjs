@@ -19,6 +19,15 @@ test("locked V5 screenshot modules occupy one semantic preview home", () => {
     assert.ok(body.includes('data-v5-signal="' + source + '"'), source);
   assert.ok(body.includes("Static project composition"));
   assert.ok(body.includes("PROVENANCE REQUIRED"));
+  assert.match(body, /portrait-anevum-transcosmic\\.webp/);
+  assert.match(body, /portrait-anevum-transcosmic-mobile\\.webp/);
+  assert.doesNotMatch(body, /crossed-arms\\.webp/);
+  assert.equal((body.match(/class="v5-lock-project-art"/g) || []).length, 5);
+  for (let i = 0; i < 5; i++) {
+    assert.ok(body.includes('id="v5art-a-' + i + '"'));
+    assert.ok(body.includes('id="v5art-b-' + i + '"'));
+  }
+
   assert.doesNotMatch(body, /143\.2M|2\.7B|3\.19B|99\.98%|all core services healthy|42(?:\/42)? tests passed/i);
 });
 test("locked screenshot home remains confined to dev-only preview and source-safe", () => {
@@ -45,4 +54,6 @@ test("locked CSS includes responsive screenshot geometry and reduced-motion guar
   assert.match(css, /max-width:340px/);
   assert.match(css, /prefers-reduced-motion:reduce/);
   assert.match(css, /min-height:44px/);
+  assert.match(css, /v5-lock-terrain-canvas/);
+  assert.match(css, /v5-lock-project-art/);
 });
