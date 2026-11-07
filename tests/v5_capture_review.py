@@ -112,6 +112,44 @@ def main():
                 assert not page_errors, (file, page_errors)
                 manifest["screenshots"].append({"file": file, "route": PREVIEW + path,
                     "viewport": [width, height], **geometry})
+                if name == "home" and width == 1199:
+                    # Two isolated visual probes, only in the disposable review
+                    # browser. The normal capture/manifest remains untouched.
+                    page.evaluate("""() => {
+                        const source = document.querySelector(".v5-locked-portrait img");
+                        const clone = source.cloneNode(true);
+                        clone.id = "v5-debug-standalone-image";
+                        clone.alt = "";
+                        clone.style.cssText =
+                            "position:fixed!important;left:320px!important;top:65px!important;" +
+                            "width:430px!important;height:430px!important;object-fit:cover!important;" +
+                            "z-index:2147483647!important;mask:none!important;filter:none!important;" +
+                            "opacity:1!important;visibility:visible!important;display:block!important;" +
+                            "transform:none!important;mix-blend-mode:normal!important;" +
+                            "border:3px solid red!important;pointer-events:none!important;";
+                        document.body.appendChild(clone);
+                    }""")
+                    page.screenshot(path=str(OUT / "DIAGNOSTIC-standalone-photo.png"), full_page=False)
+                    page.evaluate("""() => {
+                        document.querySelector("#v5-debug-standalone-image")?.remove();
+                        const box = document.querySelector(".v5-locked-portrait");
+                        const img = box?.querySelector("img");
+                        box?.style.setProperty("z-index", "2147483647", "important");
+                        box?.style.setProperty("mask-image", "none", "important");
+                        box?.style.setProperty("isolation", "auto", "important");
+                        box?.style.setProperty("opacity", "1", "important");
+                        if (img) {
+                            img.style.cssText +=
+                                "filter:none!important;mask:none!important;opacity:1!important;" +
+                                "position:relative!important;z-index:2147483647!important;";
+                        }
+                        const style = document.createElement("style");
+                        style.textContent =
+                            ".v5-locked-portrait::after{display:none!important}" +
+                            ".v5-locked-hero::before{display:none!important}";
+                        document.head.appendChild(style);
+                    }""")
+                    page.screenshot(path=str(OUT / "DIAGNOSTIC-front-portrait.png"), full_page=False)
                 context.close()
         finally:
             browser.close()
