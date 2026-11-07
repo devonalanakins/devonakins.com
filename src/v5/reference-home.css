@@ -840,3 +840,25 @@
     row-gap: 4px;
   }
 }
+
+
+/* Spotify R9: only the validated public projection adds cover and progress.
+ * An unapproved or stale track always retains the neutral source-safe state. */
+.v5-lock-music-tile { position: relative; overflow: hidden; isolation: isolate; }
+.v5-lock-music-tile img[data-v5-spotify-cover] {
+  position: absolute; inset: 0; z-index: 1;
+  width: 100%; height: 100%; object-fit: cover; border-radius: 6px;
+}
+.v5-lock-music-tile img[data-v5-spotify-cover][hidden] { display: none !important; }
+.v5-lock-spotify[data-v5-spotify-state="playing"] .v5-lock-music-text strong {
+  color: #f5ffff; text-shadow: 0 0 8px #5bd7ca44;
+}
+.v5-lock-music-text progress[data-v5-spotify-progress] {
+  display: block; width: 100%; height: 4px;
+  border: 0; border-radius: 12px; overflow: hidden; appearance: none;
+  background: #1a3638;
+}
+.v5-lock-music-text progress[data-v5-spotify-progress][hidden] { display:none!important; }
+.v5-lock-music-text progress[data-v5-spotify-progress]::-webkit-progress-bar { background: #1a3638; }
+.v5-lock-music-text progress[data-v5-spotify-progress]::-webkit-progress-value { background: #41db8e; }
+.v5-lock-music-text progress[data-v5-spotify-progress]::-moz-progress-bar { background: #41db8e; }
