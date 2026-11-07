@@ -1,4 +1,5 @@
 import { publicV5ProjectEvidence } from "./public-evidence.mjs";
+import { publicV5ActivationMode } from "./source-activation.mjs";
 const menu = document.querySelector<HTMLDetailsElement>("[data-mobile-menu]");
 menu?.addEventListener("keydown", (event) => {
   if (event.key === "Escape" && menu.open) {
@@ -104,8 +105,14 @@ inspector?.addEventListener("keydown", (event) => {
 // consent-filtered read model. No additional poller, publisher or owner API.
 const publicPreviewButton = document.querySelector<HTMLButtonElement>("[data-v5-preview-connect]");
 const publicPreviewStatus = document.querySelector<HTMLElement>("[data-v5-preview-source-state]");
-if (field && publicPreviewButton) {
-  publicPreviewButton.hidden = false;
+const activationMode = publicV5ActivationMode(
+  window.location.pathname,
+  document.documentElement.dataset.v5SignalMode,
+);
+if (field && (publicPreviewButton || activationMode === "automatic")) {
+  if (activationMode === "manual-preview" && publicPreviewButton) {
+    publicPreviewButton.hidden = false;
+  }
   let started = false;
   let latestV4: unknown = null;
   const relativeAge = (asOf: string, now: number) => {
@@ -175,11 +182,13 @@ if (field && publicPreviewButton) {
       renderPublicEvidence(latestV4, Date.now());
     }
   });
-  publicPreviewButton.addEventListener("click", async () => {
+  const startPublicReader = async () => {
     if (started) return;
     started = true;
-    publicPreviewButton.disabled = true;
-    publicPreviewButton.textContent = "Public source preview enabled";
+    if (publicPreviewButton) {
+      publicPreviewButton.disabled = true;
+      publicPreviewButton.textContent = "Public source preview enabled";
+    }
     if (publicPreviewStatus) publicPreviewStatus.textContent = "Reading existing public V4 source…";
     try {
       const { startLiveSignal } = await import("../live-signal-client");
@@ -190,7 +199,15 @@ if (field && publicPreviewButton) {
     } catch {
       if (publicPreviewStatus) publicPreviewStatus.textContent = "Public source preview unavailable";
     }
-  });
+  };
+  // The future reviewed public V5 homepage may opt into automatic,
+  // read-only V4 source initialization. Preview remains manual and cannot
+  // flip this mode through a URL query; server consent still gates data.
+  if (activationMode === "automatic") {
+    void startPublicReader();
+  } else if (activationMode === "manual-preview") {
+    publicPreviewButton?.addEventListener("click", () => { void startPublicReader(); });
+  }
 }
 
 
