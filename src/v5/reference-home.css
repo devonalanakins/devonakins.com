@@ -776,3 +776,58 @@
     position:relative;left:auto;bottom:auto;margin:8px 12px 0}
 }
 @media(prefers-reduced-motion:reduce){.v5-field-inspector{backdrop-filter:none}}
+
+
+/* V5 project evidence: only verified fresh V4 source events add accents.
+ * The static terrain never animates fake traffic. */
+.v5-lock-beam-link[data-v5-verified="editor"]::after,
+.v5-lock-beam-link[data-v5-verified="remote"]::after {
+  content: "";
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  top: 6px;
+  right: 1px;
+  border-radius: 50%;
+  background: #72e9d0;
+  box-shadow: 0 0 9px #72e9d0, 0 0 18px #6cdcf2;
+}
+.v5-lock-beam-link[data-v5-verified="remote"]::after {
+  background: #e9ba8d;
+  box-shadow: 0 0 10px #e9ba8d;
+}
+.v5-field-inspector-evidence[hidden] { display: none !important; }
+.v5-field-inspector-evidence {
+  font-size: 11px;
+  line-height: 1.4;
+  color: #bceef2;
+  margin: 7px 0 8px;
+  padding: 8px 9px;
+  border-radius: 8px;
+  border: 1px solid #366771;
+  background: #08202aa8;
+}
+.v5-preview-banner button[data-v5-preview-connect] {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 8px 12px;
+  border: 1px solid #497b84;
+  border-radius: 8px;
+  background: #09232d;
+  color: #d3f7fa;
+  cursor: pointer;
+  font: inherit;
+}
+.v5-preview-banner button[data-v5-preview-connect][hidden] { display:none; }
+.v5-preview-banner button[data-v5-preview-connect]:focus-visible {
+  outline: 2px solid #b6ffff;
+  outline-offset: 2px;
+}
+@media (max-width: 600px) {
+  .v5-frame:has(.v5-locked-home) .v5-preview-banner {
+    padding: 8px 10px;
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+}
