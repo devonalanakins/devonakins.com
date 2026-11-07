@@ -80,17 +80,17 @@ test('malformed payloads, private paths, stale/replayed signals and concurrent o
 test('VS Code companion sends no document metadata, stays paused on startup and stores credentials only in SecretStorage',async()=>{
   let time=start,listener,tick;const commands={};const secrets=new Map();const globals=new Map();const requests=[];
   const api={StatusBarAlignment:{Right:1},window:{state:{focused:true},createStatusBarItem:()=>({show(){},dispose(){}}),
-    showInputBox:async()=>'P'.repeat(43),showQuickPick:async items=>items[2],showInformationMessage:async()=>{},showErrorMessage:async()=>{}},
-    commands:{registerCommand(name,fn){commands[name]=fn;return{dispose(){}};}},workspace:{onDidChangeTextDocument(fn){listener=fn;return{dispose(){}};}}};
+    showInputBox:async()=>'P'.repeat(43),showQuickPick:async items=>items[0],showInformationMessage:async()=>{},showErrorMessage:async()=>{}},
+    commands:{registerCommand(name,fn){commands[name]=fn;return{dispose(){}};}},extensions:{getExtension:()=>({exports:{getAPI:()=>({getRepository:()=>({state:{remotes:[{name:'origin',fetchUrl:'https://github.com/devonalanakins/merit.git'}]}})})}})},workspace:{onDidChangeTextDocument(fn){listener=fn;return{dispose(){}};}}};
   const context={subscriptions:[],secrets:{async get(k){return secrets.get(k);},async store(k,v){secrets.set(k,v);},async delete(k){secrets.delete(k);}},globalState:{get:k=>globals.get(k),async update(k,v){globals.set(k,v);}}};
   const sandbox={require:name=>{assert.equal(name,'vscode');return api;},exports:{},AbortSignal,Date,JSON,Promise,setInterval,clearInterval};
   vm.runInNewContext(readFileSync(new URL('../extensions/presence-vscode/extension.cjs',import.meta.url),'utf8'),sandbox);
   const client=sandbox.exports.createCompanion(api,context,{clock:()=>time,setTimer:fn=>{tick=fn;return 1;},clearTimer(){},fetcher:async(url,init)=>{
-    requests.push({url,init});return Response.json(url.endsWith('/claim')?{token:'T'.repeat(43),expiresAt:new Date(time+3600000).toISOString(),projects:['merit']}:{accepted:true});
+    requests.push({url,init});return Response.json(url.endsWith('/claim')?{token:'T'.repeat(43),expiresAt:new Date(time+3600000).toISOString(),projects:['merit']}:url.endsWith('/catalog')?{version:1,repositories:[{owner:'devonalanakins',name:'merit',projectSlug:'merit'}],expiresAt:new Date(time+300000).toISOString()}:{accepted:true});
   }});await client.ready;
   listener({contentChanges:[{}],get document(){throw Error('document metadata must not be read');}});
   assert.equal(requests.length,0);await client.actions.pair();await client.actions.project();await client.actions.resume();
-  listener({contentChanges:[{}],get document(){throw Error('document metadata must not be read');}});
+  listener({contentChanges:[{}],document:{uri:{scheme:'file'},getText(){throw Error('document text must not be read');}}});
   await new Promise(resolve=>setTimeout(resolve,0));
   const heartbeat=requests.find(r=>r.url.endsWith('/heartbeat'));
   assert.ok(heartbeat);assert.deepEqual(Object.keys(JSON.parse(heartbeat.init.body)).sort(),['active','observedAt','projectSlug','version']);
@@ -106,11 +106,11 @@ test('automatic editor project follows only approved origin remotes and clears a
  const api={StatusBarAlignment:{Right:1},extensions:{getExtension:()=>({exports:{getAPI:()=>({getRepository:()=>({state:{remotes:[{name:'origin',fetchUrl:remote}]}})})}})},window:{state:{focused:true},createStatusBarItem:()=>({show(){},dispose(){}}),showInputBox:async()=>'P'.repeat(43),showInformationMessage:async()=>{},showErrorMessage:async()=>{}},commands:{registerCommand:()=>({dispose(){}})},workspace:{onDidChangeTextDocument(fn){listener=fn;return{dispose(){}};}}};
  const context={subscriptions:[],secrets:{get:async()=>null,store:async()=>{},delete:async()=>{}},globalState:{get:()=>undefined,update:async()=>{}}};
  const sandbox={require:()=>api,exports:{},AbortSignal,Date,JSON,Promise,setInterval,clearInterval};vm.runInNewContext(readFileSync(new URL('../extensions/presence-vscode/extension.cjs',import.meta.url),'utf8'),sandbox);
- const client=sandbox.exports.createCompanion(api,context,{clock:()=>time,setTimer:()=>1,clearTimer(){},fetcher:async(url,init)=>{requests.push({url,data:JSON.parse(init.body)});return Response.json(url.endsWith('/claim')?{token:'T'.repeat(43),expiresAt:new Date(time+3600000).toISOString(),projects:['merit','rhen']}:{accepted:true});}});
+ const client=sandbox.exports.createCompanion(api,context,{clock:()=>time,setTimer:()=>1,clearTimer(){},fetcher:async(url,init)=>{requests.push({url,data:init.body===undefined?undefined:JSON.parse(init.body)});return Response.json(url.endsWith('/claim')?{token:'T'.repeat(43),expiresAt:new Date(time+3600000).toISOString(),projects:['merit','rhen']}:url.endsWith('/catalog')?{version:1,repositories:[{owner:'devonalanakins',name:'merit',projectSlug:'merit'},{owner:'devonalanakins',name:'rhen',projectSlug:'rhen'}],expiresAt:new Date(time+300000).toISOString()}:{accepted:true});}});
  await client.ready;await client.actions.pair();await client.actions.resume();
  const edit=()=>listener({contentChanges:[{}],document:{uri:{scheme:'file'},getText(){throw Error('Text must not be read');}}});
  edit();await new Promise(r=>setTimeout(r,0));assert.equal(requests.at(-1).data.projectSlug,'merit');
  time+=60001;remote='https://github.com/devonalanakins/rhen.git';edit();await new Promise(r=>setTimeout(r,0));assert.equal(requests.at(-1).data.projectSlug,'rhen');
- time+=60001;remote='https://github.com/devonalanakins/private-client.git';edit();await new Promise(r=>setTimeout(r,0));assert.equal(requests.at(-1).data.projectSlug,null);
+ time+=60001;remote='https://github.com/devonalanakins/private-client.git';edit();await new Promise(r=>setTimeout(r,0));assert.equal(requests.at(-1).data.projectSlug,null);assert.equal(requests.at(-1).data.active,false);
  assert.ok(!JSON.stringify(requests).includes('private-client'));client.dispose();
 });

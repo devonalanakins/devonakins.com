@@ -1,7 +1,7 @@
 # DevonAkins Presence
 
 An optional, initially paused VS Code companion for the owner's personal site.
-It matches the edited document to the built-in Git extension's origin remote locally, and sends only an approved catalog slug, focused-edit observation and timestamp. Unknown/private repositories produce no project name. No text, filenames, paths, raw Git metadata, prompts or clipboard data are transmitted.
+It matches the edited document to the built-in Git extension's origin remote locally using an authenticated, owner-approved repository catalog, and sends only the approved project slug, focused-edit observation and timestamp. Unknown/private repositories produce no activity signal; switching to one clears any preceding public editor activity. No text, filenames, paths, raw Git metadata, prompts or clipboard data are transmitted.
 Edits made through editor commands can also produce an activity event; this is
 editor-observed activity, not proof of human keystrokes or productivity.
 
@@ -12,7 +12,7 @@ editor-observed activity, not proof of human keystrokes or productivity.
 2. Visit your protected website `/owner/presence/` on your phone or computer.
    Create a pairing code. Paste it only into **Devon Presence: Pair Editor** in
    VS Code's command palette. It expires after five minutes and is one-use.
-3. Automatic approved-project detection is the default. An explicit manual override remains available. Enable paired editor activity
+3. Automatic approved-project detection is the default. Project names cannot be manually assigned to unrelated edits. Enable paired editor activity
    in the private website controls, then run **Devon Presence: Resume Sharing**.
 4. Focused edits can now produce an expiring heartbeat at most once per minute.
    Merely leaving VS Code open does not count. Pairing lasts 30 days; restart
@@ -48,3 +48,15 @@ module with simulated VS Code events and SecretStorage. A real desktop extension
 host, owner pairing and signed-in account are separate acceptance checks.
 
 Version 0.2.0 adds automatic allowlisted GitHub project mapping using the built-in Git API. Credentials are independently revocable and expire after 30 days; a restart remembers explicit sharing opt-in and still waits for a real edit. Pause Sharing persists across restarts.
+
+Version 0.3.0 waits for the built-in Git extension to activate, recognizes only
+actual repository document edits, and keeps unknown, virtual and untrusted
+workspaces private. Repository recognition comes from the paired editor's
+read-only `/api/presence/editor/catalog`, refreshed at least every five minutes;
+a newly approved repository can map to an existing project identity without
+reinstalling this extension or repeating pairing. Approval changes are enforced
+again by the server on every heartbeat. An unavailable or expired catalog stops
+sharing until it can be verified again, and refreshing it never invents an edit.
+The catalog and raw Git remotes stay local; requests never transmit repository
+names, source text, file names or paths. The settings command allows automatic
+recognition or keeping all edits private.
