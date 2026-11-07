@@ -469,3 +469,15 @@
     mix-blend-mode: normal;
   }
 }
+
+
+/* Verified compositor order: the separately rendered portrait is visible;
+ * its previous low stacking level was covered by hero paint. Constrain
+ * elevated levels within the hero's existing isolated stacking context. */
+@media (min-width: 901px) {
+  .v5-locked-hero { isolation: isolate; }
+  .v5-locked-portrait { z-index: 100; }
+  .v5-locked-identity { z-index: 110; }
+  .v5-locked-rail { z-index: 120; }
+  .v5-locked-signal { z-index: 130; }
+}
