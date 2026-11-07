@@ -239,6 +239,80 @@ def main():
                 page.locator(".v5-mobile-nav a").filter(has_text="Writing").click()
                 assert page.url.endswith("writing/")
                 context.close()
+                if engine == "chromium":
+                    # The default preview remains source-free. This test
+                    # explicitly opts in, then serves only a local synthetic
+                    # PUBLIC V4 fixture to exercise the real UI adapter.
+                    from datetime import datetime, timedelta, timezone
+                    def timestamp(time):
+                        return time.isoformat(timespec="milliseconds").replace("+00:00","Z")
+                    now=datetime.now(timezone.utc)
+                    recent=timestamp(now-timedelta(seconds=30))
+                    work_at=timestamp(now-timedelta(seconds=10))
+                    task_at=timestamp(now-timedelta(seconds=12))
+                    task_end=timestamp(now+timedelta(seconds=85))
+                    payload={
+                        "version":4,"asOf":timestamp(now),
+                        "work":{"version":1,"visibility":"public","source":"editor-heartbeat",
+                                "project":"Mizvo","state":"developing","asOf":work_at},
+                        "remote":{"version":1,"visibility":"public","tasks":[
+                            {"source":"codex","project":"Merit","state":"running","checkpoint":None,
+                             "asOf":task_at,"expiresAt":task_end},
+                        ]},
+                        "recent":[{"project":"Mizvo","projectSlug":"mizvo","kind":"Commit",
+                                   "url":"https://github.com/devonalanakins/mizvo","at":recent}],
+                        "spotify":{"version":1,"mode":"hidden","detailsVisible":False},
+                        "gpt":{"state":"disconnected","scope":"personal-work-codex","observations":[]},
+                    }
+                    revoked={
+                        **payload,
+                        "work":{"visibility":"hidden","source":"none","state":"not-broadcasting"},
+                        "remote":{"visibility":"hidden","tasks":[]},
+                        "recent":[],
+                    }
+                    context=browser.new_context(viewport={"width":1199,"height":1312})
+                    page=context.new_page()
+                    public_calls=[]
+                    rejected=[]
+                    status={"mode":"live"}
+                    def route_public(route):
+                        url=route.request.url
+                        if url == origin + "/api/activity/v4":
+                            public_calls.append(url)
+                            route.fulfill(status=200,content_type="application/json",
+                                          body=json.dumps(payload if status["mode"]=="live" else revoked))
+                        elif "/api/" in url or not url.startswith(origin+"/"):
+                            rejected.append(url)
+                            route.abort()
+                        else:
+                            route.continue_()
+                    page.route("**/*",route_public)
+                    page.goto(origin+PREVIEW,wait_until="networkidle")
+                    assert not public_calls, "preview must never start an implicit source request"
+                    assert page.locator("[data-v5-field-node][data-v5-verified]").count()==0
+                    page.locator("[data-v5-preview-connect]").click()
+                    page.wait_for_function(
+                        "() => document.querySelector('[data-v5-work-summary]')?.textContent === 'Mizvo'",
+                        timeout=10000,
+                    )
+                    assert len(public_calls)==1, "one V4 polling client, not duplicate readers"
+                    assert page.locator('a[data-v5-field-slug="mizvo"]').get_attribute("data-v5-verified")=="editor"
+                    assert page.locator('a[data-v5-field-slug="merit"]').get_attribute("data-v5-verified")=="remote"
+                    assert "Public GitHub history" in page.locator("[data-v5-github-summary]").inner_text()
+                    page.locator('a[data-v5-field-slug="mizvo"]').click()
+                    assert page.locator("#v5-field-inspector").is_visible()
+                    assert "Editor observed" in page.locator("[data-v5-field-evidence]").inner_text()
+                    page.keyboard.press("Escape")
+                    status["mode"]="revoked"
+                    page.evaluate("document.dispatchEvent(new Event('visibilitychange'))")
+                    page.wait_for_function(
+                        "() => document.querySelectorAll('[data-v5-field-node][data-v5-verified]').length === 0",
+                        timeout=10000,
+                    )
+                    assert len(public_calls)>=2
+                    assert "No fresh" in page.locator("[data-v5-work-summary]").inner_text()
+                    assert not rejected, rejected
+                    context.close()
             finally:
                 browser.close()
     (output / "report.json").write_text(json.dumps(results, indent=2))
