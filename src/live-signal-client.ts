@@ -25,6 +25,16 @@ const sources: Record<string, string> = {
   "chatgpt-work": "Work task",
   "github-actions": "Workflow task",
 };
+const gptMetrics: Record<string, { unit: string; scope: string; source: string; label: string; max: number }> = {
+  profile_7d_tokens: { unit: "tokens", scope: "owner-profile", source: "owner-profile-capture", label: "7-day tokens", max: 1e12 },
+  profile_lifetime_tokens_approx: { unit: "tokens", scope: "owner-profile", source: "owner-profile-capture", label: "Approx. total tokens", max: 1e12 },
+  profile_7d_messages: { unit: "messages", scope: "owner-profile", source: "owner-profile-capture", label: "7-day messages", max: 1e9 },
+  profile_streak_days: { unit: "days", scope: "owner-profile", source: "owner-profile-capture", label: "Streak at capture", max: 36500 },
+  work_codex_credits_remaining: { unit: "credits", scope: "work-codex", source: "owner-work-codex-usage", label: "Credits remaining", max: 1e6 },
+  work_codex_credits_used: { unit: "credits", scope: "work-codex", source: "owner-work-codex-usage", label: "Credits used", max: 1e6 },
+  business_7d_messages: { unit: "messages", scope: "business-member", source: "owner-business-analytics", label: "Member messages · 7d", max: 1e9 },
+  business_7d_credits_used: { unit: "credits", scope: "business-member", source: "owner-business-analytics", label: "Member credits · 7d", max: 1e6 },
+};
 const checkpoints: Record<string, string> = {
   testing: "Testing",
   "tests-passed": "Tests reported passed",
@@ -132,9 +142,37 @@ export function startLiveSignal(onPlayback: (data: unknown) => void) {
         "data-active",
         editor ? "editor" : active.length ? "remote" : "quiet",
       );
-    // GPT counts stay disconnected until a supported, scoped publication source is connected.
-    text("[data-signal-gpt]", "—");
-    text("[data-signal-gpt-detail]", "Work / Codex · Not connected");
+    // Owner-captured GPT observations are not provider-live counts. A five-minute
+    // page refresh never advances their capture timestamps.
+    const g = v?.gpt;
+    const def = typeof g?.metric === "string" && Object.hasOwn(gptMetrics, g.metric)
+      ? gptMetrics[g.metric] : null;
+    const captureAt = typeof g?.asOf === "string" ? Date.parse(g.asOf) : NaN;
+    const validGpt = g?.state === "snapshot" && def &&
+      g.unit === def.unit && g.scope === def.scope && g.source === def.source &&
+      (g.freshness === "recent" || g.freshness === "historical") &&
+      g.sourceUpdatedAt === null &&
+      typeof g.count === "number" && Number.isFinite(g.count) &&
+      g.count >= 0 && g.count <= def.max &&
+      Number.isFinite(captureAt) && captureAt <= at + 60000 && captureAt > 0;
+    const gptCount = validGpt ? new Intl.NumberFormat("en-US", {
+      notation:"compact", maximumFractionDigits:1,
+    }).format(g.count) : "—";
+    text("[data-signal-gpt]", gptCount);
+    text("[data-signal-gpt-detail]", validGpt
+      ? def.label + " · owner capture " + age(g.asOf,at)
+      : "GPT analytics · Not connected");
+    const recordedPanel = document.querySelector<HTMLElement>("#gpt-observation-panel");
+    if (recordedPanel) {
+      recordedPanel.hidden = !validGpt;
+      if (validGpt) {
+        text("#gpt-observation-value",gptCount + " " + def.unit);
+        text("#gpt-observation-state",
+          def.label + " · " + (g.freshness === "historical" ? "Historical" : "Recent") +
+          " · Owner recorded; provider update unverified");
+        text("#gpt-observation-age","Captured " + age(g.asOf,at));
+      }
+    }
     const playback = v?.spotify || {
       version: 1,
       mode: "unavailable",
