@@ -1,5 +1,8 @@
 # Living Mind V5 — preview-shell checkpoint
 
+> **Portrait continuation (2026-11-07; supersedes crossed-arms-specific preview wording below):** The owner approved the Anevum/Transcosmic cinematic artwork for V5. This branch now includes the exact archived optimized desktop/mobile WebPs at `src/v5/assets/`, referenced only by the opt-in Vite development preview. The original V4 `/v2/crossed-arms.webp` and all production outputs remain untouched until protected release approval. These are owner-approved portrait *artworks*, not documentary photos. Desktop/mobile decode, viewport, accessibility, and production-asset exclusion are required for the updated PR head; the older CI run belongs only to the original preview commit.
+
+
 Date: November 7, 2026. Scope: the first bounded implementation task in the owner-supplied execution prompt. This is R0 / the beginning of R1, not a completed redesign or a release candidate.
 
 ## Authority and baseline

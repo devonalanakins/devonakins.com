@@ -121,7 +121,7 @@ export function renderReferenceHomepage() {
   return '<div class="v5-locked-home" data-v5-exact-reference="2026-11-07">' +
     '<section class="v5-locked-hero" aria-labelledby="v5-title">' +
       '<nav class="v5-locked-rail" aria-label="Screenshot side navigation">' + rail + '</nav>' +
-      '<div class="v5-locked-portrait v5-portrait"><img src="/v2/crossed-arms.webp" width="820" height="1024" alt="Portrait of Devon Akins" fetchpriority="high"></div>' +
+      '<div class="v5-locked-portrait v5-portrait"><picture><source media="(max-width: 600px)" type="image/webp" srcset="/src/v5/assets/portrait-anevum-transcosmic-mobile.webp"><img src="/src/v5/assets/portrait-anevum-transcosmic.webp" alt="Cinematic portrait artwork of Devon Akins in a dark eclipse-graphic T-shirt and fitted jeans" width="1122" height="1402" fetchpriority="high" decoding="async"></picture></div>' +
       '<div class="v5-locked-identity"><h1 id="v5-title">Devon Alan Akins</h1>' +
         '<p class="v5-locked-roles">Developer · Researcher · Builder · Father<br>Writer · Systems Architect</p>' +
         '<div class="v5-locked-accent"></div>' +
