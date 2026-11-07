@@ -21,6 +21,46 @@ const MIN_WRITE_INTERVAL_MS = 5 * 60_000;
 const MAX_OBSERVATION_AGE_MS = 15 * 60_000;
 const FRESH_MS = 15 * 60_000;
 const MAX_BODY_BYTES = 1024;
+
+// Reuse the existing private, single-primary D1. No extra KV resource,
+// background computer, database of conversations, or new credentials required.
+// Old standalone KV experiments remain compatible when D1 is absent.
+function observationStore(env, at) {
+  const db = env?.LISTENING_DB;
+  if (db && typeof db.prepare === "function") {
+    return {
+      async get(key, mode) {
+        if (key !== STORAGE_KEY || mode !== "text") throw Error("Invalid record");
+        const row = await db.prepare(
+          "SELECT record, received_at FROM gpt_owner_snapshots WHERE id=1",
+        ).first();
+        return row && Number.isSafeInteger(row.received_at) &&
+          at.getTime() - row.received_at < RETENTION_SECONDS * 1000
+          ? row.record : null;
+      },
+      async put(key, value, options) {
+        if (key !== STORAGE_KEY || typeof value !== "string" ||
+            value.length > 1024 ||
+            options?.expirationTtl !== RETENTION_SECONDS)
+          throw Error("Invalid record");
+        const result = await db.prepare(
+          "INSERT INTO gpt_owner_snapshots(id,record,received_at) VALUES(1,?,?) " +
+          "ON CONFLICT(id) DO UPDATE SET record=excluded.record," +
+          "received_at=excluded.received_at WHERE excluded.received_at >= " +
+          "gpt_owner_snapshots.received_at+300000",
+        ).bind(value,at.getTime()).run();
+        if (result.meta?.changes !== 1) throw Error("Concurrent snapshot write");
+      },
+      async delete(key) {
+        if (key !== STORAGE_KEY) throw Error("Invalid record");
+        await db.prepare("DELETE FROM gpt_owner_snapshots WHERE id=1").run();
+      },
+    };
+  }
+  const legacy = env?.GPT_USAGE_STORE;
+  return legacy && typeof legacy.get === "function" &&
+    typeof legacy.put === "function" ? legacy : null;
+}
 const metrics = Object.freeze({
   work_codex_credits_used: "credits",
   work_codex_credits_remaining: "credits",
@@ -204,7 +244,7 @@ export async function handleObservationRequest(
   const isRead=path===OBSERVATION_READ_PATH;
   const isWrite=path===OBSERVATION_WRITE_PATH;
   if (!isRead && !isWrite) return null;
-  const store = env?.GPT_USAGE_STORE;
+  const store = observationStore(env,at);
   if (!store || typeof store.get !== "function" ||
       typeof store.put !== "function") return disabledResponse(securityHeaders);
   if (isRead) {
@@ -263,7 +303,7 @@ export async function handleOwnerObservationRequest(
     return null;
   if (!(await isListeningOwner(env, ctx)))
     return json({ error: "Owner authentication required" },403,securityHeaders);
-  const store = env?.GPT_USAGE_STORE;
+  const store = observationStore(env,at);
   if (!store || typeof store.get !== "function" ||
       typeof store.put !== "function")
     return unavailableResponse(securityHeaders);
@@ -282,7 +322,10 @@ export async function handleOwnerObservationRequest(
   }
   if (request.method !== "POST")
     return json({error:"Method not allowed"},405,securityHeaders,{Allow:"GET, POST"});
-  if (env.GPT_USAGE_WRITE_ENABLED !== "true")
+  // Owner-initiated capture uses the already protected private D1; it does
+  // not enable bearer ingestion or publication. Legacy KV requires write gate.
+  if (env.PRESENCE_ENABLED !== "true" &&
+      env.GPT_USAGE_WRITE_ENABLED !== "true")
     return disabledResponse(securityHeaders);
   if (!validOwnerOrigin(request))
     return json({error:"Cross-site operation denied"},403,securityHeaders);
