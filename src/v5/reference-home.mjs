@@ -140,7 +140,7 @@ export function renderReferenceHomepage() {
         '<a class="v5-lock-spotify v5-lock-evidence" data-v5-signal="spotify" href="/listening/">' +
           '<span class="v5-lock-music-tile">' + icon("music") + '</span>' +
           '<span class="v5-lock-music-text"><small>SPOTIFY · PLAYBACK</small><strong>Playback not loaded</strong><span>Awaiting consented source</span></span>' +
-          '<span class="v5-lock-open" aria-label="Listening page">' + icon("arrow") + '</span>' +
+          '<span class="v5-lock-open" aria-hidden="true">' + icon("arrow") + '</span>' +
         '</a>' +
         '<a class="v5-lock-work v5-lock-evidence" data-v5-signal="work" href="/studio/">' +
           '<span class="v5-lock-panel-title">' + icon("code") + ' Current Work Session <small>NOT VERIFIED</small></span>' +
