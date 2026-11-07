@@ -12,3 +12,23 @@
 .gpt-record-actions button{min-height:44px}
 .gpt-record-actions button:disabled{opacity:.45;cursor:not-allowed}
 @media(max-width:520px){.gpt-record-row{padding:14px}.gpt-record-actions button{flex:1}}
+.gpt-groups{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px;margin-top:24px}
+.gpt-group{min-width:0;margin:0;padding:22px;border-color:rgba(174,195,212,.2)}
+.gpt-group:first-child{grid-column:1/-1}
+.gpt-group legend{font-size:21px;font-weight:650;padding:0 8px;letter-spacing:-.02em}
+.gpt-group legend .eyebrow{font-size:11px;letter-spacing:.12em;margin-right:8px;color:#f4d2b9}
+.gpt-input-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px 22px}
+.gpt-group:not(:first-child) .gpt-input-grid{grid-template-columns:1fr}
+.gpt-measurement{min-width:0}
+.gpt-measurement input{width:100%;max-width:100%;box-sizing:border-box;min-height:50px;border:1px solid rgba(166,192,211,.46);border-radius:12px;padding:12px;background:#111e29;color:#f1f5f7;font:inherit;font-size:17px;font-variant-numeric:tabular-nums}
+.gpt-measurement input::placeholder{color:#a7b8c4;opacity:1}
+.gpt-measurement input:focus-visible{outline:2px solid #ddb394;outline-offset:3px}
+.gpt-measurement input:invalid:not(:placeholder-shown){border-color:#ffb5a9}
+.gpt-previous{min-height:42px;font-size:12px;overflow-wrap:anywhere}
+.gpt-save-bar{display:flex;gap:20px;justify-content:space-between;align-items:center;margin-top:22px;padding:22px;border-radius:18px;background:#172734;border:1px solid rgba(174,195,212,.25)}
+.gpt-save-bar .fine{margin:6px 0 0}.gpt-save-bar .actions{margin:0;flex-shrink:0}
+#gpt-form-status{min-height:24px;color:#d5e4ef}#gpt-form-status[data-error=true]{color:#ffc1b6}
+.gpt-privacy-card{margin-top:28px}#gpt-save:disabled{opacity:.55;cursor:not-allowed}
+@media(max-width:720px){.gpt-groups{grid-template-columns:1fr}.gpt-group:first-child{grid-column:auto}.gpt-save-bar{align-items:stretch;flex-direction:column}.gpt-save-bar .actions{flex-wrap:wrap}.gpt-save-bar button{flex:1}}
+@media(max-width:440px){.gpt-group{padding:16px}.gpt-group legend{font-size:18px}.gpt-input-grid{grid-template-columns:1fr}.gpt-previous{min-height:0}.gpt-save-bar{padding:16px}}
+@media(prefers-reduced-motion:reduce){.gpt-group,.gpt-save-bar{animation:none;transition:none}}

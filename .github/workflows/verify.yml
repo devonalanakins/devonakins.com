@@ -57,6 +57,11 @@ jobs:
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: node scripts/verify-public-signal.mjs
 
+      - name: Verify GPT transactions against real local workerd and D1 (PR only)
+        if: github.event_name == 'pull_request'
+        run: |
+          npm install --prefix "$RUNNER_TEMP/gpt-d1" --no-save --no-package-lock --no-fund --no-audit miniflare@5.20261104.0-beta
+          GPT_MINIFLARE_ROOT="$RUNNER_TEMP/gpt-d1/node_modules" node tests/gpt-d1-runtime.mjs
       - name: Probe actual Worker HTTP behavior in isolated local workerd (PR only)
         if: github.event_name == 'pull_request'
         timeout-minutes: 4
@@ -80,6 +85,9 @@ jobs:
       - name: Verify V2 navigation, touch targets and WCAG in Chromium and WebKit (PR only)
         if: github.event_name == 'pull_request'
         run: python3 tests/browser_acceptance.py --axe --out browser-qa
+      - name: Verify private GPT batch form with synthetic records (PR only)
+        if: github.event_name == 'pull_request'
+        run: python3 tests/gpt_owner_acceptance.py
       - name: Attach browser QA report or failing screenshots (PR only)
         if: always() && github.event_name == 'pull_request'
         uses: actions/upload-artifact@v4

@@ -139,17 +139,20 @@ export function renderPublicGptProfile(input) {
     : '<p class="gpt-empty">No integrations listed in the current snapshot.</p>';
   const observationMarkup = `
     <section class="gpt-section gpt-observation-panel" id="gpt-v4-snapshot-panel"
-      aria-labelledby="gpt-v4-snapshot-heading" hidden>
-      <div class="gpt-live-kicker">OWNER-REVIEWED / PERIODIC OBSERVATION</div>
+      aria-labelledby="gpt-v4-snapshot-heading">
+      <div class="gpt-live-kicker">GPT OBSERVATORY / RECORDED ACTIVITY</div>
       <header class="gpt-live-heading">
         <div><span class="gpt-section-index">00 / SNAPSHOT</span>
-          <h2 id="gpt-v4-snapshot-heading">Latest approved capture.</h2>
-          <p>Not an account-wide live feed. Each approved metric retains its original capture time and reported scope.</p>
+          <h2 id="gpt-v4-snapshot-heading">Activity, with context.</h2>
+          <p>Personal profile, Work/Codex and individual Business readings stay separate. Each number carries its own capture date.</p>
         </div>
       </header>
+      <span class="gpt-primary-label">PERSONAL PROFILE / 7-DAY TOKENS</span>
       <strong id="gpt-v4-snapshot-value" class="gpt-observation-value" aria-live="off">—</strong>
-      <p id="gpt-v4-snapshot-state" role="status" aria-live="polite"></p>
+      <p id="gpt-v4-snapshot-state" role="status" aria-live="polite">No shared seven-day token reading.</p>
       <p id="gpt-v4-snapshot-age" class="gpt-observation-age" aria-live="off"></p>
+      <div id="gpt-v4-observations" class="gpt-current-metrics" role="list" aria-label="Approved recorded GPT metrics"></div>
+      <p id="gpt-v4-observations-empty" class="gpt-observation-age">No approved readings available. Private measurements stay private.</p>
       <p class="gpt-observation-disclosure">New values appear only after a source observation is recorded. Refreshing this page does not create new ChatGPT usage.</p>
     </section>
     <section class="gpt-section gpt-observation-panel" id="gpt-observation-panel"
@@ -201,12 +204,16 @@ export function renderPublicGptProfile(input) {
     '<strong>' + esc(p.displayName) + '</strong><span>@' + esc(p.username) + '</span></div>' +
     '<a class="gpt-profile-original" href="' + esc(p.publicProfileUrl) +
     '" target="_blank" rel="noopener noreferrer">Open ChatGPT profile</a></div>' +
-    '<div class="gpt-primary-stat" aria-label="Cumulative Work and Codex token snapshot">' +
+    observationMarkup + publicActivityMarkup +
+    '<section class="gpt-archive" aria-labelledby="gpt-archive-heading">' +
+    '<header class="gpt-section-head"><div><span class="gpt-section-index">ARCHIVE / 2026-11-04</span>' +
+    '<h2 id="gpt-archive-heading">Historical archive.</h2><p>The November 4 capture is preserved below. It does not change when new readings are recorded.</p></div></header>' +
+    '<div class="gpt-primary-stat" aria-label="Historical cumulative Work and Codex token snapshot">' +
     '<span class="gpt-primary-label">WORK / CODEX · RECORDED CUMULATIVE TOKENS</span>' +
     '<strong>≈' + esc(compact(s.count)) + '</strong><span class="gpt-primary-date">SNAPSHOT / ' +
     '<time datetime="' + esc(s.asOf) + '">' + esc(longDate) + '</time></span>' +
     '<p>' + esc(p.scope) + ' Manually captured; historical figures are not updated in real time.</p></div>' +
-    weekly + observationMarkup + publicActivityMarkup +
+    weekly +
     '<section class="gpt-section" aria-labelledby="gpt-activity-heading">' +
     heading("gpt-activity-heading", "01 / PROFILE", "By the numbers",
       "Profile-level figures captured " + longDate +
@@ -247,14 +254,10 @@ export function renderPublicGptProfile(input) {
     metric("FAST MODE", ins.fastModePercent + "%", "Profile-reported proportion") +
     metric("MOST USED REASONING", ins.mostUsedReasoning, "Profile insight; not a benchmark") +
     '</div></section>' +
-    '<section class="gpt-section" aria-labelledby="gpt-public-development-heading">' +
-    heading("gpt-public-development-heading", "06 / PUBLIC", "Development signal",
-      "Latest publicly visible GitHub activity, independent of ChatGPT and Work/Codex usage.") +
-    '<p id="gpt-public-activity" class="gpt-signal-context" role="status" aria-live="polite">Checking public development activity. The GPT statistics above remain historical.</p></section>' +
     '<footer class="gpt-profile-foot"><strong>DATED PUBLIC SNAPSHOT / NO PRIVATE ACCOUNT ACCESS</strong>' +
     '<p>As of <time datetime="' + esc(s.asOf) + '">' + esc(longDate) + '</time>. ' +
     'Reconciled from owner-provided recordings. Updates are published through this repository; ' +
     'no authenticated ChatGPT API, account cookies, or estimated daily values.</p>' +
     '<a href="' + esc(p.publicProfileUrl) + '" target="_blank" rel="noopener noreferrer">View original profile</a>' +
-    '</footer></div>';
+    '</footer></section></div>';
 }

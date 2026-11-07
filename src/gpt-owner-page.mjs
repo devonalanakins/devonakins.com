@@ -1,5 +1,18 @@
 /** Access-only owner recording screen. Never embeds source observations in HTML. */
-export function renderGptOwner() {
+export function renderGptOwner(metrics) {
+  const groups = [
+    ['Personal ChatGPT profile', 'Record the numbers shown on your own profile.', 'owner-profile'],
+    ['Work / Codex', 'Credits are separate from tokens and subscription entitlements.', 'work-codex'],
+    ['My Business usage', 'Use only your individual member row, not your organization’s totals.', 'business-member'],
+  ];
+  const fields = groups.map(([title,help,scope],index)=>`<fieldset class="card gpt-group">
+    <legend><span class="eyebrow">0${index+1}</span> ${title}</legend><p class="fine">${help}</p>
+    <div class="gpt-input-grid">${Object.entries(metrics).filter(([,spec])=>spec.scope===scope).map(([metric,spec])=>`
+      <div class="gpt-measurement"><label class="gpt-field" for="gpt-${metric}">${spec.label}</label>
+        <input id="gpt-${metric}" data-metric="${metric}" type="number" inputmode="${spec.integer?'numeric':'decimal'}"
+          min="0" max="${spec.max}" step="${spec.integer?'1':'any'}" placeholder="Leave blank to keep" aria-describedby="gpt-last-${metric}">
+        <p class="gpt-previous fine" id="gpt-last-${metric}">Checking previous reading…</p>
+      </div>`).join('')}</div></fieldset>`).join('');
   return `<!doctype html><html lang="en"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="robots" content="noindex,nofollow,noarchive"><meta name="referrer" content="no-referrer">
@@ -12,36 +25,20 @@ export function renderGptOwner() {
 <main class="container" id="main">
   <div class="eyebrow">GPT OBSERVATORY / PRIVATE CAPTURE</div>
   <h1>Recorded usage.<br><em>No invented signal.</em></h1>
-  <p class="intro">Save an actual number visible in your own ChatGPT profile, Work/Codex usage screen, or your individual Business analytics row. The website checks for approved new readings every five minutes, but cannot force OpenAI to issue new measurements. No passwords, screenshots or conversations are collected.</p>
-  <div class="grid">
-    <section class="card" aria-labelledby="capture-heading">
-      <h2 id="capture-heading">Add an observation</h2>
-      <form id="gpt-record-form">
-        <label class="gpt-field" for="gpt-metric">What did you measure?</label>
-        <select id="gpt-metric" required>
-          <option value="profile_7d_tokens">7-day tokens · owner profile</option>
-          <option value="profile_lifetime_tokens_approx">Approximate lifetime tokens · owner profile</option>
-          <option value="profile_7d_messages">7-day messages · owner profile</option>
-          <option value="profile_streak_days">Streak days · owner profile</option>
-          <option value="work_codex_credits_remaining">Work/Codex credits remaining</option>
-          <option value="work_codex_credits_used">Work/Codex credits used</option>
-          <option value="business_7d_messages">My Business member-row 7-day messages</option>
-          <option value="business_7d_credits_used">My Business member-row 7-day credits</option>
-        </select>
-        <label class="gpt-field" for="gpt-value">Number shown in the source</label>
-        <input id="gpt-value" type="number" inputmode="decimal" min="0" max="1000000000000" step="any" required placeholder="Enter the actual number">
-        <p class="fine" id="gpt-source-help">Choose the metric exactly as labeled in the source. We record the capture time, not an OpenAI refresh time.</p>
-        <div class="actions"><button id="gpt-save" type="submit">Save private reading</button><button id="gpt-reload" type="button" class="secondary">Refresh records</button></div>
-      </form>
-    </section>
-    <section class="card" aria-labelledby="gpt-privacy-heading">
-      <h2 id="gpt-privacy-heading">Privacy &amp; freshness</h2>
-      <p class="fine">Every new metric is private by default. Publishing one requires an independent server release gate, your metric-specific permission, and the main Live Signal broadcasting permission. Stop all broadcasting hides every metric.</p>
-      <p class="fine">An observation is <strong>recent for 24 hours</strong>, then explicitly historical. A page refresh does not change its recorded time. The archived 2026 profile is preserved separately and never treated as the current total.</p>
-      <p class="fine">Only small numeric values and their capture timestamps are stored in the existing private database. No account IDs, conversations, client information, or usage exports are stored.</p>
-      <a class="return" href="/gpt/">VIEW PUBLIC GPT PROFILE ↗</a>
-    </section>
-  </div>
+  <p class="intro">Record your profile, Work/Codex, and individual Business measurements together. The website checks for approved new readings every five minutes, but cannot force OpenAI to issue new measurements. No passwords, screenshots or conversations are collected.</p>
+  <form id="gpt-record-form" aria-describedby="gpt-batch-help">
+    <p class="fine" id="gpt-batch-help">Enter any measurements you checked. Blank fields keep their previous values and capture times. One save records the entire batch; sharing permissions stay as you set them.</p>
+    <div class="gpt-groups">${fields}</div>
+    <div class="gpt-save-bar"><div><strong id="gpt-draft-summary">No new readings entered</strong><p class="fine">Capture time is recorded when you save.</p></div>
+      <div class="actions"><button id="gpt-save" type="submit" disabled>Save readings</button><button id="gpt-reload" type="button" class="secondary">Refresh records</button></div></div>
+    <p id="gpt-form-status" class="fine" role="status" aria-live="polite">Loading current revision…</p>
+  </form>
+  <section class="card gpt-privacy-card" aria-labelledby="gpt-privacy-heading">
+    <h2 id="gpt-privacy-heading">You control what is public.</h2>
+    <p class="fine">New metrics stay private until you share each one below. Sharing a metric also permits its future recorded updates while Live Signal broadcasting is enabled. Stop all broadcasting hides every metric.</p>
+    <p class="fine">Readings are recent for 24 hours, then historical. The homepage always features seven-day tokens when shared. The November 4 archive stays separate.</p>
+    <a class="return" href="/gpt/">VIEW PUBLIC GPT PROFILE ↗</a>
+  </section>
   <section class="card gpt-record-card" aria-labelledby="gpt-record-heading">
     <h2 id="gpt-record-heading">Latest private readings</h2>
     <p class="fine" id="gpt-owner-status" role="status" aria-live="polite">Checking the private source…</p>

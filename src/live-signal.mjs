@@ -17,6 +17,7 @@ export const disconnectedGpt = () => ({
   asOf: null,
   source: null,
   freshness: "unavailable",
+  observations: [],
 });
 export const emptyPlayback = () => ({
   version: 1,
@@ -52,9 +53,6 @@ export function createLiveSignal({
       recent: [],
     });
     const result = base();
-    // GPT snapshots have their own owner/metric and server-side release gates.
-    // This does not convert a dated owner observation into live ChatGPT usage.
-    result.gpt = await readPublicGptSnapshot(env, clock());
     // Public GitHub events are history; never an input to current work selection.
     try {
       result.recent = (await readGithub()).slice(0, 8);
@@ -96,6 +94,16 @@ export function createLiveSignal({
         final.editor_generation !== before.editor_generation
       )
         return base();
+      // Capture GPT last: a slow external provider must not hold a revoked
+      // observation in the aggregate response. It independently fences consent.
+      const capture=env.GPT_SNAPSHOT_PUBLIC_RELEASE_APPROVED==='true'?
+        await env.LISTENING_DB.prepare('SELECT revision FROM gpt_capture_state WHERE id=1').first():null;
+      result.gpt = await readPublicGptSnapshot(env, clock());
+      const consent=capture?
+        await env.LISTENING_DB.prepare('SELECT p.revision,p.public_enabled,p.private_work,g.revision AS capture_revision FROM presence_state p JOIN gpt_capture_state g ON g.id=p.id WHERE p.id=1').first():
+        await presenceRow(env);
+      if(!enabled(env,consent)||consent.revision!==before.revision||
+          (capture&&consent.capture_revision!==capture.revision))return base();
       result.asOf = new Date(clock()).toISOString();
       return result;
     } catch {
