@@ -30,6 +30,9 @@ const env=(store,read=true,write=true)=>({
   GPT_USAGE_READ_ENABLED:read?"true":"false",
   GPT_USAGE_PUBLIC_RELEASE_APPROVED:"true",
   GPT_USAGE_WRITE_ENABLED:write?"true":"false",
+  PRESENCE_ENABLED:"true",
+  PRESENCE_PUBLIC_RELEASE_APPROVED:"true",
+  LISTENING_DB:{prepare:()=>({first:async()=>({public_enabled:1,private_work:0,revision:0})})},
   GPT_USAGE_INGEST_SECRET:secret,
 });
 const req=(path,method="GET",value=undefined,token=secret,extraHeaders={})=>
