@@ -61,6 +61,18 @@ def check_page(page, origin, path, axe):
         assert page.locator(".v5-lock-top-nav a").count() == 7
         assert page.locator("[data-v5-search-toggle]").count() == 1
         assert page.locator(".v5-locked-portrait picture img").count() == 1
+        portrait_box = page.locator(".v5-locked-portrait")
+        assert portrait_box.evaluate("e => Number(getComputedStyle(e).zIndex) >= 0"), (
+            page.viewport_size, "approved portrait hidden behind page background")
+        assert portrait_box.evaluate("e => e.getBoundingClientRect().width > 80")
+        if page.viewport_size["width"] <= 360:
+            for selector in [".v5-topbar", ".v5-brand", ".v5-lock-search-toggle",
+                             ".v5-mobile-menu", ".v5-mobile-menu summary"]:
+                assert page.locator(selector).evaluate("""e => {
+                    const r=e.getBoundingClientRect();
+                    return r.left >= -1 && r.right <= innerWidth + 1;
+                }"""), (page.viewport_size, selector, "mobile header clipped")
+
         assert page.locator(".v5-locked-rail a").count() == 9
         if page.viewport_size["width"] >= 1000:
             rects = page.locator(".v5-locked-hero, .v5-lock-projects, .v5-lock-triple, .v5-lock-field").evaluate_all(
