@@ -57,7 +57,8 @@ const rows = async db => (await db.prepare(
   'SELECT metric,value,source,recorded_at,revision,shared FROM gpt_owner_metrics ORDER BY recorded_at DESC LIMIT 8'
 ).all()).results || [];
 const envDb = env => env?.LISTENING_DB && typeof env.LISTENING_DB.prepare === 'function';
-const publicApproved = env => env?.GPT_SNAPSHOT_PUBLIC_RELEASE_APPROVED === 'true' &&
+const publicApproved = env => env?.PRESENCE_ENABLED === 'true' &&
+  env?.GPT_SNAPSHOT_PUBLIC_RELEASE_APPROVED === 'true' &&
   env?.PRESENCE_PUBLIC_RELEASE_APPROVED === 'true';
 
 export const disconnectedGptSnapshot = () => ({...NO_DATA});
