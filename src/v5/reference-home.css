@@ -459,3 +459,13 @@
   .v5-locked-rail { z-index: 4; }
   .v5-locked-signal { z-index: 5; }
 }
+
+
+@media (min-width: 901px) {
+  .v5-locked-portrait { isolation: auto; }
+  .v5-locked-portrait picture img {
+    filter: none;
+    transform: none;
+    mix-blend-mode: normal;
+  }
+}
