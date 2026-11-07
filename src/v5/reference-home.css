@@ -831,3 +831,12 @@
     gap: 4px;
   }
 }
+
+
+@media (max-width: 900px) {
+  .v5-frame:has(.v5-locked-home) .v5-preview-banner {
+    flex-wrap: wrap;
+    column-gap: 12px;
+    row-gap: 4px;
+  }
+}
