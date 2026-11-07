@@ -305,11 +305,15 @@ def main():
                     page.keyboard.press("Escape")
                     status["mode"]="revoked"
                     page.evaluate("document.dispatchEvent(new Event('visibilitychange'))")
+                    for _ in range(30):
+                        if len(public_calls)>=2:
+                            break
+                        page.wait_for_timeout(100)
+                    assert len(public_calls)>=2, "revocation must cause a new public-only read"
                     page.wait_for_function(
                         "() => document.querySelectorAll('[data-v5-field-node][data-v5-verified]').length === 0",
                         timeout=10000,
                     )
-                    assert len(public_calls)>=2
                     assert "No fresh" in page.locator("[data-v5-work-summary]").inner_text()
                     assert not rejected, rejected
                     context.close()
