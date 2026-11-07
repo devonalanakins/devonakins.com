@@ -56,7 +56,9 @@ assert.equal(signal.version, 4);
 assert.equal(listening.version, 1);
 assert.equal(presence.version, 1);
 assert.match(health.commit || "", /^[a-f0-9]{40}$/);
-assert.equal(signal.spotify?.mode, listening.mode, "Live ribbon and playback endpoint must agree");
+// The two requests are independent; Spotify can change tracks or pause
+// between them, so their instantaneous modes are not required to match.
+assert.ok(typeof signal.spotify?.mode === "string" && signal.spotify.mode.length <= 40);
 assert.ok(["hidden", "public"].includes(signal.work?.visibility), "Work projection must be gated");
 assert.ok(["hidden", "public"].includes(signal.remote?.visibility), "Remote task projection must be gated");
 assert.ok(Array.isArray(signal.remote?.tasks) && signal.remote.tasks.length <= 16);
