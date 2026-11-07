@@ -151,7 +151,8 @@ if (field && publicPreviewButton) {
     const recent = projection.recent[0];
     const github = document.querySelector<HTMLElement>("[data-v5-github-summary]");
     if (github) github.textContent = recent
-      ? recent.slug + " · " + recent.kind + " · " +
+      ? (fieldLinks.find(node => node.dataset.v5FieldSlug === recent.slug)
+          ?.dataset.v5FieldTitle || recent.slug) + " · " + recent.kind + " · " +
         relativeAge(recent.at, at) + " · Public GitHub history"
       : "No approved public GitHub history within the verified window";
 
