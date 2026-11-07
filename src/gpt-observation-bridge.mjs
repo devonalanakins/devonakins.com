@@ -208,7 +208,9 @@ export async function handleObservationRequest(
   if (!store || typeof store.get !== "function" ||
       typeof store.put !== "function") return disabledResponse(securityHeaders);
   if (isRead) {
-    if (env.GPT_USAGE_READ_ENABLED !== "true")
+    // Publication needs explicit GPT-specific authorization, independent of ingest.
+    if (env.GPT_USAGE_READ_ENABLED !== "true" ||
+        env.GPT_USAGE_PUBLIC_RELEASE_APPROVED !== "true")
       return disabledResponse(securityHeaders);
     if (!["GET","HEAD"].includes(request.method))
       return json({error:"Method not allowed"},405,securityHeaders,
