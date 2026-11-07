@@ -1,5 +1,5 @@
 // Protected owner-only GPT measurements; values originate from an explicit owner entry.
-const endpoint = "/api/gpt/owner";
+const endpoint = "/api/presence/owner?channel=gpt";
 const labels = {
   profile_7d_tokens: ["7-day tokens", "Owner-visible personal profile", true],
   profile_lifetime_tokens_approx: ["Approximate lifetime tokens", "Owner-visible personal profile", true],
