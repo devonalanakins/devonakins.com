@@ -481,3 +481,16 @@
   .v5-locked-rail { z-index: 120; }
   .v5-locked-signal { z-index: 130; }
 }
+
+
+/* Keep atmosphere behind content, not in generated layers that can
+ * interfere with GPU/image compositing in Chromium's review runner. */
+@media (min-width: 901px) {
+  .v5-locked-hero {
+    background:
+      radial-gradient(ellipse 46% 76% at 49% 28%, #9c65523b, transparent 76%),
+      radial-gradient(ellipse 58% 82% at 53% 42%, #1c455052, transparent 84%);
+  }
+  .v5-locked-hero::before,
+  .v5-locked-portrait::after { display: none; }
+}
