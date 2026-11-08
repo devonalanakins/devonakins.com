@@ -31,6 +31,10 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run build
+      - name: Verify approved GitHub sources remain publicly accessible
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: node scripts/verify-public-portfolio-links.mjs
       # Only tested default-branch work may receive the scoped reporter secret.
       # PRs and other branches run the same tests without any reporter credential.
       - name: Test and report private CI activity (trusted main push)
