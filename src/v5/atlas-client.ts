@@ -234,6 +234,7 @@ export function mountV5Atlas() {
         detail.querySelector("summary")?.focus();
       }
     }
+    root.dispatchEvent(new CustomEvent("v5-atlas-selected", { detail: { id } }));
     render();
   };
   // Selecting on focusin changed the status text while a pointer was still
@@ -275,7 +276,12 @@ export function mountV5Atlas() {
     dispose();
     fallback();
   };
-  const pagehide = () => dispose();
+  const pagehide = (event: PageTransitionEvent) => {
+    if (!event.persisted) dispose();
+  };
+  const pageshow = (event: PageTransitionEvent) => {
+    if (event.persisted) resize();
+  };
   const dispose = () => {
     if (disposed) return;
     disposed = true;
@@ -289,6 +295,7 @@ export function mountV5Atlas() {
     canvas.removeEventListener("webglcontextlost", contextLost);
     document.removeEventListener("visibilitychange", visible);
     window.removeEventListener("pagehide", pagehide);
+    window.removeEventListener("pageshow", pageshow);
     scene.traverse(object => {
       if (object instanceof THREE.Mesh || object instanceof THREE.Line) {
         object.geometry.dispose();
@@ -304,6 +311,7 @@ export function mountV5Atlas() {
   document.addEventListener("visibilitychange", visible);
   canvas.addEventListener("webglcontextlost", contextLost);
   window.addEventListener("pagehide", pagehide);
+  window.addEventListener("pageshow", pageshow);
   root.dataset.v5AtlasReady = "true";
   status.textContent =
     "3D reviewed catalog ready. Drag to orbit, pinch or scroll to zoom, or use the accessible index. " +

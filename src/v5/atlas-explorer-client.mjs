@@ -20,7 +20,30 @@ export function mountPublicAtlasExplorer() {
   const count = root.querySelector("[data-v5-atlas-filter-count]");
   const index = Array.from(root.querySelectorAll("[data-v5-atlas-node-id]"));
   const shortcuts = Array.from(root.querySelectorAll("[data-v5-atlas-select]"));
-  if (!section || !search || !count || checkboxes.length !== ATLAS_DISPLAY_LAYERS.length ||
+  const spotlight = root.querySelector("[data-v5-atlas-spotlight]");
+  const profileTemplates = new Map(Array.from(
+    root.querySelectorAll("template[data-v5-atlas-profile]"),
+    template => [template.dataset.v5AtlasProfile, template],
+  ));
+  const resetSpotlight = () => {
+    if (!spotlight) return;
+    delete spotlight.dataset.v5AtlasSelected;
+    const prompt = document.createElement("p");
+    prompt.textContent = "Select a public system from the directory to inspect its curated overview. " +
+      "Portfolio descriptions are not live activity or feature-verification evidence.";
+    spotlight.replaceChildren(prompt);
+  };
+  const updateSpotlight = id => {
+    if (!spotlight || typeof id !== "string" ||
+        !index.some(item => item.dataset.v5AtlasNodeId === id && !item.hidden)) return;
+    const template = profileTemplates.get(id);
+    if (!template || !template.content) return;
+    spotlight.replaceChildren(template.content.cloneNode(true));
+    spotlight.dataset.v5AtlasSelected = id;
+  };
+  if (!section || !search || !count || !spotlight ||
+      profileTemplates.size !== 8 ||
+      checkboxes.length !== ATLAS_DISPLAY_LAYERS.length ||
       !ATLAS_DISPLAY_LAYERS.every(key => checkboxes.some(c => c.dataset.v5AtlasLayer === key)))
     return () => {};
 
@@ -40,6 +63,8 @@ export function mountPublicAtlasExplorer() {
       if (li) li.hidden = !visible.has(shortcut.dataset.v5AtlasSelect);
     }
     count.textContent = slice.count + " approved visible public structures · no live connection implied";
+    if (spotlight.dataset.v5AtlasSelected &&
+        !visible.has(spotlight.dataset.v5AtlasSelected)) resetSpotlight();
     root.dispatchEvent(new CustomEvent("v5-atlas-filter", {
       detail: { nodeIds: slice.nodeIds, linkIndexes: slice.linkIndexes },
     }));
@@ -54,8 +79,22 @@ export function mountPublicAtlasExplorer() {
       detail.open = true;
       // Keep the ordinary fragment link operational without JavaScript.
       detail.querySelector("summary")?.focus();
+      updateSpotlight(id);
     }
   };
+  const onDisclosure = event => {
+    const detail = event.target;
+    if (detail instanceof HTMLDetailsElement && detail.open &&
+        detail.hasAttribute("data-v5-atlas-node-id")) {
+      updateSpotlight(detail.dataset.v5AtlasNodeId);
+    }
+  };
+  const onCanvasSelection = event => {
+    // Never trust a dispatched id to create a new profile.
+    updateSpotlight(event.detail?.id);
+  };
+  root.addEventListener("toggle", onDisclosure, true);
+  root.addEventListener("v5-atlas-selected", onCanvasSelection);
   search.addEventListener("input", apply);
   for (const checkbox of checkboxes) checkbox.addEventListener("change", apply);
   root.addEventListener("click", onSelect);
@@ -64,7 +103,15 @@ export function mountPublicAtlasExplorer() {
     search.removeEventListener("input", apply);
     for (const checkbox of checkboxes) checkbox.removeEventListener("change", apply);
     root.removeEventListener("click", onSelect);
+    root.removeEventListener("toggle", onDisclosure, true);
+    root.removeEventListener("v5-atlas-selected", onCanvasSelection);
+    window.removeEventListener("pagehide", onPageHide);
   };
-  window.addEventListener("pagehide", dispose, { once: true });
+  // BFCache preserves the same page/controls; a persisted pagehide is not a
+  // teardown. Otherwise mobile Back navigation restores visible but dead filters.
+  const onPageHide = event => {
+    if (!event.persisted) dispose();
+  };
+  window.addEventListener("pagehide", onPageHide);
   return dispose;
 }

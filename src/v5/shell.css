@@ -1000,3 +1000,65 @@ a[aria-current="page"] {
   .v5-atlas-root-list { grid-template-columns: minmax(0,1fr); }
   .v5-atlas-quicklinks { grid-template-columns: repeat(2,minmax(0,1fr)); }
 }
+
+
+/* R19: honest contextual inspector. All copy originates in existing curated
+   public portfolio metadata, not live status or structural history inference. */
+.v5-atlas-spotlight {
+  position: relative; isolation: isolate; margin: 0 0 25px;
+  padding: 18px; border: 1px solid #3a6677; border-radius: 12px;
+  background: radial-gradient(ellipse at 12% 6%, #1b59644a, transparent 76%),
+    linear-gradient(155deg, #122b39, #0c1929 80%);
+  box-shadow: inset 0 1px 0 #c5eff011;
+}
+.v5-atlas-spotlight > .v5-eyebrow { color: #8be1e8; }
+.v5-atlas-spotlight > h2 { font: 25px/1.17 Georgia, serif; margin: 9px 0 16px; }
+.v5-atlas-spotlight [data-v5-atlas-spotlight] > p {
+  color: #c7d9e2; line-height: 1.65; font-size: 12px;
+}
+.v5-atlas-profile { display: grid; gap: 9px; min-width: 0; }
+.v5-atlas-profile h3 { font-size: 24px; line-height: 1.15; letter-spacing: -.02em; }
+.v5-atlas-profile h4 {
+  margin: 12px 0 0; padding-top: 12px; border-top: 1px solid #456174;
+  color: #e5f5f8; font-size: 11px; letter-spacing: .09em; text-transform: uppercase;
+}
+.v5-atlas-profile p { color: #d2e1e9; line-height: 1.65; font-size: 12px; overflow-wrap: anywhere; }
+.v5-atlas-profile .v5-atlas-profile-context { color: #8bdae4; font-size: 10px; letter-spacing: .075em; }
+.v5-atlas-profile .v5-atlas-profile-status {
+  color: #f0d09d; border-left: 2px solid #d4a665; padding: 5px 0 5px 11px;
+}
+.v5-atlas-profile .v5-atlas-profile-boundary { color: #abc8d4; }
+.v5-atlas-profile-source {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-height: 44px; padding: 10px 14px; margin-top: 10px;
+  border: 1px solid #68bfce; border-radius: 8px;
+  color: #a7f7f3; font-size: 12px; font-weight: 650;
+  text-decoration: underline; text-underline-offset: 4px;
+}
+.v5-atlas-profile-source:hover,
+.v5-atlas-profile-source:focus-visible { background: #144253; color: #e7ffff; }
+.v5-atlas-profile-unavailable { font-style: italic; }
+.v5-atlas-details .v5-atlas-native-summary { color: #d3e6ec; }
+@media (max-width: 600px) {
+  .v5-atlas-spotlight { padding: 15px; }
+  .v5-atlas-spotlight > h2 { font-size: 23px; }
+}
+@media (forced-colors: active) {
+  .v5-atlas-spotlight, .v5-atlas-profile-source { border-color: CanvasText; }
+  .v5-atlas-profile .v5-atlas-profile-status { border-left-color: CanvasText; }
+}
+
+
+/* Mobile first viewport: expose the approved spatial view before the
+   directory. DOM/keyboard order remains controls -> atlas -> inspector;
+   the canvas is aria-hidden, while semantic controls stay first in DOM. */
+@media (max-width: 600px) {
+  .v5-atlas-viewport { order: -1; min-height: 330px; }
+  .v5-atlas-explorer { order: 0; }
+  .v5-atlas-index { order: 1; }
+}
+@media (min-width: 360px) and (max-width: 600px) {
+  .v5-atlas-root-list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .v5-atlas-root-list a { padding: 8px; gap: 8px; }
+  .v5-atlas-root-list small { line-height: 1.25; }
+}

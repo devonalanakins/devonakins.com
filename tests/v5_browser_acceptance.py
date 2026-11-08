@@ -6,6 +6,8 @@ import json
 import os
 from pathlib import Path
 import socket
+import sys
+import traceback
 import subprocess
 import time
 import urllib.error
@@ -63,6 +65,12 @@ def check_page(page, origin, path, axe):
         explorer = page.locator(".v5-atlas-explorer")
         assert explorer.count() == 1
         assert explorer.locator("[data-v5-atlas-select]").count() == 8
+        if page.viewport_size and page.viewport_size["width"] <= 600:
+            viewport_top = page.locator("#v5-atlas-viewport").evaluate(
+                "element => element.getBoundingClientRect().top"
+            )
+            explorer_top = explorer.evaluate("element => element.getBoundingClientRect().top")
+            assert viewport_top < explorer_top, "Mobile 3D view should precede the directory visually"
         page.wait_for_function(
             "() => document.querySelector('[data-v5-atlas-controls]')?.hidden === false",
             timeout=10000,
@@ -86,12 +94,45 @@ def check_page(page, origin, path, axe):
             timeout=10000,
         )
         assert page.locator("[data-v5-atlas-node-id='project:mizvo'] a").get_attribute("href") == "/work/mizvo/"
+        spotlight = page.locator("[data-v5-atlas-spotlight]")
+        page.wait_for_function(
+            "() => document.querySelector('[data-v5-atlas-spotlight]')?.dataset.v5AtlasSelected === 'project:mizvo'",
+            timeout=10000,
+        )
+        assert "AGPL review build" in spotlight.inner_text()
+        assert "NOT LIVE TELEMETRY" in spotlight.inner_text()
+        assert spotlight.locator('a[href="https://github.com/devonalanakins/mizvo"]').count() == 1
         # A status update must not swallow the second native toggle, either.
         page.locator("[data-v5-atlas-node-id='project:mizvo'] summary").click()
         page.wait_for_function(
             "() => document.querySelector('[data-v5-atlas-node-id=\"project:mizvo\"]')?.open === false",
             timeout=10000,
         )
+        # Sidebar selection uses the same safe curated inspector without
+        # requiring GPU picking or a second network request.
+        explorer.locator('[data-v5-atlas-select="project:anevum"]').click()
+        page.wait_for_function(
+            "() => document.querySelector('[data-v5-atlas-spotlight]')?.dataset.v5AtlasSelected === 'project:anevum'",
+            timeout=10000,
+        )
+        assert "Anevum" in spotlight.inner_text()
+        assert "anevum.com" in spotlight.locator("a").get_attribute("href")
+        search.fill("Merit")
+        page.wait_for_function(
+            "() => !document.querySelector('[data-v5-atlas-spotlight]')?.dataset.v5AtlasSelected",
+            timeout=10000,
+        )
+        assert "Select a public system" in spotlight.inner_text()
+        search.fill("")
+        # A mobile back-forward cache restore must preserve source-free
+        # explorer listeners and a responsive optional Three.js viewport.
+        page.evaluate("window.dispatchEvent(new PageTransitionEvent('pagehide', {persisted: true}))")
+        page.evaluate("window.dispatchEvent(new PageTransitionEvent('pageshow', {persisted: true}))")
+        search.fill("Rhen")
+        assert explorer.locator("[data-v5-atlas-select]:visible").count() == 1
+        assert page.locator("[data-v5-atlas-node-id]:visible").count() == 1
+        search.fill("")
+        assert explorer.locator("[data-v5-atlas-select]:visible").count() == 8
         canvas = page.locator("[data-v5-atlas-host] canvas")
         if canvas.count():
             assert canvas.get_attribute("aria-hidden") == "true"
@@ -107,10 +148,19 @@ def check_page(page, origin, path, axe):
         )
         assert page.evaluate("document.documentElement.scrollWidth <= innerWidth + 1")
         # The date form must work through server-rendered GET, not client JS.
-        page.context.set_default_timeout(10000)
+        # Do not reduce the entire browser context timeout. That setting
+        # persists into later full-page captures and unrelated page checks,
+        # making slow font loading appear as a 10s application failure.
         selected = page.locator("#v5-graph-date")
         selected.fill("2026-11-06")
         page.locator(".v5-graph-date-form button").click()
+        # A native GET navigation may complete asynchronously in WebKit.
+        # Require the actual archived route before testing its new document.
+        # If form submission fails, this will still fail (with a useful URL).
+        page.wait_for_url(
+            "**/__v5_preview__/field/?asOf=2026-11-06",
+            wait_until="domcontentloaded", timeout=15000,
+        )
         assert "?asOf=2026-11-06" in page.url
         assert page.locator("#v5-graph-date").input_value() == "2026-11-06"
         assert page.locator(".v5-graph-history").get_attribute("data-v5-graph-revision") == "0"
@@ -297,7 +347,7 @@ def main():
                                 page.goto(origin + PREVIEW + "field/", wait_until="networkidle")
                                 page.screenshot(
                                     path=str(output / f"{engine}-atlas-{width}x{height}-{motion}.png"),
-                                    full_page=True, animations="disabled",
+                                    full_page=True, animations="disabled", timeout=30000,
                                 )
                             page.goto(origin + PREVIEW, wait_until="networkidle")
                             if width <= 900:
@@ -325,7 +375,10 @@ def main():
                             assert page.locator("#v5-field-inspector").is_hidden()
                             assert field_node.get_attribute("aria-expanded") == "false"
                             assert field_node.evaluate("e => e === document.activeElement")
-                            page.screenshot(path=str(output / f"{engine}-{width}x{height}-{motion}.png"), full_page=True)
+                            page.screenshot(
+                                path=str(output / f"{engine}-{width}x{height}-{motion}.png"),
+                                full_page=True, animations="disabled", timeout=30000,
+                            )
                             # After the inspector returns focus to a project
                             # node, Tab advances from that node, not the start
                             # of the page. Reload before checking first-Tab
@@ -339,8 +392,27 @@ def main():
                             assert not api, api
                             assert not external, external
                             results.append({"engine": engine, "viewport": [width, height], "motion": motion, "routes": len(PAGES), "result": "pass"})
-                        except Exception:
-                            page.screenshot(path=str(output / f"FAILED-{engine}-{width}x{height}.png"), full_page=True)
+                        except Exception as test_error:
+                            # A failed diagnostic capture must never hide the
+                            # original browser regression from CI logs.
+                            print(
+                                f"V5 ACCEPTANCE FAILED: {engine} {width}x{height} "
+                                f"motion={motion}: {type(test_error).__name__}: {test_error}",
+                                file=sys.stderr, flush=True,
+                            )
+                            traceback.print_exc()
+                            try:
+                                page.screenshot(
+                                    path=str(output / f"FAILED-{engine}-{width}x{height}.png"),
+                                    full_page=False, animations="disabled",
+                                    timeout=5000,
+                                )
+                            except Exception as capture_error:
+                                print(
+                                    "Diagnostic screenshot unavailable: "
+                                    f"{type(capture_error).__name__}: {capture_error}",
+                                    file=sys.stderr, flush=True,
+                                )
                             raise
                         finally:
                             context.close()
@@ -360,6 +432,10 @@ def main():
                 assert page.locator("[data-v5-atlas-select]").count() == 8
                 page.locator("[data-v5-atlas-node-id='project:mizvo'] summary").click()
                 assert page.locator("[data-v5-atlas-node-id='project:mizvo']").get_attribute("open") is not None
+                assert "engineering studio" in page.locator(
+                    "[data-v5-atlas-node-id='project:mizvo'] .v5-atlas-native-summary"
+                ).inner_text()
+                assert "Select a public system" in page.locator("[data-v5-atlas-spotlight]").inner_text()
                 assert page.locator(".v5-graph-node").count() == 8
                 page.locator("#v5-graph-date").fill("2026-11-06")
                 page.locator(".v5-graph-date-form button").click()
