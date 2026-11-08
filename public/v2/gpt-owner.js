@@ -54,7 +54,7 @@ function render(data) {
     share.dataset.allowed=String(record.shared||data.publishingAllowed);
     share.textContent=record.shared?'Stop sharing '+record.label:'Share '+record.label;
     share.onclick=()=>{
-      if(!record.shared&&!window.confirm('Share this metric and its future recorded updates while Live Signal broadcasting is enabled?'))return;
+      if(!record.shared&&!window.confirm('Share this metric and its future recorded updates while public sharing is enabled?'))return;
       void mutate('POST',{action:'sharing',metric:record.metric,enabled:!record.shared,revision:record.revision,captureRevision:revision});
     };
     const remove=document.createElement('button');remove.type='button';remove.className='secondary';remove.textContent='Delete '+record.label;
