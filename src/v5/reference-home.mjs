@@ -323,7 +323,15 @@ export function renderReferenceHomepage() {
     '<div class="v5-lock-triple">' +
       '<section class="v5-lock-panel" aria-labelledby="v5-lock-github-title"><h2 id="v5-lock-github-title">' + icon("github") + ' GitHub Activity <small>PROVIDER-SOURCED</small></h2><p class="v5-lock-empty" data-v5-github-summary>Waiting for verified, allowlisted GitHub events.</p><a href="https://github.com/devonalanakins">View GitHub →</a></section>' +
       '<section class="v5-lock-panel" aria-labelledby="v5-lock-threads-title"><h2 id="v5-lock-threads-title">' + icon("nodes") + ' Threads Feed <small>CONNECTION PENDING</small></h2><p class="v5-lock-empty">Public Threads posts will appear only through a permitted integration after account authorization and publication review.</p><a href="/contact/">Public social profiles →</a></section>' +
-      '<section class="v5-lock-panel" aria-labelledby="v5-lock-gpt-title"><h2 id="v5-lock-gpt-title">' + icon("signal") + ' GPT Analytics <small>MANUAL CAPTURES</small></h2><p class="v5-lock-empty">Owner-recorded values will display here with their capture date. No automated token total is claimed.</p><a href="/gpt/">View GPT profile →</a></section>' +
+      '<section class="v5-lock-panel" aria-labelledby="v5-lock-gpt-title"><h2 id="v5-lock-gpt-title">' + icon("signal") + ' GPT Analytics <small>MANUAL CAPTURES</small></h2>' +
+        '<p class="v5-lock-empty" data-v5-gpt-empty>Owner-recorded values will display here with their capture date. No automated token total is claimed.</p>' +
+        '<div class="v5-gpt-capture" data-v5-gpt-capture hidden>' +
+          '<strong data-v5-gpt-primary></strong>' +
+          '<span class="v5-gpt-primary-label" data-v5-gpt-primary-label></span>' +
+          '<time data-v5-gpt-time></time>' +
+          '<ul class="v5-gpt-readings" data-v5-gpt-readings aria-label="Approved owner-recorded GPT measurements"></ul>' +
+          '<p class="v5-gpt-disclosure">Owner-captured · Not live provider telemetry</p>' +
+        '</div><a href="/gpt/">View GPT profile →</a></section>' +
     '</div>' +
     '<section class="v5-lock-field" aria-labelledby="v5-lock-field-title">' +
       '<header><h2 id="v5-lock-field-title">The Signal Field</h2><p>A living view of everything in motion — verified events only.</p></header>' +
