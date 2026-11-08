@@ -113,6 +113,24 @@ test("public site uses human-first labels, never release or internal interface n
   }
 });
 
+test("Work directory filters follow reviewed public presentation categories, not legacy implementation labels", () => {
+  const work = renderV5PublicPage("projects");
+  const categories = ["software", "research", "creative", "writing", "operations", "archive"];
+  for (const category of categories)
+    assert.ok(work.includes('<option value="' + category + '">'),
+      "Missing approved category: " + category);
+  const cards = [...work.matchAll(/data-project-category="([^"]+)" href="\/work\/([^"]+)\/"/g)];
+  assert.equal(cards.length, projects.length, "Every approved entry gets one category-filterable card");
+  assert.deepEqual(new Set(cards.map(match => match[1])), new Set(categories));
+  assert.ok(cards.some(([full, category, slug]) => category === "archive" && slug === "rhen"));
+  assert.ok(cards.some(([full, category, slug]) => category === "operations" && slug === "operations"));
+  assert.ok(cards.some(([full, category, slug]) => category === "writing" && slug === "writing"));
+  assert.ok(!work.includes('data-project-category="business"'),
+    "Legacy business category no longer merges services with software");
+  assert.match(renderV5ProjectPage("operations"), /Operations · Professional support/);
+  assert.match(renderV5ProjectPage("vesper"), /Research · Private-source research concept/);
+});
+
 test("curated public topics have source context and working related/backlink targets", () => {
   const slugs = new Set(publicNotes.map((n) => n.slug));
   for (const n of publicNotes) {
