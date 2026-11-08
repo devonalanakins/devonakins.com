@@ -40,7 +40,8 @@ function renderExplorer(layout) {
   const relations = layout.links.filter(edge => edge.evidence === "reviewed-public-relation");
   const layer = (key, label, count) =>
     '<label class="v5-atlas-layer"><input type="checkbox" data-v5-atlas-layer="' +
-    key + '" checked><span>' + label + '</span><strong>' + count + '</strong></label>';
+    key + '" checked' + (count === 0 ? ' disabled' : '') +
+    '><span>' + label + '</span><strong>' + count + '</strong></label>';
   return '<aside class="v5-atlas-explorer" aria-label="Public systems explorer">' +
     '<p class="v5-eyebrow">SIGNAL FIELD · V5</p>' +
     '<h2>Systems explorer</h2>' +
