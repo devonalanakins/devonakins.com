@@ -472,6 +472,17 @@ def main():
                                 page.locator(".v5-desktop-nav a").filter(has_text="Projects").click()
                                 assert page.url.endswith("projects/")
                             page.goto(origin + PREVIEW, wait_until="networkidle")
+                            if width <= 600:
+                                # Portfolio status includes meaningful release
+                                # disclaimers; never ellipsize those words in
+                                # the narrow 165px mobile carousel.
+                                statuses = page.locator(".v5-lock-project .v5-lock-state")
+                                assert statuses.count() == 5
+                                assert statuses.evaluate_all("""
+                                    nodes => nodes.every(node =>
+                                      node.scrollWidth <= node.clientWidth + 1 &&
+                                      node.scrollHeight <= node.clientHeight + 1)
+                                """), "Mobile project statuses must not be clipped"
                             field_node = page.locator('a[data-v5-field-slug="mizvo"]')
                             field_node.focus()
                             page.keyboard.press("Enter")
