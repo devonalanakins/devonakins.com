@@ -4,6 +4,7 @@ import {DatabaseSync} from 'node:sqlite';
 import {readFileSync} from 'node:fs';
 import {createActivityTasksApi,activityTasks} from '../src/activity-tasks.mjs';
 import {createLiveSignal} from '../src/live-signal.mjs';
+import {createPublicThreadsReader} from '../src/threads-public.mjs';
 import {projectActivityHistory} from '../src/activity-history.mjs';
 import {projectPlayback} from '../src/spotify-presence.mjs';
 const START=Date.parse('2026-11-07T02:00:00.000Z');
@@ -99,4 +100,48 @@ test('actual Worker V4 route has bounded hidden defaults, no-store, HEAD and own
 test('a repository switch cannot report under a differently scoped workspace source',async()=>{
  const f=fixture(),s=await f.source('merit');const r=await f.api(f.req('/api/activity/tasks/start','POST',{version:1,projectSlug:'rhen'},s.token),f.env);assert.equal(r.status,409);assert.equal(f.sql.prepare('SELECT COUNT(*) n FROM activity_tasks').get().n,0);
  const good=await f.api(f.req('/api/activity/tasks/start','POST',{version:1,projectSlug:'merit'},s.token),f.env);assert.equal(good.status,200);
+});
+
+
+test('existing V4 aggregate carries approved official Threads posts without leaking credentials or bypassing Stop All',async()=>{
+  const f=fixture();
+  f.publish();
+  const token='s'.repeat(40);
+  Object.assign(f.env,{
+    THREADS_PUBLIC_RELEASE_APPROVED:'true',
+    THREADS_PUBLIC_FEED_ENABLED:'true',
+    THREADS_USER_ACCESS_TOKEN:token,
+    THREADS_PUBLIC_USERNAME:'fixtureDevon',
+  });
+  let calls=0;
+  const readThreads=createPublicThreadsReader({
+    clock:f.clock,fetchImpl:async(url,request)=>{
+      calls++;
+      assert.equal(request.headers.Authorization,'Bearer '+token);
+      assert.equal(new URL(url).hostname,'graph.threads.net');
+      return Response.json({data:[{
+        id:'123456789',username:'fixtureDevon',media_type:'TEXT_POST',
+        permalink:'https://www.threads.com/@fixtureDevon/post/CXtzA7JPq5V',
+        text:'Public original post',timestamp:new Date(f.clock()-60000).toISOString(),
+      }]});
+    },
+  });
+  const read=createLiveSignal({
+    clock:f.clock,readGithub:async()=>[],
+    readListening:async()=>Response.json({version:1,mode:'hidden',detailsVisible:false}),
+    readThreads,
+  });
+  const result=await read(f.env);
+  assert.equal(result.version,4);
+  assert.equal(result.threads.state,'connected');
+  assert.equal(result.threads.posts[0].text,'Public original post');
+  assert.equal(calls,1);
+  assert.equal((await read(f.env)).threads.state,'connected');
+  assert.equal(calls,1,'normal 30-second public signal does not refetch Threads before the 5-minute TTL');
+  assert.ok(!JSON.stringify(result).includes(token));
+  f.sql.exec('UPDATE presence_state SET public_enabled=0,revision=revision+1');
+  const revoked=await read(f.env);
+  assert.equal(revoked.threads.state,'disconnected');
+  assert.deepEqual(revoked.threads.posts,[]);
+  assert.equal(calls,1,'Stop All prevents any new official Threads request');
 });

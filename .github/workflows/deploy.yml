@@ -6,6 +6,18 @@ on:
         description: Exact tested 40-character main commit to release
         required: true
         type: string
+      release_variant:
+        description: Default to V4; V5 requires full release acceptance
+        required: true
+        type: choice
+        options:
+          - v4
+          - v5
+        default: v4
+      v5_confirmation:
+        description: V5 only - enter V5-CUTOVER-APPROVED after final release acceptance
+        required: false
+        type: string
 permissions:
   contents: read
 concurrency:
@@ -17,6 +29,10 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     environment: production
+    # Also inherited by wrangler's configured build command: a V5 build
+    # must not silently turn back into V4 during deployment.
+    env:
+      V5_PUBLIC_SITE_CANDIDATE: ${{ inputs.release_variant == 'v5' && '1' || '0' }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -28,6 +44,8 @@ jobs:
       - name: Guard exact commit and Worker name
         env:
           EXPECTED_SHA: ${{ inputs.expected_sha }}
+          RELEASE_VARIANT: ${{ inputs.release_variant }}
+          V5_CONFIRMATION: ${{ inputs.v5_confirmation }}
         run: |
           set -eu
           case "$EXPECTED_SHA" in
@@ -36,12 +54,26 @@ jobs:
           test "${#EXPECTED_SHA}" -eq 40
           test "$(git rev-parse HEAD)" = "$EXPECTED_SHA"
           grep -Fq '"name": "devonakins-personal"' wrangler.jsonc
+          # Never enable V5 from a generic manual V4 deployment. A protected
+          # production approval is still required after these safeguards.
+          case "$RELEASE_VARIANT" in
+            v4) test "$V5_PUBLIC_SITE_CANDIDATE" = '0' ;;
+            v5)
+              test "$V5_PUBLIC_SITE_CANDIDATE" = '1'
+              test "$V5_CONFIRMATION" = 'V5-CUTOVER-APPROVED'
+              ;;
+            *) echo 'Unrecognized release variant'; exit 1 ;;
+          esac
       - name: Build and validate Worker
         run: |
           npm ci
           npm run build
           npm test
           node --check scripts/verify-live.mjs
+          node --check scripts/verify-live-v5.mjs
+          if [ "$V5_PUBLIC_SITE_CANDIDATE" = '1' ]; then
+            node scripts/verify-v5-site-candidate.mjs
+          fi
       - name: Require dedicated Cloudflare CI credentials
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
@@ -62,4 +94,9 @@ jobs:
       - name: Verify actual public deployment
         env:
           EXPECTED_COMMIT: ${{ github.sha }}
-        run: node scripts/verify-live.mjs
+        run: |
+          if [ "$V5_PUBLIC_SITE_CANDIDATE" = '1' ]; then
+            node scripts/verify-live-v5.mjs
+          else
+            node scripts/verify-live.mjs
+          fi

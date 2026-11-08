@@ -74,7 +74,11 @@ export function validSignalTasks(value: any, at = Date.now()): Task[] {
       fresh(t, at),
   );
 }
-export function startLiveSignal(onPlayback: (data: unknown) => void) {
+// Optional V5 consumer reuses the existing same-origin polling loop.
+export function startLiveSignal(
+  onPlayback: (data: unknown) => void,
+  onPublicSnapshot?: (data: unknown, at: number) => void,
+) {
   let latest: any = null,
     busy = false,
     epoch = 0;
@@ -362,6 +366,7 @@ export function startLiveSignal(onPlayback: (data: unknown) => void) {
       for (const key of feedRows.keys())
         if (!used.has(key)) feedRows.delete(key);
     }
+    onPublicSnapshot?.(v, at);
   };
   async function refresh() {
     if (busy || document.hidden) return;

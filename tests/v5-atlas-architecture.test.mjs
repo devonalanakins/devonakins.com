@@ -1,0 +1,127 @@
+import test from "node:test";
+import assert from "node:assert/strict";
+import { replayPublicGraphHistory } from "../src/v5/public-graph-history.mjs";
+import { projectV5Atlas } from "../src/v5/atlas-layout.mjs";
+import { publicAtlasVisibleSlice } from "../src/v5/atlas-explorer-model.mjs";
+import {
+  projectPublicAtlasArchitecture,
+  PUBLIC_ATLAS_ARCHITECTURE_VERSION,
+  PUBLIC_ATLAS_ROOT_COLORS,
+} from "../src/v5/atlas-architecture.mjs";
+
+const date = Date.parse("2026-11-07T20:00:00.000Z");
+const graph = projectV5Atlas(replayPublicGraphHistory([], date));
+const visual = projectPublicAtlasArchitecture(graph);
+
+test("adds exactly one decorative sculpture for each approved public catalog root", () => {
+  assert.equal(visual.valid, true);
+  assert.equal(visual.version, PUBLIC_ATLAS_ARCHITECTURE_VERSION);
+  assert.equal(visual.clusters.length, 8);
+  assert.deepEqual(visual.clusters.map(c => c.id),
+    graph.nodes.filter(n => n.parent === null).map(n => n.id));
+  assert.equal(Object.keys(PUBLIC_ATLAS_ROOT_COLORS).length, 8);
+  assert.equal(graph.links.length, 0);
+  assert.equal(graph.revision, 0);
+  assert.ok(visual.clusters.every(c => c.facets.length === 24));
+  assert.equal(visual.clusters.reduce((sum, cluster) => sum + cluster.facets.length, 0), 8 * 24,
+    "All additional towers remain decorative instances, never semantic nodes");
+});
+
+test("all visual facets are bounded, deterministic and visually local to their existing root", () => {
+  const again = projectPublicAtlasArchitecture(graph);
+  assert.deepEqual(again, visual);
+  for (const c of visual.clusters) {
+    const node = graph.nodes.find(n => n.id === c.id);
+    assert.deepEqual(c.position, node.position);
+    assert.equal(c.color, PUBLIC_ATLAS_ROOT_COLORS[c.id]);
+    assert.ok(Object.isFrozen(c));
+    assert.ok(Object.isFrozen(c.facets));
+    for (const f of c.facets) {
+      assert.ok(Object.isFrozen(f));
+      assert.equal(f.offset.length, 3);
+      assert.equal(f.scale.length, 3);
+      assert.ok(f.offset.every(Number.isFinite));
+      assert.ok(f.offset.every(n => Math.abs(n) < 1));
+      assert.ok(f.scale.every(n => n > 0 && n < 1));
+    }
+  }
+});
+
+test("visual sculptures contain no semantic nodes, links, status, metrics or invented activity", () => {
+  assert.deepEqual(Object.keys(visual).sort(), ["clusters", "valid", "version"]);
+  for (const c of visual.clusters) {
+    assert.deepEqual(Object.keys(c).sort(), ["color", "facets", "id", "position"]);
+    assert.doesNotMatch(JSON.stringify(c), /PRIVATE_CLIENT|dependency|featureCount|lastSeen|activity|reporter|services/);
+  }
+  const filtered = publicAtlasVisibleSlice(graph, { search: "Mizvo" });
+  assert.deepEqual(filtered.nodeIds, ["project:mizvo"]);
+  assert.equal(graph.nodes.length, 8, "decorative geometry must never become a semantic node");
+});
+
+test("invalid or forged root catalogs fail closed rather than generating private sculptures", () => {
+  const bad = [
+    null, undefined, {},
+    { ...graph, valid: false },
+    { ...graph, nodes: graph.nodes.slice(1) },
+    { ...graph, nodes: [...graph.nodes, graph.nodes[0]] },
+    { ...graph, nodes: graph.nodes.map((n,i) =>
+      i===0 ? { ...n, id: "project:private-client" } : n) },
+    { ...graph, nodes: graph.nodes.map((n,i) =>
+      i===0 ? { ...n, position: [Infinity,0,0] } : n) },
+    { ...graph, nodes: graph.nodes.map((n,i) =>
+      i===0 ? { ...n, state: "active" } : n) },
+    { ...graph, nodes: graph.nodes.map((n,i) =>
+      i===0 ? { ...n, type: "private-client" } : n) },
+    { ...graph, nodes: graph.nodes.map((n,i) =>
+      i===0 ? { ...n, label: "PRIVATE_CLIENT" } : n) },
+    { ...graph, nodes: graph.nodes.map((n,i) =>
+      i===0 ? { ...n, parent: "project:mizvo" } : n) },
+  ];
+  for (const input of bad) {
+    const result = projectPublicAtlasArchitecture(input);
+    assert.equal(result.valid,false);
+    assert.deepEqual(result.clusters, []);
+  }
+});
+
+
+test("bounded atmosphere is deterministic, disconnected and private-catalog blind", async () => {
+  const { projectPublicAtlasAtmosphere, PUBLIC_ATLAS_ATMOSPHERE_VERSION } =
+    await import("../src/v5/atlas-architecture.mjs");
+  const result = projectPublicAtlasAtmosphere(visual);
+  assert.equal(result.version, PUBLIC_ATLAS_ATMOSPHERE_VERSION);
+  assert.equal(result.valid, true);
+  assert.deepEqual(result, projectPublicAtlasAtmosphere(visual));
+  assert.equal(result.clouds.length, 8);
+  assert.equal(result.backdrop.length, 640 * 3);
+  assert.deepEqual(Object.keys(result).sort(), ["backdrop","clouds","valid","version"]);
+  for (const [index, cloud] of result.clouds.entries()) {
+    assert.deepEqual(Object.keys(cloud).sort(), ["color","id","positions"]);
+    assert.equal(cloud.id, visual.clusters[index].id);
+    assert.equal(cloud.color, visual.clusters[index].color);
+    assert.equal(cloud.positions.length, 128 * 3);
+    assert.ok(cloud.positions.every(n => Number.isFinite(n) && Math.abs(n) < 7));
+    assert.ok(Object.isFrozen(cloud.positions));
+  }
+  assert.ok(result.backdrop.every(n => Number.isFinite(n) && Math.abs(n) < 7));
+  assert.ok(Object.isFrozen(result.backdrop));
+  assert.equal(graph.nodes.length, 8, "Mist must not add or imply graph identities");
+  assert.equal(graph.links.length, 0, "Mist cannot assert unreviewed relations");
+});
+test("ambient scene refuses forged identities, geometry and presentation versions", async () => {
+  const { projectPublicAtlasAtmosphere } = await import("../src/v5/atlas-architecture.mjs");
+  for (const invalid of [
+    null, undefined, {}, { ...visual, valid:false },
+    { ...visual, version:999 },
+    { ...visual, clusters:visual.clusters.slice(1) },
+    { ...visual, clusters:[...visual.clusters,visual.clusters[0]] },
+    { ...visual, clusters:visual.clusters.map((c,i)=>i===1?{...c,id:"project:private-client"}:c) },
+    { ...visual, clusters:visual.clusters.map((c,i)=>i===1?{...c,color:0xffffff}:c) },
+    { ...visual, clusters:visual.clusters.map((c,i)=>i===1?{...c,position:[Infinity,0,0]}:c) },
+  ]) {
+    const result = projectPublicAtlasAtmosphere(invalid);
+    assert.equal(result.valid,false);
+    assert.deepEqual(result.clouds,[]);
+    assert.deepEqual(result.backdrop,[]);
+  }
+});

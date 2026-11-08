@@ -70,10 +70,17 @@ for (const module of [
   "github-integration", "github-integration-auth", "github-integration-page",
   "presence-preferences", "presence-editor-api",
   "cloud-presence-model", "cloud-presence-api", "activity-tasks", "live-signal", "activity-history",
-  "listening-collections",
+  "listening-collections", "threads-public",
 ]) {
   await writeFile(".release/" + module + ".mjs", await readFile("src/" + module + ".mjs"));
 }
+// Server-only pure public graph renderers support no-JS date replay on an
+// explicitly compiled full-site candidate. They cannot create a V5 route in V4.
+await mkdir(".release/v5",{recursive:true});
+for(const file of await readdir("src/v5")) {
+  if(file.endsWith(".mjs")) await writeFile(".release/v5/"+file,await readFile("src/v5/"+file));
+}
+await writeFile(".release/content.mjs",await readFile("src/content.mjs"));
 await writeFile(
   ".release/worker.mjs",
   `import assets from './assets.mjs';import {createHandler} from './handler.mjs';export default createHandler(assets,${JSON.stringify(release)});\n`,
