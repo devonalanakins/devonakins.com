@@ -129,15 +129,29 @@ function secondary(key, options = {}) {
     return `${heading("SYSTEMS MAP", "A connected body of work.", "Explore approved public identities, inspect reviewed structural relationships in 3D, and replay the dated record without implying live work.")}
     <!-- V5_FIELD_BEGIN -->${renderV5Atlas({ requestedDate: options.asOf ?? null, now: options.now ?? Date.now() })}
     ${renderPublicGraphHistory({ requestedDate: options.asOf ?? null, now: options.now ?? Date.now() })}
-    <!-- V5_FIELD_END -->${ribbon()}<section class="v5-card v5-reading"><h2>Live evidence stays separate.</h2><p>Editor observations, participating agent tasks and GitHub history do not create permanent graph nodes. This gated preview does not request private provider data.</p><a class="v5-text-link" href="/studio/">View the current Live Studio <span aria-hidden="true">↗</span></a></section>`;
-  return `${heading("THE PERSON BEHIND THE PROJECTS", "Hello. I’m Devon.", "Father, author and independent developer. I build useful software, write fiction and help improve the systems behind family businesses.")}
-    <section class="v5-card v5-reading"><h2>Curiosity, made useful.</h2><p>I care about software people can understand, original work worth finishing, and making space for family along the way.</p><div class="v5-actions"><a class="v5-button" href="/about/">Read my biography</a><a class="v5-secondary" href="/contact/">Get in touch</a></div></section>`;
+    <!-- V5_FIELD_END -->${ribbon()}<section class="v5-card v5-reading"><h2>Live evidence stays separate.</h2><p>Editor observations, participating agent tasks and GitHub history do not create permanent graph nodes. This gated preview does not request private provider data.</p><a class="v5-text-link" href="/studio/">View public activity <span aria-hidden="true">↗</span></a></section>`;
+  return `${heading("THE PERSON BEHIND THE WORK", "Devon Alan Akins", "Independent developer, researcher, writer, creator and father.")}
+    <section class="v5-card v5-reading"><h2>Building ideas into something useful</h2>
+      <p>I work across software engineering, research, original writing and creative systems. My goal is to make tools people can understand and work worth sharing, without sacrificing curiosity or independence.</p>
+      <h2>What shapes the work</h2>
+      <p>Science, mathematics, psychology and storytelling continually inform my projects. I favor accessible design, transparent engineering and open-source work that can be inspected and improved.</p>
+      <h2>What matters outside the screen</h2>
+      <p>Family and fatherhood are central to how I choose my priorities. Sustainable progress matters more to me than endless new projects.</p>
+      <div class="v5-actions"><a class="v5-button" href="/work/">Explore my work</a><a class="v5-secondary" href="/contact/">Get in touch</a></div></section>`;
 }
 export function renderV5Preview(key = "home", options = {}) {
   if (!previewPages.some((page) => page.key === key))
     throw new Error("Unknown V5 preview page");
+  const navPages = [
+    ["home", "Home", href("home")], ["projects", "Work", href("projects")],
+    ["research", "Research", href("research")],
+    ["writing", "Writing", href("writing")],
+    ["knowledge", "Knowledge", href("knowledge")],
+    ["field", "Systems", href("field")],
+    ["activity", "Activity", "/studio/"], ["about", "About", href("about")],
+  ];
   const nav = (className) =>
-    `<nav class="${className}" aria-label="${className === "v5-desktop-nav" ? "Primary" : "Mobile"}">${previewPages.map((page) => `<a href="${page.path}"${key === page.key ? ' aria-current="page"' : ""}>${page.label}</a>`).join("")}</nav>`;
+    `<nav class="${className}" aria-label="${className === "v5-desktop-nav" ? "Primary" : "Mobile"}">${navPages.map(([pageKey, label, path]) => `<a href="${path}"${key === pageKey ? ' aria-current="page"' : ""}>${label}</a>`).join("")}</nav>`;
   const previewNotice = `<aside class="v5-preview-banner" aria-label="Preview notice"><span>INTERNAL DESIGN PREVIEW</span><span data-v5-preview-source-state>Development only · live sources not loaded</span><button type="button" data-v5-preview-connect hidden>Preview verified public signals</button><a href="/">Current website <span aria-hidden="true">↗</span></a></aside>`;
   return `<!doctype html><html lang="en" data-v5-signal-mode="preview"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow,noarchive"><meta name="description" content="Development-only DevonAkins.com layout preview. Live data is not connected."><title>${previewPages.find((page) => page.key === key).label} — DevonAkins.com Preview</title><link rel="icon" href="/brand-mark-mono.svg"><link rel="stylesheet" href="/src/v5/shell.css">${key === "home" ? '<link rel="stylesheet" href="/src/v5/reference-home.css">' : ""}<script type="module" src="/src/v5/client.ts"></script></head>
   <body${key === "field" ? ' class="v5-page-field"' : ""}><a class="v5-skip" href="#v5-main">Skip to content</a><div class="v5-frame">
