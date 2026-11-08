@@ -385,6 +385,14 @@ def check_page(page, origin, path, axe):
         portrait = page.locator(".v5-locked-portrait img")
         assert portrait.evaluate("e => e.complete && e.naturalWidth === (innerWidth <= 600 ? 464 : 582) && e.naturalHeight === 533"), (path, page.viewport_size, "approved responsive portrait failed to decode")
         assert portrait.get_attribute("alt") == "Cinematic portrait of Devon Akins wearing a backward cap"
+        if page.viewport_size["width"] <= 600:
+            assert page.locator(".v5-locked-portrait").evaluate("""e => {
+                const r = e.getBoundingClientRect();
+                const css = getComputedStyle(e);
+                return r.height > 140 && r.height <= 205 &&
+                    r.width <= innerWidth * .75 &&
+                    css.backgroundRepeat === 'no-repeat';
+            }"""), "Mobile cap portrait must remain compact, nonrepeating and decorative"
         # On a narrow 568px phone, the first source card must be usable in
         # the first viewport, not hidden behind decorative hero whitespace.
         if page.viewport_size == {"width": 320, "height": 568}:
