@@ -57,7 +57,18 @@ def check_atlas_live_evidence(browser, origin, local_tls):
         assert page.locator('[data-v5-atlas-live-list]').inner_text().find('Codex task')>=0
         assert page.locator('[data-v5-atlas-node-id="section:knowledge-overview"]').get_attribute(
             'data-v5-atlas-live-kind') is None
-        # A public consent change clears all previous source-qualified activity.
+        # BFCache suspension must immediately clear previously painted
+        # activity, even before a network request resolves. The semantic
+        # structures remain; only transient evidence is suppressed.
+        page.evaluate("window.dispatchEvent(new PageTransitionEvent('pagehide',{persisted:true}))")
+        assert page.locator('[data-v5-atlas-node-id="project:mizvo"]').get_attribute('data-v5-atlas-live-kind') is None
+        assert page.locator('[data-v5-atlas-node-id="project:merit"]').get_attribute('data-v5-atlas-live-kind') is None
+        assert page.locator('[data-v5-atlas-live-list] li').count()==0
+        assert 'unavailable' in page.locator('[data-v5-atlas-live-status]').inner_text()
+        assert page.locator('[data-v5-atlas-node-id]').count()==12
+        assert page.locator('[data-v5-atlas-revision]').get_attribute('data-v5-atlas-revision')=='8'
+        # Resuming against a now-private provider must never resurrect
+        # stale paint while awaiting the new consent-filtered response.
         mode['value']='private'
         page.evaluate("window.dispatchEvent(new PageTransitionEvent('pageshow',{persisted:true}))")
         page.wait_for_function("""() =>
@@ -75,6 +86,16 @@ def check_atlas_live_evidence(browser, origin, local_tls):
               ?.textContent.includes('unavailable')""",timeout=10000)
         assert not page.locator('[data-v5-atlas-live-list] li').count()
         assert calls.count('active')>=1 and calls.count('private')>=1 and calls.count('unavailable')>=1,calls
+        # Explicit reauthorization is allowed to restore fresh current
+        # evidence; the reset is not a permanent disable switch.
+        mode['value']='active'
+        page.evaluate("window.dispatchEvent(new PageTransitionEvent('pageshow',{persisted:true}))")
+        page.wait_for_function("""() =>
+            document.querySelector('[data-v5-atlas-node-id="project:mizvo"]')
+              ?.dataset.v5AtlasLiveKind === 'editor' &&
+            document.querySelector('[data-v5-atlas-node-id="project:merit"]')
+              ?.dataset.v5AtlasLiveKind === 'remote'""",timeout=10000)
+        assert page.locator('[data-v5-atlas-live-list] li').count()==2
         assert not errors,errors
         assert not blocked,blocked
     finally:context.close()

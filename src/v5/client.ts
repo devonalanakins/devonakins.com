@@ -333,6 +333,22 @@ if (field && (publicPreviewButton || activationMode === "automatic")) {
       renderPublicEvidence(latestV4, Date.now());
     }
   });
+  // BFCache can preserve a painted "active" scene while the source is being
+  // revalidated. Clear ALL transient V5 evidence immediately on departure,
+  // restored navigation and backgrounding. The single V4 reader remains the
+  // only authority allowed to repaint after a fresh consent-filtered fetch.
+  const clearHomepageEvidence = () => {
+    latestV4 = null;
+    renderSpotify(null);
+    renderPublicEvidence(null, Date.now());
+  };
+  window.addEventListener("pagehide", clearHomepageEvidence);
+  window.addEventListener("pageshow", event => {
+    if (event.persisted) clearHomepageEvidence();
+  });
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden) clearHomepageEvidence();
+  });
   const startPublicReader = async () => {
     if (started) return;
     started = true;
@@ -445,6 +461,18 @@ if (atlasRoot) {
     }
     atlasRoot.dispatchEvent(new Event("v5-atlas-evidence"));
   };
+  // Native directory and dated history survive BFCache, but short-lived
+  // public work signals must not. V4 invalidates its snapshot on pagehide;
+  // clear the V5 presentation at the SAME boundary rather than displaying a
+  // once-active project while the restored page awaits a new network result.
+  const clearAtlasEvidence = () => renderAtlasActivity(null, Date.now());
+  window.addEventListener("pagehide", clearAtlasEvidence);
+  window.addEventListener("pageshow", event => {
+    if (event.persisted) clearAtlasEvidence();
+  });
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden) clearAtlasEvidence();
+  });
   let atlasReaderStarted = false;
   const startAtlasReader = async () => {
     if (atlasReaderStarted) return;
