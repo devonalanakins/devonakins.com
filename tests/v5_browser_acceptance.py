@@ -546,11 +546,22 @@ def main():
                 ).inner_text()
                 assert "Select a public system" in page.locator("[data-v5-atlas-spotlight]").inner_text()
                 assert page.locator(".v5-graph-node").count() == 12
-                page.locator("#v5-graph-date").fill("2026-11-06")
-                page.locator(".v5-graph-date-form button").click()
-                assert "asOf=2026-11-06" in page.url
-                assert page.locator("#v5-graph-date").input_value() == "2026-11-06"
-                assert page.locator(".v5-graph-history").get_attribute("data-v5-graph-revision") == "0"
+                # Replay both sides of the approved November 2026 publication
+                # boundary. Early dates cannot display later proof/relations;
+                # later dates must include all eight independently dated events.
+                for day, revision, nodes, milestones in (
+                    ("2026-11-03", "0", 8, 0),
+                    ("2026-11-06", "8", 12, 4),
+                ):
+                    page.locator("#v5-graph-date").fill(day)
+                    page.locator(".v5-graph-date-form button").click()
+                    assert f"asOf={day}" in page.url
+                    assert page.locator("#v5-graph-date").input_value() == day
+                    assert page.locator(".v5-graph-history").get_attribute("data-v5-graph-revision") == revision
+                    assert page.locator(".v5-graph-node").count() == nodes
+                    assert page.locator(".v5-graph-proof").count() == milestones
+                    assert page.locator(".v5-graph-relations li").count() == milestones
+                    assert page.locator(".v5-graph-timeline li").count() == int(revision)
                 # Route coverage above leaves us on its final secondary page.
                 # The Signal Field exists only on the homepage; explicitly
                 # navigate back before testing its no-JS native links.
