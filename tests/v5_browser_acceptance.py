@@ -266,6 +266,14 @@ def main():
                         try:
                             for path in PAGES:
                                 check_page(page, origin, path, axe)
+                            if (width, height) in [(1440, 900), (390, 844), (320, 568)]:
+                                # First-party visual review: actual Chromium/WebKit
+                                # desktop/mobile atlas, not a generated concept.
+                                page.goto(origin + PREVIEW + "field/", wait_until="networkidle")
+                                page.screenshot(
+                                    path=str(output / f"{engine}-atlas-{width}x{height}-{motion}.png"),
+                                    full_page=True, animations="disabled",
+                                )
                             page.goto(origin + PREVIEW, wait_until="networkidle")
                             if width <= 900:
                                 page.locator("summary").click()
