@@ -105,9 +105,12 @@ def check_page(page, origin, path, axe):
         assert portrait_box.evaluate(
             "e => getComputedStyle(e).backgroundImage.includes('portrait-anevum-transcosmic')"
         ), "Visible cutout must use the original approved first-party portrait"
-        assert page.locator(".v5-locked-portrait picture img").evaluate(
+        # CSS opacity is not inherited: the <picture> is transparent while
+        # its child img retains computed opacity 1. Assert the composited
+        # parent, not the child, to avoid a false negative in WebKit/Chromium.
+        assert page.locator(".v5-locked-portrait picture").evaluate(
             "e => getComputedStyle(e).opacity === '0'"
-        ), "Accessible image should not paint a second rectangular copy"
+        ), "Accessible image must not paint a second rectangular copy"
         assert portrait_box.evaluate(
             "e => Number(getComputedStyle(e).opacity) > .9"
         ), "Portrait cutout must remain fully visible"
