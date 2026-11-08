@@ -1766,7 +1766,9 @@
 @media (max-width:600px) {
   .v5-locked-home .v5-locked-hero {
     height:auto;
-    min-height:605px;
+    /* Intrinsic content still determines final height on narrow/wrapped phones.
+       Remove the 605px artificial blank band before the five real source cells. */
+    min-height:520px;
     overflow:hidden;
     padding:0 16px 16px;
   }
