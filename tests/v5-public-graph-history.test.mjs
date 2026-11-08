@@ -124,7 +124,7 @@ test("explicit relationship requires existing public nonretired endpoints",()=>{
 test("a late invalid record invalidates earlier snapshots, never leaks future edits",()=>{
   const poisoned=[
     record(1,"publish-node",node,"2026-11-07T18:00:00.000Z"),
-    record(2,"publish-node",{...node2,label:"SECRET_CLIENT"},at),
+    record(2,"publish-node",{...node2,label:"<script>SECRET_CLIENT</script>"},at),
   ];
   assert.equal(replayPublicGraphHistory(poisoned,Date.parse("2026-11-07T19:00:00.000Z")).valid,false);
   const reversed=[
