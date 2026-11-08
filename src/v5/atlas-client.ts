@@ -2,6 +2,7 @@ import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { replayPublicGraphHistory } from "./public-graph-history.mjs";
 import { projectV5Atlas } from "./atlas-layout.mjs";
+import { publicAtlasVisibleSlice } from "./atlas-explorer-model.mjs";
 
 /**
  * Reconciled from PR #68's progressive public Three.js catalog.
@@ -105,7 +106,10 @@ export function mountV5Atlas() {
   ]));
   const materials = new Map<string, THREE.MeshStandardMaterial>();
   const meshes: THREE.Mesh[] = [];
-  const annotated: { point: THREE.Vector3; label: HTMLElement }[] = [];
+  const rootSpokes: { id: string; line: THREE.Line }[] = [];
+  const reviewedLines: { index: number; line: THREE.Line }[] = [];
+  const annotated: { id: string; point: THREE.Vector3; label: HTMLElement }[] = [];
+  let visibleNodeIds = new Set(graph.nodes.map(node => node.id));
   for (const node of graph.nodes) {
     const color = rootColors[node.id] ?? colors[node.type] ?? 0x9bc7d8;
     const material = new THREE.MeshStandardMaterial({
@@ -131,42 +135,46 @@ export function mountV5Atlas() {
     if (!node.parent) {
       // A faint spoke means membership in the approved public catalog,
       // never dependency, uptime, a deployment or evidence of current work.
-      scene.add(new THREE.Line(
+      const spoke = new THREE.Line(
         new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(), mesh.position]),
         new THREE.LineBasicMaterial({
           color, transparent: true, opacity: .17, depthWrite: false,
         }),
-      ));
+      );
+      scene.add(spoke);
+      rootSpokes.push({ id: node.id, line: spoke });
     }
     if (!node.parent || node.state === "published") {
       const tag = document.createElement("span");
       tag.className = "v5-atlas-node-label";
       tag.textContent = node.label;
       labels.append(tag);
-      annotated.push({ point: mesh.position, label: tag });
+      annotated.push({ id: node.id, point: mesh.position, label: tag });
     }
   }
   // Nondecorative lines exist ONLY if the reviewed history explicitly
   // published a parent-child membership or a typed relationship.
-  for (const edge of graph.links) {
+  for (const [index, edge] of graph.links.entries()) {
     const start = positions.get(edge.from), end = positions.get(edge.to);
     if (!start || !end) continue;
-    scene.add(new THREE.Line(
+    const line = new THREE.Line(
       new THREE.BufferGeometry().setFromPoints([start, end]),
       new THREE.LineBasicMaterial({
         color: edge.type === "published-membership" ? 0x79bde0 : 0x6df0ce,
         transparent: true, opacity: .8, depthWrite: false,
       }),
-    ));
+    );
+    scene.add(line);
+    reviewedLines.push({ index, line });
   }
   let disposed = false;
   const render = () => {
     if (disposed || document.hidden || !root.isConnected) return;
     renderer.render(scene, camera);
     const bounds = host.getBoundingClientRect();
-    for (const { point, label } of annotated) {
+    for (const { id, point, label } of annotated) {
       const p = point.clone().project(camera);
-      const visible = p.z >= -1 && p.z <= 1 &&
+      const visible = visibleNodeIds.has(id) && p.z >= -1 && p.z <= 1 &&
         p.x >= -1 && p.x <= 1 && p.y >= -1 && p.y <= 1;
       label.hidden = !visible;
       if (visible) {
@@ -184,14 +192,32 @@ export function mountV5Atlas() {
     camera.updateProjectionMatrix();
     render();
   };
+  // Read actual controls instead of trusting a synthetic event payload.
+  // A search only changes visibility, never graph membership or evidence.
+  const applyVisibility = () => {
+    const search = root.querySelector<HTMLInputElement>("[data-v5-atlas-search]")?.value ?? "";
+    const checkboxes = Array.from(root.querySelectorAll<HTMLInputElement>("[data-v5-atlas-layer]"));
+    const enabled = Object.fromEntries(checkboxes.map(item => [
+      item.dataset.v5AtlasLayer, item.checked,
+    ]));
+    const slice = publicAtlasVisibleSlice(graph, { search, ...enabled });
+    visibleNodeIds = new Set(slice.nodeIds);
+    const visibleLinks = new Set(slice.linkIndexes);
+    for (const mesh of meshes) mesh.visible = visibleNodeIds.has(mesh.userData.nodeId);
+    for (const spoke of rootSpokes) spoke.line.visible = visibleNodeIds.has(spoke.id);
+    for (const entry of reviewedLines) entry.line.visible = visibleLinks.has(entry.index);
+    render();
+  };
+  root.addEventListener("v5-atlas-filter", applyVisibility);
   const observer = new ResizeObserver(resize);
   observer.observe(host);
   controls.addEventListener("change", render);
   resize();
+  applyVisibility();
 
   const select = (id: string, reveal = false) => {
     const node = graph.nodes.find(item => item.id === id);
-    if (!node || disposed) return;
+    if (!node || disposed || !visibleNodeIds.has(id)) return;
     for (const [key, material] of materials) {
       material.emissiveIntensity = key === id ? .83 : .14;
     }
@@ -257,6 +283,7 @@ export function mountV5Atlas() {
     controls.removeEventListener("change", render);
     controls.dispose();
     root.removeEventListener("toggle", onIndex, true);
+    root.removeEventListener("v5-atlas-filter", applyVisibility);
     canvas.removeEventListener("pointerdown", down);
     canvas.removeEventListener("pointerup", up);
     canvas.removeEventListener("webglcontextlost", contextLost);
