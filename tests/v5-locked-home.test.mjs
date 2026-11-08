@@ -12,8 +12,8 @@ test("locked V5 screenshot modules occupy one semantic preview home", () => {
   assert.match(body, /href="\/work\/">Explore My Work/);
   assert.match(body, /href="\/about\/">About Me/);
   assert.match(body, /ENGINEER.*RESEARCHER.*WRITER.*CREATOR/);
-  assert.match(body, /cap-hero-desktop\\.webp/);
-  assert.match(body, /cap-hero-mobile\\.webp/);
+  assert.match(body, /cap-hero-desktop\.webp/);
+  assert.match(body, /cap-hero-mobile\.webp/);
   assert.equal((body.match(/<h1\b/g) || []).length, 1);
   for (const name of [
     "Activity", "Work status", "Selected projects",
