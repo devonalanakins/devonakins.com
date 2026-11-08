@@ -1448,3 +1448,65 @@ body.v5-page-projects .v5-project-card:hover {
  body.v5-page-projects .v5-project-card {transition:none;}
  body.v5-page-projects .v5-project-card:hover {transform:none;}
 }
+
+
+/* Approved project story hierarchy: real scope and evidence, no fake demos. */
+.v5-project-detail-hero {
+  min-height:295px;
+  padding-right:clamp(30px,24vw,330px)!important;
+}
+.v5-project-detail-hero > .v5-wordmark {
+  position:absolute;right:clamp(24px,4vw,63px);
+  top:50%;transform:translateY(-50%);
+  width:min(21vw,220px);height:auto;max-height:135px;
+  object-fit:contain;object-position:center;
+  filter:drop-shadow(0 0 20px #68a5c939);
+}
+.v5-project-detail-hero[data-v5-project-category="creative"] {
+  background:
+    radial-gradient(ellipse 42% 83% at 80% 53%,#8c55384b,transparent 85%),
+    radial-gradient(ellipse 45% 63% at 10% 42%,#15435e46,transparent 79%),
+    linear-gradient(105deg,#09141b,#0b1119);
+  border-color:#604634;
+}
+.v5-project-detail-hero[data-v5-project-category="research"] {
+  background:
+    radial-gradient(ellipse 50% 86% at 77% 37%,#27607e66,transparent 84%),
+    radial-gradient(ellipse 35% 80% at 5% 80%,#7253372f,transparent 90%),
+    linear-gradient(112deg,#09121a,#071820);
+}
+.v5-project-detail-layout {gap:clamp(16px,2vw,29px);align-items:start;}
+.v5-project-story {padding:clamp(24px,3vw,42px);}
+.v5-project-story > h2 {margin-top:clamp(22px,2.5vw,36px);}
+.v5-project-story > h2:first-of-type {margin-top:25px;}
+.v5-project-story > p:not(.v5-card-state) {
+  color:#c4d8db;font-size:clamp(14px,1.1vw,17px);
+  line-height:1.8;max-width:76ch;
+}
+.v5-project-story > .v5-card-state {display:inline-block;max-width:100%;
+  white-space:normal;overflow-wrap:anywhere;}
+.v5-project-detail-tags {
+  list-style:none;display:flex;flex-wrap:wrap;gap:8px;
+  padding:13px 0 0;margin:0;
+}
+.v5-project-detail-tags > li {
+  border:1px solid #355861;border-radius:999px;
+  padding:6px 12px;background:#0b2630b6;
+  color:#badcdd;font-size:12px;
+}
+.v5-project-aside {
+  padding:clamp(21px,2.2vw,30px);
+  border-color:#3a585b;
+  background:linear-gradient(155deg,#0b1c25f2,#08141bef);
+}
+.v5-project-aside > p {line-height:1.7;overflow-wrap:anywhere;}
+.v5-project-aside > .v5-text-link {border-top:1px solid #25414b;}
+@media (max-width:850px) {
+ .v5-project-detail-hero {padding-right:clamp(24px,3vw,45px)!important;}
+ .v5-project-detail-hero > .v5-wordmark {
+   position:relative;right:auto;top:auto;transform:none;
+   width:min(185px,55vw);height:50px;display:block;margin:14px 0 20px;
+   object-position:left;
+ }
+ .v5-project-detail-layout {grid-template-columns:1fr;}
+}
