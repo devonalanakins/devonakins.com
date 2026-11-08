@@ -20,10 +20,6 @@ const ROOT_IDS = Object.freeze(Object.keys(POSITIONS));
 const ROOT_SET = new Set(ROOT_IDS);
 const NODE_TYPES = new Set(["feature", "component", "integration", "publication"]);
 const RELATION_TYPES = new Set(["contains", "implements", "documents", "depends-on", "integrates-with"]);
-const color = Object.freeze({
-  project: "project", section: "section", feature: "feature",
-  component: "component", integration: "integration", publication: "publication",
-});
 const hash = str => {
   let h = 2166136261;
   for (const char of str) {
@@ -65,7 +61,7 @@ export function projectV5Atlas(frame) {
         !["published", "retired"].includes(node.state) ||
         typeof node.label !== "string" || node.label.length > 70 ||
         typeof node.parent !== "string" || !entries.has(node.parent) ||
-        entries.get(node.parent).state === "retired") {
+        (node.state === "published" && entries.get(node.parent).state === "retired")) {
       // Never display an unexplained or unapproved relationship.
       return { version: V5_ATLAS_LAYOUT_VERSION, valid: false, revision: 0,
         nodes: [...entries.values()].filter(n => ROOT_SET.has(n.id)), links: [] };
