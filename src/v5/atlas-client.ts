@@ -210,14 +210,17 @@ export function mountV5Atlas() {
     }
     render();
   };
+  // Selecting on focusin changed the status text while a pointer was still
+  // pressing the summary. The resulting layout shift could cancel the native
+  // click before <details> opened. Only select AFTER the browser toggles it;
+  // keyboard Enter/Space, pointer, touch and no-JS remain native.
   const onIndex = (event: Event) => {
     const from = event.target;
     if (!(from instanceof Element)) return;
     const detail = from.closest<HTMLDetailsElement>("[data-v5-atlas-node-id]");
     const id = detail?.dataset.v5AtlasNodeId;
-    if (id) select(id);
+    if (id && detail?.open) select(id);
   };
-  root.addEventListener("focusin", onIndex);
   root.addEventListener("toggle", onIndex, true);
   const raycaster = new THREE.Raycaster();
   const pointer = new THREE.Vector2();
@@ -253,7 +256,6 @@ export function mountV5Atlas() {
     observer.disconnect();
     controls.removeEventListener("change", render);
     controls.dispose();
-    root.removeEventListener("focusin", onIndex);
     root.removeEventListener("toggle", onIndex, true);
     canvas.removeEventListener("pointerdown", down);
     canvas.removeEventListener("pointerup", up);
