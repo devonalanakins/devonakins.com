@@ -30,7 +30,15 @@ test("full-site candidate publishes real sections and a dedicated atlas without 
     );
     assert.match(html, /data-v5-signal-mode="released-v5"/);
   }
-  assert.match(renderV5PublicPage("home"), /href="\/signal-field\/"/);
+  const fullHome = renderV5PublicPage("home");
+  // A complete V5 release must never strand homepage navigation on V4.
+  for (const href of ["/knowledge/", "/writing/", "/signal-field/"]) {
+    assert.ok(fullHome.includes('href="' + href + '"'), href);
+  }
+  assert.ok(!fullHome.includes('href="/source/"'),
+    "The V5 Knowledge link must not silently fall back to V4 Source");
+  assert.ok(!fullHome.includes('href="/work/writing/"'),
+    "The V5 Writing link must reach its V5 public page");
   const knowledge = renderV5PublicPage("knowledge");
   for (const n of publicNotes)
     assert.ok(knowledge.includes("/knowledge/" + n.slug + "/"));
