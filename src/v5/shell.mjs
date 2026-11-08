@@ -202,7 +202,12 @@ export function renderV5PublicPage(key, options = {}) {
     .replace('Development-only Living Mind V5 layout preview. Live data is not connected.',
       'Public projects, writing and source-linked engineering explanations by Devon Alan Akins.')
     .replace(/ — Living Mind V5 Preview<\/title>/,' — Devon Alan Akins</title>');
-  html = publishV5Links(html).replace('href="/#v5-lock-field-title"','href="/signal-field/"');
+  html = publishV5Links(html).replace('href="/#v5-lock-field-title"','href="/signal-field/"')
+    .replaceAll('This preview never reads private Knowledge','The public atlas never reads private Knowledge')
+    .replaceAll('This gated preview does not request private provider data.','This view does not request private provider data.')
+    .replaceAll('Preview · no source request','Live sources not loaded on this page');
+  const topic = options.topic && publicNotes.find(note => note.slug === options.topic);
+  if (topic) html=html.replace(/<title>[^<]*<\/title>/,`<title>${esc(topic.title)} — Devon Alan Akins</title>`);
   html = html.replace('</head>',`<link rel="canonical" href="https://devonakins.com${esc(path)}"></head>`);
   if (html.includes('/__v5_preview__/')) throw Error("Preview link in public V5 page");
   return html;

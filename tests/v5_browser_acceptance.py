@@ -76,6 +76,7 @@ def check_page(page, origin, path, axe):
             assert panels["width"] >= page.viewport_size["width"] * .94
             assert panels["centerFraction"] > .49
             assert panels["viewHeight"] >= 620
+            assert panels["viewHeight"] <= page.viewport_size["height"], "Sidebar content must not stretch the camera below the screen"
             assert panels["aligned"], "Explorer, volumetric scene and inspector must align"
         atlas = page.locator("[data-v5-atlas]")
         assert atlas.count() == 1
@@ -503,6 +504,9 @@ def main():
                 assert page.url.endswith("writing/")
                 context.close()
                 if engine == "chromium":
+                    if args.fresh_browser_per_case:
+                        browser.close()
+                        browser = getattr(playwright, engine).launch(**options)
                     # The default preview remains source-free. This test
                     # explicitly opts in, then serves only a local synthetic
                     # PUBLIC V4 fixture to exercise the real UI adapter.

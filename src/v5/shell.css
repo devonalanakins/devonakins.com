@@ -1189,3 +1189,13 @@ a[aria-current="page"] {
 .v5-camera-controls[hidden] {display:none}
 .v5-camera-controls button {font:inherit;font-size:11px;min-height:44px;border-radius:7px;border:1px solid var(--v5-border);background:#08131fef;color:var(--v5-ink);padding:8px;cursor:pointer}
 @media(max-width:600px){.v5-camera-controls{bottom:65px;gap:3px}.v5-camera-controls button{font-size:10px;min-height:44px;padding:5px}}
+
+/* Sidebar content scrolls independently instead of stretching the atlas beyond the viewport. */
+@media (min-width:1101px) {
+  .v5-page-field .v5-atlas-shell {
+    height:clamp(620px,calc(100dvh - 148px),1180px);
+    grid-template-rows:minmax(0,1fr);
+  }
+  .v5-page-field .v5-atlas-viewport {min-height:0;height:100%}
+  .v5-page-field .v5-atlas-explorer,.v5-page-field .v5-atlas-index {min-height:0;overflow:auto;overscroll-behavior:contain}
+}
