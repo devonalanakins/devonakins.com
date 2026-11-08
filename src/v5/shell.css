@@ -837,7 +837,24 @@ a[aria-current="page"] {
 .v5-graph-node p, .v5-graph-empty, .v5-graph-footnote { color: var(--v5-muted); }
 .v5-graph-node p { font-size: 12px; }
 .v5-graph-proof { margin-top: 12px; }
-.v5-graph-proof a, .v5-graph-relations a, .v5-graph-timeline a { color: var(--v5-cyan); text-decoration: underline; text-underline-offset: 3px; }
+/* Evidence, relationship and timeline links are primary actions, not tiny
+   inline annotations. Keep their actual hit boxes keyboard/touch accessible
+   across desktop, mobile and reduced-motion without changing public claims. */
+.v5-graph-proof a, .v5-graph-relations a, .v5-graph-timeline a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 8px 4px;
+  color: var(--v5-cyan);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.v5-graph-proof a:focus-visible,
+.v5-graph-relations a:focus-visible,
+.v5-graph-timeline a:focus-visible {
+  outline: 2px solid var(--v5-cyan);
+  outline-offset: 3px;
+}
 .v5-graph-relations, .v5-graph-timeline { list-style: none; margin: 0; padding: 0; }
 .v5-graph-relations li, .v5-graph-timeline li { padding: 12px 0; border-bottom: 1px solid var(--v5-border); display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
 .v5-graph-relations li span, .v5-graph-timeline li time { color: var(--v5-muted); }

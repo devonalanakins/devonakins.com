@@ -45,3 +45,27 @@ test("full-bleed layout introduces no public source connections, fabricated stat
   assert.doesNotMatch(field, /PRIVATE_CLIENT|THREADS_USER_ACCESS_TOKEN|all systems healthy/i);
   assert.doesNotMatch(field, /<iframe|fetch\(|setInterval/);
 });
+
+test("dated graph source links, relationships and timeline have 44px hit boxes and keyboard focus", () => {
+  const rule = stylesheet.match(
+    /\.v5-graph-proof a, \.v5-graph-relations a, \.v5-graph-timeline a \{([^}]+)\}/
+  );
+  assert.ok(rule, "The three evidence link types must share an accessible hit-target rule");
+  assert.match(rule[1], /display:\s*inline-flex/);
+  assert.match(rule[1], /min-height:\s*44px/);
+  assert.match(rule[1], /align-items:\s*center/);
+  for (const selector of [
+    ".v5-graph-proof a:focus-visible",
+    ".v5-graph-relations a:focus-visible",
+    ".v5-graph-timeline a:focus-visible",
+  ]) assert.ok(stylesheet.includes(selector), selector + " needs visible keyboard focus");
+
+  const field = renderV5Preview("field", { now });
+  assert.match(field, /class="v5-graph-proof"/);
+  assert.match(field, /class="v5-graph-relations"/);
+  assert.match(field, /class="v5-graph-timeline"/);
+  assert.match(field, />Publication review<\/a>/);
+  assert.match(field, />Source evidence<\/a>/);
+  assert.match(field, />Review evidence<\/a>/);
+  assert.match(field, />Review #8<\/a>/);
+});
