@@ -282,10 +282,12 @@ export function renderReferenceHomepage() {
       '<nav class="v5-locked-rail" aria-label="Page shortcuts">' + rail + '</nav>' +
       '<div class="v5-locked-portrait"><picture><source media="(max-width: 600px)" type="image/webp" srcset="/src/v5/assets/cap-hero-mobile.webp"><img src="/src/v5/assets/cap-hero-desktop.webp" alt="Cinematic portrait of Devon Akins wearing a backward cap" width="582" height="533" fetchpriority="high" decoding="async"></picture></div>' +
       '<div class="v5-hero-veil" aria-hidden="true"></div>' +
-      '<div class="v5-locked-identity"><h1 id="v5-title">Devon Alan Akins</h1>' +
-        '<p class="v5-locked-roles">Developer · Researcher · Builder · Father<br>Writer · Systems Architect</p>' +
+      '<div class="v5-locked-identity">' +
+        '<p class="v5-locked-roles">ENGINEER <span aria-hidden="true">/</span> RESEARCHER <span aria-hidden="true">/</span> WRITER <span aria-hidden="true">/</span> CREATOR</p>' +
+        '<h1 id="v5-title">Devon Alan Akins</h1>' +
         '<div class="v5-locked-accent"></div>' +
-        '<p class="v5-locked-manifesto">Building real tools, exploring real ideas,<br>and turning research into things<br>that actually work.</p>' +
+        '<p class="v5-locked-manifesto">I build software, explore complex systems, write fiction, and investigate the nature of intelligence, creativity, and human potential.</p>' +
+        '<div class="v5-locked-hero-actions"><a class="v5-lock-primary-cta" href="/work/">Explore My Work <span aria-hidden="true">→</span></a><a class="v5-lock-secondary-cta" href="/about/">About Me</a></div>' +
         '<div class="v5-locked-socials">' +
           protectedLink("GitHub profile", "https://github.com/devonalanakins", icon("github")) +
           protectedLink("Instagram profile", "https://www.instagram.com/devonalanakins/", icon("instagram")) +
