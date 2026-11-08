@@ -8,7 +8,6 @@ export const PUBLIC_REPOSITORIES = Object.freeze({
   squelch: "squelch",
   "anevum-web": "anevum",
   brandicade: "brandicade",
-  vesper: "vesper",
   knowledge: "knowledge",
 });
 export function projectActivityHistory(events, at = Date.now()) {
