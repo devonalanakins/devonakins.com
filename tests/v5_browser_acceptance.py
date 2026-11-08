@@ -385,6 +385,14 @@ def check_page(page, origin, path, axe):
         portrait = page.locator(".v5-locked-portrait img")
         assert portrait.evaluate("e => e.complete && e.naturalWidth === (innerWidth <= 600 ? 464 : 582) && e.naturalHeight === 533"), (path, page.viewport_size, "approved responsive portrait failed to decode")
         assert portrait.get_attribute("alt") == "Cinematic portrait of Devon Akins wearing a backward cap"
+        # On a narrow 568px phone, the first source card must be usable in
+        # the first viewport, not hidden behind decorative hero whitespace.
+        if page.viewport_size == {"width": 320, "height": 568}:
+            assert page.locator('[data-v5-home-source="github"]').evaluate("""e => {
+                const r = e.getBoundingClientRect();
+                return r.width >= 130 && r.height >= 44 &&
+                    r.top >= 0 && r.bottom <= innerHeight + 1;
+            }"""), "First verified-source cell must fit the 320x568 viewport"
         assert page.locator(".v5-locked-portrait picture").evaluate("e => e.getBoundingClientRect().height > 0")
 
         if page.viewport_size["height"] >= 568:
