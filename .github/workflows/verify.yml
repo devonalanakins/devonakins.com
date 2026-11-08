@@ -114,7 +114,7 @@ jobs:
           retention-days: 7
 
   v5_candidate:
-    if: github.head_ref == 'release/living-mind-v5' || github.ref == 'refs/heads/release/living-mind-v5'
+    if: github.head_ref == 'release/living-mind-v5' || github.ref == 'refs/heads/release/living-mind-v5' || github.head_ref == 'design/public-website-experience' || github.ref == 'refs/heads/design/public-website-experience'
     needs: verify
     runs-on: ubuntu-24.04
     timeout-minutes: 20
