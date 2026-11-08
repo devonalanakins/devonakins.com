@@ -136,6 +136,8 @@ jobs:
         run: node scripts/verify-v5-site-candidate.mjs
       - run: python3 -m pip install --disable-pip-version-check playwright==1.57.0
       - run: python3 -m playwright install --with-deps chromium webkit
+      - name: Verify optional software WebGL camera and context recovery
+        run: python3 tests/v5_atlas_lifecycle.py
       - name: Verify full V5 candidate in actual isolated workerd
         run: |
           set -eu
