@@ -1202,7 +1202,7 @@ a[aria-current="page"] {
 
 
 /* V5 full-atlas: current approved V4 observations, distinct from reviewed history. */
-.v5-atlas-live { margin-top: 20px; padding-top: 15px; border-top: 1px solid var(--v5-border); }
+.v5-atlas-live { margin: 18px 0 20px; padding-top: 15px; border-top: 1px solid var(--v5-border); }
 .v5-atlas-live h3 { font-size: 12px; letter-spacing: .06em; text-transform: uppercase; margin-bottom: 9px; }
 .v5-atlas-live p { font-size: 11px; line-height: 1.5; color: #b9d6e2; }
 .v5-atlas-live-list { list-style: none; padding: 0; margin: 10px 0 0; display: grid; gap: 6px; }

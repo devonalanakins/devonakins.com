@@ -204,3 +204,15 @@ test("the full atlas has a source-qualified activity region and no-JS directory 
   assert.match(html,/Live activity is not loaded/);
   assert.doesNotMatch(html,/data-v5-atlas-live-kind|private-client|automatically connected/);
 });
+
+test("current atlas activity appears after layer filters and before the static directory",()=>{
+  const html=renderV5Atlas({now:NOW});
+  const filters=html.indexOf("data-v5-atlas-layer");
+  const activity=html.indexOf('aria-label="Current public source evidence"');
+  const directory=html.indexOf('aria-label="Approved public system index"');
+  assert.ok(filters>=0 && filters<activity && activity<directory,
+    "Visible activity must not be buried after all directory entries");
+  assert.equal((html.match(/aria-label="Current public source evidence"/g)||[]).length,1);
+  assert.match(html,/data-v5-atlas-live-status role="status"/);
+  assert.doesNotMatch(html,/data-v5-atlas-live-kind|\/api\/activity\/v4/);
+});
