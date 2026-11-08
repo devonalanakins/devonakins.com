@@ -320,6 +320,36 @@ export function renderReferenceHomepage() {
         '</section>' +
       '</section>' +
     '</section>' +
+    // Render source truth without assuming a source is connected. The existing
+    // single authorized V4 reader hydrates these states on released pages.
+    '<section class="v5-home-source-strip" aria-labelledby="v5-home-source-title">' +
+      '<header><h2 id="v5-home-source-title">From my work</h2><p>Public, consented sources · Current only when verified</p></header>' +
+      '<div class="v5-home-source-grid">' +
+        '<a href="/studio/" class="v5-home-source-card" data-v5-home-source="github">' +
+          icon("github") + '<span><strong>GitHub</strong><small data-v5-home-github>Source unavailable</small></span></a>' +
+        '<a href="/studio/" class="v5-home-source-card" data-v5-home-source="tasks">' +
+          icon("nodes") + '<span><strong>Tasks</strong><small data-v5-home-tasks>Source unavailable</small></span></a>' +
+        '<a href="/listening/" class="v5-home-source-card" data-v5-home-source="spotify">' +
+          icon("music") + '<span><strong>Listening</strong><small data-v5-home-spotify>Playback unavailable</small></span></a>' +
+        '<a href="/gpt/" class="v5-home-source-card" data-v5-home-source="gpt">' +
+          icon("signal") + '<span><strong>GPT</strong><small data-v5-home-gpt>Capture unavailable</small></span></a>' +
+        '<a href="/studio/" class="v5-home-source-card" data-v5-home-source="coding">' +
+          icon("code") + '<span><strong>Editor</strong><small data-v5-home-coding>Source unavailable</small></span></a>' +
+      '</div>' +
+    '</section>' +
+    '<div class="v5-home-activity-grid">' +
+      '<section class="v5-home-activity-card" aria-labelledby="v5-home-activity-title">' +
+        '<header><h2 id="v5-home-activity-title">Recent activity</h2><a href="/studio/">Full activity →</a></header>' +
+        '<p data-v5-home-activity-empty>No recent approved public events available.</p>' +
+        '<ol data-v5-home-activity-list aria-label="Verified GitHub project activity"></ol>' +
+      '</section>' +
+      '<section class="v5-home-activity-card v5-home-focus-card" aria-labelledby="v5-home-focus-title">' +
+        '<header><h2 id="v5-home-focus-title">Current focus</h2><a href="/work/">Explore work →</a></header>' +
+        '<strong data-v5-home-focus>No current public work observed</strong>' +
+        '<p data-v5-home-focus-detail>Editor and participating task observations remain private unless explicitly shared and recent.</p>' +
+        '<p class="v5-home-evidence-caption">Evidence · not a progress estimate</p>' +
+      '</section>' +
+    '</div>' +
     '<section class="v5-lock-projects" aria-labelledby="v5-lock-projects-title">' +
       '<div class="v5-lock-heading"><h2 id="v5-lock-projects-title">' + icon("layers") + 'Selected projects</h2><span>Public portfolio · not a claim of live activity</span><a href="/__v5_preview__/projects/">View All Projects →</a></div>' +
       '<div class="v5-lock-project-grid">' + cards + '</div>' +
