@@ -48,17 +48,20 @@ function fixture({badV5=false,badCommit=false,badArchive=false,missingCsp=false,
   };
   return {fetchImpl,requests};
 }
-test("manual V5 release path stays opt-in, exact-commit gated and preserves V4 default",()=>{
+test("manual V5 release path stays opt-in, exact-commit gated and preserves V4 default",()=> {
   const workflow=readFileSync(new URL("../.github/workflows/deploy.yml",import.meta.url),"utf8");
-  assert.match(workflow,/default: v4/);
-  assert.match(workflow,/release_variant:/);
-  assert.match(workflow,/V5-CUTOVER-APPROVED/);
-  assert.match(workflow,/V5_PUBLIC_SITE_CANDIDATE: \\\$\\{\\{ inputs\\.release_variant/);
-  assert.match(workflow,/node scripts\/verify-v5-site-candidate\\.mjs/);
-  assert.match(workflow,/node scripts\/verify-live-v5\\.mjs/);
-  assert.match(workflow,/node scripts\/verify-live\\.mjs/);
-  assert.match(workflow,/github\\.ref == 'refs\\/heads\\/main'/);
-  assert.match(workflow,/wrangler@4\\.151\\.3 deploy/);
+  const v5Expression="$"+"{{ inputs.release_variant == 'v5' && '1' || '0' }}";
+  for(const expected of [
+    "default: v4",
+    "release_variant:",
+    "V5-CUTOVER-APPROVED",
+    "V5_PUBLIC_SITE_CANDIDATE: "+v5Expression,
+    "node scripts/verify-v5-site-candidate.mjs",
+    "node scripts/verify-live-v5.mjs",
+    "node scripts/verify-live.mjs",
+    "github.ref == 'refs/heads/main'",
+    "wrangler@4.151.3 deploy",
+  ]) assert.ok(workflow.includes(expected),"Protected deployment missing: "+expected);
   assert.equal(v5ReleaseRoutes.length,22,"new repositories stay outside first V5 release");
 });
 test("V5 read-only production verifier attests exact SHA, public routes and historical replay",async()=>{
