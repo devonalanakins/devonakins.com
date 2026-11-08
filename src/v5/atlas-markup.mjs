@@ -122,7 +122,7 @@ export function renderV5Atlas({ requestedDate = null, now = Date.now() } = {}) {
       '</div>' +
       '<div class="v5-atlas-label-layer" data-v5-atlas-label-layer aria-hidden="true"></div>' +
       '<div class="v5-atlas-legend" aria-hidden="true"><span>APPROVED PUBLIC IDENTITIES</span>' +
-        '<span>Solid links require reviewed public evidence</span></div>' +
+        '<span>Decorative towers are not component totals</span></div>' +
     '</div>' +
     '<aside class="v5-atlas-index" aria-label="Accessible public systems index">' +
       '<section class="v5-atlas-spotlight" aria-labelledby="v5-atlas-spotlight-heading">' +
@@ -137,7 +137,7 @@ export function renderV5Atlas({ requestedDate = null, now = Date.now() } = {}) {
       '<p class="v5-eyebrow">THE STRUCTURAL MAP</p>' +
       '<h2>Explore the structure.</h2>' +
       '<p data-v5-atlas-status role="status">3D rendering is optional. The complete public index works without JavaScript or graphics.</p>' +
-      '<p class="v5-atlas-caveat">Only approved public identities and separately reviewed structural milestones appear here. A visual node does not imply live work, a connected service, or a software dependency.</p>' +
+      '<p class="v5-atlas-caveat">Only approved public identities and separately reviewed structural milestones appear here. Decorative towers, halos and points are artwork: not features, real deployments, measured activity or software dependencies. Only independently reviewed lines represent structural relationships.</p>' +
       '<div class="v5-atlas-details">' + layout.nodes.map(node =>
         item(node, sources.get(node.id), profileMap.get(node.id))).join("") + '</div>' +
     '</aside>' +
