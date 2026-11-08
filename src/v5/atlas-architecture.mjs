@@ -6,7 +6,7 @@
  * dependencies, uptime or current activity. Never turn these into graph nodes.
  * The existing reviewed structural graph is the ONLY source of semantic edges.
  */
-export const PUBLIC_ATLAS_ARCHITECTURE_VERSION = 1;
+export const PUBLIC_ATLAS_ARCHITECTURE_VERSION = 2;
 export const PUBLIC_ATLAS_ROOT_COLORS = Object.freeze({
   "project:devonstation": 0x70baff,
   "project:mizvo": 0x46e4fb,
@@ -30,7 +30,7 @@ const ROOT_LABELS = Object.freeze({
   "project:squelch": "Squelch",
 });
 const count = ROOT_IDS.length;
-const facetsPerRoot = 9;
+const facetsPerRoot = 24;
 const round = n => Number(n.toFixed(4));
 const vector = values => Object.freeze(values.map(round));
 const invalid = () => ({
@@ -66,9 +66,12 @@ export function projectPublicAtlasArchitecture(graph) {
     const facets = [];
     for (let i = 0; i < facetsPerRoot; i++) {
       const angle = rotation + (i / facetsPerRoot) * Math.PI * 2;
-      const radius = 0.35 + (i % 3) * 0.09;
-      const width = 0.11 + (i % 3) * 0.025;
-      const height = 0.23 + ((i + (seed % 5)) % 5) * 0.12;
+      // Three small, staggered rings suggest a living miniature skyline.
+      // There are 24 equally decorative facets on EVERY approved identity;
+      // this number is not a feature, deployment or service measurement.
+      const radius = 0.18 + (i % 3) * 0.20;
+      const width = 0.08 + (i % 4) * 0.017;
+      const height = 0.20 + ((i * 7 + (seed % 13)) % 11) * 0.065;
       facets.push(Object.freeze({
         offset: vector([Math.cos(angle) * radius, -0.32 + height / 2, Math.sin(angle) * radius]),
         scale: vector([width, height, width]),

@@ -78,13 +78,22 @@ export function mountV5Atlas() {
   violet.position.set(5, 1, -3);
   scene.add(violet);
   const nucleus = new THREE.Mesh(
-    new THREE.IcosahedronGeometry(.60, 2),
+    new THREE.IcosahedronGeometry(.72, 2),
     new THREE.MeshStandardMaterial({
       color: 0x12596b, emissive: 0x339bae, emissiveIntensity: .52,
       roughness: .3, metalness: .15, flatShading: true,
     }),
   );
   scene.add(nucleus);
+  // Geometric aurora is anchored to the central public presentation origin.
+  // It is decoration, not an active-service or current-traffic indicator.
+  scene.add(new THREE.Mesh(
+    new THREE.IcosahedronGeometry(.83, 1),
+    new THREE.MeshBasicMaterial({
+      color: 0x77edf4, wireframe: true, transparent: true,
+      opacity: .32, depthWrite: false,
+    }),
+  ));
   const ring = new THREE.Mesh(
     new THREE.TorusGeometry(.91, .01, 4, 84),
     new THREE.MeshBasicMaterial({
@@ -162,7 +171,7 @@ export function mountV5Atlas() {
   const architecture = projectPublicAtlasArchitecture(graph);
   if (architecture.valid) {
     for (const cluster of architecture.clusters) {
-      // Nine equally decorative geometric facets per approved identity:
+      // Twenty-four equally decorative facets per approved identity:
       // never DOM nodes, source components, selectable work, or metrics.
       const group = new THREE.Group();
       group.position.set(...(cluster.position as [number, number, number]));
@@ -170,7 +179,7 @@ export function mountV5Atlas() {
         new THREE.BoxGeometry(1, 1, 1),
         new THREE.MeshStandardMaterial({
           color: cluster.color, emissive: cluster.color,
-          emissiveIntensity: .29, metalness: .42, roughness: .28,
+          emissiveIntensity: .39, metalness: .42, roughness: .25,
         }),
         cluster.facets.length,
       );
@@ -199,7 +208,8 @@ export function mountV5Atlas() {
       group.add(plinth);
 
       for (const [radius, thickness, opacity, elevation] of [
-        [.74, .014, .50, -.34], [.86, .008, .24, -.31],
+        [.74, .014, .59, -.34], [.86, .008, .33, -.31],
+        [1.00, .007, .21, -.29], [1.12, .004, .13, -.27],
       ] as const) {
         const halo = new THREE.Mesh(
           new THREE.TorusGeometry(radius, thickness, 5, 64),
@@ -211,6 +221,28 @@ export function mountV5Atlas() {
         halo.position.y = elevation;
         group.add(halo);
       }
+      // A single bounded point cloud per cluster makes the illuminated
+      // pedestal more legible at desktop scale without adding graph nodes,
+      // links, status or a costly animation loop.
+      const glints: number[] = [];
+      for (let i = 0; i < 48; i++) {
+        const angle = i * (Math.PI * 2 / 48);
+        const radius = .78 + (i % 4) * .085;
+        glints.push(
+          Math.cos(angle) * radius,
+          -.30 + (i % 5) * .035,
+          Math.sin(angle) * radius,
+        );
+      }
+      const glintGeometry = new THREE.BufferGeometry();
+      glintGeometry.setAttribute("position", new THREE.Float32BufferAttribute(glints, 3));
+      group.add(new THREE.Points(
+        glintGeometry,
+        new THREE.PointsMaterial({
+          color: cluster.color, size: .065, transparent: true,
+          opacity: .74, depthWrite: false, sizeAttenuation: true,
+        }),
+      ));
       scene.add(group);
       architecturalGroups.set(cluster.id, group);
     }
@@ -273,13 +305,33 @@ export function mountV5Atlas() {
     scene.add(line);
     reviewedLines.push({ index, line });
   }
+  // Camera-tracked visual nucleus. The static accessible page heading and
+  // no-WebGL fallback still carry meaning; this label adds no semantic node.
+  const coreLabel = document.createElement("span");
+  coreLabel.className = "v5-atlas-core-label";
+  coreLabel.dataset.v5AtlasCoreLabel = "true";
+  const coreTitle = document.createElement("strong");
+  coreTitle.textContent = "DEVON AKINS";
+  const coreSubtitle = document.createElement("span");
+  coreSubtitle.textContent = "SIGNAL FIELD · V5";
+  coreLabel.append(coreTitle, coreSubtitle);
+  labels.append(coreLabel);
+
   let disposed = false;
   let contextUnavailable = false;
   let selectedId: string | null = null;
   const render = () => {
     if (disposed || contextUnavailable || document.hidden || !root.isConnected) return;
     renderer.render(scene, camera);
-    const bounds = host.getBoundingClientRect();
+    const coreProjection = new THREE.Vector3().project(camera);
+    const coreVisible = coreProjection.z >= -1 && coreProjection.z <= 1 &&
+      coreProjection.x >= -1 && coreProjection.x <= 1 &&
+      coreProjection.y >= -1 && coreProjection.y <= 1;
+    coreLabel.hidden = !coreVisible;
+    if (coreVisible) {
+      coreLabel.style.left = ((coreProjection.x + 1) * 50) + "%";
+      coreLabel.style.top = ((1 - coreProjection.y) * 50) + "%";
+    }
     for (const { id, point, label } of annotated) {
       const p = point.clone().project(camera);
       const visible = visibleNodeIds.has(id) && p.z >= -1 && p.z <= 1 &&

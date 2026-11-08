@@ -890,6 +890,29 @@ a[aria-current="page"] {
   text-shadow: 0 1px 3px #06111d;
 }
 .v5-atlas-node-label[hidden] { display: none; }
+/* The original reference's luminous nucleus is a camera-tracked, strictly
+   decorative identity label. The real semantic headings remain in the DOM. */
+.v5-atlas-core-label {
+  position: absolute; transform: translate(-50%, -50%);
+  display: grid; gap: 4px; place-items: center; text-align: center;
+  width: clamp(118px, 12vw, 182px); min-height: 80px;
+  padding: 16px 10px; border: 1px solid #83eafa70; border-radius: 999px;
+  background: radial-gradient(ellipse, #062b39ec 0%, #041b2bdc 63%, #04152154 100%);
+  box-shadow: 0 0 36px #31bed643, inset 0 0 18px #54e1e02b;
+  color: #e5fdff; text-shadow: 0 0 12px #72e4ff9c;
+  pointer-events: none;
+}
+.v5-atlas-core-label strong { font-size: clamp(11px, 1.15vw, 15px); letter-spacing: .075em; line-height: 1.25; }
+.v5-atlas-core-label span { font-size: 9px; letter-spacing: .15em; color: #a9e5ea; line-height: 1.4; }
+.v5-atlas-core-label[hidden] { display: none; }
+@media (max-width: 600px) {
+  .v5-atlas-core-label { width: 108px; min-height: 56px; padding: 10px 5px; gap: 2px; }
+  .v5-atlas-core-label strong { font-size: 9px; }
+  .v5-atlas-core-label span { font-size: 7px; letter-spacing: .08em; }
+}
+@media (forced-colors: active) {
+  .v5-atlas-core-label { color: CanvasText; border-color: CanvasText; background: Canvas; box-shadow: none; }
+}
 .v5-atlas-legend {
   position: absolute; z-index: 5; inset: auto 18px 15px;
   display: flex; justify-content: space-between; flex-wrap: wrap; gap: 6px 16px;

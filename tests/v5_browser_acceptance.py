@@ -156,6 +156,12 @@ def check_page(page, origin, path, axe):
         canvas = page.locator("[data-v5-atlas-host] canvas")
         if canvas.count():
             assert canvas.get_attribute("aria-hidden") == "true"
+            core = page.locator("[data-v5-atlas-core-label]")
+            assert core.count() == 1, "3D nucleus should have one visual identity label"
+            assert core.locator("strong").inner_text() == "DEVON AKINS"
+            assert "SIGNAL FIELD" in core.inner_text()
+            assert page.locator("[data-v5-atlas-node-id]").count() == 8, (
+                "Decorative core and skyline cannot create semantic project nodes")
             assert page.locator(".v5-atlas-label-layer").get_attribute("aria-hidden") == "true"
             # At desktop widths, all eight approved project labels must fit
             # inside the displayed 3D panel at initial camera position.

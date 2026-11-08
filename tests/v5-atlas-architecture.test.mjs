@@ -22,7 +22,9 @@ test("adds exactly one decorative sculpture for each approved public catalog roo
   assert.equal(Object.keys(PUBLIC_ATLAS_ROOT_COLORS).length, 8);
   assert.equal(graph.links.length, 0);
   assert.equal(graph.revision, 0);
-  assert.ok(visual.clusters.every(c => c.facets.length === 9));
+  assert.ok(visual.clusters.every(c => c.facets.length === 24));
+  assert.equal(visual.clusters.reduce((sum, cluster) => sum + cluster.facets.length, 0), 8 * 24,
+    "All additional towers remain decorative instances, never semantic nodes");
 });
 
 test("all visual facets are bounded, deterministic and visually local to their existing root", () => {
