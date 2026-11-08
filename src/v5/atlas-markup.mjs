@@ -1,6 +1,7 @@
 import { replayPublicGraphHistory } from "./public-graph-history.mjs";
 import { selectPublicGraphDate } from "./public-graph-view.mjs";
 import { projectV5Atlas } from "./atlas-layout.mjs";
+import { publicAtlasProfiles } from "./atlas-public-profiles.mjs";
 
 const esc = v => String(v ?? "").replace(/[&<>"']/g, c =>
   ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
@@ -14,7 +15,7 @@ const terms = Object.freeze({
   component: "Reviewed component", feature: "Reviewed feature",
   publication: "Reviewed publication", integration: "Reviewed integration",
 });
-function item(node, source) {
+function item(node, source, profile) {
   const target = url(node.id) || url(node.parent);
   const root = node.parent === null;
   const proof = !root && source?.evidenceUrl && source.reviewUrl
@@ -29,8 +30,29 @@ function item(node, source) {
     (root ? "Catalog identity only. This is not a verified active reporter." :
       node.state === "retired" ? "Historical, retired structure." :
         "Published from an explicitly reviewed public milestone.") + '</p>' +
+    (profile ? '<p class="v5-atlas-native-summary">' + esc(profile.summary) + '</p>' : "") +
     (target ? '<a class="v5-text-link" href="' + esc(target) +
       '">Open public context</a>' : "") + proof + '</details>';
+}
+function renderProfileTemplates(profiles) {
+  return profiles.map(profile =>
+    '<template data-v5-atlas-profile="' + esc(profile.id) + '">' +
+      '<article class="v5-atlas-profile" data-v5-atlas-profile-view="' + esc(profile.id) + '">' +
+        '<p class="v5-eyebrow">' + esc(profile.category) + '</p>' +
+        '<h3>' + esc(profile.title) + '</h3>' +
+        '<p class="v5-atlas-profile-context">CURATED PORTFOLIO STATUS · NOT LIVE TELEMETRY</p>' +
+        '<p class="v5-atlas-profile-status">' + esc(profile.status) + '</p>' +
+        '<h4>Overview</h4><p>' + esc(profile.summary) + '</p>' +
+        '<h4>Public information boundary</h4><p class="v5-atlas-profile-boundary">' +
+          esc(profile.boundary) + '</p>' +
+        (profile.url
+          ? '<a class="v5-atlas-profile-source" href="' + esc(profile.url) + '"' +
+            (profile.url.startsWith("https://") ? ' rel="noopener noreferrer"' : '') + '>' +
+              esc(profile.urlLabel) + '</a>'
+          : '<p class="v5-atlas-profile-unavailable">No approved external source link for this section.</p>') +
+      '</article>' +
+    '</template>'
+  ).join("");
 }
 function renderExplorer(layout) {
   const roots = layout.nodes.filter(node => node.parent === null);
@@ -85,6 +107,8 @@ export function renderV5Atlas({ requestedDate = null, now = Date.now() } = {}) {
   const frame = replayPublicGraphHistory(undefined, selection.at);
   const layout = projectV5Atlas(frame);
   const sources = new Map(frame.nodes.map(node => [node.id, node]));
+  const profiles = publicAtlasProfiles(layout);
+  const profileMap = new Map(profiles.map(profile => [profile.id, profile]));
   return '<section class="v5-atlas-shell" data-v5-atlas data-v5-atlas-version="' +
     layout.version + '" data-v5-atlas-at="' +
     esc(new Date(selection.at).toISOString()) + '" data-v5-atlas-revision="' +
@@ -101,11 +125,21 @@ export function renderV5Atlas({ requestedDate = null, now = Date.now() } = {}) {
         '<span>Solid links require reviewed public evidence</span></div>' +
     '</div>' +
     '<aside class="v5-atlas-index" aria-label="Accessible public systems index">' +
+      '<section class="v5-atlas-spotlight" aria-labelledby="v5-atlas-spotlight-heading">' +
+        '<p class="v5-eyebrow">THE PUBLIC RECORD</p>' +
+        '<h2 id="v5-atlas-spotlight-heading">System inspector</h2>' +
+        '<div data-v5-atlas-spotlight aria-live="polite" aria-atomic="true">' +
+          '<p>Select a public system from the directory to inspect its curated overview. ' +
+          'Portfolio descriptions are not live activity or feature-verification evidence.</p>' +
+        '</div>' +
+      '</section>' +
+      renderProfileTemplates(profiles) +
       '<p class="v5-eyebrow">THE STRUCTURAL MAP</p>' +
       '<h2>Explore the structure.</h2>' +
       '<p data-v5-atlas-status role="status">3D rendering is optional. The complete public index works without JavaScript or graphics.</p>' +
       '<p class="v5-atlas-caveat">Only approved public identities and separately reviewed structural milestones appear here. A visual node does not imply live work, a connected service, or a software dependency.</p>' +
-      '<div class="v5-atlas-details">' + layout.nodes.map(node => item(node, sources.get(node.id))).join("") + '</div>' +
+      '<div class="v5-atlas-details">' + layout.nodes.map(node =>
+        item(node, sources.get(node.id), profileMap.get(node.id))).join("") + '</div>' +
     '</aside>' +
   '</section>';
 }
