@@ -1100,3 +1100,74 @@
     background-image: url("/src/v5/assets/portrait-anevum-transcosmic-mobile.webp");
   }
 }
+
+
+/* R11: textured volumetric plumes behind the original R10 cutout.
+ * One static two-octave SVG curl provides wispy volume; only the compositor
+ * slowly translates the authored layers. No per-frame turbulence, canvas
+ * loop, network texture, work data, or extra provider request.
+ */
+.v5-locked-home svg.v5-hero-clouds {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: block;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  opacity: .7;
+  overflow: hidden;
+}
+.v5-hero-cloud {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+.v5-hero-cloud--cyan { opacity: .8; }
+.v5-hero-cloud--violet { opacity: .78; }
+.v5-hero-cloud--ember { opacity: .7; }
+.v5-locked-home svg.v5-hero-streams {
+  z-index: 2;
+  opacity: .82;
+}
+@keyframes v5-cloud-drift-cyan {
+  from { transform: translate3d(-8px, 3px, 0) scale(.97); }
+  to   { transform: translate3d(22px, -13px, 0) scale(1.055); }
+}
+@keyframes v5-cloud-drift-violet {
+  from { transform: translate3d(13px, -9px, 0) scale(1.04); }
+  to   { transform: translate3d(-18px, 10px, 0) scale(.97); }
+}
+@keyframes v5-cloud-drift-ember {
+  from { transform: translate3d(-10px, 10px, 0) scale(1); }
+  to   { transform: translate3d(17px, -7px, 0) scale(1.08); }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .v5-hero-cloud--cyan {
+    animation: v5-cloud-drift-cyan 23s ease-in-out infinite alternate;
+    will-change: transform;
+  }
+  .v5-hero-cloud--violet {
+    animation: v5-cloud-drift-violet 31s ease-in-out infinite alternate;
+    will-change: transform;
+  }
+  .v5-hero-cloud--ember {
+    animation: v5-cloud-drift-ember 28s ease-in-out infinite alternate;
+    will-change: transform;
+  }
+}
+@media (max-width: 900px) {
+  .v5-locked-home svg.v5-hero-clouds { opacity: .64; }
+}
+@media (max-width: 600px) {
+  .v5-locked-home svg.v5-hero-clouds { opacity: .52; }
+  /* The high-resolution, displacement-filtered layer is desktop-only.
+   * On phones, retain its plumes with a simple, lower-cost blur. */
+  .v5-hero-cloud { filter: blur(12px) !important; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .v5-hero-cloud {
+    animation: none !important;
+    transform: none !important;
+    will-change: auto;
+  }
+}
