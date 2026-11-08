@@ -1,11 +1,83 @@
 #!/usr/bin/env python3
 """Full-site candidate through the actual local Worker. No live provider access."""
 import argparse,json,ssl,time,urllib.request
+from datetime import datetime,timedelta,timezone
 from pathlib import Path
 from playwright.sync_api import sync_playwright
 ROOT=Path(__file__).resolve().parents[1]
 ROUTES=['/','/signal-field/','/work/','/writing/','/research/','/knowledge/','/knowledge/sources-and-meaning/','/knowledge/public-and-private/','/knowledge/replaying-a-record/','/about/','/work/mizvo/']
 VIEWS=[(1199,1312),(1440,900),(1280,800),(1024,768),(390,844),(375,667),(320,568)]
+
+def check_atlas_live_evidence(browser, origin, local_tls):
+    """Synthetic public V4 fixtures through the compiled full atlas; no provider access."""
+    context=browser.new_context(viewport={'width':390,'height':844},reduced_motion='reduce',
+                                ignore_https_errors=local_tls is not None)
+    page=context.new_page();mode={'value':'active'};calls=[];errors=[];blocked=[]
+    page.on('pageerror',lambda error:errors.append(str(error)))
+    def stamp(offset=0):
+        return (datetime.now(timezone.utc)+timedelta(seconds=offset)).isoformat(
+            timespec='milliseconds').replace('+00:00','Z')
+    def route(r):
+        url=r.request.url
+        if url==origin+'/api/activity/v4':
+            calls.append(mode['value'])
+            if mode['value']=='unavailable':
+                r.fulfill(status=503,content_type='application/json',body='{}')
+                return
+            active=mode['value']=='active'
+            snapshot={
+                'version':4,'asOf':stamp(),
+                'work':({'version':1,'visibility':'public','source':'editor-heartbeat',
+                         'project':'Mizvo','state':'developing','asOf':stamp(-6)}
+                        if active else {'visibility':'hidden','state':'not-broadcasting'}),
+                'remote':({'visibility':'public','tasks':[{
+                    'source':'codex','project':'Merit','state':'running','checkpoint':None,
+                    'asOf':stamp(-8),'expiresAt':stamp(92)}]}
+                    if active else {'visibility':'hidden','tasks':[]}),
+                'recent':[],
+            }
+            r.fulfill(status=200,content_type='application/json',body=json.dumps(snapshot))
+        elif '/api/' in url:
+            r.fulfill(status=200,content_type='application/json',body='{}')
+        elif not url.startswith(origin+'/'):
+            blocked.append(url);r.abort()
+        else:r.continue_()
+    page.route('**/*',route)
+    try:
+        assert page.goto(origin+'/signal-field/',wait_until='networkidle').status==200
+        assert page.locator('[data-v5-atlas-node-id]').count()==8
+        page.wait_for_function("""() =>
+            document.querySelector('[data-v5-atlas-node-id="project:mizvo"]')
+              ?.dataset.v5AtlasLiveKind === 'editor' &&
+            document.querySelector('[data-v5-atlas-node-id="project:merit"]')
+              ?.dataset.v5AtlasLiveKind === 'remote'""",timeout=10000)
+        assert '2 fresh' in page.locator('[data-v5-atlas-live-status]').inner_text()
+        assert page.locator('[data-v5-atlas-live-list] li').count()==2
+        assert page.locator('[data-v5-atlas-live-list]').inner_text().find('Codex task')>=0
+        assert page.locator('[data-v5-atlas-node-id="section:knowledge-overview"]').get_attribute(
+            'data-v5-atlas-live-kind') is None
+        # A public consent change clears all previous source-qualified activity.
+        mode['value']='private'
+        page.evaluate("window.dispatchEvent(new PageTransitionEvent('pageshow',{persisted:true}))")
+        page.wait_for_function("""() =>
+            !document.querySelector('[data-v5-atlas-node-id="project:mizvo"]')
+              ?.hasAttribute('data-v5-atlas-live-kind') &&
+            !document.querySelector('[data-v5-atlas-node-id="project:merit"]')
+              ?.hasAttribute('data-v5-atlas-live-kind')""",timeout=10000)
+        assert page.locator('[data-v5-atlas-live-list] li').count()==0
+        assert 'No fresh' in page.locator('[data-v5-atlas-live-status]').inner_text()
+        # Source errors must remain unavailable, never relight a stale project.
+        mode['value']='unavailable'
+        page.evaluate("window.dispatchEvent(new PageTransitionEvent('pageshow',{persisted:true}))")
+        page.wait_for_function("""() =>
+            document.querySelector('[data-v5-atlas-live-status]')
+              ?.textContent.includes('unavailable')""",timeout=10000)
+        assert not page.locator('[data-v5-atlas-live-list] li').count()
+        assert calls.count('active')>=1 and calls.count('private')>=1 and calls.count('unavailable')>=1,calls
+        assert not errors,errors
+        assert not blocked,blocked
+    finally:context.close()
+
 def main():
     parser=argparse.ArgumentParser();parser.add_argument('--origin',required=True);parser.add_argument('--engine',choices=['chromium','webkit'],default='chromium');parser.add_argument('--chromium-executable');parser.add_argument('--constrained',action='store_true');args=parser.parse_args()
     origin=args.origin.rstrip('/')
@@ -101,6 +173,7 @@ def main():
             assert page.locator('[data-v5-atlas-at]').get_attribute('data-v5-atlas-at')=='2026-11-06T23:59:59.999Z'
             page.locator('[data-v5-atlas-node-id="project:mizvo"] summary').click();assert page.locator('[data-v5-atlas-node-id="project:mizvo"]').get_attribute('open') is not None
             page.goto(origin+'/knowledge/');page.locator('a[href="/knowledge/sources-and-meaning/"]').first.click();assert page.locator('h1').is_visible();context.close()
+            check_atlas_live_evidence(browser,origin,local_tls)
         finally:browser.close()
     (out/f'{args.engine}-report.json').write_text(json.dumps(records,indent=2))
     print(f'{args.engine}: {len(records)} viewport cases, {len(ROUTES)} routes each, WCAG, search, backlinks and actual Worker no-JS date navigation passed.')
