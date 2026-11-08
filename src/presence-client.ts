@@ -142,7 +142,7 @@ export function renderLivePresence() {
         : "hidden";
     ticker.setAttribute(
       "aria-label",
-      label + (detail ? ". " + detail : "") + ". Open Live Studio.",
+      label + (detail ? ". " + detail : "") + ". Open Activity.",
     );
   }
   const title = document.querySelector("#presence-ticker-label");
