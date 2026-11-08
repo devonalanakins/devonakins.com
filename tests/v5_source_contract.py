@@ -149,6 +149,18 @@ def run():
                 path=str(review / "GPT-OWNER-CAPTURE-SYNTHETIC-1199x1312.png"),
                 full_page=True, animations="disabled",
             )
+            page.set_viewport_size({"width": 390, "height": 844})
+            assert page.locator("[data-v5-gpt-capture]").is_visible()
+            assert page.locator("[data-v5-gpt-readings] li").count() == 2
+            assert page.evaluate("document.documentElement.scrollWidth <= innerWidth + 1"), (
+                "Owner-captured GPT values must not overflow on iPhone-size screens"
+            )
+            page.evaluate("window.scrollTo(0, 0)")
+            page.screenshot(
+                path=str(review / "GPT-OWNER-CAPTURE-SYNTHETIC-390x844.png"),
+                full_page=True, animations="disabled",
+            )
+            page.set_viewport_size({"width": 1199, "height": 1312})
             assert page.locator(".v5-lock-spotify").get_attribute("href").startswith(
                 "https://open.spotify.com/track/"
             )
