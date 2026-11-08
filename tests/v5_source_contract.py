@@ -48,6 +48,28 @@ def run():
             },
             "playback": {"durationMs": 240000, "progressMs": 35000},
         },
+        "gpt": {
+            "state": "snapshot", "scope": "owner-profile",
+            "metric": "profile_7d_tokens", "period": "7d",
+            "count": 143204887, "unit": "tokens", "label": "7-day tokens",
+            "asOf": stamp(now - timedelta(minutes=8)),
+            "source": "owner-profile-capture", "sourceUpdatedAt": None,
+            "freshness": "recent",
+            "observations": [
+                {"metric": "profile_7d_tokens", "unit": "tokens",
+                 "scope": "owner-profile", "source": "owner-profile-capture",
+                 "value": 143204887, "asOf": stamp(now - timedelta(minutes=8)),
+                 "sourceUpdatedAt": None, "freshness": "recent"},
+                {"metric": "profile_lifetime_tokens_approx", "unit": "tokens",
+                 "scope": "owner-profile", "source": "owner-profile-capture",
+                 "value": 2310000000, "asOf": stamp(now - timedelta(minutes=8)),
+                 "sourceUpdatedAt": None, "freshness": "recent"},
+                {"metric": "work_codex_credits_used", "unit": "credits",
+                 "scope": "work-codex", "source": "owner-work-codex-usage",
+                 "value": 1.5, "asOf": stamp(now - timedelta(minutes=8)),
+                 "sourceUpdatedAt": None, "freshness": "recent"},
+            ],
+        },
         "recent": [{
             "project": "Mizvo", "projectSlug": "mizvo", "kind": "Commit",
             "at": stamp(now - timedelta(seconds=30)),
@@ -60,6 +82,7 @@ def run():
         "remote": {"visibility": "hidden", "tasks": []},
         "recent": [],
         "spotify": {"version": 1, "mode": "hidden", "detailsVisible": False},
+        "gpt": {"state": "disconnected", "observations": []},
     }
 
     with server(True) as origin, sync_playwright() as playwright:
@@ -108,6 +131,15 @@ def run():
             assert page.locator("[data-v5-spotify-title]").inner_text() == "Fixture Track"
             assert page.locator("[data-v5-spotify-artist]").inner_text() == "Fixture Artist"
             assert page.locator("[data-v5-spotify-progress]").is_visible()
+            assert page.locator("[data-v5-gpt-capture]").is_visible()
+            assert page.locator("[data-v5-gpt-empty]").is_hidden()
+            assert page.locator("[data-v5-gpt-primary]").inner_text() == "143.2M"
+            assert "7-day tokens" in page.locator("[data-v5-gpt-primary-label]").inner_text()
+            assert page.locator("[data-v5-gpt-readings] li").count() == 2
+            assert "credits" in page.locator("[data-v5-gpt-readings] li").last.inner_text()
+            assert page.locator("[data-v5-gpt-time]").get_attribute("datetime") == (
+                active["gpt"]["asOf"]
+            )
             assert page.locator(".v5-lock-spotify").get_attribute("href").startswith(
                 "https://open.spotify.com/track/"
             )
@@ -143,6 +175,10 @@ def run():
             )
             assert page.locator("[data-v5-spotify-title]").inner_text() != "Fixture Track"
             assert page.locator("[data-v5-spotify-progress]").is_hidden()
+            assert page.locator("[data-v5-gpt-capture]").is_hidden()
+            assert page.locator("[data-v5-gpt-empty]").is_visible()
+            assert page.locator("[data-v5-gpt-readings] li").count() == 0
+            assert page.locator("[data-v5-gpt-primary]").inner_text() == ""
             assert page.locator(".v5-lock-spotify").get_attribute("href") == "/listening/"
 
             # Transport failure must also remain quiet, not restore stale
