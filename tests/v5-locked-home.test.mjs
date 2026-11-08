@@ -10,8 +10,8 @@ test("locked V5 screenshot modules occupy one semantic preview home", () => {
   assert.match(body, /<h1 id="v5-title">Devon Alan Akins<\/h1>/);
   assert.equal((body.match(/<h1\b/g) || []).length, 1);
   for (const name of [
-    "Live Signal", "Current Work Session", "Active Projects",
-    "GitHub Activity", "Threads Feed", "GPT Analytics", "The Signal Field",
+    "Activity", "Work status", "Selected projects",
+    "GitHub Activity", "Threads Feed", "GPT Analytics", "Systems Map",
   ]) assert.ok(body.includes(name), name);
   for (const name of ["Mizvo", "Rhen", "Merit", "Vesper", "Squelch"])
     assert.ok(body.includes(name), name);
