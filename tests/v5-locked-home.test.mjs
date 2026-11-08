@@ -30,6 +30,13 @@ test("locked V5 screenshot modules occupy one semantic preview home", () => {
   assert.ok(body.includes("PROVENANCE REQUIRED"));
   assert.match(body, /portrait-anevum-transcosmic\.webp/);
   assert.match(body, /portrait-anevum-transcosmic-mobile\.webp/);
+  assert.equal((body.match(/class="v5-hero-atmosphere"/g) || []).length, 1);
+  assert.equal((body.match(/class="v5-hero-veil"/g) || []).length, 1);
+  assert.equal((body.match(/class="v5-hero-smoke /g) || []).length, 3);
+  assert.match(body, /data-v5-ambient-motion/);
+  assert.match(body, /class="v5-hero-streams"/);
+  assert.match(body, /aria-hidden="true" data-v5-ambient-motion/);
+
   assert.doesNotMatch(body, /crossed-arms\.webp/);
   assert.equal((body.match(/class="v5-lock-project-art"/g) || []).length, 5);
   assert.equal((body.match(/class="v5-lock-project-brand"/g) || []).length, 5);
@@ -72,6 +79,16 @@ test("locked CSS includes responsive screenshot geometry and reduced-motion guar
   assert.match(css, /v5-lock-project-art/);
   assert.match(css, /svg\.v5-lock-project-art\s*\{/);
   assert.match(css, /v5-lock-project-brand/);
+  assert.match(css, /portrait-cutout-mask\\.svg/);
+  assert.match(css, /v5-smoke-cyan/);
+  assert.match(css, /v5-smoke-violet/);
+  assert.match(css, /v5-smoke-amber/);
+  assert.match(css, /prefers-reduced-motion: reduce/);
+  const matte = readFileSync(new URL("../src/v5/assets/portrait-cutout-mask.svg", import.meta.url), "utf8");
+  assert.match(matte, /viewBox="0 0 1122 1402"/);
+  assert.match(matte, /<path fill="#fff" d="M/);
+  assert.doesNotMatch(matte, /<image\\b|<script\\b|https?:\\/\\//);
+
   assert.match(css, /v5-field-inspector\[hidden\]/);
   assert.match(css, /v5-lock-beam-link/);
 });
