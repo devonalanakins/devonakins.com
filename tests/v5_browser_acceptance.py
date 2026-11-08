@@ -116,6 +116,15 @@ def check_page(page, origin, path, axe):
         )
         assert "Select a public system" in spotlight.inner_text()
         search.fill("")
+        # A mobile back-forward cache restore must preserve source-free
+        # explorer listeners and a responsive optional Three.js viewport.
+        page.evaluate("window.dispatchEvent(new PageTransitionEvent('pagehide', {persisted: true}))")
+        page.evaluate("window.dispatchEvent(new PageTransitionEvent('pageshow', {persisted: true}))")
+        search.fill("Rhen")
+        assert explorer.locator("[data-v5-atlas-select]:visible").count() == 1
+        assert page.locator("[data-v5-atlas-node-id]:visible").count() == 1
+        search.fill("")
+        assert explorer.locator("[data-v5-atlas-select]:visible").count() == 8
         canvas = page.locator("[data-v5-atlas-host] canvas")
         if canvas.count():
             assert canvas.get_attribute("aria-hidden") == "true"
