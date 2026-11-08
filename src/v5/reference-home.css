@@ -886,8 +886,8 @@
   overflow: hidden;
   background:
     radial-gradient(ellipse 41% 68% at 43% 40%, #1dd2df30 0%, transparent 75%),
-    radial-gradient(ellipse 43% 68% at 69% 34%, #ab3cba43 0%, transparent 76%),
-    radial-gradient(ellipse 20% 43% at 58% 67%, #ec9b6a24 0%, transparent 84%),
+    radial-gradient(ellipse 43% 68% at 69% 34%, #b47b4b4a 0%, transparent 76%),
+    radial-gradient(ellipse 20% 43% at 58% 67%, #ec9b6a35 0%, transparent 84%),
     linear-gradient(180deg, #030c13, #091825 65%, #030b12);
 }
 .v5-hero-smoke {
@@ -916,16 +916,16 @@
   top: -17%;
   opacity: .7;
   background:
-    radial-gradient(ellipse 31% 37% at 40% 35%, #bb3bca72, transparent 94%),
-    radial-gradient(ellipse 22% 51% at 70% 76%, #d24aee76, transparent 90%),
-    radial-gradient(ellipse 37% 23% at 18% 67%, #7d32c64d, transparent 91%);
+    radial-gradient(ellipse 31% 37% at 40% 35%, #d29b7660, transparent 94%),
+    radial-gradient(ellipse 22% 51% at 70% 76%, #a25a8440, transparent 90%),
+    radial-gradient(ellipse 37% 23% at 18% 67%, #af725748, transparent 91%);
   animation: v5-smoke-violet 27s ease-in-out infinite alternate;
 }
 .v5-hero-smoke--amber {
   left: 32%;
   top: 9%;
   width: 56%;
-  opacity: .32;
+  opacity: .45;
   background:
     radial-gradient(ellipse 20% 41% at 60% 51%, #f1a86894, transparent 94%),
     radial-gradient(ellipse 28% 37% at 38% 78%, #f56d9b37, transparent 94%);
@@ -1123,7 +1123,7 @@
   transform-origin: center;
 }
 .v5-hero-cloud--cyan { opacity: .8; }
-.v5-hero-cloud--violet { opacity: .78; }
+.v5-hero-cloud--violet { opacity: .52; }
 .v5-hero-cloud--ember { opacity: .7; }
 .v5-locked-home svg.v5-hero-streams {
   z-index: 2;
@@ -1335,7 +1335,7 @@
   pointer-events: none;
   background: url("/src/v5/assets/portrait-anevum-transcosmic.webp")
     center / 100% 100% no-repeat;
-  opacity: .64;
+  opacity: .76;
   mix-blend-mode: screen;
   filter: saturate(1.18) contrast(1.06);
   -webkit-mask-image: radial-gradient(
