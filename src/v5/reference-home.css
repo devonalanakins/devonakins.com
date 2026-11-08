@@ -1779,6 +1779,7 @@
     width:73%;height:205px;
     background-size:auto 300px;
     background-position:center top;
+    background-repeat:no-repeat;
     background-image:url("/src/v5/assets/cap-hero-mobile.webp");
     opacity:.92;
     -webkit-mask-image:linear-gradient(0deg,transparent 0%,#000 32%,#000 80%,transparent 100%);
