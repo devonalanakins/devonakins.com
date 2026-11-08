@@ -1,6 +1,7 @@
 import { projects } from "../content.mjs";
 import { renderReferenceHomepage, renderReferenceNav } from "./reference-home.mjs";
 import { renderPublicGraphHistory } from "./public-graph-view.mjs";
+import { renderV5Atlas } from "./atlas-markup.mjs";
 
 export const PREVIEW_ROOT = "/__v5_preview__/";
 export const previewPages = [
@@ -118,8 +119,8 @@ function secondary(key, options = {}) {
     return `${heading("THE WORKSHOP", "Projects & systems", "Original software, creative worlds and practical tools. Status descriptions come from the existing public portfolio; they are not live telemetry.")}
     <div class="v5-cards v5-project-grid">${catalog.map(projectCard).join("")}</div>`;
   if (key === "field")
-    return `${heading("THE SIGNAL FIELD", "A connected body of work.", "Explore the approved public directory and reviewed structural history. The visual landscape is decorative; active work is distinct from durable milestones.")}
-    <section class="v5-field-stage" aria-label="Decorative public project composition">${fieldComposition()}</section><p class="v5-art-note">Decorative project geometry · no inferred dependencies or live activity</p>
+    return `${heading("THE SIGNAL FIELD", "A connected body of work.", "Explore approved public identities, inspect reviewed structural relationships in 3D, and replay the dated record without implying live work.")}
+    ${renderV5Atlas({ requestedDate: options.asOf ?? null, now: options.now ?? Date.now() })}
     ${renderPublicGraphHistory({ requestedDate: options.asOf ?? null, now: options.now ?? Date.now() })}
     ${ribbon()}<section class="v5-card v5-reading"><h2>Live evidence stays separate.</h2><p>Editor observations, participating agent tasks and GitHub history do not create permanent graph nodes. This gated preview does not request private provider data.</p><a class="v5-text-link" href="/studio/">View the current Live Studio <span aria-hidden="true">↗</span></a></section>`;
   if (key === "writing")
