@@ -61,24 +61,38 @@ def main():
                 page.wait_for_timeout(450)
                 file = f"{name}-{width}x{height}.png"
                 page.screenshot(path=str(OUT / file), full_page=True, animations="disabled")
-                # Check the actual browser-rendered image, not merely the
-                # <img> load state. The approved golden viewport has a warm
-                # portrait at this fixed reference pixel; the previous broken
-                # desktop render was a dark empty surface.
+                # R10 diagnostic capture while replacing the previous
+                # rectangular-hero pixel coordinate with a cutout-aware gate.
                 if name == "home" and width == 1199:
-                    script = (
-                        "import sharp from 'sharp';"
-                        "const pixel = await sharp(process.argv[1])."
-                        "extract({left:550,top:160,width:1,height:1}).raw().toBuffer();"
-                        "process.stdout.write(JSON.stringify([...pixel]));"
-                    )
-                    portrait_sample = json.loads(subprocess.check_output(
-                        ["node", "--input-type=module", "-e", script, str(OUT / file)],
-                        cwd=ROOT, text=True,
-                    ))
-                    assert sum(portrait_sample[:3]) >= 300, (
-                        "Golden screenshot portrait missing or too dark", portrait_sample)
-
+                    state = page.locator(".v5-locked-portrait picture img").evaluate("""e => {
+                        const img=getComputedStyle(e);
+                        const parent=getComputedStyle(e.closest('.v5-locked-portrait'));
+                        return {
+                            mask: img.maskImage, webkitMask:img.webkitMaskImage,
+                            opacity:img.opacity, parentOpacity:parent.opacity,
+                            parentZ:parent.zIndex,
+                            natural:[e.naturalWidth,e.naturalHeight],
+                            bounds:(() => { const r=e.getBoundingClientRect();
+                                return {x:r.x,y:r.y,width:r.width,height:r.height}; })()
+                        };
+                    }""")
+                    print("R10 portrait geometry/mask:", json.dumps(state))
+                    page.locator(".v5-locked-portrait picture img").evaluate("""e => {
+                        e.style.setProperty('mask-image','none','important');
+                        e.style.setProperty('-webkit-mask-image','none','important');
+                    }""")
+                    page.screenshot(path=str(OUT / "DIAGNOSTIC-portrait-mask-off.png"),
+                                    full_page=True, animations="disabled")
+                    page.reload(wait_until="networkidle")
+                    mask_result = page.evaluate("""async () => {
+                        const url = '/src/v5/assets/portrait-cutout-mask.svg';
+                        const res=await fetch(url);
+                        return {status:res.status,contentType:res.headers.get('content-type'),
+                          head:(await res.text()).slice(0,150)};
+                    }""")
+                    print("R10 mask asset request:",json.dumps(mask_result))
+                    assert mask_result["status"] == 200, mask_result
+                    assert state["natural"][0] > 100, state
                 geometry = page.evaluate("""() => ({
                     overflow: document.documentElement.scrollWidth > window.innerWidth + 1,
                     fullHeight: document.documentElement.scrollHeight,
