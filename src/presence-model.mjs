@@ -13,7 +13,6 @@ const ALLOWED_PROJECTS = Object.freeze({
   squelch: "Squelch",
   anevum: "Anevum",
   brandicade: "Brandicade",
-  vesper: "Vesper",
   knowledge: "Knowledge",
   "devonakins-com": "DevonAkins.com",
 });
