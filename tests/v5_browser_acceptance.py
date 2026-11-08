@@ -282,6 +282,10 @@ def main():
                 for path in PAGES:
                     assert page.goto(origin + PREVIEW + path).status == 200
                     assert page.locator("h1").is_visible()
+                # Route coverage above leaves us on its final secondary page.
+                # The Signal Field exists only on the homepage; explicitly
+                # navigate back before testing its no-JS native links.
+                assert page.goto(origin + PREVIEW).status == 200
                 assert page.locator('a[data-v5-field-slug="mizvo"]').get_attribute("href") == "/work/mizvo/"
                 page.locator("summary").click()
                 page.locator(".v5-mobile-nav a").filter(has_text="Writing").click()
