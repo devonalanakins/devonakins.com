@@ -304,6 +304,15 @@ def main():
                 for path in PAGES:
                     assert page.goto(origin + PREVIEW + path).status == 200
                     assert page.locator("h1").is_visible()
+                # The history form is server-rendered and must remain
+                # usable even when JavaScript is disabled.
+                assert page.goto(origin + PREVIEW + "field/").status == 200
+                assert page.locator(".v5-graph-node").count() == 8
+                page.locator("#v5-graph-date").fill("2026-11-06")
+                page.locator(".v5-graph-date-form button").click()
+                assert "asOf=2026-11-06" in page.url
+                assert page.locator("#v5-graph-date").input_value() == "2026-11-06"
+                assert page.locator(".v5-graph-history").get_attribute("data-v5-graph-revision") == "0"
                 # Route coverage above leaves us on its final secondary page.
                 # The Signal Field exists only on the homepage; explicitly
                 # navigate back before testing its no-JS native links.
