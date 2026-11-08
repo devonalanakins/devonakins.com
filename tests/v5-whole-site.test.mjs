@@ -44,6 +44,11 @@ test("full-site candidate publishes real sections and a dedicated atlas without 
   assert.ok(fullHome.includes('data-v5-home-activity-list'));
   assert.ok(fullHome.includes('data-v5-home-focus'));
   const about = renderV5PublicPage("about");
+  for (const key of ["projects","writing","research","knowledge","about"]) {
+    const doc = renderV5PublicPage(key);
+    assert.ok(doc.includes('class="v5-page-' + key + '"'),
+      key + " must use shared cinematic editorial styling");
+  }
   assert.ok(about.includes("Building ideas into something useful"));
   assert.ok(about.includes('href="/work/">Explore my work'));
   assert.ok(!about.includes("Read my biography"), "About must not link to itself");
