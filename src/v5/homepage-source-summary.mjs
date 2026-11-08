@@ -4,7 +4,7 @@
 const approvedTitles = Object.freeze({
   devonstation: "DevonStation", mizvo: "Mizvo",
   anevum: "Anevum", "rhen-language": "Rhen", merit: "Merit",
-  vesper: "Vesper", squelch: "Squelch",
+squelch: "Squelch",
 });
 const labels = Object.freeze({
   editor: "Editor observed", remote: "Participating task",
