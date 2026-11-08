@@ -98,6 +98,25 @@ test("disconnected or revoked sharing immediately clears cached posts without pr
   assert.equal((await reader(env)).posts.length,1);
   assert.equal(calls,2,"revocation must flush cached post projection");
 });
+test("in-flight source revocation cannot return old account posts",async()=>{
+ let resume;const entered=new Promise(resolve=>{
+  resume=resolve;
+ });
+ const gate={...env};
+ let release;
+ const waiting=new Promise(resolve=>{release=resolve;});
+ const reader=createPublicThreadsReader({clock:()=>now,fetchImpl:async()=>{
+  resume();
+  await waiting;
+  return Response.json(payload(row()));
+ }});
+ const request=reader(gate);
+ await entered;
+ gate.THREADS_PUBLIC_FEED_ENABLED="false";
+ release();
+ assert.deepEqual(await request,disconnectedThreads());
+ assert.deepEqual(await reader(gate),disconnectedThreads());
+});
 test("invalid API payload, HTTP error, network exception and changed credentials fail closed",async()=>{
   for(const handler of [
     async()=>Response.json({data:[{...row(),username:"bad"}]}),
