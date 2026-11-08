@@ -167,6 +167,24 @@ def check_page(page, origin, path, axe):
                     ".filter(node => !node.hidden).length === 8",
                     timeout=10000,
                 )
+                if page.viewport_size["width"] >= 1200:
+                    outside = page.evaluate("""() => {
+                        const viewport = document.querySelector('.v5-atlas-viewport')
+                            .getBoundingClientRect();
+                        return [...document.querySelectorAll('.v5-atlas-node-label')]
+                            .filter(label => !label.hidden)
+                            .filter(label => {
+                                const bounds = label.getBoundingClientRect();
+                                return bounds.left < viewport.left - 1 ||
+                                    bounds.right > viewport.right + 1 ||
+                                    bounds.top < viewport.top - 1 ||
+                                    bounds.bottom > viewport.bottom + 1;
+                            }).map(label => label.textContent);
+                    }""")
+                    assert not outside, (
+                        "Approved public labels clipped inside 3D viewport: " +
+                        ", ".join(outside)
+                    )
         archive = page.locator(".v5-graph-history")
         assert archive.count() == 1
         assert archive.get_attribute("data-v5-graph-revision") == "0"
