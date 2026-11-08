@@ -8,6 +8,7 @@ constitute a production source-connection acceptance test.
 from datetime import datetime, timedelta, timezone
 import json
 import urllib.request
+from pathlib import Path
 
 from playwright.sync_api import sync_playwright
 from v5_browser_acceptance import PREVIEW, server
@@ -139,6 +140,14 @@ def run():
             assert "credits" in page.locator("[data-v5-gpt-readings] li").last.inner_text()
             assert page.locator("[data-v5-gpt-time]").get_attribute("datetime") == (
                 active["gpt"]["asOf"]
+            )
+            # Capture the actual browser UI using explicitly synthetic owner
+            # fixture data; this image is not a claim about live GPT usage.
+            review = Path(__file__).resolve().parents[1] / "v5-review-screenshots"
+            review.mkdir(exist_ok=True)
+            page.screenshot(
+                path=str(review / "GPT-OWNER-CAPTURE-SYNTHETIC-1199x1312.png"),
+                full_page=True, animations="disabled",
             )
             assert page.locator(".v5-lock-spotify").get_attribute("href").startswith(
                 "https://open.spotify.com/track/"
