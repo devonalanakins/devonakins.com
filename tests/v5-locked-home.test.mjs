@@ -35,6 +35,12 @@ test("locked V5 screenshot modules occupy one semantic preview home", () => {
   assert.equal((body.match(/class="v5-hero-smoke /g) || []).length, 3);
   assert.match(body, /data-v5-ambient-motion/);
   assert.match(body, /class="v5-hero-streams"/);
+  assert.equal((body.match(/class="v5-hero-clouds"/g) || []).length, 1);
+  assert.equal((body.match(/class="v5-hero-cloud v5-hero-cloud--/g) || []).length, 3);
+  assert.equal((body.match(/id="v5-cloud-curl"/g) || []).length, 1);
+  assert.ok(body.includes('aria-hidden="true" data-v5-ambient-motion'));
+  assert.doesNotMatch(body, /<video|<iframe|<foreignObject|<animate[\s>]/);
+
   assert.match(body, /aria-hidden="true" data-v5-ambient-motion/);
 
   assert.doesNotMatch(body, /crossed-arms\.webp/);
@@ -83,6 +89,12 @@ test("locked CSS includes responsive screenshot geometry and reduced-motion guar
   assert.match(css, /v5-smoke-cyan/);
   assert.match(css, /v5-smoke-violet/);
   assert.match(css, /v5-smoke-amber/);
+  assert.match(css, /v5-cloud-drift-cyan/);
+  assert.match(css, /v5-cloud-drift-violet/);
+  assert.match(css, /v5-cloud-drift-ember/);
+  assert.match(css, /prefers-reduced-motion: no-preference/);
+  assert.match(css, /\.v5-hero-cloud \{ filter: blur\(12px\) !important; \}/);
+
   assert.match(css, /prefers-reduced-motion: reduce/);
   const matte = readFileSync(new URL("../src/v5/assets/portrait-cutout-mask.svg", import.meta.url), "utf8");
   assert.match(matte, /viewBox="0 0 1122 1402"/);
