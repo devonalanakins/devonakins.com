@@ -60,6 +60,32 @@ test("full-site candidate publishes real sections and a dedicated atlas without 
   );
   assert.throws(() => renderV5PublicPage("unknown"));
 });
+test("public site uses human-first labels, never release or internal interface names", () => {
+  const published = [
+    ...Object.keys(V5_PUBLIC_ROUTES).map(key => [V5_PUBLIC_ROUTES[key], renderV5PublicPage(key)]),
+    ...publicNotes.map(note => {
+      const path = "/knowledge/" + note.slug + "/";
+      return [path, renderV5PublicPage("knowledge", {topic: note.slug, publicPath: path})];
+    }),
+    ...projects.map(project => ["/work/" + project.slug + "/", renderV5ProjectPage(project.slug)]),
+  ];
+  const forbidden = /\b(?:the living mind|living mind|live signal|live mind|signal field\s*[·:–-]\s*v\d+|v[345])\b/i;
+  for (const [path, html] of published) {
+    // Inspect visitor-visible text without accidentally treating internal
+    // class names, data attributes, JS paths or preview contract markers
+    // as public marketing copy.
+    const text = html
+      .replace(/<!--[\s\S]*?-->/g, " ")
+      .replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, " ")
+      .replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi, " ")
+      .replace(/<[^>]*>/g, " ");
+    assert.doesNotMatch(text, forbidden, path + " public text");
+    for (const match of html.matchAll(/\b(?:aria-label|title|content)="([^"]*)"/g)) {
+      assert.doesNotMatch(match[1], forbidden, path + " public metadata/accessibility");
+    }
+  }
+});
+
 test("curated public topics have source context and working related/backlink targets", () => {
   const slugs = new Set(publicNotes.map((n) => n.slug));
   for (const n of publicNotes) {
