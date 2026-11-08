@@ -141,11 +141,11 @@ jobs:
       - name: Verify full V5 candidate in actual isolated workerd
         run: |
           set -eu
-          V5_PUBLIC_SITE_CANDIDATE=1 npx --yes wrangler@4.158.0 dev --local --ip 127.0.0.1 --port 8790 --infer-origin-from-routes=false > /tmp/v5-workerd.log 2>&1 &
+          V5_PUBLIC_SITE_CANDIDATE=1 npx --yes wrangler@4.158.0 dev --local --ip 127.0.0.1 --port 8790 --local-protocol=https --infer-origin-from-routes=false > /tmp/v5-workerd.log 2>&1 &
           worker_pid=$!
           trap 'kill "$worker_pid" 2>/dev/null || true' EXIT
-          python3 tests/v5_site_candidate_acceptance.py --origin http://127.0.0.1:8790 --engine chromium
-          python3 tests/v5_site_candidate_acceptance.py --origin http://127.0.0.1:8790 --engine webkit
+          python3 tests/v5_site_candidate_acceptance.py --origin https://127.0.0.1:8790 --engine chromium
+          python3 tests/v5_site_candidate_acceptance.py --origin https://127.0.0.1:8790 --engine webkit
       - name: Preserve candidate browser evidence
         if: always()
         uses: actions/upload-artifact@v4

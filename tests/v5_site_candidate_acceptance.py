@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Full-site candidate through the actual local Worker. No live provider access."""
-import argparse,json,time,urllib.request
+import argparse,json,ssl,time,urllib.request
 from pathlib import Path
 from playwright.sync_api import sync_playwright
 ROOT=Path(__file__).resolve().parents[1]
@@ -8,9 +8,13 @@ ROUTES=['/','/signal-field/','/work/','/writing/','/research/','/knowledge/','/k
 VIEWS=[(1199,1312),(1440,900),(1280,800),(1024,768),(390,844),(375,667),(320,568)]
 def main():
     parser=argparse.ArgumentParser();parser.add_argument('--origin',required=True);parser.add_argument('--engine',choices=['chromium','webkit'],default='chromium');parser.add_argument('--chromium-executable');parser.add_argument('--constrained',action='store_true');args=parser.parse_args()
-    origin=args.origin.rstrip('/');out=ROOT/'.artifacts/v5-site-candidate';out.mkdir(parents=True,exist_ok=True)
+    origin=args.origin.rstrip('/')
+    if not origin.startswith(('http://127.0.0.1:','https://127.0.0.1:','http://localhost:','https://localhost:')):
+        raise AssertionError('Candidate browser acceptance must use a loopback Worker')
+    local_tls = ssl._create_unverified_context() if origin.startswith('https://') else None
+    out=ROOT/'.artifacts/v5-site-candidate';out.mkdir(parents=True,exist_ok=True)
     for _ in range(120):
-        try: urllib.request.urlopen(origin+'/_health',timeout=1).close();break
+        try: urllib.request.urlopen(origin+'/_health',timeout=1,context=local_tls).close();break
         except OSError: time.sleep(.5)
     else: raise AssertionError('Local Worker failed to start')
     records=[];axe=(ROOT/'node_modules/axe-core/axe.min.js').read_text()
@@ -21,7 +25,8 @@ def main():
         browser=getattr(p,args.engine).launch(**options)
         try:
             for width,height in VIEWS:
-                context=browser.new_context(viewport={'width':width,'height':height},reduced_motion='reduce');page=context.new_page();errors=[];blocked=[]
+                context=browser.new_context(viewport={'width':width,'height':height},reduced_motion='reduce',
+                                            ignore_https_errors=local_tls is not None);page=context.new_page();errors=[];blocked=[]
                 page.on('pageerror',lambda e:errors.append(str(e)))
                 def route(r):
                     if '/api/' in r.request.url: r.fulfill(status=200,content_type='application/json',body='{}')
@@ -87,7 +92,8 @@ def main():
                 assert not errors,(width,errors);assert not blocked,blocked
                 records.append({'engine':args.engine,'viewport':[width,height],'routes':len(ROUTES),'result':'pass'});context.close()
                 if args.constrained: browser.close();browser=getattr(p,args.engine).launch(**options)
-            context=browser.new_context(viewport={'width':390,'height':844},java_script_enabled=False);page=context.new_page()
+            context=browser.new_context(viewport={'width':390,'height':844},java_script_enabled=False,
+                                        ignore_https_errors=local_tls is not None);page=context.new_page()
             response=page.goto(origin+'/signal-field/');assert 'no-store' in response.headers['cache-control'];assert "form-action 'self'" in response.headers['content-security-policy']
             page.locator('#v5-graph-date').fill('2026-11-06')
             with page.expect_navigation():page.locator('.v5-graph-date-form button').click()
