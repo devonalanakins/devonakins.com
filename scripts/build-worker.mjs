@@ -81,6 +81,7 @@ for(const file of await readdir("src/v5")) {
   if(file.endsWith(".mjs")) await writeFile(".release/v5/"+file,await readFile("src/v5/"+file));
 }
 await writeFile(".release/content.mjs",await readFile("src/content.mjs"));
+await writeFile(".release/publication-manifest.mjs",await readFile("src/publication-manifest.mjs"));
 await writeFile(
   ".release/worker.mjs",
   `import assets from './assets.mjs';import {createHandler} from './handler.mjs';export default createHandler(assets,${JSON.stringify(release)});\n`,
