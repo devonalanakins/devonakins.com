@@ -9,7 +9,7 @@ import { renderV5Atlas } from "./atlas-markup.mjs";
 export const PREVIEW_ROOT = "/__v5_preview__/";
 export const previewPages = [
   ["home", "Home"],
-  ["field", "Signal Field"],
+  ["field", "Systems Map"],
   ["projects", "Projects"],
   ["writing", "Writing"],
   ["research", "Research"],
@@ -69,13 +69,13 @@ function fieldComposition() {
     <g class="v5-strands" fill="none" stroke="url(#field-thread)">${curves}</g>
     <g fill="#a6f3ed" opacity=".65">${stars}</g>
     <g fill="none" stroke="#7beae9" opacity=".4"><ellipse cx="365" cy="222" rx="80" ry="65"/><ellipse cx="365" cy="222" rx="65" ry="80" transform="rotate(32 365 222)"/></g></svg>
-    <span class="v5-field-core" aria-hidden="true">DA<span>THE LIVING MIND</span></span>
+    <span class="v5-field-core" aria-hidden="true">DA<span>PUBLIC PROJECTS</span></span>
     <div class="v5-project-orbits">${catalog.map((project, index) => `<a class="v5-orbit v5-orbit-${index}" href="${projectLink(project)}">${lockup(project)}<span>${esc(project.label)}</span></a>`).join("")}</div>
   </div>`;
 }
 function ribbon() {
   return `<section class="v5-ribbon" aria-label="Work, Spotify and GPT sources">
-    <div class="v5-ribbon-label"><span class="v5-status-ring" aria-hidden="true"></span>LIVE SIGNAL<span>Independent sources</span></div>
+    <div class="v5-ribbon-label"><span class="v5-status-ring" aria-hidden="true"></span>ACTIVITY<span>Independent sources</span></div>
     ${[
       [
         "work",
@@ -107,7 +107,7 @@ function home() {
   return `<section class="v5-hero" aria-labelledby="v5-title">
     <div class="v5-portrait"><picture><source media="(max-width: 600px)" type="image/webp" srcset="/src/v5/assets/portrait-anevum-transcosmic-mobile.webp"><img src="/src/v5/assets/portrait-anevum-transcosmic.webp" alt="Cinematic portrait artwork of Devon Akins in a dark eclipse-graphic T-shirt and fitted jeans" width="1122" height="1402" fetchpriority="high" decoding="async"></picture></div>
     <div class="v5-intro"><p class="v5-eyebrow">INDEPENDENT DEVELOPER · AUTHOR</p><h1 id="v5-title">Devon<br><span>Akins.</span></h1><p class="v5-lede">Building useful systems.<br>Exploring ideas. Creating worlds.</p><p class="v5-intro-detail">Father, writer and independent developer working where thoughtful engineering meets imagination.</p>
-      <div class="v5-actions"><a class="v5-button" href="${href("field")}">Explore the Signal Field <span aria-hidden="true">↗</span></a><a class="v5-secondary" href="${href("projects")}">My work</a></div>
+      <div class="v5-actions"><a class="v5-button" href="${href("field")}">Explore the systems map <span aria-hidden="true">↗</span></a><a class="v5-secondary" href="${href("projects")}">My work</a></div>
       <a class="v5-github" href="https://github.com/devonalanakins">GitHub <span aria-hidden="true">↗</span></a>
     </div>
     <div class="v5-hero-field">${fieldComposition()}<p class="v5-art-note">Static project composition · no activity or dependency claims</p></div>
@@ -126,7 +126,7 @@ function secondary(key, options = {}) {
     return `${heading("THE WORKSHOP", "Projects & systems", "Original software, creative worlds and practical tools. Status descriptions come from the existing public portfolio; they are not live telemetry.")}
     <form class="v5-directory-controls" role="search" data-v5-directory-controls hidden><label>Find a project<input type="search" maxlength="120" data-v5-project-search placeholder="Name, purpose or subject"></label><label>Category<select data-v5-project-category><option value="">All categories</option>${["software","research","creative","business"].map(c=>`<option value="${c}">${c[0].toUpperCase()+c.slice(1)}</option>`).join("")}</select></label><p role="status" data-v5-project-count>${projects.length} public projects</p></form><div class="v5-cards v5-project-grid">${projects.map(projectCard).join("")}</div><p class="v5-card v5-reading" data-v5-project-empty hidden>No matching public projects. Try another name or category.</p>`;
   if (key === "field")
-    return `${heading("THE SIGNAL FIELD", "A connected body of work.", "Explore approved public identities, inspect reviewed structural relationships in 3D, and replay the dated record without implying live work.")}
+    return `${heading("SYSTEMS MAP", "A connected body of work.", "Explore approved public identities, inspect reviewed structural relationships in 3D, and replay the dated record without implying live work.")}
     <!-- V5_FIELD_BEGIN -->${renderV5Atlas({ requestedDate: options.asOf ?? null, now: options.now ?? Date.now() })}
     ${renderPublicGraphHistory({ requestedDate: options.asOf ?? null, now: options.now ?? Date.now() })}
     <!-- V5_FIELD_END -->${ribbon()}<section class="v5-card v5-reading"><h2>Live evidence stays separate.</h2><p>Editor observations, participating agent tasks and GitHub history do not create permanent graph nodes. This gated preview does not request private provider data.</p><a class="v5-text-link" href="/studio/">View the current Live Studio <span aria-hidden="true">↗</span></a></section>`;
@@ -138,13 +138,13 @@ export function renderV5Preview(key = "home", options = {}) {
     throw new Error("Unknown V5 preview page");
   const nav = (className) =>
     `<nav class="${className}" aria-label="${className === "v5-desktop-nav" ? "Primary" : "Mobile"}">${previewPages.map((page) => `<a href="${page.path}"${key === page.key ? ' aria-current="page"' : ""}>${page.label}</a>`).join("")}</nav>`;
-  const previewNotice = `<aside class="v5-preview-banner" aria-label="Preview notice"><span>DESIGN PREVIEW · V5</span><span data-v5-preview-source-state>Development only · live sources not loaded</span><button type="button" data-v5-preview-connect hidden>Preview verified public signals</button><a href="/">Current website <span aria-hidden="true">↗</span></a></aside>`;
-  return `<!doctype html><html lang="en" data-v5-signal-mode="preview"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow,noarchive"><meta name="description" content="Development-only Living Mind V5 layout preview. Live data is not connected."><title>${previewPages.find((page) => page.key === key).label} — Living Mind V5 Preview</title><link rel="icon" href="/brand-mark-mono.svg"><link rel="stylesheet" href="/src/v5/shell.css">${key === "home" ? '<link rel="stylesheet" href="/src/v5/reference-home.css">' : ""}<script type="module" src="/src/v5/client.ts"></script></head>
+  const previewNotice = `<aside class="v5-preview-banner" aria-label="Preview notice"><span>INTERNAL DESIGN PREVIEW</span><span data-v5-preview-source-state>Development only · live sources not loaded</span><button type="button" data-v5-preview-connect hidden>Preview verified public signals</button><a href="/">Current website <span aria-hidden="true">↗</span></a></aside>`;
+  return `<!doctype html><html lang="en" data-v5-signal-mode="preview"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow,noarchive"><meta name="description" content="Development-only DevonAkins.com layout preview. Live data is not connected."><title>${previewPages.find((page) => page.key === key).label} — DevonAkins.com Preview</title><link rel="icon" href="/brand-mark-mono.svg"><link rel="stylesheet" href="/src/v5/shell.css">${key === "home" ? '<link rel="stylesheet" href="/src/v5/reference-home.css">' : ""}<script type="module" src="/src/v5/client.ts"></script></head>
   <body${key === "field" ? ' class="v5-page-field"' : ""}><a class="v5-skip" href="#v5-main">Skip to content</a><div class="v5-frame">
     ${key === "home" ? "" : previewNotice}
     <header class="v5-topbar"><a class="v5-brand" href="${PREVIEW_ROOT}" aria-label="Devon Akins home"><img src="/brand-mark-mono.svg" alt="" width="34" height="34"><span>DEVONAKINS.COM<small>SOFTWARE · WORLDS · POSSIBILITIES</small></span></a>${key === "home" ? renderReferenceNav() : nav("v5-desktop-nav")}<details class="v5-mobile-menu" data-mobile-menu><summary>Menu</summary>${nav("v5-mobile-nav")}</details></header>
     <main id="v5-main" tabindex="-1">${key === "home" ? renderReferenceHomepage() : secondary(key, options)}</main>
-    <footer class="v5-footer"><a href="${PREVIEW_ROOT}">The Living Mind <span>V5</span></a><p>Original work. Open questions. A growing body of ideas.</p><nav aria-label="More"><a href="/listening/">Listening</a><a href="/gpt/">GPT captures</a><a href="/contact/">Contact</a></nav></footer>
+    <footer class="v5-footer"><a href="${PREVIEW_ROOT}">Devon Alan Akins</a><p>Original work. Open questions. A growing body of ideas.</p><nav aria-label="More"><a href="/listening/">Listening</a><a href="/gpt/">GPT captures</a><a href="/contact/">Contact</a></nav></footer>
     ${key === "home" ? previewNotice : ""}
   </div></body></html>`;
 }
@@ -162,9 +162,9 @@ export function renderV5PublicHomepage({ fullSite = false } = {}) {
   };
   exact('data-v5-signal-mode="preview"', 'data-v5-signal-mode="released-v5"');
   exact('<meta name="robots" content="noindex,nofollow,noarchive">', '<meta name="robots" content="index,follow,max-image-preview:large">');
-  exact('Development-only Living Mind V5 layout preview. Live data is not connected.',
+  exact('Development-only DevonAkins.com layout preview. Live data is not connected.',
     'Devon Alan Akins — independent developer, researcher, writer and builder. Public work and source-qualified activity.');
-  exact('<title>Home — Living Mind V5 Preview</title>',
+  exact('<title>Home — DevonAkins.com Preview</title>',
     '<title>Devon Alan Akins — Developer, Researcher, Builder</title>');
   // The below-footer preview-only control is never published. The released
   // homepage automatically READS the same consent-filtered V4 projection.
@@ -202,9 +202,9 @@ export function renderV5PublicPage(key, options = {}) {
   html = html.replace('data-v5-signal-mode="preview"','data-v5-signal-mode="released-v5"')
     .replace('<meta name="robots" content="noindex,nofollow,noarchive">','<meta name="robots" content="index,follow,max-image-preview:large">')
     .replace(/<aside class="v5-preview-banner" aria-label="Preview notice">[\s\S]*?<\/aside>/g,"")
-    .replace('Development-only Living Mind V5 layout preview. Live data is not connected.',
+    .replace('Development-only DevonAkins.com layout preview. Live data is not connected.',
       'Public projects, writing and source-linked engineering explanations by Devon Alan Akins.')
-    .replace(/ — Living Mind V5 Preview<\/title>/,' — Devon Alan Akins</title>');
+    .replace(/ — DevonAkins.com Preview<\/title>/,' — Devon Alan Akins</title>');
   html = publishV5Links(html).replace('href="/#v5-lock-field-title"','href="/signal-field/"')
     .replaceAll('This preview never reads private Knowledge','The public atlas never reads private Knowledge')
     .replaceAll('This gated preview does not request private provider data.','This view does not request private provider data.')
