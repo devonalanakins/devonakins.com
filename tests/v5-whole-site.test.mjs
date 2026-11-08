@@ -40,10 +40,13 @@ test("full-site candidate publishes real sections and a dedicated atlas without 
   for (const href of ["/knowledge/", "/writing/", "/signal-field/"]) {
     assert.ok(fullHome.includes('href="' + href + '"'), href);
   }
-  assert.ok(!fullHome.includes('href="/source/"'),
-    "The V5 Knowledge link must not silently fall back to V4 Source");
-  assert.ok(!fullHome.includes('href="/work/writing/"'),
-    "The V5 Writing link must reach its V5 public page");
+  const rail = fullHome.match(/<nav class="v5-locked-rail"[^>]*>([\\s\\S]*?)<\\/nav>/)?.[1];
+  assert.ok(rail, "The approved homepage must retain its navigation rail");
+  for (const href of ["/knowledge/", "/writing/"])
+    assert.ok(rail.includes('href="' + href + '"'), "V5 primary rail: " + href);
+  assert.ok(!rail.includes('href="/source/"') &&
+    !rail.includes('href="/work/writing/"'),
+    "Only the V5 primary rail must avoid the old V4 fallbacks; legacy crosslinks may remain");
   const knowledge = renderV5PublicPage("knowledge");
   for (const n of publicNotes)
     assert.ok(knowledge.includes("/knowledge/" + n.slug + "/"));
