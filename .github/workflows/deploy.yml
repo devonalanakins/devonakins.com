@@ -66,12 +66,19 @@ jobs:
           esac
       - name: Build and validate Worker
         run: |
+          set -eu
           npm ci
-          npm run build
-          npm test
+          # Existing V4 tests assert V4 markup and stay mandatory for BOTH
+          # release variants. A V5 production run must not execute them against
+          # generated V5 HTML or bypass them entirely.
+          V5_PUBLIC_SITE_CANDIDATE=0 npm run build
+          V5_PUBLIC_SITE_CANDIDATE=0 npm test
           node --check scripts/verify-live.mjs
           node --check scripts/verify-live-v5.mjs
           if [ "$V5_PUBLIC_SITE_CANDIDATE" = '1' ]; then
+            # Rebuild the artifact actually selected for production. Wrangler's
+            # configured build inherits the job-level flag and repeats V5.
+            V5_PUBLIC_SITE_CANDIDATE=1 npm run build
             node scripts/verify-v5-site-candidate.mjs
           fi
       - name: Require dedicated Cloudflare CI credentials
