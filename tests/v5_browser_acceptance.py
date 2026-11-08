@@ -91,6 +91,23 @@ def check_page(page, origin, path, axe):
         assert portrait_box.evaluate("e => e.getBoundingClientRect().width > 80")
         # R10: the approved first-party image is a cutout, NOT a rectangular
         # photographic hero background. Atmosphere is a separate nonsemantic layer.
+        assert page.locator(".v5-hero-clouds").count() == 1
+        assert page.locator(".v5-hero-cloud").count() == 3
+        assert page.locator("filter#v5-cloud-curl").count() == 1
+        assert page.locator(".v5-hero-clouds").evaluate(
+            "e => getComputedStyle(e).pointerEvents === 'none'"
+        ), "Ambient volume cannot intercept project or nav interactions"
+        cloud_motion = page.locator(".v5-hero-cloud--cyan").evaluate(
+            "e => getComputedStyle(e).animationName"
+        )
+        reduced = page.evaluate("matchMedia('(prefers-reduced-motion: reduce)').matches")
+        assert (cloud_motion == "none") == reduced, (
+            page.viewport_size, "Volumetric smoke must not animate when reduced motion is requested"
+        )
+        if page.viewport_size["width"] <= 600:
+            assert page.locator(".v5-hero-cloud--cyan").evaluate(
+                "e => getComputedStyle(e).filter.startsWith('blur(')"
+            ), "Mobile volume needs its lower-cost blur fallback"
         assert page.locator(".v5-hero-atmosphere").count() == 1
         assert page.locator(".v5-hero-veil").count() == 1
         assert page.locator(".v5-hero-smoke").count() == 3
