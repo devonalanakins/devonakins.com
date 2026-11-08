@@ -408,17 +408,19 @@ test("catalog requires paired bearer, includes approved static projects and priv
   f.install(repo("new-research", 203));
   f.install(repo("private-client", 204, true));
   let data = await (await f.catalog(request(), f.env)).json();
-  assert.equal(data.repositories.length, 10);
+  assert.equal(data.repositories.length, 9);
   assert.equal(
     data.repositories.find((r) => r.name === "anevum-web").projectSlug,
     "anevum",
   );
   assert.ok(!JSON.stringify(data).includes("private-client"));
+  assert.ok(!data.repositories.some((r) => r.name === "vesper"),
+    "A now-private repository must not enter the default editor catalog");
   f.sql.exec(
     "UPDATE github_repositories SET approved=1,project_slug='merit' WHERE repo_id=203",
   );
   data = await (await f.catalog(request(), f.env)).json();
-  assert.equal(data.repositories.length, 11);
+  assert.equal(data.repositories.length, 10);
   assert.equal(Date.parse(data.expiresAt), START + 300000);
   f.sql.exec(
     "UPDATE presence_state SET public_projects_json='[\"rhen\"]',revision=revision+1",
@@ -729,7 +731,7 @@ test("known-private built-in repository is omitted from the paired-editor catalo
     )
   ).json();
   assert.ok(!data.repositories.some((r) => r.name === "merit"));
-  assert.equal(data.repositories.length, 9);
+  assert.equal(data.repositories.length, 8);
 });
 
 test("an older concurrent running callback cannot revive an already completed workflow", async () => {
