@@ -23,6 +23,7 @@ function item(node, source) {
       '">Evidence source</a></p>'
     : "";
   return '<details data-v5-atlas-node-id="' + esc(node.id) +
+    '" id="v5-atlas-' + esc(node.id.replace(/[^a-z0-9]+/g, "-")) +
     '"><summary>' + esc(node.label) + '</summary><p>' +
     esc(terms[node.type] || "Reviewed public structure") + ' · ' +
     (root ? "Catalog identity only. This is not a verified active reporter." :
@@ -30,6 +31,52 @@ function item(node, source) {
         "Published from an explicitly reviewed public milestone.") + '</p>' +
     (target ? '<a class="v5-text-link" href="' + esc(target) +
       '">Open public context</a>' : "") + proof + '</details>';
+}
+function renderExplorer(layout) {
+  const roots = layout.nodes.filter(node => node.parent === null);
+  const projects = roots.filter(node => node.type === "project");
+  const sections = roots.filter(node => node.type === "section");
+  const reviewed = layout.nodes.filter(node => node.parent !== null);
+  const relations = layout.links.filter(edge => edge.evidence === "reviewed-public-relation");
+  const layer = (key, label, count) =>
+    '<label class="v5-atlas-layer"><input type="checkbox" data-v5-atlas-layer="' +
+    key + '" checked><span>' + label + '</span><strong>' + count + '</strong></label>';
+  return '<aside class="v5-atlas-explorer" aria-label="Public systems explorer">' +
+    '<p class="v5-eyebrow">SIGNAL FIELD · V5</p>' +
+    '<h2>Systems explorer</h2>' +
+    '<p class="v5-atlas-explorer-note">Inspect the curated public catalog. Project names are not live connections.</p>' +
+    '<nav class="v5-atlas-quicklinks" aria-label="Signal Field sections">' +
+      '<a href="#v5-atlas-viewport" aria-current="location">Atlas view</a>' +
+      '<a href="#v5-graph-timeline-title">Growth timeline</a>' +
+      '<a href="#v5-graph-relations-title">Reviewed relationships</a>' +
+    '</nav>' +
+    '<div data-v5-atlas-controls hidden>' +
+      '<div class="v5-atlas-filter-search" role="search">' +
+        '<label for="v5-atlas-search">Find a public system</label>' +
+        '<input id="v5-atlas-search" type="search" autocomplete="off"' +
+          ' placeholder="Search approved names" maxlength="80" data-v5-atlas-search>' +
+      '</div>' +
+      '<fieldset class="v5-atlas-layer-list"><legend>Visible layers</legend>' +
+        layer("projects", "Projects", projects.length) +
+        layer("sections", "Public sections", sections.length) +
+        layer("reviewed", "Reviewed structures", reviewed.length) +
+        layer("relationships", "Reviewed relationships", relations.length) +
+      '</fieldset>' +
+    '</div>' +
+    '<nav aria-label="Approved public system index"><h3>Public directory</h3>' +
+    '<ul class="v5-atlas-root-list">' +
+      roots.map(node =>
+        '<li><a href="#v5-atlas-' + esc(node.id.replace(/[^a-z0-9]+/g, "-")) +
+          '" data-v5-atlas-select="' + esc(node.id) + '">' +
+          '<span class="v5-atlas-root-glyph" aria-hidden="true"></span>' +
+          '<span>' + esc(node.label) + '<small>' +
+            (node.type === "project" ? "Public project" : "Public section") +
+          '</small></span></a></li>'
+      ).join("") +
+    '</ul></nav>' +
+    '<p class="v5-atlas-visible-status" data-v5-atlas-filter-count>' +
+      roots.length + ' approved public identities · no live connection implied</p>' +
+  '</aside>';
 }
 /** Gated, SEO-disabled preview only. The homepage and V4 never use this. */
 export function renderV5Atlas({ requestedDate = null, now = Date.now() } = {}) {
@@ -41,7 +88,8 @@ export function renderV5Atlas({ requestedDate = null, now = Date.now() } = {}) {
     layout.version + '" data-v5-atlas-at="' +
     esc(new Date(selection.at).toISOString()) + '" data-v5-atlas-revision="' +
     frame.revision + '" aria-label="Reviewed public systems atlas">' +
-    '<div class="v5-atlas-viewport">' +
+    renderExplorer(layout) +
+    '<div class="v5-atlas-viewport" id="v5-atlas-viewport">' +
       '<div class="v5-atlas-host" data-v5-atlas-host aria-hidden="true"></div>' +
       '<div class="v5-atlas-still" data-v5-atlas-still aria-hidden="true">' +
         '<span class="v5-atlas-still-mark">DA</span>' +
