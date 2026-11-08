@@ -19,6 +19,16 @@ export const PUBLIC_ATLAS_ROOT_COLORS = Object.freeze({
 });
 
 const ROOT_IDS = Object.freeze(Object.keys(PUBLIC_ATLAS_ROOT_COLORS));
+const ROOT_LABELS = Object.freeze({
+  "project:devonstation": "DevonStation",
+  "project:mizvo": "Mizvo",
+  "section:knowledge-overview": "Knowledge",
+  "project:anevum": "Anevum",
+  "project:rhen-language": "Rhen",
+  "project:merit": "Merit",
+  "project:vesper": "Vesper",
+  "project:squelch": "Squelch",
+});
 const count = ROOT_IDS.length;
 const facetsPerRoot = 9;
 const round = n => Number(n.toFixed(4));
@@ -46,8 +56,10 @@ export function projectPublicAtlasArchitecture(graph) {
     if (matches.length !== 1) return invalid();
     const node = matches[0];
     const pos = node.position;
-    if (node.state !== "catalogued" || !Array.isArray(pos) ||
-        pos.length !== 3 || pos.some(v => !Number.isFinite(v) || Math.abs(v) > 10))
+    if (node.state !== "catalogued" || node.label !== ROOT_LABELS[id] ||
+        node.type !== (id.startsWith("section:") ? "section" : "project") ||
+        !Array.isArray(pos) || pos.length !== 3 ||
+        pos.some(v => !Number.isFinite(v) || Math.abs(v) > 10))
       return invalid();
     const seed = hashId(id);
     const rotation = ((seed % 314) / 314) * Math.PI * 2;
