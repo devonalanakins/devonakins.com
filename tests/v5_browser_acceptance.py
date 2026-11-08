@@ -623,13 +623,33 @@ def main():
                     assert page.locator("#v5-field-inspector").is_visible()
                     assert "Editor observed" in page.locator("[data-v5-field-evidence]").inner_text()
                     page.keyboard.press("Escape")
+                    # Returning from a BFCache entry must not show cached
+                    # editor/task activity while a new public read is pending.
+                    page.evaluate("window.dispatchEvent(new PageTransitionEvent('pagehide', {persisted:true}))")
+                    assert page.locator("[data-v5-field-node][data-v5-verified]").count()==0
+                    assert "No fresh" in page.locator("[data-v5-work-summary]").inner_text()
+                    assert "unavailable" in page.locator("[data-v5-preview-source-state]").inner_text()
+                    # The provider changed to private while this page was away.
+                    # A restored page stays source-free until a new consent-
+                    # filtered response has actually been received.
+                    status["mode"]="revoked"
+                    page.evaluate("window.dispatchEvent(new PageTransitionEvent('pageshow', {persisted:true}))")
+                    page.wait_for_function(
+                        "() => document.querySelector('[data-v5-work-provenance]')?.textContent?.includes('No recent approved')",
+                        timeout=10000,
+                    )
+                    assert len(public_calls)>=2, "BFCache restoration must revalidate public source"
+                    assert page.locator("[data-v5-field-node][data-v5-verified]").count()==0
+                    # Fresh, newly permitted evidence can illuminate again,
+                    # and a subsequent privacy change clears it immediately.
+                    status["mode"]="live"
+                    page.evaluate("document.dispatchEvent(new Event('visibilitychange'))")
+                    page.wait_for_function(
+                        "() => document.querySelector('[data-v5-work-summary]')?.textContent === 'Mizvo'",
+                        timeout=10000,
+                    )
                     status["mode"]="revoked"
                     page.evaluate("document.dispatchEvent(new Event('visibilitychange'))")
-                    for _ in range(30):
-                        if len(public_calls)>=2:
-                            break
-                        page.wait_for_timeout(100)
-                    assert len(public_calls)>=2, "revocation must cause a new public-only read"
                     page.wait_for_function(
                         "() => document.querySelectorAll('[data-v5-field-node][data-v5-verified]').length === 0",
                         timeout=10000,
