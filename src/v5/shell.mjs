@@ -1,4 +1,5 @@
 import { projects } from "../content.mjs";
+import { renderReferenceHomepage, renderReferenceNav } from "./reference-home.mjs";
 
 export const PREVIEW_ROOT = "/__v5_preview__/";
 export const previewPages = [
@@ -136,11 +137,55 @@ export function renderV5Preview(key = "home") {
     throw new Error("Unknown V5 preview page");
   const nav = (className) =>
     `<nav class="${className}" aria-label="${className === "v5-desktop-nav" ? "Primary" : "Mobile"}">${previewPages.map((page) => `<a href="${page.path}"${key === page.key ? ' aria-current="page"' : ""}>${page.label}</a>`).join("")}</nav>`;
-  return `<!doctype html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow,noarchive"><meta name="description" content="Development-only Living Mind V5 layout preview. Live data is not connected."><title>${previewPages.find((page) => page.key === key).label} — Living Mind V5 Preview</title><link rel="icon" href="/brand-mark-mono.svg"><link rel="stylesheet" href="/src/v5/shell.css"><script type="module" src="/src/v5/client.ts"></script></head>
+  const previewNotice = `<aside class="v5-preview-banner" aria-label="Preview notice"><span>DESIGN PREVIEW · V5</span><span data-v5-preview-source-state>Development only · live sources not loaded</span><button type="button" data-v5-preview-connect hidden>Preview verified public signals</button><a href="/">Current website <span aria-hidden="true">↗</span></a></aside>`;
+  return `<!doctype html><html lang="en" data-v5-signal-mode="preview"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow,noarchive"><meta name="description" content="Development-only Living Mind V5 layout preview. Live data is not connected."><title>${previewPages.find((page) => page.key === key).label} — Living Mind V5 Preview</title><link rel="icon" href="/brand-mark-mono.svg"><link rel="stylesheet" href="/src/v5/shell.css">${key === "home" ? '<link rel="stylesheet" href="/src/v5/reference-home.css">' : ""}<script type="module" src="/src/v5/client.ts"></script></head>
   <body><a class="v5-skip" href="#v5-main">Skip to content</a><div class="v5-frame">
-    <aside class="v5-preview-banner" aria-label="Preview notice"><span>DESIGN PREVIEW · V5</span><span>Development only · live sources not loaded</span><a href="/">Current website <span aria-hidden="true">↗</span></a></aside>
-    <header class="v5-topbar"><a class="v5-brand" href="${PREVIEW_ROOT}" aria-label="Devon Akins home"><img src="/brand-mark-mono.svg" alt="" width="34" height="34"><span>DEVONAKINS.COM<small>SOFTWARE · WORLDS · POSSIBILITIES</small></span></a>${nav("v5-desktop-nav")}<details class="v5-mobile-menu" data-mobile-menu><summary>Menu</summary>${nav("v5-mobile-nav")}</details></header>
-    <main id="v5-main" tabindex="-1">${key === "home" ? home() : secondary(key)}</main>
+    ${key === "home" ? "" : previewNotice}
+    <header class="v5-topbar"><a class="v5-brand" href="${PREVIEW_ROOT}" aria-label="Devon Akins home"><img src="/brand-mark-mono.svg" alt="" width="34" height="34"><span>DEVONAKINS.COM<small>SOFTWARE · WORLDS · POSSIBILITIES</small></span></a>${key === "home" ? renderReferenceNav() : nav("v5-desktop-nav")}<details class="v5-mobile-menu" data-mobile-menu><summary>Menu</summary>${nav("v5-mobile-nav")}</details></header>
+    <main id="v5-main" tabindex="-1">${key === "home" ? renderReferenceHomepage() : secondary(key)}</main>
     <footer class="v5-footer"><a href="${PREVIEW_ROOT}">The Living Mind <span>V5</span></a><p>Original work. Open questions. A growing body of ideas.</p><nav aria-label="More"><a href="/listening/">Listening</a><a href="/gpt/">GPT captures</a><a href="/contact/">Contact</a></nav></footer>
+    ${key === "home" ? previewNotice : ""}
   </div></body></html>`;
+}
+
+
+// Built only by the explicit, non-default release-candidate build. The
+// screenshot-authoritative home markup is shared with the preview; only
+// publication metadata and links change. This function alone cannot alter
+// any deployed route or bypass the existing public V4 consent gates.
+export function renderV5PublicHomepage() {
+  let html = renderV5Preview("home");
+  const exact = (before, after) => {
+    if (!html.includes(before)) throw new Error("V5 public home source drift: " + before);
+    html = html.replace(before, after);
+  };
+  exact('data-v5-signal-mode="preview"', 'data-v5-signal-mode="released-v5"');
+  exact('<meta name="robots" content="noindex,nofollow,noarchive">', '<meta name="robots" content="index,follow,max-image-preview:large">');
+  exact('Development-only Living Mind V5 layout preview. Live data is not connected.',
+    'Devon Alan Akins — independent developer, researcher, writer and builder. Public work and source-qualified activity.');
+  exact('<title>Home — Living Mind V5 Preview</title>',
+    '<title>Devon Alan Akins — Developer, Researcher, Builder</title>');
+  // The below-footer preview-only control is never published. The released
+  // homepage automatically READS the same consent-filtered V4 projection.
+  const notice = /<aside class="v5-preview-banner" aria-label="Preview notice">[\s\S]*?<\/aside>/;
+  if (!notice.test(html)) throw new Error("V5 preview banner not found");
+  html = html.replace(notice, "");
+  const publicRoutes = [
+    ["/__v5_preview__/projects/", "/work/"],
+    ["/__v5_preview__/knowledge/", "/source/"],
+    ["/__v5_preview__/research/", "/source/"],
+    ["/__v5_preview__/writing/", "/work/writing/"],
+    ["/__v5_preview__/field/", "/#v5-lock-field-title"],
+    ["/__v5_preview__/about/", "/about/"],
+    ["/__v5_preview__/", "/"],
+  ];
+  for (const [preview, published] of publicRoutes) {
+    html = html.replaceAll('href="' + preview + '"', 'href="' + published + '"');
+  }
+  if (html.includes("/__v5_preview__/") || html.includes("DESIGN PREVIEW") ||
+      html.includes("data-v5-preview-connect") ||
+      html.includes("noindex,nofollow,noarchive")) {
+    throw new Error("Unreleased preview content in V5 public homepage");
+  }
+  return html;
 }
