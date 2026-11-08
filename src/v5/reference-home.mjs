@@ -1,4 +1,4 @@
-import { projects } from "../content.mjs";
+import { approvedPublicProjects as projects } from "../publication-manifest.mjs";
 
 // This is the screenshot's semantic layout, not a bitmap or a simulated feed.
 // Data slots stay unavailable until independently authenticated/consented sources
