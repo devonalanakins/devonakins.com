@@ -62,8 +62,17 @@ def check_page(page, origin, path, axe):
         assert page.locator("[data-v5-atlas-node-id]").count() == 8
         assert page.locator("[data-v5-atlas-node-id='project:mizvo'] summary").is_visible()
         page.locator("[data-v5-atlas-node-id='project:mizvo'] summary").click()
-        assert page.locator("[data-v5-atlas-node-id='project:mizvo']").get_attribute("open") is not None
+        page.wait_for_function(
+            "() => document.querySelector('[data-v5-atlas-node-id=\"project:mizvo\"]')?.open === true",
+            timeout=10000,
+        )
         assert page.locator("[data-v5-atlas-node-id='project:mizvo'] a").get_attribute("href") == "/work/mizvo/"
+        # A status update must not swallow the second native toggle, either.
+        page.locator("[data-v5-atlas-node-id='project:mizvo'] summary").click()
+        page.wait_for_function(
+            "() => document.querySelector('[data-v5-atlas-node-id=\"project:mizvo\"]')?.open === false",
+            timeout=10000,
+        )
         canvas = page.locator("[data-v5-atlas-host] canvas")
         if canvas.count():
             assert canvas.get_attribute("aria-hidden") == "true"
