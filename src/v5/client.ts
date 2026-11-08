@@ -1,5 +1,6 @@
 import { publicV5ProjectEvidence } from "./public-evidence.mjs";
 import { publicV5Playback } from "./public-playback.mjs";
+import { publicV5GptCapture, formatPublicGptValue, publicGptCapturedAt } from "./public-gpt-capture.mjs";
 import { publicV5ActivationMode } from "./source-activation.mjs";
 const menu = document.querySelector<HTMLDetailsElement>("[data-mobile-menu]");
 menu?.addEventListener("keydown", (event) => {
@@ -146,6 +147,62 @@ if (field && (publicPreviewButton || activationMode === "automatic")) {
     }
   };
 
+  // Owner-entered GPT measurements are read exclusively from the approved
+  // public V4 projection. No new fetch, stored credential or token estimate.
+  const gptPanel = document.querySelector<HTMLElement>("[data-v5-gpt-capture]");
+  const gptEmpty = document.querySelector<HTMLElement>("[data-v5-gpt-empty]");
+  const gptPrimary = gptPanel?.querySelector<HTMLElement>("[data-v5-gpt-primary]");
+  const gptLabel = gptPanel?.querySelector<HTMLElement>("[data-v5-gpt-primary-label]");
+  const gptTime = gptPanel?.querySelector<HTMLTimeElement>("[data-v5-gpt-time]");
+  const gptRows = gptPanel?.querySelector<HTMLUListElement>("[data-v5-gpt-readings]");
+  const renderPublicGpt = (gpt: unknown, at: number) => {
+    const capture = publicV5GptCapture(gpt, at);
+    if (gptPanel) gptPanel.hidden = !capture.available;
+    if (gptEmpty) gptEmpty.hidden = capture.available;
+    if (!capture.available) {
+      if (gptPrimary) gptPrimary.textContent = "";
+      if (gptLabel) gptLabel.textContent = "";
+      if (gptTime) { gptTime.textContent = ""; gptTime.removeAttribute("datetime"); }
+      gptRows?.replaceChildren();
+      return;
+    }
+    const featured = capture.headline;
+    if (gptPrimary) {
+      gptPrimary.textContent = featured
+        ? formatPublicGptValue(featured, true)
+        : "No shared 7-day token capture";
+      if (featured) gptPrimary.setAttribute(
+        "aria-label", formatPublicGptValue(featured) + " personal-profile tokens recorded over 7 days",
+      );
+      else gptPrimary.removeAttribute("aria-label");
+    }
+    if (gptLabel) gptLabel.textContent = featured
+      ? "Personal-profile 7-day tokens · " +
+        (featured.freshness === "historical" ? "Historical" : "Owner capture")
+      : "Other approved GPT measurements";
+    if (gptTime) {
+      gptTime.textContent = featured ? "Captured " + publicGptCapturedAt(featured.asOf) : "";
+      if (featured) gptTime.dateTime = featured.asOf;
+      else gptTime.removeAttribute("datetime");
+    }
+    const rows = capture.readings.filter((r) => r.metric !== "profile_7d_tokens");
+    if (gptRows) gptRows.replaceChildren(...rows.map(r => {
+      const item = document.createElement("li");
+      const label = document.createElement("span");
+      const amount = document.createElement("strong");
+      const captured = document.createElement("time");
+      label.textContent = r.label + " · " + r.scope;
+      amount.textContent = formatPublicGptValue(r, true) + " " + r.unit;
+      amount.setAttribute("aria-label",
+        formatPublicGptValue(r) + " " + r.unit + " · " + r.label);
+      captured.dateTime = r.asOf;
+      captured.textContent = "Captured " + publicGptCapturedAt(r.asOf) +
+        " · " + (r.freshness === "historical" ? "Historical" : "Owner capture");
+      item.append(label, amount, captured);
+      return item;
+    }));
+  };
+
   const relativeAge = (asOf: string, now: number) => {
     const seconds = Math.max(0, Math.floor((now - Date.parse(asOf)) / 1000));
     if (seconds < 60) return seconds + "s ago";
@@ -155,6 +212,9 @@ if (field && (publicPreviewButton || activationMode === "automatic")) {
   };
   const renderPublicEvidence = (snapshot: unknown, at: number) => {
     const projection = publicV5ProjectEvidence(snapshot, at);
+    const publicGpt = projection.available && snapshot && typeof snapshot === "object"
+      && "gpt" in snapshot ? (snapshot as { gpt?: unknown }).gpt : null;
+    renderPublicGpt(publicGpt, at);
     if (publicPreviewStatus) publicPreviewStatus.textContent = projection.available
       ? "Public V4 source checked · consented evidence only"
       : "Public source unavailable, disabled or stale";
