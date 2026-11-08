@@ -32,7 +32,7 @@ const CHILD_ID = /^(feature|component|integration|publication):([a-z][a-z0-9-]{1
 const RELATION_ID = /^relation:[a-z][a-z0-9-]{2,63}$/;
 const TITLE = /^[A-Za-z0-9][A-Za-z0-9 _.,:()\/&+\-]{0,69}$/;
 const REVIEW_URL = /^https:\/\/github\.com\/devonalanakins\/devonakins\.com\/pull\/[1-9][0-9]*$/;
-const EVIDENCE_URL = /^https:\/\/github\.com\/devonalanakins\/(?:devonakins\.com|devon-station|mizvo|rhen|merit|vesper|squelch|anevum)\/(?:pull\/[1-9][0-9]*|commit\/[0-9a-f]{40})$/;
+const EVIDENCE_URL = /^https:\/\/github\.com\/devonalanakins\/(?:devonakins\.com|devon-station|mizvo|rhen|merit|squelch|anevum)\/(?:pull\/[1-9][0-9]*|commit\/[0-9a-f]{40})$/;
 const NODE_TYPES = new Set(["feature", "component", "integration", "publication"]);
 const RELATION_TYPES = new Set(["contains", "implements", "documents", "depends-on", "integrates-with"]);
 const hash = str => {
