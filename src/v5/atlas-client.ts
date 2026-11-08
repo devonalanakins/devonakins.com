@@ -234,6 +234,7 @@ export function mountV5Atlas() {
         detail.querySelector("summary")?.focus();
       }
     }
+    root.dispatchEvent(new CustomEvent("v5-atlas-selected", { detail: { id } }));
     render();
   };
   // Selecting on focusin changed the status text while a pointer was still
