@@ -1199,3 +1199,21 @@ a[aria-current="page"] {
   .v5-page-field .v5-atlas-viewport {min-height:0;height:100%}
   .v5-page-field .v5-atlas-explorer,.v5-page-field .v5-atlas-index {min-height:0;overflow:auto;overscroll-behavior:contain}
 }
+
+
+/* V5 full-atlas: current approved V4 observations, distinct from reviewed history. */
+.v5-atlas-live { margin-top: 20px; padding-top: 15px; border-top: 1px solid var(--v5-border); }
+.v5-atlas-live h3 { font-size: 12px; letter-spacing: .06em; text-transform: uppercase; margin-bottom: 9px; }
+.v5-atlas-live p { font-size: 11px; line-height: 1.5; color: #b9d6e2; }
+.v5-atlas-live-list { list-style: none; padding: 0; margin: 10px 0 0; display: grid; gap: 6px; }
+.v5-atlas-live-list li { border-left: 3px solid #61c9d8; padding: 7px 9px; background: #112a3b; border-radius: 0 7px 7px 0; }
+.v5-atlas-live-list strong, .v5-atlas-live-list small { display: block; overflow-wrap: anywhere; }
+.v5-atlas-live-list strong { font-size: 12px; color: #e8fbff; }
+.v5-atlas-live-list small { font-size: 11px; color: #b7d9e4; margin-top: 3px; }
+.v5-atlas-root-list [data-v5-atlas-live-kind="editor"] { border-color: #61e1da; box-shadow: inset 0 0 18px #17a6b128; }
+.v5-atlas-root-list [data-v5-atlas-live-kind="remote"] { border-color: #b9a0ed; box-shadow: inset 0 0 18px #7864ba30; }
+.v5-atlas-node-label[data-v5-atlas-live-kind="editor"] { border-color: #6af7e8; box-shadow: 0 0 17px #40e4d04d; }
+.v5-atlas-node-label[data-v5-atlas-live-kind="remote"] { border-color: #c5afff; box-shadow: 0 0 17px #a089f45a; }
+@media (forced-colors: active) {
+  .v5-atlas-root-list [data-v5-atlas-live-kind], .v5-atlas-node-label[data-v5-atlas-live-kind] { border-color: CanvasText; }
+}

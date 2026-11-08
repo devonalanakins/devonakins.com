@@ -291,6 +291,29 @@ export function mountV5Atlas() {
       }
     }
   };
+  // Glow is an optional visual annotation of the already-validated public
+  // evidence, never a generated edge, deployment or structural change.
+  const syncEvidence = () => {
+    if (disposed) return;
+    const live = new Map<string, "editor" | "remote">();
+    for (const element of root.querySelectorAll<HTMLElement>("[data-v5-atlas-node-id]")) {
+      const id = element.dataset.v5AtlasNodeId;
+      const kind = element.dataset.v5AtlasLiveKind;
+      if (id && (kind === "editor" || kind === "remote") &&
+          graph.nodes.some(node => node.id === id && node.parent === null && node.type === "project"))
+        live.set(id, kind);
+    }
+    for (const [id, material] of materials) {
+      material.emissiveIntensity = selectedId === id ? .83 :
+        live.get(id) === "editor" ? .62 : live.get(id) === "remote" ? .52 : .14;
+    }
+    for (const { id, label } of annotated) {
+      const kind = live.get(id);
+      if (kind) label.dataset.v5AtlasLiveKind = kind;
+      else delete label.dataset.v5AtlasLiveKind;
+    }
+    render();
+  };
   const resize = () => {
     if (disposed) return;
     const width = host.clientWidth, height = host.clientHeight;
@@ -329,20 +352,25 @@ export function mountV5Atlas() {
   controls.addEventListener("change", render);
   resize();
   applyVisibility();
+  root.addEventListener("v5-atlas-evidence", syncEvidence);
+  syncEvidence();
 
   const select = (id: string, reveal = false) => {
     const node = graph.nodes.find(item => item.id === id);
     if (!node || disposed || !visibleNodeIds.has(id)) return;
     selectedId = id;
-    for (const [key, material] of materials) {
-      material.emissiveIntensity = key === id ? .83 : .14;
-    }
+    syncEvidence();
     for (const mesh of meshes) mesh.scale.setScalar(mesh.userData.nodeId === id ? 1.30 : 1);
     for (const [key, group] of architecturalGroups)
       group.scale.setScalar(key === id ? 1.08 : 1);
+    const currentKind = root.querySelectorAll<HTMLElement>("[data-v5-atlas-node-id]");
+    const observed = Array.from(currentKind).find(el => el.dataset.v5AtlasNodeId === id)
+      ?.dataset.v5AtlasLiveKind;
     status.textContent = node.label + " selected. " +
       (node.parent ? "Public reviewed structure." : "Approved public directory identity.") +
-      " No active reporter or unverified dependency is implied.";
+      (observed === "editor" ? " Recent editor evidence is detailed under Observed now." :
+        observed === "remote" ? " Recent participating-task evidence is detailed under Observed now." :
+          " No current activity is implied.");
     if (reveal) {
       const detail = Array.from(root.querySelectorAll<HTMLDetailsElement>(
         "[data-v5-atlas-node-id]",
@@ -454,6 +482,7 @@ export function mountV5Atlas() {
     controls.dispose();
     root.removeEventListener("toggle", onIndex, true);
     root.removeEventListener("v5-atlas-filter", applyVisibility);
+    root.removeEventListener("v5-atlas-evidence", syncEvidence);
     canvas.removeEventListener("pointerdown", down);
     canvas.removeEventListener("pointerup", up);
     canvas.removeEventListener("webglcontextlost", contextLost);

@@ -196,3 +196,11 @@ test("homepage source is unchanged and keeps the locked screenshot target",()=>{
   assert.doesNotMatch(home,/\/__v5_preview__\//);
   assert.match(home,/data-v5-signal-mode="released-v5"/);
 });
+
+test("the full atlas has a source-qualified activity region and no-JS directory fallback",()=>{
+  const html=renderV5Atlas({now:NOW});
+  assert.match(html,/data-v5-atlas-live-status role="status"/);
+  assert.match(html,/data-v5-atlas-live-list/);
+  assert.match(html,/Live activity is not loaded/);
+  assert.doesNotMatch(html,/data-v5-atlas-live-kind|private-client|automatically connected/);
+});

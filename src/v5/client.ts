@@ -1,4 +1,5 @@
 import { publicV5ProjectEvidence } from "./public-evidence.mjs";
+import { publicV5AtlasSignals } from "./atlas-live-evidence.mjs";
 import { publicV5Playback } from "./public-playback.mjs";
 import { publicV5GptCapture, formatPublicGptValue, publicGptCapturedAt } from "./public-gpt-capture.mjs";
 import { publicV5Threads, threadsPublicDate } from "./public-threads.mjs";
@@ -386,7 +387,8 @@ if (terrain && window.innerWidth > 600) {
 }
 
 
-if (document.querySelector("[data-v5-atlas]")) {
+const atlasRoot = document.querySelector<HTMLElement>("[data-v5-atlas]");
+if (atlasRoot) {
   // Source-free directory filters work independently of optional WebGL.
   void import("./atlas-explorer-client.mjs").then(({ mountPublicAtlasExplorer }) => {
     mountPublicAtlasExplorer();
@@ -404,6 +406,68 @@ if (document.querySelector("[data-v5-atlas]")) {
     if (state) state.textContent =
       "Optional 3D renderer could not load. The public index remains accessible.";
   });
+
+  // This view has exactly one V4 reader. The public homepage has its own
+  // mutually exclusive field mount, so the atlas never adds another poller.
+  // Structure/history remains independent of these short-lived observations.
+  const activityStatus = atlasRoot.querySelector<HTMLElement>("[data-v5-atlas-live-status]");
+  const activityList = atlasRoot.querySelector<HTMLUListElement>("[data-v5-atlas-live-list]");
+  const directoryNodes = Array.from(atlasRoot.querySelectorAll<HTMLElement>(
+    "[data-v5-atlas-node-id], [data-v5-atlas-select]",
+  ));
+  const renderAtlasActivity = (snapshot: unknown, at: number) => {
+    const projection = publicV5AtlasSignals(publicV5ProjectEvidence(snapshot, at), at);
+    const active = new Map(projection.active.map(entry => [entry.id, entry]));
+    for (const node of directoryNodes) {
+      const id = node.dataset.v5AtlasNodeId || node.dataset.v5AtlasSelect;
+      const kind = id ? active.get(id)?.kind : null;
+      if (kind) node.dataset.v5AtlasLiveKind = kind;
+      else delete node.dataset.v5AtlasLiveKind;
+    }
+    if (activityStatus) activityStatus.textContent = !projection.available
+      ? "Public source unavailable or sharing disabled. No active work is asserted."
+      : projection.active.length
+        ? projection.active.length + " fresh, independently sourced public project signal(s)"
+        : "No fresh approved editor or participating task activity.";
+    if (activityList) {
+      const rows = projection.active.map(entry => {
+        const row = document.createElement("li");
+        const title = document.createElement("strong");
+        const detail = document.createElement("small");
+        const seconds = Math.max(0, Math.floor((at - Date.parse(entry.at)) / 1000));
+        title.textContent = entry.label;
+        detail.textContent = entry.source + " · observed " +
+          (seconds < 60 ? seconds + "s" : Math.floor(seconds / 60) + "m") + " ago";
+        row.append(title, detail);
+        return row;
+      });
+      activityList.replaceChildren(...rows);
+    }
+    atlasRoot.dispatchEvent(new Event("v5-atlas-evidence"));
+  };
+  let atlasReaderStarted = false;
+  const startAtlasReader = async () => {
+    if (atlasReaderStarted) return;
+    atlasReaderStarted = true;
+    if (publicPreviewButton) {
+      publicPreviewButton.disabled = true;
+      publicPreviewButton.textContent = "Public source preview enabled";
+    }
+    if (activityStatus) activityStatus.textContent = "Checking authorized public V4 evidence…";
+    try {
+      const { startLiveSignal } = await import("../live-signal-client");
+      startLiveSignal(undefined, renderAtlasActivity);
+    } catch {
+      renderAtlasActivity(null, Date.now());
+    }
+  };
+  // Preview only reads after visitor action. Opt-in full-site candidate reads
+  // automatically through V4's existing server-side approval/revocation gates.
+  if (activationMode === "automatic") void startAtlasReader();
+  else if (activationMode === "manual-preview" && publicPreviewButton) {
+    publicPreviewButton.hidden = false;
+    publicPreviewButton.addEventListener("click", () => { void startAtlasReader(); });
+  }
 }
 
 export {};

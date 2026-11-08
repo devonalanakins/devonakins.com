@@ -99,6 +99,11 @@ function renderExplorer(layout) {
     '</ul></nav>' +
     '<p class="v5-atlas-visible-status" data-v5-atlas-filter-count>' +
       roots.length + ' approved public identities · no live connection implied</p>' +
+    '<section class="v5-atlas-live" aria-label="Current public source evidence">' +
+      '<h3>Observed now</h3>' +
+      '<p data-v5-atlas-live-status role="status">Live activity is not loaded. The public directory remains usable without JavaScript.</p>' +
+      '<ul class="v5-atlas-live-list" data-v5-atlas-live-list aria-label="Source-qualified recent work"></ul>' +
+    '</section>' +
   '</aside>';
 }
 /** Gated, SEO-disabled preview only. The homepage and V4 never use this. */
