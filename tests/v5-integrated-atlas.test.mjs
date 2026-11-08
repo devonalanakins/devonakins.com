@@ -79,6 +79,22 @@ test("retired nodes remain historical but their structural links disappear",()=>
   assert.equal(projected.nodes.find(n=>n.id===child.id).state,"retired");
   assert.deepEqual(projected.links,[]);
 });
+test("nested retired structures remain inspectable without phantom live edges",()=>{
+  const feature={id:"feature:mizvo/room-entry",type:"feature",label:"Room Entry",parent:child.id};
+  const history=[
+    rec(1,"publish-node",child),
+    rec(2,"publish-node",feature),
+    rec(3,"retire-node",{id:feature.id}),
+    rec(4,"retire-node",{id:child.id}),
+  ];
+  const frame=replayPublicGraphHistory(history,NOW);
+  assert.equal(frame.valid,true);
+  const graph=projectV5Atlas(frame);
+  assert.equal(graph.valid,true);
+  assert.equal(graph.nodes.length,10);
+  assert.equal(graph.nodes.find(n=>n.id===feature.id).state,"retired");
+  assert.deepEqual(graph.links,[]);
+});
 test("invalid graph input cannot create edges or unknown private nodes",()=>{
   const clean=replayPublicGraphHistory([],NOW);
   const hostile=projectV5Atlas({
