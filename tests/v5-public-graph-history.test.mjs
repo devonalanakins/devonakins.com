@@ -93,6 +93,8 @@ test("fail closed for malformed, reordered, duplicate, unreviewed, private, unkn
       record(3,"publish-node",{...node2,parent:node.id})],
     [{...record(1,"publish-node",node),evidenceUrl:
       "https://github.com/devonalanakins/private-client/pull/1"}],
+    [{...record(1,"publish-node",node),evidenceUrl:
+      "https://github.com/devonalanakins/vesper/pull/1"}],
     [{...record(1,"publish-node",node),reviewUrl:"https://github.com/evil/repo/pull/1"}],
     [{...record(1,"publish-node",node),secret:"private"}],
   ];
