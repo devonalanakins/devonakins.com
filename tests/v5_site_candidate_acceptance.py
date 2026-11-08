@@ -33,7 +33,7 @@ def main():
                     assert page.locator('h1').count()==1,path
                     assert page.evaluate('document.documentElement.scrollWidth <= innerWidth+1'),(width,path,'overflow')
                     assert not page.locator('a[href*="/__v5_preview__/"]').count(),path
-                    page.add_script_tag(content=axe)
+                    page.evaluate(axe)
                     violations=page.evaluate("async()=> (await axe.run(document,{runOnly:{type:'tag',values:['wcag2a','wcag2aa','wcag21aa','wcag22aa']}})).violations.map(v=>({id:v.id,nodes:v.nodes.map(n=>n.target)}))")
                     assert not violations,(width,path,violations)
                     if path in ['/','/signal-field/','/knowledge/sources-and-meaning/']:
