@@ -161,12 +161,12 @@ function fieldInspector() {
 export function renderReferenceNav() {
   const items = [
     ["Home", "/__v5_preview__/"],
-    ["Projects", "/__v5_preview__/projects/"],
-    ["Knowledge", "/__v5_preview__/knowledge/"],
-    ["Anevum", "/work/anevum/"],
-    ["Mizvo", "/work/mizvo/"],
+    ["Work", "/__v5_preview__/projects/"],
+    ["Research", "/__v5_preview__/research/"],
     ["Writing", "/__v5_preview__/writing/"],
-    ["Media", "/listening/"],
+    ["Knowledge", "/__v5_preview__/knowledge/"],
+    ["Systems", "/__v5_preview__/field/"],
+    ["Activity", "/studio/"],
   ];
   const nav = '<nav class="v5-desktop-nav v5-lock-top-nav" aria-label="Primary">' +
     items.map(([label, href], i) =>
