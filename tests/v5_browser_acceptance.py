@@ -55,6 +55,28 @@ def check_page(page, origin, path, axe):
     assert "noindex" in response.headers.get("x-robots-tag", "")
     assert response.headers.get("cache-control") == "no-store"
     assert page.locator("h1").count() == 1
+    if path == "field/":
+        archive = page.locator(".v5-graph-history")
+        assert archive.count() == 1
+        assert archive.get_attribute("data-v5-graph-revision") == "0"
+        assert page.locator(".v5-graph-node").count() == 8
+        assert page.locator(".v5-graph-date-form input[type=date]").count() == 1
+        assert "No reviewed structural events yet" in archive.inner_text()
+        assert page.locator(".v5-graph-date-form button").evaluate(
+            "e => e.getBoundingClientRect().height >= 43"
+        )
+        assert page.evaluate("document.documentElement.scrollWidth <= innerWidth + 1")
+        # The date form must work through server-rendered GET, not client JS.
+        page.context.set_default_timeout(10000)
+        selected = page.locator("#v5-graph-date")
+        selected.fill("2026-11-06")
+        page.locator(".v5-graph-date-form button").click()
+        assert "?asOf=2026-11-06" in page.url
+        assert page.locator("#v5-graph-date").input_value() == "2026-11-06"
+        assert page.locator(".v5-graph-history").get_attribute("data-v5-graph-revision") == "0"
+        assert page.locator(".v5-graph-node").count() == 8
+        page.goto(origin + PREVIEW + path + "?asOf=2026-11-99", wait_until="networkidle")
+        assert "Choose a valid UTC date" in page.locator(".v5-graph-error").inner_text()
     if not path and page.locator("[data-v5-exact-reference]").count():
         assert page.locator(".v5-lock-project-grid .v5-lock-project").count() == 5
         # The artwork must be genuinely full-bleed, not collapsed to the
