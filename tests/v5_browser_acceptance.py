@@ -86,15 +86,6 @@ def check_page(page, origin, path, axe):
         assert explorer.count() == 1
         assert explorer.locator("[data-v5-atlas-select]").count() == 8
         if page.viewport_size and page.viewport_size["width"] <= 600:
-            camera_buttons = page.locator("[data-v5-camera-controls] button")
-            assert camera_buttons.count() == 8
-            assert camera_buttons.first.get_attribute("aria-label") == "Orbit left"
-            assert camera_buttons.first.evaluate(
-                "e => e.getBoundingClientRect().width >= 44 && e.getBoundingClientRect().height >= 44"
-            ), "Mobile controls must retain 44px touch targets"
-            assert page.locator(".v5-atlas-node-label:visible").count() == 0, (
-                "Decorative labels must not overlap mobile camera controls; accessible directory remains"
-            )
             viewport_top = page.locator("#v5-atlas-viewport").evaluate(
                 "element => element.getBoundingClientRect().top"
             )
@@ -165,6 +156,20 @@ def check_page(page, origin, path, axe):
         canvas = page.locator("[data-v5-atlas-host] canvas")
         if canvas.count():
             assert canvas.get_attribute("aria-hidden") == "true"
+            if page.viewport_size and page.viewport_size["width"] <= 600:
+                page.wait_for_function(
+                    "() => document.querySelector('[data-v5-camera-controls]')?.hidden === false",
+                    timeout=10000,
+                )
+                camera_buttons = page.locator("[data-v5-camera-controls] button")
+                assert camera_buttons.count() == 8
+                assert camera_buttons.first.get_attribute("aria-label") == "Orbit left"
+                assert camera_buttons.first.evaluate(
+                    "e => e.getBoundingClientRect().width >= 44 && e.getBoundingClientRect().height >= 44"
+                ), "Mobile controls must retain 44px touch targets"
+                assert page.locator(".v5-atlas-node-label:visible").count() == 0, (
+                    "Decorative labels must not overlap mobile camera controls; accessible directory remains"
+                )
             core = page.locator("[data-v5-atlas-core-label]")
             assert core.count() == 1, "3D nucleus should have one visual identity label"
             assert core.locator("strong").inner_text() == "DEVON AKINS"
