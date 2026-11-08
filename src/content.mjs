@@ -211,7 +211,7 @@ export const projects = [
 ];
 
 export const pages = [
-  {key:'studio',path:'/studio/',title:'Live Studio — Devon Alan Akins',description:'Opt-in development presence and independent public activity.'},
+  {key:'studio',path:'/studio/',title:'Activity — Devon Alan Akins',description:'Opt-in development presence and independent public activity.'},
   {
     path: "/",
     key: "home",
