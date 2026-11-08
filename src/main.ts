@@ -1,5 +1,6 @@
 import { icon } from "./icons.mjs";
-import { projects, pages } from "./content.mjs";
+import { pages } from "./content.mjs";
+import { approvedPublicProjects as projects } from "./publication-manifest.mjs";
 
 type SceneHandle = {
   setMotion: (value: boolean) => void;
