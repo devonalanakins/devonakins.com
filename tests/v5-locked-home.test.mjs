@@ -39,8 +39,8 @@ test("locked V5 screenshot modules occupy one semantic preview home", () => {
   assert.match(body, /Approved public project catalog/);
   assert.match(body, /data-v5-field-slug="rhen-language"/);
   assert.ok(body.includes("CHECK DATES &amp; SOURCES"));
-  assert.match(body, /portrait-anevum-transcosmic\.webp/);
-  assert.match(body, /portrait-anevum-transcosmic-mobile\.webp/);
+  assert.match(body, /cap-hero-desktop\.webp/);
+  assert.match(body, /cap-hero-mobile\.webp/);
   assert.equal((body.match(/class="v5-hero-atmosphere"/g) || []).length, 1);
   assert.equal((body.match(/class="v5-portrait-source-atmosphere"/g) || []).length, 1);
   assert.equal((body.match(/class="v5-hero-veil"/g) || []).length, 1);
@@ -97,7 +97,11 @@ test("locked CSS includes responsive screenshot geometry and reduced-motion guar
   assert.match(css, /v5-lock-project-art/);
   assert.match(css, /svg\.v5-lock-project-art\s*\{/);
   assert.match(css, /v5-lock-project-brand/);
-  assert.ok(css.includes("clip-path: polygon("), "Portrait must clip without a bundled mask URL");
+  assert.match(css, /OWNER-APPROVED CAP PORTRAIT 2026-11-08/);
+  assert.match(css, /cap-hero-desktop\.webp/);
+  assert.match(css, /cap-hero-mobile\.webp/);
+  assert.match(css, /clip-path: none/);
+  assert.match(css, /mask-image: radial-gradient/);
   assert.match(css, /v5-portrait-source-atmosphere/);
   assert.match(css, /mix-blend-mode: screen/);
   assert.match(css, /mask-image: radial-gradient/);
