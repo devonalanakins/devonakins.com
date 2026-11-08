@@ -24,7 +24,10 @@ export function v5PreviewPlugin({ enabled = process.env.V5_PREVIEW } = {}) {
         try {
           const html = await server.transformIndexHtml(
             url.pathname,
-            renderV5Preview(page.key),
+            renderV5Preview(page.key, {
+              asOf: page.key === "field" ? url.searchParams.get("asOf") : null,
+              now: Date.now(),
+            }),
           );
           response.setHeader("Content-Type", "text/html; charset=utf-8");
           response.end(request.method === "HEAD" ? undefined : html);
