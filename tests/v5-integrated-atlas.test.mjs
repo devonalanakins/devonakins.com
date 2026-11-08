@@ -183,7 +183,7 @@ test("the date-aware semantic inspector and the visual atlas share one version",
 });
 test("the atlas uses native links and details, never JS-only navigation",()=>{
   const html=renderV5Atlas({now:NOW});
-  assert.match(html,/<details data-v5-atlas-node-id="project:mizvo"><summary>Mizvo<\/summary>/);
+  assert.match(html,/<details data-v5-atlas-node-id="project:mizvo" id="v5-atlas-project-mizvo"><summary>Mizvo<\/summary>/);
   assert.match(html,/<a class="v5-text-link" href="\/work\/mizvo\/">/);
   assert.match(html,/section:knowledge-overview/);
   assert.match(html,/href="\/__v5_preview__\/knowledge\/"/);

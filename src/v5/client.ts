@@ -385,6 +385,12 @@ if (terrain && window.innerWidth > 600) {
 
 
 if (document.querySelector("[data-v5-atlas]")) {
+  // Source-free directory filters work independently of optional WebGL.
+  void import("./atlas-explorer-client.mjs").then(({ mountPublicAtlasExplorer }) => {
+    mountPublicAtlasExplorer();
+  }).catch(() => {
+    // The server-rendered public index remains usable without scripts.
+  });
   // PR #68's full-screen 3D atlas, reconciled with R15/R16 dated public history.
   // Same local first-party vetted manifest as the semantic index; zero fetches.
   void import("./atlas-client").then(({ mountV5Atlas }) => {
