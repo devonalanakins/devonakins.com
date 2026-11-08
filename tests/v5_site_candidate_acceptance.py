@@ -59,6 +59,21 @@ def main():
                               transform:style.transform}];
                           }));
                         }""")
+                        resources = page.evaluate("""() => ({
+                          links:[...document.querySelectorAll('link[rel="stylesheet"]')].map(n=>({
+                            href:n.href,media:n.media,disabled:n.disabled,
+                            hasSheet:!!n.sheet,
+                          })),
+                          sheets:[...document.styleSheets].map(s=>({
+                            href:s.href,disabled:s.disabled,
+                            rules:(()=>{try{return s.cssRules.length}catch{return 'unavailable'}})(),
+                          })),
+                          css:[...performance.getEntriesByType('resource')]
+                            .filter(r=>/\\.css(?:[?#]|$)/.test(r.name))
+                            .map(r=>({name:r.name,status:r.responseStatus,
+                                      duration:r.duration,bytes:r.transferSize})),
+                        })""")
+                        print("WebKit stylesheet diagnostics:",json.dumps(resources,sort_keys=True),flush=True)
                         print("WebKit target diagnostics:",json.dumps(diagnostics,sort_keys=True),flush=True)
                     assert not violations,(width,path,violations)
                     if path in ['/','/signal-field/','/knowledge/sources-and-meaning/']:
