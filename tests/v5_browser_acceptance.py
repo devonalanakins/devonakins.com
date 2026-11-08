@@ -6,6 +6,8 @@ import json
 import os
 from pathlib import Path
 import socket
+import sys
+import traceback
 import subprocess
 import time
 import urllib.error
@@ -378,8 +380,27 @@ def main():
                             assert not api, api
                             assert not external, external
                             results.append({"engine": engine, "viewport": [width, height], "motion": motion, "routes": len(PAGES), "result": "pass"})
-                        except Exception:
-                            page.screenshot(path=str(output / f"FAILED-{engine}-{width}x{height}.png"), full_page=True)
+                        except Exception as test_error:
+                            # A failed diagnostic capture must never hide the
+                            # original browser regression from CI logs.
+                            print(
+                                f"V5 ACCEPTANCE FAILED: {engine} {width}x{height} "
+                                f"motion={motion}: {type(test_error).__name__}: {test_error}",
+                                file=sys.stderr, flush=True,
+                            )
+                            traceback.print_exc()
+                            try:
+                                page.screenshot(
+                                    path=str(output / f"FAILED-{engine}-{width}x{height}.png"),
+                                    full_page=False, animations="disabled",
+                                    timeout=5000,
+                                )
+                            except Exception as capture_error:
+                                print(
+                                    "Diagnostic screenshot unavailable: "
+                                    f"{type(capture_error).__name__}: {capture_error}",
+                                    file=sys.stderr, flush=True,
+                                )
                             raise
                         finally:
                             context.close()
