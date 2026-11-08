@@ -105,7 +105,7 @@ function projectCard(project) {
 }
 function home() {
   return `<section class="v5-hero" aria-labelledby="v5-title">
-    <div class="v5-portrait"><picture><source media="(max-width: 600px)" type="image/webp" srcset="/src/v5/assets/portrait-anevum-transcosmic-mobile.webp"><img src="/src/v5/assets/portrait-anevum-transcosmic.webp" alt="Cinematic portrait artwork of Devon Akins in a dark eclipse-graphic T-shirt and fitted jeans" width="1122" height="1402" fetchpriority="high" decoding="async"></picture></div>
+    <div class="v5-portrait"><picture><source media="(max-width: 600px)" type="image/webp" srcset="/src/v5/assets/cap-hero-mobile.webp"><img src="/src/v5/assets/cap-hero-desktop.webp" alt="Cinematic portrait of Devon Akins wearing a backward cap" width="582" height="533" fetchpriority="high" decoding="async"></picture></div>
     <div class="v5-intro"><p class="v5-eyebrow">INDEPENDENT DEVELOPER · AUTHOR</p><h1 id="v5-title">Devon<br><span>Akins.</span></h1><p class="v5-lede">Building useful systems.<br>Exploring ideas. Creating worlds.</p><p class="v5-intro-detail">Father, writer and independent developer working where thoughtful engineering meets imagination.</p>
       <div class="v5-actions"><a class="v5-button" href="${href("field")}">Explore the systems map <span aria-hidden="true">↗</span></a><a class="v5-secondary" href="${href("projects")}">My work</a></div>
       <a class="v5-github" href="https://github.com/devonalanakins">GitHub <span aria-hidden="true">↗</span></a>
