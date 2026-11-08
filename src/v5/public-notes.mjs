@@ -2,7 +2,7 @@
 export const publicNotes = Object.freeze([
   {
     slug: "sources-and-meaning",
-    title: "What a live signal actually means",
+    title: "What an activity record actually means",
     kind: "Engineering explanation",
     topic: "Evidence & observation",
     summary:
@@ -22,7 +22,7 @@ export const publicNotes = Object.freeze([
       ],
     ],
     sources: [
-      ["Source-qualified V4 read model", "src/live-signal.mjs"],
+      ["Public activity read model", "src/live-signal.mjs"],
       ["Public evidence projection", "src/v5/public-evidence.mjs"],
     ],
     related: ["public-and-private", "replaying-a-record"],
@@ -60,7 +60,7 @@ export const publicNotes = Object.freeze([
     kind: "Engineering explanation",
     topic: "Systems & history",
     summary:
-      "The Signal Field separates a curated directory, reviewed structural changes and temporary activity.",
+      "The systems map separates a curated directory, reviewed structural changes and temporary activity.",
     sections: [
       [
         "A directory is not a launch history",
