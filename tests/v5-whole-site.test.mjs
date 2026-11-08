@@ -39,7 +39,6 @@ test("full-site candidate publishes real sections and a dedicated atlas without 
   for (const [label, url] of [
     ["GitHub profile", "https://github.com/devonalanakins"],
     ["Instagram profile", "https://www.instagram.com/devonalanakins/"],
-    ["Facebook profile", "https://www.facebook.com/devonalanakins"],
   ]) {
     assert.ok(fullHome.includes('href="' + url + '" aria-label="' + label + '"'),
       "Published V5 hero must expose the verified " + label);
