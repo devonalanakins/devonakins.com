@@ -1,3 +1,4 @@
+import { renderPublishedField } from "./v5/field-response.mjs";
 import { projectPublicGithubEvents, unavailablePublicGithub, projectPublicTelemetry, validPublicGithubSignal, githubCooldownMs } from "./public-telemetry.mjs";
 import { createD1PresenceReader } from "./listening-d1-presence.mjs";
 import { createListeningOwnerApi } from "./listening-owner-api.mjs";
@@ -332,6 +333,19 @@ export function createHandler(assets, release, options = {}) {
       }
       const asset = assets[index] || assets[path];
       const selected = asset || assets["/404/index.html"];
+      if(path==="/signal-field/" && asset?.type.startsWith("text/html")) {
+        const zipped=Uint8Array.from(atob(asset.gzip),c=>c.charCodeAt(0));
+        const template=await new Response(new Blob([zipped]).stream()
+          .pipeThrough(new DecompressionStream("gzip"))).text();
+        const html=renderPublishedField(template,url.searchParams.get("asOf"),now().getTime());
+        if(html!==null) {
+          const headers=new Headers({...securityHeaders,"Content-Type":"text/html; charset=utf-8",
+            "Cache-Control":"no-store"});
+          // This route has a bounded, same-origin GET date form only.
+          headers.set("Content-Security-Policy",securityHeaders["Content-Security-Policy"].replace("form-action 'none'","form-action 'self'"));
+          return new Response(request.method==="HEAD"?null:html,{status:200,headers});
+        }
+      }
       const status = asset ? 200 : 404;
       const isHtml = selected.type.startsWith("text/html");
       const headers = new Headers({

@@ -28,3 +28,10 @@ __pycache__/
 *.pyc
 
 /wrangler.deploy.jsonc
+
+/signal-field/
+/writing/
+/research/
+/knowledge/
+/v5-review-screenshots/
+/browser-qa/

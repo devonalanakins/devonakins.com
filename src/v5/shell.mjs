@@ -1,3 +1,6 @@
+import { V5_PUBLIC_ROUTES, publishV5Links } from "./public-routes.mjs";
+import { renderReadingRoom } from "./reading-room.mjs";
+import { publicNotes } from "./public-notes.mjs";
 import { projects } from "../content.mjs";
 import { renderReferenceHomepage, renderReferenceNav } from "./reference-home.mjs";
 import { renderPublicGraphHistory } from "./public-graph-view.mjs";
@@ -17,6 +20,7 @@ export const previewPages = [
   label,
   path: PREVIEW_ROOT + (key === "home" ? "" : key + "/"),
 }));
+export const previewTopicPages = publicNotes.map(note => ({key:"knowledge", topic:note.slug, path:PREVIEW_ROOT+"knowledge/"+note.slug+"/"}));
 const esc = (value) =>
   String(value).replace(
     /[&<>"']/g,
@@ -42,6 +46,7 @@ const identity = (project) =>
   ] || project.slug;
 const projectLink = (project) => `/work/${project.slug}/`;
 const lockup = (project) =>
+  !["mizvo", "merit", "rhen-language", "squelch", "vesper", "anevum", "brandicade", "devonstation", "ideaflow"].includes(project.slug) ? `<span class="v5-wordmark-text">${esc(project.title)}</span>` :
   `<img class="v5-wordmark" src="/v2/identity/${identity(project)}.svg" alt="${esc(project.title)}" width="180" height="36">`;
 
 function fieldComposition() {
@@ -96,7 +101,7 @@ function ribbon() {
   </section>`;
 }
 function projectCard(project) {
-  return `<a class="v5-card v5-project-card" href="${projectLink(project)}">${lockup(project)}<span class="v5-card-state">${esc(project.status)}</span><h3>${esc(project.label)}</h3><p>${esc(project.summary)}</p><span class="v5-text-link">Explore project <span aria-hidden="true">↗</span></span></a>`;
+  return `<a class="v5-card v5-project-card" data-v5-project-card data-search-text="${esc([project.title,project.label,project.summary,...project.tags].join(" ").toLowerCase())}" data-project-category="${esc(project.category)}" href="${projectLink(project)}">${lockup(project)}<span class="v5-card-state">${esc(project.status)}</span><h3>${esc(project.label)}</h3><p>${esc(project.summary)}</p><span class="v5-text-link">Explore project <span aria-hidden="true">↗</span></span></a>`;
 }
 function home() {
   return `<section class="v5-hero" aria-labelledby="v5-title">
@@ -112,26 +117,19 @@ function home() {
   </section>`;
 }
 function secondary(key, options = {}) {
+  const reading = renderReadingRoom(key, options);
+  if (reading !== null) return reading;
   const page = previewPages.find((entry) => entry.key === key);
   const heading = (eyebrow, title, description) =>
     `<header class="v5-page-heading"><p class="v5-eyebrow">${eyebrow}</p><h1 id="v5-title">${title}</h1><p>${description}</p></header>`;
   if (key === "projects")
     return `${heading("THE WORKSHOP", "Projects & systems", "Original software, creative worlds and practical tools. Status descriptions come from the existing public portfolio; they are not live telemetry.")}
-    <div class="v5-cards v5-project-grid">${catalog.map(projectCard).join("")}</div>`;
+    <form class="v5-directory-controls" role="search" data-v5-directory-controls hidden><label>Find a project<input type="search" maxlength="120" data-v5-project-search placeholder="Name, purpose or subject"></label><label>Category<select data-v5-project-category><option value="">All categories</option>${["software","research","creative","business"].map(c=>`<option value="${c}">${c[0].toUpperCase()+c.slice(1)}</option>`).join("")}</select></label><p role="status" data-v5-project-count>${projects.length} public projects</p></form><div class="v5-cards v5-project-grid">${projects.map(projectCard).join("")}</div><p class="v5-card v5-reading" data-v5-project-empty hidden>No matching public projects. Try another name or category.</p>`;
   if (key === "field")
     return `${heading("THE SIGNAL FIELD", "A connected body of work.", "Explore approved public identities, inspect reviewed structural relationships in 3D, and replay the dated record without implying live work.")}
-    ${renderV5Atlas({ requestedDate: options.asOf ?? null, now: options.now ?? Date.now() })}
+    <!-- V5_FIELD_BEGIN -->${renderV5Atlas({ requestedDate: options.asOf ?? null, now: options.now ?? Date.now() })}
     ${renderPublicGraphHistory({ requestedDate: options.asOf ?? null, now: options.now ?? Date.now() })}
-    ${ribbon()}<section class="v5-card v5-reading"><h2>Live evidence stays separate.</h2><p>Editor observations, participating agent tasks and GitHub history do not create permanent graph nodes. This gated preview does not request private provider data.</p><a class="v5-text-link" href="/studio/">View the current Live Studio <span aria-hidden="true">↗</span></a></section>`;
-  if (key === "writing")
-    return `${heading("ORIGINAL WORKS", "Stories. Worlds. Possibilities.", "Writing, revision and the worlds behind the pages.")}
-    <section class="v5-card v5-reading"><p class="v5-eyebrow">BOOKS & MANUSCRIPTS</p><h2>Making room for the story.</h2><p>${esc(projects.find((p) => p.slug === "writing").description)}</p><a class="v5-text-link" href="/work/writing/">Books & writing <span aria-hidden="true">↗</span></a></section>`;
-  if (key === "research")
-    return `${heading("QUESTIONS & METHODS", "Follow the question.", "Mathematics, physics, cognition and software engineering are ongoing interests. Study, original hypotheses and validated findings will have distinct labels.")}
-    <section class="v5-card v5-reading"><h2>Research index in preparation</h2><p>No new articles, reviewed findings or discoveries are published in this preview.</p><a class="v5-text-link" href="/#research">Read the current research introduction <span aria-hidden="true">↗</span></a></section>`;
-  if (key === "knowledge")
-    return `${heading("PUBLIC KNOWLEDGE", "Ideas with context.", "A future curated index of public topics, sources and relationships.")}
-    <section class="v5-card v5-reading"><h2>Public index in preparation</h2><p>This preview does not connect to the private Knowledge workspace. Public articles and backlinks will appear only after individual review.</p><a class="v5-text-link" href="/source/">Explore existing public source <span aria-hidden="true">↗</span></a></section>`;
+    <!-- V5_FIELD_END -->${ribbon()}<section class="v5-card v5-reading"><h2>Live evidence stays separate.</h2><p>Editor observations, participating agent tasks and GitHub history do not create permanent graph nodes. This gated preview does not request private provider data.</p><a class="v5-text-link" href="/studio/">View the current Live Studio <span aria-hidden="true">↗</span></a></section>`;
   return `${heading("THE PERSON BEHIND THE PROJECTS", "Hello. I’m Devon.", "Father, author and independent developer. I build useful software, write fiction and help improve the systems behind family businesses.")}
     <section class="v5-card v5-reading"><h2>Curiosity, made useful.</h2><p>I care about software people can understand, original work worth finishing, and making space for family along the way.</p><div class="v5-actions"><a class="v5-button" href="/about/">Read my biography</a><a class="v5-secondary" href="/contact/">Get in touch</a></div></section>`;
 }
@@ -191,4 +189,30 @@ export function renderV5PublicHomepage() {
     throw new Error("Unreleased preview content in V5 public homepage");
   }
   return html;
+}
+
+/** Opt-in whole-site candidate. Default V4 and home-only candidates are unchanged. */
+export function renderV5PublicPage(key, options = {}) {
+  const path = options.publicPath ?? V5_PUBLIC_ROUTES[key];
+  if (!path || !Object.hasOwn(V5_PUBLIC_ROUTES,key)) throw Error("Unknown public V5 route");
+  let html = key === "home" ? renderV5PublicHomepage() : renderV5Preview(key, options);
+  html = html.replace('data-v5-signal-mode="preview"','data-v5-signal-mode="released-v5"')
+    .replace('<meta name="robots" content="noindex,nofollow,noarchive">','<meta name="robots" content="index,follow,max-image-preview:large">')
+    .replace(/<aside class="v5-preview-banner" aria-label="Preview notice">[\s\S]*?<\/aside>/g,"")
+    .replace('Development-only Living Mind V5 layout preview. Live data is not connected.',
+      'Public projects, writing and source-linked engineering explanations by Devon Alan Akins.')
+    .replace(/ — Living Mind V5 Preview<\/title>/,' — Devon Alan Akins</title>');
+  html = publishV5Links(html).replace('href="/#v5-lock-field-title"','href="/signal-field/"');
+  html = html.replace('</head>',`<link rel="canonical" href="https://devonakins.com${esc(path)}"></head>`);
+  if (html.includes('/__v5_preview__/')) throw Error("Preview link in public V5 page");
+  return html;
+}
+
+export function renderV5ProjectPage(slug) {
+  const p=projects.find(p=>p.slug===slug);
+  if(!p) throw Error("Unknown public project");
+  let html=renderV5PublicPage("projects",{publicPath:"/work/"+p.slug+"/"});
+  const content=`<header class="v5-page-heading"><p class="v5-eyebrow">${esc(p.category)} · ${esc(p.role)}</p>${lockup(p)}<h1 id="v5-title">${esc(p.title)}</h1><p>${esc(p.summary)}</p></header><div class="v5-reading-layout"><article class="v5-card v5-reading"><p class="v5-card-state">${esc(p.status)}</p><h2>The project</h2><p>${esc(p.description)}</p><h2>Documented scope</h2><p>${esc(p.detail)}</p><h2>Next acceptance step</h2><p>${esc(p.next)}</p></article><aside class="v5-card v5-reading"><h2>Public information</h2><p>${esc(p.boundary)}</p>${p.url?`<a class="v5-text-link" href="${esc(p.url)}" rel="noopener noreferrer">${esc(p.urlLabel||"Public source")}</a>`:""}<a class="v5-text-link" href="/work/">All projects</a><a class="v5-text-link" href="/writing/">Writing</a><a class="v5-text-link" href="/research/">Research</a><a class="v5-text-link" href="/knowledge/">Public Knowledge</a></aside></div>`;
+  return html.replace(/<main id="v5-main" tabindex="-1">[\s\S]*?<\/main>/,`<main id="v5-main" tabindex="-1">${content}</main>`)
+    .replace(/<title>[^<]*<\/title>/,`<title>${esc(p.title)} — Devon Alan Akins</title>`);
 }

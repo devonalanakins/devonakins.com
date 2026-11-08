@@ -120,7 +120,11 @@ export function renderV5Atlas({ requestedDate = null, now = Date.now() } = {}) {
         '<span class="v5-atlas-still-mark">DA</span>' +
         '<span>THE LIVING MIND</span>' +
       '</div>' +
-      '<div class="v5-atlas-label-layer" data-v5-atlas-label-layer aria-hidden="true"></div>' +
+      '<div class="v5-camera-controls" data-v5-camera-controls hidden role="group" aria-label="3D camera controls">' +
+      [['left','Orbit left'],['right','Orbit right'],['up','Orbit up'],['down','Orbit down'],['in','Zoom in'],['out','Zoom out'],['focus','Focus selected'],['reset','Reset view']].map(([action,label]) =>
+        '<button type="button" data-v5-camera="'+action+'">'+label+'</button>').join('') +
+    '</div>' +
+    '<div class="v5-atlas-label-layer" data-v5-atlas-label-layer aria-hidden="true"></div>' +
       '<div class="v5-atlas-legend" aria-hidden="true"><span>APPROVED PUBLIC IDENTITIES</span>' +
         '<span>Decorative towers are not component totals</span></div>' +
     '</div>' +

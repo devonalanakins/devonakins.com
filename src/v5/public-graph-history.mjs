@@ -29,7 +29,7 @@ const CHILD_ID = /^(feature|component|integration|publication):([a-z][a-z0-9-]{1
 const RELATION_ID = /^relation:[a-z][a-z0-9-]{2,63}$/;
 const TITLE = /^[A-Za-z0-9][A-Za-z0-9 _.,:()\/&+\-]{0,69}$/;
 const DATE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/;
-const ACTIONS = new Set(["publish-node", "retire-node", "publish-relation", "retire-relation"]);
+const ACTIONS = new Set(["publish-node", "retire-node", "publish-relation", "retire-relation", "reinstate-node", "reinstate-relation"]);
 
 const obj = value => Boolean(value) && typeof value === "object" && !Array.isArray(value) &&
   (Object.getPrototypeOf(value) === Object.prototype || Object.getPrototypeOf(value) === null);
@@ -81,6 +81,7 @@ export function replayPublicGraphHistory(
     if (!exactKeys(record, ["schema", "sequence", "effectiveAt", "action", "evidenceUrl", "reviewUrl", "value"]) ||
         record.schema !== PUBLIC_GRAPH_HISTORY_VERSION || record.sequence !== index + 1 ||
         !iso(record.effectiveAt) || !ACTIONS.has(record.action) ||
+        typeof record.evidenceUrl !== "string" || typeof record.reviewUrl !== "string" ||
         !PROOF_URL.test(record.evidenceUrl) || !REVIEW_URL.test(record.reviewUrl))
       return fallback;
     const when = Date.parse(record.effectiveAt);
@@ -89,7 +90,7 @@ export function replayPublicGraphHistory(
     const value = record.value;
     if (record.action === "publish-node") {
       if (!exactKeys(value, ["id", "type", "label", "parent"]) ||
-          !NODE_TYPES.has(value.type) || !TITLE.test(value.label) ||
+          !NODE_TYPES.has(value.type) || typeof value.label !== "string" || !TITLE.test(value.label) ||
           !CHILD_ID.test(value.id) || !rootOf(value.id) ||
           value.type !== CHILD_ID.exec(value.id)[1] || entries.has(value.id))
         return fallback;
@@ -107,6 +108,22 @@ export function replayPublicGraphHistory(
       if (!target || target.state !== "published" ||
           [...entries.values()].some(n => n.parent === value.id && n.state === "published")) return fallback;
       entries.set(value.id, { ...target, state: "retired", retiredAt: record.effectiveAt, retirementReviewUrl: record.reviewUrl });
+    } else if (record.action === "reinstate-node") {
+      if (!exactKeys(value,["id"]) || ROOT_SET.has(value.id)) return fallback;
+      const target=entries.get(value.id);
+      const parent=target && entries.get(target.parent);
+      if(!target || target.state!=="retired" || !parent || parent.state==="retired") return fallback;
+      entries.set(value.id,{...target,state:"published",reinstatedAt:record.effectiveAt,
+        reinstatementReviewUrl:record.reviewUrl});
+    } else if (record.action === "reinstate-relation") {
+      if(!exactKeys(value,["id"])) return fallback;
+      const target=relations.get(value.id);
+      if(!target || target.state!=="retired" ||
+        entries.get(target.from)?.state==="retired" || entries.get(target.to)?.state==="retired" ||
+        [...relations.values()].some(r=>r.id!==target.id && r.state==="published" &&
+          r.from===target.from && r.to===target.to && r.type===target.type)) return fallback;
+      relations.set(value.id,{...target,state:"published",reinstatedAt:record.effectiveAt,
+        reinstatementReviewUrl:record.reviewUrl});
     } else if (record.action === "publish-relation") {
       if (!exactKeys(value, ["id", "type", "from", "to"]) ||
           !RELATION_ID.test(value.id) || !RELATION_TYPES.has(value.type) ||

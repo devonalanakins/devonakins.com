@@ -1,4 +1,4 @@
-import { renderV5Preview, previewPages, PREVIEW_ROOT } from "./shell.mjs";
+import { renderV5Preview, previewPages, previewTopicPages, PREVIEW_ROOT } from "./shell.mjs";
 
 /** Development-only: never register routes or emit preview assets in a build. */
 export function v5PreviewPlugin({ enabled = process.env.V5_PREVIEW } = {}) {
@@ -11,7 +11,7 @@ export function v5PreviewPlugin({ enabled = process.env.V5_PREVIEW } = {}) {
         if (!url.pathname.startsWith(PREVIEW_ROOT.slice(0, -1))) return next();
         response.setHeader("Cache-Control", "no-store");
         response.setHeader("X-Robots-Tag", "noindex, nofollow, noarchive");
-        const page = previewPages.find((entry) => entry.path === url.pathname);
+        const page = [...previewPages, ...previewTopicPages].find((entry) => entry.path === url.pathname);
         if (enabled !== "1" || !page) {
           response.statusCode = 404;
           return response.end("Not found");
@@ -27,6 +27,7 @@ export function v5PreviewPlugin({ enabled = process.env.V5_PREVIEW } = {}) {
             renderV5Preview(page.key, {
               asOf: page.key === "field" ? url.searchParams.get("asOf") : null,
               now: Date.now(),
+              topic: page.topic ?? null,
             }),
           );
           response.setHeader("Content-Type", "text/html; charset=utf-8");

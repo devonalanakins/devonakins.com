@@ -1294,3 +1294,11 @@
 @media (forced-colors: active) {
   .v5-threads-feed,.v5-threads-feed li { border-color: CanvasText; }
 }
+
+/* Keep the mobile header inside its actual width at intermediate phone sizes. */
+@media(max-width:600px){
+  .v5-frame:has(.v5-locked-home) .v5-topbar{gap:8px}
+  .v5-frame:has(.v5-locked-home) .v5-brand{min-width:0;flex:1}
+  .v5-frame:has(.v5-locked-home) .v5-brand > span{font-size:11px;letter-spacing:.13em;min-width:0}
+  .v5-frame:has(.v5-locked-home) .v5-mobile-menu{flex:none}
+}

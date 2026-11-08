@@ -298,7 +298,7 @@ export function mountDecorativeTerrain(element: HTMLElement) {
     };
     paintEvidence = setEvidence;
     const resize = () => {
-      if (!renderer || !scene) return;
+      if (!renderer || !scene || disposed || element.dataset.webgl !== "ready") return;
       const rect = element.getBoundingClientRect();
       if (rect.width < 80 || rect.height < 80) return;
       renderer.setSize(rect.width, rect.height, false);
@@ -337,7 +337,14 @@ export function mountDecorativeTerrain(element: HTMLElement) {
       delete element.dataset.webgl;
       if (canvas) canvas.hidden = true;
     };
+    const restored = () => {
+      if(disposed || !canvas) return;
+      canvas.hidden = false;
+      element.dataset.webgl = "ready";
+      resize();
+    };
     canvas.addEventListener("webglcontextlost", lost);
+    canvas.addEventListener("webglcontextrestored", restored);
     return { setEvidence: paintEvidence, dispose: () => {
       disposed = true;
       if (frame !== null) cancelAnimationFrame(frame);
@@ -347,6 +354,8 @@ export function mountDecorativeTerrain(element: HTMLElement) {
       if (scene) releaseGeometry(scene);
       delete element.dataset.webgl;
       delete element.dataset.v5TerrainVerifiedCount;
+      canvas?.removeEventListener("webglcontextlost", lost);
+      canvas?.removeEventListener("webglcontextrestored", restored);
       renderer?.dispose();
       canvas?.remove();
     } };

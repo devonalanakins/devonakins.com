@@ -352,6 +352,7 @@ def main():
     parser.add_argument("--out", default=".artifacts/v5-preview")
     parser.add_argument("--engines", nargs="+", choices=["chromium", "webkit"], default=["chromium", "webkit"])
     parser.add_argument("--chromium-executable", default=None)
+    parser.add_argument("--constrained-chromium", action="store_true", help="Single-process launch for restricted local runtimes; CI keeps real browser defaults")
     parser.add_argument("--fresh-browser-per-case", action="store_true", help="For constrained single-process browser runtimes")
     args = parser.parse_args()
     output = ROOT / args.out
@@ -368,6 +369,8 @@ def main():
     with server(True) as origin, sync_playwright() as playwright:
         for engine in args.engines:
             options = {"executable_path": args.chromium_executable} if engine == "chromium" and args.chromium_executable else {}
+            if engine == "chromium" and args.constrained_chromium:
+                options["args"] = ["--single-process", "--no-zygote", "--no-sandbox"]
             browser = getattr(playwright, engine).launch(**options)
             try:
                 for width, height in VIEWPORTS:

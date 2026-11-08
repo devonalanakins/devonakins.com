@@ -17,6 +17,8 @@ const labels = Object.freeze({
   "retire-node": "Retired structure",
   "publish-relation": "Published relationship",
   "retire-relation": "Retired relationship",
+  "reinstate-node": "Reinstated structure",
+  "reinstate-relation": "Reinstated relationship",
 });
 const rootLink = id => {
   if (id === "section:knowledge-overview") return "/__v5_preview__/knowledge/";

@@ -112,3 +112,43 @@ jobs:
           path: dist/
           if-no-files-found: error
           retention-days: 7
+
+  v5_candidate:
+    if: github.head_ref == 'release/living-mind-v5' || github.ref == 'refs/heads/release/living-mind-v5'
+    needs: verify
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - run: npm ci
+      - name: Build opt-in full V5 candidate without changing production defaults
+        run: V5_PUBLIC_SITE_CANDIDATE=1 npm run build
+      - name: Verify all compiled routes and real Worker date replay
+        run: node scripts/verify-v5-site-candidate.mjs
+      - run: python3 -m pip install --disable-pip-version-check playwright==1.57.0
+      - run: python3 -m playwright install --with-deps chromium webkit
+      - name: Verify full V5 candidate in actual isolated workerd
+        run: |
+          set -eu
+          npx --yes wrangler@4.158.0 dev --local --ip 127.0.0.1 --port 8790 --infer-origin-from-routes=false > /tmp/v5-workerd.log 2>&1 &
+          worker_pid=$!
+          trap 'kill "$worker_pid" 2>/dev/null || true' EXIT
+          python3 tests/v5_site_candidate_acceptance.py --origin http://127.0.0.1:8790 --engine chromium
+          python3 tests/v5_site_candidate_acceptance.py --origin http://127.0.0.1:8790 --engine webkit
+      - name: Preserve candidate browser evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: v5-full-site-candidate
+          path: .artifacts/v5-site-candidate/
+          if-no-files-found: warn
+          retention-days: 14

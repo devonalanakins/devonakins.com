@@ -371,12 +371,14 @@ if (terrain && window.innerWidth > 600) {
     // A verified V4 update may arrive while the optional GPU module loads.
     // Recheck the most recent projection instead of preserving a stale state.
     controller.setEvidence(latestTerrainActivity);
-    window.addEventListener("pagehide", (event) => {
+    const onTerrainPageHide = (event: PageTransitionEvent) => {
       if (!event.persisted) {
         controller.dispose();
         setTerrainActivity = null;
+        window.removeEventListener("pagehide", onTerrainPageHide);
       }
-    }, { once: true });
+    };
+    window.addEventListener("pagehide", onTerrainPageHide);
   }).catch(() => {
     // Semantic links and their source-qualified states remain usable.
     setTerrainActivity = null;
@@ -405,3 +407,45 @@ if (document.querySelector("[data-v5-atlas]")) {
 }
 
 export {};
+
+// One public portfolio, filtered locally; no provider or private inventory read.
+const directoryControls = document.querySelector<HTMLElement>("[data-v5-directory-controls]");
+if (directoryControls) {
+  const input = directoryControls.querySelector<HTMLInputElement>("[data-v5-project-search]");
+  const category = directoryControls.querySelector<HTMLSelectElement>("[data-v5-project-category]");
+  const cards = Array.from(document.querySelectorAll<HTMLElement>("[data-v5-project-card]"));
+  const count = directoryControls.querySelector<HTMLElement>("[data-v5-project-count]");
+  const empty = document.querySelector<HTMLElement>("[data-v5-project-empty]");
+  const filter = () => {
+    const term = (input?.value ?? "").trim().toLocaleLowerCase();
+    let visible = 0;
+    for (const card of cards) {
+      card.hidden = !(card.dataset.searchText ?? "").includes(term) ||
+        Boolean(category?.value && category.value !== card.dataset.projectCategory);
+      if (!card.hidden) visible++;
+    }
+    if (count) count.textContent = visible + " of " + cards.length + " public projects";
+    if (empty) empty.hidden = visible > 0;
+  };
+  directoryControls.hidden = false;
+  directoryControls.addEventListener("submit", event => event.preventDefault());
+  input?.addEventListener("input", filter);
+  category?.addEventListener("change", filter);
+  filter();
+}
+
+// Preserve bookmarked V4 section fragments when the full V5 home is selected.
+if (window.location.pathname === "/" &&
+    document.documentElement.dataset.v5SignalMode === "released-v5" &&
+    document.querySelector('a[href="/signal-field/"]')) {
+  const legacyDestinations: Record<string,string> = {
+    "#work":"/work/", "#writing":"/writing/", "#research":"/research/",
+    "#contact":"/contact/", "#listening":"/listening/",
+  };
+  const followLegacyHash = () => {
+    const destination = legacyDestinations[window.location.hash];
+    if(destination) window.location.replace(destination);
+  };
+  window.addEventListener("hashchange",followLegacyHash);
+  followLegacyHash();
+}

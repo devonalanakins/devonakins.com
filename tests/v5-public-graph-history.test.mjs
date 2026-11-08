@@ -133,3 +133,49 @@ test("a late invalid record invalidates earlier snapshots, never leaks future ed
   ];
   assert.equal(replayPublicGraphHistory(reversed,Date.parse(at)).valid,false);
 });
+
+test("explicit reinstatement preserves identity and earlier retirement in historical replay",()=>{
+  const later="2026-11-08T02:00:00.000Z";
+  const h=[...history,record(4,"retire-node",{id:node2.id}),
+    record(5,"reinstate-node",{id:node2.id},later)];
+  const past=replayPublicGraphHistory(h,Date.parse(at));
+  assert.equal(past.nodes.find(n=>n.id===node2.id).state,"retired");
+  assert.equal(past.relations.length,0);
+  const present=replayPublicGraphHistory(h,Date.parse(later));
+  assert.equal(present.valid,true);
+  const restored=present.nodes.find(n=>n.id===node2.id);
+  assert.equal(restored.state,"published");
+  assert.equal(restored.retiredAt,at);
+  assert.equal(restored.reinstatedAt,later);
+  assert.equal(restored.evidenceUrl,proof);
+  assert.equal(present.relations.length,1);
+});
+test("retired edges require their own explicit reinstatement",()=>{
+  const h=[...history,record(4,"retire-relation",{id:link.id}),
+    record(5,"retire-node",{id:node2.id}),record(6,"reinstate-node",{id:node2.id})];
+  assert.equal(replayPublicGraphHistory(h,Date.parse(at)).relations.length,0);
+  const restored=replayPublicGraphHistory([...h,record(7,"reinstate-relation",{id:link.id})],Date.parse(at));
+  assert.equal(restored.valid,true);
+  assert.equal(restored.relations.length,1);
+});
+test("reinstatement cannot create unknown identities, bypass retired parents or duplicate relations",()=>{
+  for(const h of [
+    [record(1,"reinstate-node",{id:node.id})],
+    [...history,record(4,"reinstate-node",{id:node.id})],
+    [...history,record(4,"reinstate-relation",{id:link.id})],
+    [...history,record(4,"retire-relation",{id:link.id}),record(5,"retire-node",{id:node.id}),record(6,"reinstate-relation",{id:link.id})],
+    [record(1,"publish-node",node),record(2,"publish-node",{...node2,parent:node.id}),
+      record(3,"retire-node",{id:node2.id}),record(4,"retire-node",{id:node.id}),record(5,"reinstate-node",{id:node2.id})],
+    [...history,record(4,"retire-relation",{id:link.id}),record(5,"publish-relation",{...link,id:"relation:mizvo-replacement"}),record(6,"reinstate-relation",{id:link.id})],
+  ]) assert.equal(replayPublicGraphHistory(h,Date.parse(at)).valid,false);
+});
+test("graph manifest rejects coercible evidence and labels instead of executing their conversion",()=>{
+  for(const field of ['evidenceUrl','reviewUrl']) {
+    let called=false;
+    const r=record(1,'publish-node',node);
+    const text=r[field];r[field]={toString(){called=true;return text;}};
+    assert.equal(replayPublicGraphHistory([r],Date.parse(at)).valid,false);
+    assert.equal(called,false);
+  }
+  assert.equal(replayPublicGraphHistory([record(1,'publish-node',{...node,label:{toString:()=>"Rooms"}})],Date.parse(at)).valid,false);
+});

@@ -55,7 +55,7 @@ export function mountV5Atlas() {
   const controls = new OrbitControls(camera, canvas);
   controls.enableDamping = false;
   controls.autoRotate = false;
-  controls.enablePan = false;
+  controls.enablePan = true;
   controls.enableZoom = true;
   controls.enableRotate = true;
   controls.minDistance = 6;
@@ -274,8 +274,10 @@ export function mountV5Atlas() {
     reviewedLines.push({ index, line });
   }
   let disposed = false;
+  let contextUnavailable = false;
+  let selectedId: string | null = null;
   const render = () => {
-    if (disposed || document.hidden || !root.isConnected) return;
+    if (disposed || contextUnavailable || document.hidden || !root.isConnected) return;
     renderer.render(scene, camera);
     const bounds = host.getBoundingClientRect();
     for (const { id, point, label } of annotated) {
@@ -331,6 +333,7 @@ export function mountV5Atlas() {
   const select = (id: string, reveal = false) => {
     const node = graph.nodes.find(item => item.id === id);
     if (!node || disposed || !visibleNodeIds.has(id)) return;
+    selectedId = id;
     for (const [key, material] of materials) {
       material.emissiveIntensity = key === id ? .83 : .14;
     }
@@ -385,11 +388,56 @@ export function mountV5Atlas() {
   };
   canvas.addEventListener("pointerdown", down);
   canvas.addEventListener("pointerup", up);
+  const cameraTools = root.querySelector<HTMLElement>("[data-v5-camera-controls]");
+  const onCamera = (event: Event) => {
+    const button = event.target instanceof Element ? event.target.closest<HTMLElement>("[data-v5-camera]") : null;
+    const action = button?.dataset.v5Camera;
+    if(!action || disposed || contextUnavailable) return;
+    const offset = camera.position.clone().sub(controls.target);
+    const spherical = new THREE.Spherical().setFromVector3(offset);
+    if(action === "reset") {
+      cameraAdjustedByUser = false;
+      controls.target.set(0,0,0);
+      resize();
+      return;
+    }
+    if(action === "focus") {
+      const point = selectedId && visibleNodeIds.has(selectedId) ? positions.get(selectedId) : null;
+      if(!point) { status.textContent = "Select a public system from the index before focusing."; return; }
+      controls.target.copy(point);
+      camera.position.copy(point).add(offset);
+    } else {
+      if(action === "left") spherical.theta -= .15;
+      if(action === "right") spherical.theta += .15;
+      if(action === "up") spherical.phi = Math.max(controls.minPolarAngle,spherical.phi-.15);
+      if(action === "down") spherical.phi = Math.min(controls.maxPolarAngle,spherical.phi+.15);
+      if(action === "in") spherical.radius = Math.max(controls.minDistance,spherical.radius*.85);
+      if(action === "out") spherical.radius = Math.min(controls.maxDistance,spherical.radius/ .85);
+      camera.position.copy(controls.target).add(new THREE.Vector3().setFromSpherical(spherical));
+    }
+    cameraAdjustedByUser = true;
+    controls.update(); render();
+  };
+  cameraTools?.addEventListener("click",onCamera);
+  if(cameraTools) cameraTools.hidden = false;
   const visible = () => { if (!document.hidden) resize(); };
   const contextLost = (event: Event) => {
     event.preventDefault();
-    dispose();
+    contextUnavailable = true;
+    canvas.hidden = true;
+    if(cameraTools) cameraTools.hidden = true;
+    delete root.dataset.v5AtlasReady;
     fallback();
+  };
+  const contextRestored = () => {
+    if(disposed) return;
+    contextUnavailable = false;
+    canvas.hidden = false;
+    delete host.dataset.v5AtlasFallback;
+    root.dataset.v5AtlasReady = "true";
+    if(cameraTools) cameraTools.hidden = false;
+    status.textContent = "3D rendering recovered. The public index and selection are preserved.";
+    resize();
   };
   const pagehide = (event: PageTransitionEvent) => {
     if (!event.persisted) dispose();
@@ -409,6 +457,9 @@ export function mountV5Atlas() {
     canvas.removeEventListener("pointerdown", down);
     canvas.removeEventListener("pointerup", up);
     canvas.removeEventListener("webglcontextlost", contextLost);
+    canvas.removeEventListener("webglcontextrestored", contextRestored);
+    cameraTools?.removeEventListener("click",onCamera);
+    if(cameraTools) cameraTools.hidden = true;
     document.removeEventListener("visibilitychange", visible);
     window.removeEventListener("pagehide", pagehide);
     window.removeEventListener("pageshow", pageshow);
@@ -428,6 +479,7 @@ export function mountV5Atlas() {
   };
   document.addEventListener("visibilitychange", visible);
   canvas.addEventListener("webglcontextlost", contextLost);
+  canvas.addEventListener("webglcontextrestored", contextRestored);
   window.addEventListener("pagehide", pagehide);
   window.addEventListener("pageshow", pageshow);
   root.dataset.v5AtlasReady = "true";
