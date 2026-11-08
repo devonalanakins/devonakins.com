@@ -984,8 +984,8 @@
   transform: none;
   filter: none;
   opacity: 1;
-  -webkit-mask-image: url("/src/v5/assets/portrait-cutout-mask.svg");
-  mask-image: url("/src/v5/assets/portrait-cutout-mask.svg");
+  -webkit-mask-image: url("/v5/portrait-cutout-mask.svg");
+  mask-image: url("/v5/portrait-cutout-mask.svg");
   -webkit-mask-size: 100% 100%;
   mask-size: 100% 100%;
   -webkit-mask-position: center;
