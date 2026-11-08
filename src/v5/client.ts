@@ -1,6 +1,7 @@
 import { publicV5ProjectEvidence } from "./public-evidence.mjs";
 import { publicV5Playback } from "./public-playback.mjs";
 import { publicV5GptCapture, formatPublicGptValue, publicGptCapturedAt } from "./public-gpt-capture.mjs";
+import { publicV5Threads, threadsPublicDate } from "./public-threads.mjs";
 import { publicV5ActivationMode } from "./source-activation.mjs";
 const menu = document.querySelector<HTMLDetailsElement>("[data-mobile-menu]");
 menu?.addEventListener("keydown", (event) => {
@@ -203,6 +204,57 @@ if (field && (publicPreviewButton || activationMode === "automatic")) {
     }));
   };
 
+
+  const threadsStatus = document.querySelector<HTMLElement>("[data-v5-threads-status]");
+  const threadsEmpty = document.querySelector<HTMLElement>("[data-v5-threads-empty]");
+  const threadsFeed = document.querySelector<HTMLElement>("[data-v5-threads-feed]");
+  const threadsPosts = document.querySelector<HTMLUListElement>("[data-v5-threads-posts]");
+  const threadsChecked = document.querySelector<HTMLTimeElement>("[data-v5-threads-checked]");
+  const renderPublicThreads = (snapshot: unknown, at: number) => {
+    const feed = publicV5Threads(snapshot, at);
+    if (threadsStatus) threadsStatus.textContent = feed.connected
+      ? "SOURCE CONNECTED" : "CONNECTION PENDING";
+    if (threadsFeed) threadsFeed.hidden = !feed.connected;
+    if (threadsEmpty) {
+      threadsEmpty.hidden = feed.connected;
+      if (!feed.connected) threadsEmpty.textContent =
+        "Public Threads posts will appear only through a permitted integration after account authorization and publication review.";
+    }
+    if (!feed.connected) {
+      threadsPosts?.replaceChildren();
+      if (threadsChecked) {
+        threadsChecked.textContent = "";
+        threadsChecked.removeAttribute("datetime");
+      }
+      return;
+    }
+    if (threadsChecked && feed.checkedAt) {
+      threadsChecked.dateTime = feed.checkedAt;
+      threadsChecked.textContent = "checked " + threadsPublicDate(feed.checkedAt);
+    }
+    if (!threadsPosts) return;
+    if (!feed.posts.length) {
+      const noPosts=document.createElement("li");
+      noPosts.textContent="No public posts available from the authorized account.";
+      threadsPosts.replaceChildren(noPosts);
+      return;
+    }
+    threadsPosts.replaceChildren(...feed.posts.map(post => {
+      const item=document.createElement("li");
+      const link=document.createElement("a");
+      const date=document.createElement("time");
+      link.href=post.href;
+      link.target="_blank";
+      link.rel="noopener noreferrer";
+      link.textContent=post.text;
+      link.setAttribute("aria-label","Open original Threads post: " + post.text.slice(0,75));
+      date.dateTime=post.publishedAt;
+      date.textContent="Posted " + threadsPublicDate(post.publishedAt);
+      item.append(link,date);
+      return item;
+    }));
+  };
+
   const relativeAge = (asOf: string, now: number) => {
     const seconds = Math.max(0, Math.floor((now - Date.parse(asOf)) / 1000));
     if (seconds < 60) return seconds + "s ago";
@@ -215,6 +267,7 @@ if (field && (publicPreviewButton || activationMode === "automatic")) {
     const publicGpt = projection.available && snapshot && typeof snapshot === "object"
       && "gpt" in snapshot ? (snapshot as { gpt?: unknown }).gpt : null;
     renderPublicGpt(publicGpt, at);
+    renderPublicThreads(projection.available ? snapshot : null, at);
     if (publicPreviewStatus) publicPreviewStatus.textContent = projection.available
       ? "Public V4 source checked · consented evidence only"
       : "Public source unavailable, disabled or stale";
