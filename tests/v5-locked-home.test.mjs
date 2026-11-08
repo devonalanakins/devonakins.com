@@ -79,12 +79,12 @@ test("locked CSS includes responsive screenshot geometry and reduced-motion guar
   assert.match(css, /v5-lock-project-art/);
   assert.match(css, /svg\.v5-lock-project-art\s*\{/);
   assert.match(css, /v5-lock-project-brand/);
-  assert.ok(css.includes('portrait-cutout-mask.svg'));
+  assert.ok(css.includes("clip-path: polygon("), "Portrait must clip without a bundled mask URL");
   assert.match(css, /v5-smoke-cyan/);
   assert.match(css, /v5-smoke-violet/);
   assert.match(css, /v5-smoke-amber/);
   assert.match(css, /prefers-reduced-motion: reduce/);
-  const matte = readFileSync(new URL("../public/v5/portrait-cutout-mask.svg", import.meta.url), "utf8");
+  const matte = readFileSync(new URL("../src/v5/assets/portrait-cutout-mask.svg", import.meta.url), "utf8");
   assert.match(matte, /viewBox="0 0 1122 1402"/);
   assert.match(matte, /<path fill="#fff" d="M/);
   assert.ok(!matte.includes("<image") && !matte.includes("<script") && !matte.includes("href="), "Cutout mask must contain no remote image/script references");
