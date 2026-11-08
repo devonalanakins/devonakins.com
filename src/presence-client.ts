@@ -64,8 +64,7 @@ export function validPresence(value: unknown, at = Date.now()): Presence {
         "Squelch",
         "Anevum",
         "Brandicade",
-        "Vesper",
-        "Knowledge",
+              "Knowledge",
         "DevonAkins.com",
       ].includes(v.project)
     )
