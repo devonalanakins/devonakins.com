@@ -63,6 +63,12 @@ def check_page(page, origin, path, axe):
         explorer = page.locator(".v5-atlas-explorer")
         assert explorer.count() == 1
         assert explorer.locator("[data-v5-atlas-select]").count() == 8
+        if page.viewport_size and page.viewport_size["width"] <= 600:
+            viewport_top = page.locator("#v5-atlas-viewport").evaluate(
+                "element => element.getBoundingClientRect().top"
+            )
+            explorer_top = explorer.evaluate("element => element.getBoundingClientRect().top")
+            assert viewport_top < explorer_top, "Mobile 3D view should precede the directory visually"
         page.wait_for_function(
             "() => document.querySelector('[data-v5-atlas-controls]')?.hidden === false",
             timeout=10000,
