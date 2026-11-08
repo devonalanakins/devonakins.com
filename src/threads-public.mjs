@@ -104,6 +104,13 @@ export function createPublicThreadsReader({
         if(raw.length>32_768)return disconnectedThreads();
         const posts=publicThreadsPosts(JSON.parse(raw),username,clock());
         if(!posts)return disconnectedThreads();
+        // Source-specific revocation or token rollover while an upstream
+        // request is in flight must not publish a response from old authority.
+        if(!threadsApproved(env) || env.THREADS_USER_ACCESS_TOKEN!==token ||
+           env.THREADS_PUBLIC_USERNAME!==username) {
+          memo=null;
+          return disconnectedThreads();
+        }
         const checkedAt=new Date(clock()).toISOString();
         const data={version:1,state:"connected",checkedAt,posts};
         // Key includes current credentials, but neither the key nor token is
