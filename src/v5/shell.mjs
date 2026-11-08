@@ -211,7 +211,24 @@ export function renderV5PublicPage(key, options = {}) {
     .replaceAll('Preview · no source request','Live sources not loaded on this page');
   const topic = options.topic && publicNotes.find(note => note.slug === options.topic);
   if (topic) html=html.replace(/<title>[^<]*<\/title>/,`<title>${esc(topic.title)} — Devon Alan Akins</title>`);
-  html = html.replace('</head>',`<link rel="canonical" href="https://devonakins.com${esc(path)}"></head>`);
+  if (options.pageTitle) html=html.replace(/<title>[^<]*<\/title>/,
+    `<title>${esc(options.pageTitle)} — Devon Alan Akins</title>`);
+  // The full-site candidate publishes real canonical, shareable page metadata.
+  // Use an existing first-party public image; never expose preview artwork,
+  // fictional source readings or private Knowledge documents.
+  const socialTitle = html.match(/<title>([^<]*)<\/title>/)?.[1];
+  if (!socialTitle) throw Error("Public page title missing");
+  const canonical = "https://devonakins.com" + esc(path);
+  const social = `<link rel="canonical" href="${canonical}">` +
+    `<meta property="og:type" content="website">` +
+    `<meta property="og:site_name" content="DevonAkins.com">` +
+    `<meta property="og:title" content="${socialTitle}">` +
+    `<meta property="og:description" content="Original software, writing, and source-linked research by Devon Alan Akins.">` +
+    `<meta property="og:url" content="${canonical}">` +
+    `<meta property="og:image" content="https://devonakins.com/da-social-2400.png">` +
+    `<meta property="og:image:alt" content="Original DevonAkins.com social illustration">` +
+    `<meta name="twitter:card" content="summary_large_image">`;
+  html = html.replace('</head>', social + '</head>');
   if (html.includes('/__v5_preview__/')) throw Error("Preview link in public V5 page");
   return html;
 }
@@ -219,7 +236,7 @@ export function renderV5PublicPage(key, options = {}) {
 export function renderV5ProjectPage(slug) {
   const p=projects.find(p=>p.slug===slug);
   if(!p) throw Error("Unknown public project");
-  let html=renderV5PublicPage("projects",{publicPath:"/work/"+p.slug+"/"});
+  let html=renderV5PublicPage("projects",{publicPath:"/work/"+p.slug+"/",pageTitle:p.title});
   const content=`<header class="v5-page-heading"><p class="v5-eyebrow">${esc(p.category)} · ${esc(p.role)}</p>${lockup(p)}<h1 id="v5-title">${esc(p.title)}</h1><p>${esc(p.summary)}</p></header><div class="v5-reading-layout"><article class="v5-card v5-reading"><p class="v5-card-state">${esc(p.status)}</p><h2>The project</h2><p>${esc(p.description)}</p><h2>Documented scope</h2><p>${esc(p.detail)}</p><h2>Next acceptance step</h2><p>${esc(p.next)}</p></article><aside class="v5-card v5-reading"><h2>Public information</h2><p>${esc(p.boundary)}</p>${p.url?`<a class="v5-text-link" href="${esc(p.url)}" rel="noopener noreferrer">${esc(p.urlLabel||"Public source")}</a>`:""}<a class="v5-text-link" href="/work/">All projects</a><a class="v5-text-link" href="/writing/">Writing</a><a class="v5-text-link" href="/research/">Research</a><a class="v5-text-link" href="/knowledge/">Public Knowledge</a></aside></div>`;
   return html.replace(/<main id="v5-main" tabindex="-1">[\s\S]*?<\/main>/,`<main id="v5-main" tabindex="-1">${content}</main>`)
     .replace(/<title>[^<]*<\/title>/,`<title>${esc(p.title)} — Devon Alan Akins</title>`);
