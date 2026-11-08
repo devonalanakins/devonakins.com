@@ -1,0 +1,57 @@
+{
+  "schema": "devonakins-living-mind-v5/graph-publication-proposals-v1",
+  "state": "PROPOSED_NOT_PUBLISHED",
+  "intendedReviewPr": 77,
+  "disclosure": "These are source-merged public portfolio claims, not independently approved V5 graph milestones or proof of a running project/deployment.",
+  "publicationRule": "Do not import this file in public runtime. Independent owner review must confirm each node and its provenance before explicit promotion into PUBLIC_GRAPH_REVIEWED_RECORDS.",
+  "candidates": [
+    {
+      "id": "publication:squelch/public-portfolio-source",
+      "type": "publication",
+      "label": "Squelch portfolio source",
+      "parent": "project:squelch",
+      "relationId": "relation:squelch-portfolio-documents",
+      "relationType": "documents",
+      "sourcePr": 26,
+      "sourceMergeAt": "2026-11-04T00:26:13.000Z",
+      "sourceMergeCommit": "d7e9c4cd4f599485dd8dbf028f386295e6811623",
+      "scope": "Site portfolio rename, canonical /work/squelch/ and safe redirects. Does not establish a deployed DJ engine."
+    },
+    {
+      "id": "publication:merit/public-portfolio-source",
+      "type": "publication",
+      "label": "Merit portfolio source",
+      "parent": "project:merit",
+      "relationId": "relation:merit-portfolio-documents",
+      "relationType": "documents",
+      "sourcePr": 29,
+      "sourceMergeAt": "2026-11-04T04:59:08.000Z",
+      "sourceMergeCommit": "310b90386bb02749a784e1b57b1d0b17ba01cadf",
+      "scope": "Site source for Merit public portfolio identity. Does not assert a stable framework release."
+    },
+    {
+      "id": "publication:rhen-language/public-portfolio-source",
+      "type": "publication",
+      "label": "Rhen language portfolio source",
+      "parent": "project:rhen-language",
+      "relationId": "relation:rhen-language-portfolio-documents",
+      "relationType": "documents",
+      "sourcePr": 29,
+      "sourceMergeAt": "2026-11-04T04:59:08.000Z",
+      "sourceMergeCommit": "310b90386bb02749a784e1b57b1d0b17ba01cadf",
+      "scope": "Site source identifies Rhen language research distinctly from trading research; no public compiler release implied."
+    },
+    {
+      "id": "publication:mizvo/public-portfolio-source",
+      "type": "publication",
+      "label": "Mizvo portfolio source",
+      "parent": "project:mizvo",
+      "relationId": "relation:mizvo-portfolio-documents",
+      "relationType": "documents",
+      "sourcePr": 34,
+      "sourceMergeAt": "2026-11-05T05:34:39.000Z",
+      "sourceMergeCommit": "4a4922e324b85f41aa0d7f7c40c8f6d15a3eacd4",
+      "scope": "Site source for provisional Mizvo AGPL review-build portfolio entry. No app deployment, staff or customers implied."
+    }
+  ]
+}
