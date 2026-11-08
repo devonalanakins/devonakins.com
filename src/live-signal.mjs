@@ -7,6 +7,7 @@ import {
 import { approvedProjects } from "./presence-preferences.mjs";
 import { publicCloudPresence } from "./cloud-presence-api.mjs";
 import { readPublicGptSnapshot } from "./gpt-snapshots.mjs";
+import { disconnectedThreads } from "./threads-public.mjs";
 
 export const disconnectedGpt = () => ({
   state: "disconnected",
@@ -39,6 +40,7 @@ const enabled = (env, o) =>
 export function createLiveSignal({
   readListening,
   readGithub,
+  readThreads = async () => disconnectedThreads(),
   clock = Date.now,
 }) {
   return async (env = {}) => {
@@ -50,6 +52,7 @@ export function createLiveSignal({
       legacy: null,
       spotify: emptyPlayback(),
       gpt: disconnectedGpt(),
+      threads: disconnectedThreads(),
       recent: [],
     });
     const result = base();
@@ -99,6 +102,10 @@ export function createLiveSignal({
       const capture=env.GPT_SNAPSHOT_PUBLIC_RELEASE_APPROVED==='true'?
         await env.LISTENING_DB.prepare('SELECT revision FROM gpt_capture_state WHERE id=1').first():null;
       result.gpt = await readPublicGptSnapshot(env, clock());
+      // Threads is an independent, owner-authorized read-only source. It
+      // cannot disable unrelated work, GPT or Spotify if the provider fails.
+      try { result.threads = await readThreads(env); }
+      catch { result.threads = disconnectedThreads(); }
       const consent=capture?
         await env.LISTENING_DB.prepare('SELECT p.revision,p.public_enabled,p.private_work,g.revision AS capture_revision FROM presence_state p JOIN gpt_capture_state g ON g.id=p.id WHERE p.id=1').first():
         await presenceRow(env);
