@@ -32,7 +32,7 @@ const icon = (name) => {
   return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + (paths[name] || paths.orbit) + "</svg>";
 };
 const navRail = [
-  ["Live Signal", "signal", "/studio/"],
+  ["Activity", "signal", "/studio/"],
   ["Projects", "layers", "/__v5_preview__/projects/"],
   ["Knowledge", "book", "/__v5_preview__/knowledge/"],
   ["GitHub", "github", "https://github.com/devonalanakins"],
@@ -120,7 +120,7 @@ function terrain() {
     const summary = entry?.summary ||
       "Public Knowledge section preview. Private wiki records are not exposed.";
     const status = entry?.status || "Public preview only";
-    const source = entry ? "Approved public project catalog" : "V5 public section";
+    const source = entry ? "Approved public project catalog" : "Public section";
     const href = entry ? projectHref(entry.slug) : "/__v5_preview__/knowledge/";
     const safe = (value) => escapeHtml(value);
     return '<span class="v5-lock-beam v5-lock-' + color +
@@ -277,7 +277,7 @@ export function renderReferenceHomepage() {
       // faded, purely decorative backdrop behind the isolated portrait.
       // Uses the same first-party asset, not a second subject image.
       '<div class="v5-portrait-source-atmosphere" aria-hidden="true"></div>' +
-      '<nav class="v5-locked-rail" aria-label="Screenshot side navigation">' + rail + '</nav>' +
+      '<nav class="v5-locked-rail" aria-label="Page shortcuts">' + rail + '</nav>' +
       '<div class="v5-locked-portrait"><picture><source media="(max-width: 600px)" type="image/webp" srcset="/src/v5/assets/portrait-anevum-transcosmic-mobile.webp"><img src="/src/v5/assets/portrait-anevum-transcosmic.webp" alt="Cinematic portrait artwork of Devon Akins in a dark eclipse-graphic T-shirt and fitted jeans" width="1122" height="1402" fetchpriority="high" decoding="async"></picture></div>' +
       '<div class="v5-hero-veil" aria-hidden="true"></div>' +
       '<div class="v5-locked-identity"><h1 id="v5-title">Devon Alan Akins</h1>' +
@@ -294,7 +294,7 @@ export function renderReferenceHomepage() {
       '</div>' +
       '<section class="v5-locked-signal" aria-labelledby="v5-lock-signal-title">' +
         '<header class="v5-lock-signal-heading"><div>' + icon("signal") +
-        '<div><h2 id="v5-lock-signal-title">Live Signal <span>V5</span></h2><p>REAL WORK · REAL EVIDENCE</p></div></div><span class="v5-lock-wave" aria-hidden="true"></span></header>' +
+        '<div><h2 id="v5-lock-signal-title">Activity &amp; sources</h2><p>RECORDED · SOURCE-QUALIFIED</p></div></div><span class="v5-lock-wave" aria-hidden="true"></span></header>' +
         '<a class="v5-lock-spotify v5-lock-evidence" data-v5-signal="spotify" href="/listening/">' +
           '<span class="v5-lock-music-tile">' + icon("music") +
             '<img data-v5-spotify-cover alt="" hidden decoding="async" referrerpolicy="no-referrer"></span>' +
@@ -305,12 +305,12 @@ export function renderReferenceHomepage() {
           '<span class="v5-lock-open" aria-hidden="true">' + icon("arrow") + '</span>' +
         '</a>' +
         '<a class="v5-lock-work v5-lock-evidence" data-v5-signal="work" href="/studio/">' +
-          '<span class="v5-lock-panel-title">' + icon("code") + ' Current Work Session <small>NOT VERIFIED</small></span>' +
+          '<span class="v5-lock-panel-title">' + icon("code") + ' Work status <small>NOT VERIFIED</small></span>' +
           '<span class="v5-lock-no-work" data-v5-work-summary>No fresh, verified work session</span>' +
           '<span class="v5-lock-work-hint" data-v5-work-provenance>Editor / GitHub / participating agent sources are separate</span>' +
         '</a>' +
         '<section class="v5-lock-metrics" aria-label="Evidence-based activity metrics">' +
-          '<header class="v5-lock-panel-title">' + icon("signal") + ' Live Metrics <small>PROVENANCE REQUIRED</small></header>' +
+          '<header class="v5-lock-panel-title">' + icon("signal") + ' Recorded &amp; recent <small>CHECK DATES &amp; SOURCES</small></header>' +
           '<div class="v5-lock-metric-grid">' +
             '<a data-v5-signal="gpt" href="/gpt/"><span>GPT CAPTURE</span><strong>—</strong><small>Manual · dated</small></a>' +
             '<a href="/studio/"><span>COMMITS</span><strong>—</strong><small>Verified events</small></a>' +
@@ -321,7 +321,7 @@ export function renderReferenceHomepage() {
       '</section>' +
     '</section>' +
     '<section class="v5-lock-projects" aria-labelledby="v5-lock-projects-title">' +
-      '<div class="v5-lock-heading"><h2 id="v5-lock-projects-title">' + icon("layers") + 'Active Projects</h2><span>Public portfolio · not a claim of live activity</span><a href="/__v5_preview__/projects/">View All Projects →</a></div>' +
+      '<div class="v5-lock-heading"><h2 id="v5-lock-projects-title">' + icon("layers") + 'Selected projects</h2><span>Public portfolio · not a claim of live activity</span><a href="/__v5_preview__/projects/">View All Projects →</a></div>' +
       '<div class="v5-lock-project-grid">' + cards + '</div>' +
     '</section>' +
     '<div class="v5-lock-triple">' +
@@ -343,10 +343,10 @@ export function renderReferenceHomepage() {
         '</div><a href="/gpt/">View GPT profile →</a></section>' +
     '</div>' +
     '<section class="v5-lock-field" aria-labelledby="v5-lock-field-title">' +
-      '<header><h2 id="v5-lock-field-title">The Signal Field</h2><p>A living view of everything in motion — verified events only.</p></header>' +
+      '<header><h2 id="v5-lock-field-title">Systems Map</h2><p>Explore approved public projects and documented relationships.</p></header>' +
       terrain() + fieldInspector() +
       '<p class="v5-lock-art-disclosure">Static project composition · no activity or dependency claims</p>' +
-      '<a class="v5-lock-field-cta" href="/__v5_preview__/field/">Explore the Signal Field →</a>' +
+      '<a class="v5-lock-field-cta" href="/__v5_preview__/field/">Explore the systems map →</a>' +
     '</section>' +
   '</div>';
 }
