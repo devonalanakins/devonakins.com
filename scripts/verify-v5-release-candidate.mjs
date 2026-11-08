@@ -17,7 +17,7 @@ assert.match(html, /data-v5-signal-mode="released-v5"/);
 assert.match(html, /data-v5-exact-reference="2026-11-07"/);
 assert.match(html, /name="robots" content="index,follow,max-image-preview:large"/);
 assert.doesNotMatch(html, /__v5_preview__|DESIGN PREVIEW|data-v5-preview-connect|noindex/i);
-assert.match(html, /The Signal Field/);
+assert.match(html, /Systems Map/);
 assert.match(html, /No fresh, verified work session/);
 assert.match(html, /No verified inter-project dependencies are published here/);
 assert.match(html, /<script type="module" crossorigin src="\/assets\//);
