@@ -1211,7 +1211,33 @@ a[aria-current="page"] {
 .v5-camera-controls {position:absolute;bottom:64px;left:12px;right:12px;z-index:5;display:flex;flex-wrap:wrap;gap:5px;pointer-events:auto}
 .v5-camera-controls[hidden] {display:none}
 .v5-camera-controls button {font:inherit;font-size:11px;min-height:44px;border-radius:7px;border:1px solid var(--v5-border);background:#08131fef;color:var(--v5-ink);padding:8px;cursor:pointer}
-@media(max-width:600px){.v5-camera-controls{bottom:65px;gap:3px}.v5-camera-controls button{font-size:10px;min-height:44px;padding:5px}}
+/* The desktop keeps full button names; phone users get compact, accessible
+   icon controls in one row, without obscuring the scene or the semantic index. */
+.v5-camera-icon { display: none; }
+@media (max-width: 600px) {
+  .v5-page-field .v5-atlas-node-label { display: none !important; }
+  .v5-page-field .v5-atlas-legend { display: none; }
+  .v5-camera-controls {
+    bottom: 12px; left: 10px; right: 10px; min-height: 50px;
+    display: flex; flex-wrap: nowrap; gap: 4px;
+    padding: 3px 1px; overflow-x: auto; overflow-y: hidden;
+    overscroll-behavior-x: contain; scrollbar-width: thin;
+    scroll-snap-type: x proximity;
+  }
+  .v5-camera-controls button {
+    display: grid; place-items: center; flex: 0 0 44px;
+    width: 44px; height: 44px; min-height: 44px;
+    padding: 10px; border-radius: 999px;
+    background: #082335eb; border-color: #42869a;
+    scroll-snap-align: center;
+  }
+  .v5-camera-icon {
+    display: block; width: 21px; height: 21px;
+    stroke: currentColor; stroke-width: 1.9; fill: none;
+    stroke-linecap: round; stroke-linejoin: round;
+  }
+  .v5-camera-text { display: none; }
+}
 
 /* Sidebar content scrolls independently instead of stretching the atlas beyond the viewport. */
 @media (min-width:1101px) {

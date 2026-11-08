@@ -106,6 +106,19 @@ function renderExplorer(layout) {
       roots.length + ' approved public identities · no live connection implied</p>' +
   '</aside>';
 }
+// Inline icon geometry has no external fonts or scripts. Controls retain
+// accessible names and their existing data-v5-camera actions.
+const CAMERA_ICONS = Object.freeze({
+  left: '<path d="M15 6l-6 6 6 6M20 12H9"/>',
+  right: '<path d="m9 6 6 6-6 6M4 12h11"/>',
+  up: '<path d="m6 15 6-6 6 6M12 20V9"/>',
+  down: '<path d="m6 9 6 6 6-6M12 4v11"/>',
+  in: '<circle cx="10" cy="10" r="6"/><path d="M10 7v6M7 10h6M15 15l6 6"/>',
+  out: '<circle cx="10" cy="10" r="6"/><path d="M7 10h6M15 15l6 6"/>',
+  focus: '<circle cx="12" cy="12" r="4"/><path d="M12 2v5M12 17v5M2 12h5M17 12h5"/>',
+  reset: '<path d="M4 11a8 8 0 1 1 2 6M4 4v7h7"/>',
+});
+
 /** Gated, SEO-disabled preview only. The homepage and V4 never use this. */
 export function renderV5Atlas({ requestedDate = null, now = Date.now() } = {}) {
   const selection = selectPublicGraphDate(requestedDate, now);
@@ -127,7 +140,10 @@ export function renderV5Atlas({ requestedDate = null, now = Date.now() } = {}) {
       '</div>' +
       '<div class="v5-camera-controls" data-v5-camera-controls hidden role="group" aria-label="3D camera controls">' +
       [['left','Orbit left'],['right','Orbit right'],['up','Orbit up'],['down','Orbit down'],['in','Zoom in'],['out','Zoom out'],['focus','Focus selected'],['reset','Reset view']].map(([action,label]) =>
-        '<button type="button" data-v5-camera="'+action+'">'+label+'</button>').join('') +
+        '<button type="button" data-v5-camera="'+action+'" aria-label="'+label+'">' +
+          '<svg class="v5-camera-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">' +
+            CAMERA_ICONS[action] + '</svg>' +
+          '<span class="v5-camera-text">'+label+'</span></button>').join('') +
     '</div>' +
     '<div class="v5-atlas-label-layer" data-v5-atlas-label-layer aria-hidden="true"></div>' +
       '<div class="v5-atlas-legend" aria-hidden="true"><span>APPROVED PUBLIC IDENTITIES</span>' +
