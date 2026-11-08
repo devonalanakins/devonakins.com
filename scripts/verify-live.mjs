@@ -227,7 +227,7 @@ for (const [path, title] of portfolio) {
   }
   if (path === "/work/vesper/") {
     assert.match(page, /not a live brokerage service/, "Vesper research is explicitly not live");
-    assert.match(page, /github\.com\/devonalanakins\/vesper/, "Vesper source repository");
+    assert.doesNotMatch(page, /href="https:\/\/github\.com\/devonalanakins\/vesper(?:["\/?#])/, "Private Vesper source must not appear as a link");
   }
   if (path === "/work/mizvo/") {
     assert.match(page, /AGPL review build · not deployed/, "Mizvo is not a live service");
