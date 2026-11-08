@@ -1766,27 +1766,30 @@
 @media (max-width:600px) {
   .v5-locked-home .v5-locked-hero {
     height:auto;
-    /* Intrinsic content still determines final height on narrow/wrapped phones.
-       Remove the 605px artificial blank band before the five real source cells. */
-    min-height:520px;
+    /* Content-driven hero: portrait is decorative, source status is useful.
+       Keep the actual identity/actions and never force a blank 520px panel. */
+    min-height:0;
     overflow:hidden;
-    padding:0 16px 16px;
+    padding:0 16px 10px;
   }
   .v5-locked-home .v5-locked-hero .v5-locked-portrait {
-    left:-12%;top:-35px;
-    width:128%;height:330px;
-    background-position:50% 22%;
+    /* Keep the approved cap photograph, but frame it as an atmospheric
+       portrait, not an edge-to-edge face across the whole first viewport. */
+    left:24%;top:-6px;
+    width:73%;height:205px;
+    background-size:auto 300px;
+    background-position:center top;
     background-image:url("/src/v5/assets/cap-hero-mobile.webp");
-    opacity:.91;
-    -webkit-mask-image:linear-gradient(0deg,transparent 0%,#000 34%,#000 74%,transparent 100%);
-    mask-image:linear-gradient(0deg,transparent 0%,#000 34%,#000 74%,transparent 100%);
+    opacity:.92;
+    -webkit-mask-image:linear-gradient(0deg,transparent 0%,#000 32%,#000 80%,transparent 100%);
+    mask-image:linear-gradient(0deg,transparent 0%,#000 32%,#000 80%,transparent 100%);
   }
   .v5-locked-home .v5-locked-hero .v5-locked-identity {
     position:relative;
     left:auto;top:auto;
     width:100%;
     max-width:100%;
-    padding:285px 2px 0;
+    padding:158px 2px 0;
   }
   .v5-locked-home .v5-locked-identity .v5-locked-roles {
     font-size:9px;letter-spacing:.1em;line-height:1.55;
@@ -1820,6 +1823,17 @@
   .v5-locked-home .v5-home-source-card small {font-size:10px;}
   .v5-locked-home .v5-home-activity-grid {
     grid-template-columns:1fr;gap:10px;padding:0 12px 18px;
+  }
+}
+@media (max-width:340px) {
+  .v5-locked-home .v5-locked-hero .v5-locked-portrait {
+    left:27%;
+    width:70%;
+    height:185px;
+    background-size:auto 268px;
+  }
+  .v5-locked-home .v5-locked-hero .v5-locked-identity {
+    padding-top:137px;
   }
 }
 @media (prefers-reduced-motion:reduce) {
