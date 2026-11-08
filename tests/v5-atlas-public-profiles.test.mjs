@@ -75,8 +75,12 @@ test("gated atlas markup includes source-qualified contextual inspector and no-J
   const html = renderV5Atlas({ now: NOW });
   assert.match(html, /data-v5-atlas-spotlight/);
   assert.match(html, /aria-labelledby="v5-atlas-spotlight-heading"/);
-  assert.equal((html.match(/<template data-v5-atlas-profile=/g) || []).length, 8);
+  assert.equal((html.match(/<template data-v5-atlas-profile=/g) || []).length, 12);
   assert.equal((html.match(/class="v5-atlas-native-summary"/g) || []).length, 8);
+  assert.match(html, /data-v5-atlas-profile="publication:mizvo\/public-portfolio-source"/);
+  assert.match(html, /Publication provenance/);
+  assert.match(html, /Source commit/);
+  assert.match(html, /DOCUMENTED STRUCTURE · NOT LIVE TELEMETRY/);
   assert.match(html, /data-v5-atlas-profile="project:mizvo"/);
   assert.match(html, /AGPL review build/);
   assert.match(html, /CURATED PORTFOLIO STATUS · NOT LIVE TELEMETRY/);

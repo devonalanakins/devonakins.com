@@ -54,6 +54,37 @@ function renderProfileTemplates(profiles) {
     '</template>'
   ).join("");
 }
+/**
+ * Review-backed publication inspector templates are derived only from the
+ * previously validated static graph and its first-party publication records.
+ * No user payloads, arbitrary URLs, repositories or live activity are loaded.
+ */
+function renderReviewedTemplates(layout, sources) {
+  const byId = new Map(layout.nodes.map(node => [node.id, node]));
+  return layout.nodes.filter(node => node.parent !== null).map(node => {
+    const source = sources.get(node.id), parent = byId.get(node.parent);
+    if (!source || !parent || typeof source.evidenceUrl !== "string" ||
+        typeof source.reviewUrl !== "string") return "";
+    return '<template data-v5-atlas-profile="' + esc(node.id) + '">' +
+      '<article class="v5-atlas-profile" data-v5-atlas-profile-view="' + esc(node.id) + '">' +
+        '<p class="v5-eyebrow">REVIEWED PUBLIC SOURCE · HISTORICAL</p>' +
+        '<h3>' + esc(node.label) + '</h3>' +
+        '<p class="v5-atlas-profile-context">DOCUMENTED STRUCTURE · NOT LIVE TELEMETRY</p>' +
+        '<p class="v5-atlas-profile-status">' +
+          (node.state === "retired" ? "Retired historical record." :
+            "Published portfolio-source record.") + '</p>' +
+        '<h4>Public context</h4><p>This source records a portfolio publication for ' +
+          esc(parent.label) + '. A source merge does not demonstrate a deployed application, ' +
+          'running reporter, verified feature or external dependency.</p>' +
+        '<h4>Publication provenance</h4><p class="v5-atlas-profile-proof">' +
+          '<a class="v5-atlas-profile-source" href="' + esc(source.evidenceUrl) +
+            '" rel="noopener noreferrer">Source commit</a> · ' +
+          '<a class="v5-atlas-profile-source" href="' + esc(source.reviewUrl) +
+            '" rel="noopener noreferrer">Publication review</a></p>' +
+      '</article></template>';
+  }).join("");
+}
+
 function renderExplorer(layout) {
   const roots = layout.nodes.filter(node => node.parent === null);
   const projects = roots.filter(node => node.type === "project");
@@ -159,6 +190,7 @@ export function renderV5Atlas({ requestedDate = null, now = Date.now() } = {}) {
         '</div>' +
       '</section>' +
       renderProfileTemplates(profiles) +
+      renderReviewedTemplates(layout, sources) +
       '<p class="v5-eyebrow">THE STRUCTURAL MAP</p>' +
       '<h2>Explore the structure.</h2>' +
       '<p data-v5-atlas-status role="status">3D rendering is optional. The complete public index works without JavaScript or graphics.</p>' +

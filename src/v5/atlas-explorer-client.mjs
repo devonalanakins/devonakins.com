@@ -42,7 +42,7 @@ export function mountPublicAtlasExplorer() {
     spotlight.dataset.v5AtlasSelected = id;
   };
   if (!section || !search || !count || !spotlight ||
-      profileTemplates.size !== 8 ||
+      profileTemplates.size !== graph.nodes.length ||
       checkboxes.length !== ATLAS_DISPLAY_LAYERS.length ||
       !ATLAS_DISPLAY_LAYERS.every(key => checkboxes.some(c => c.dataset.v5AtlasLayer === key)))
     return () => {};

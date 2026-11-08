@@ -129,6 +129,16 @@ def check_page(page, origin, path, axe):
             "() => document.querySelector('[data-v5-atlas-node-id=\"project:mizvo\"]')?.open === false",
             timeout=10000,
         )
+        # New publication children must replace the inspector's previous root
+        # profile with their own pinned source and review provenance.
+        page.locator("[data-v5-atlas-node-id='publication:mizvo/public-portfolio-source'] summary").click()
+        page.wait_for_function(
+            "() => document.querySelector('[data-v5-atlas-spotlight]')?.dataset.v5AtlasSelected === 'publication:mizvo/public-portfolio-source'",
+            timeout=10000,
+        )
+        assert "Published portfolio-source record" in spotlight.inner_text()
+        assert spotlight.locator('a[href="https://github.com/devonalanakins/devonakins.com/commit/4a4922e324b85f41aa0d7f7c40c8f6d15a3eacd4"]').count() == 1
+        assert spotlight.locator('a[href="https://github.com/devonalanakins/devonakins.com/pull/77"]').count() == 1
         # Sidebar selection uses the same safe curated inspector without
         # requiring GPU picking or a second network request.
         explorer.locator('[data-v5-atlas-select="project:anevum"]').click()
