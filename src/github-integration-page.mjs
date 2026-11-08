@@ -6,7 +6,7 @@ export function renderGithubIntegrationOwner() {
 <title>Repository connections — Devon Alan Akins</title>
 <link rel="stylesheet" href="/v2/listening-owner.css"><link rel="stylesheet" href="/v2/github-owner.css">
 </head><body><a class="skip" href="#main">Skip to repositories</a>
-<header class="topbar"><a class="wordmark" href="/">DEVON ALAN AKINS <span>/ PRIVATE CONTROL ROOM</span></a><a class="return" href="/owner/presence/">LIVE SIGNAL CONTROLS ↗</a></header>
+<header class="topbar"><a class="wordmark" href="/">DEVON ALAN AKINS <span>/ PRIVATE CONTROL ROOM</span></a><a class="return" href="/owner/presence/">SHARING CONTROLS ↗</a></header>
 <main class="container" id="main"><div class="eyebrow">GITHUB / PRIVATE REPOSITORY INVENTORY</div>
 <h1>Connected work.<br><em>Chosen by you.</em></h1>
 <p class="intro">One authorized GitHub App can discover selected repositories and report genuine workflow activity. Discovery stays private. Each public project and workflow source needs your approval before visitors can see it.</p>
