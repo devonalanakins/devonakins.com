@@ -29,6 +29,11 @@ test("full-site candidate publishes real sections and a dedicated atlas without 
       /__v5_preview__|DESIGN PREVIEW|noindex|in preparation/,
     );
     assert.match(html, /data-v5-signal-mode="released-v5"/);
+    assert.ok(html.includes('property="og:url" content="https://devonakins.com' + path + '"'),
+      key + " social canonical must match its published route");
+    assert.ok(html.includes('property="og:image" content="https://devonakins.com/da-social-2400.png"'));
+    assert.ok(html.includes('name="twitter:card" content="summary_large_image"'));
+    assert.match(html, /property="og:title"/);
   }
   const fullHome = renderV5PublicPage("home");
   // A complete V5 release must never strand homepage navigation on V4.
@@ -79,6 +84,9 @@ test("all already-public portfolio entries preserve their actual scope and links
       assert.ok(html.includes(escaped), p.slug + ": " + text);
     }
     if (p.url) assert.ok(html.includes('href="' + p.url + '"'));
+    assert.ok(html.includes('property="og:url" content="https://devonakins.com/work/' + p.slug + '/"'));
+    assert.ok(html.includes('property="og:title" content="' +
+      p.title.replaceAll("&", "&amp;").replaceAll("'", "&#39;") + ' — Devon Alan Akins"'));
     assert.equal((html.match(/<h1\b/g) ?? []).length, 1);
     assert.doesNotMatch(html, /__v5_preview__/);
   }
