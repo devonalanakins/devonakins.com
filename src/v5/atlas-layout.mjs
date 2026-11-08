@@ -53,6 +53,10 @@ export function projectV5Atlas(frame) {
       roots.length < ROOT_IDS.length || roots.length > 96)
     return { version: V5_ATLAS_LAYOUT_VERSION, valid: false, revision: 0,
       nodes: [], links: [] };
+  // A forged duplicate root is not an additional approved public identity.
+  if (roots.filter(node => ROOT_SET.has(node?.id)).length !== ROOT_IDS.length)
+    return { version: V5_ATLAS_LAYOUT_VERSION, valid: false, revision: 0,
+      nodes: [], links: [] };
   for (const [id, position] of Object.entries(POSITIONS)) {
     const node = roots.find(n => n?.id === id && n?.state === "catalogued" &&
       n.parent === null &&
@@ -80,10 +84,13 @@ export function projectV5Atlas(frame) {
       ? parent.id.slice("project:".length)
       : typeof parent?.id === "string" ? CHILD_ID.exec(parent.id)?.[2] : null;
     if (!identity || !NODE_TYPES.has(node.type) || node.type !== identity[1] ||
-        !TITLE.test(node.label) || entries.has(node.id) ||
+        typeof node.label !== "string" || !TITLE.test(node.label) ||
+        entries.has(node.id) ||
         !["published", "retired"].includes(node.state) ||
         !parent || parentSlug !== identity[2] ||
         (node.state === "published" && parent.state === "retired") ||
+        typeof node.reviewUrl !== "string" ||
+        typeof node.evidenceUrl !== "string" ||
         !REVIEW_URL.test(node.reviewUrl) || !EVIDENCE_URL.test(node.evidenceUrl)) {
       // Never display an unexplained or unapproved relationship.
       return { version: V5_ATLAS_LAYOUT_VERSION, valid: false, revision: 0,
@@ -119,6 +126,8 @@ export function projectV5Atlas(frame) {
         !entries.has(relation.from) || !entries.has(relation.to) ||
         entries.get(relation.from).state === "retired" ||
         entries.get(relation.to).state === "retired" ||
+        typeof relation.reviewUrl !== "string" ||
+        typeof relation.evidenceUrl !== "string" ||
         !REVIEW_URL.test(relation.reviewUrl) ||
         !EVIDENCE_URL.test(relation.evidenceUrl)) {
       return { version: V5_ATLAS_LAYOUT_VERSION, valid: false, revision: 0,
