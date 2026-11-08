@@ -199,6 +199,40 @@ function renderHeroAtmosphere() {
     '<span class="v5-hero-smoke v5-hero-smoke--cyan"></span>' +
     '<span class="v5-hero-smoke v5-hero-smoke--violet"></span>' +
     '<span class="v5-hero-smoke v5-hero-smoke--amber"></span>' +
+    // Slow, decorative, volumetric plumes. The fractal curl is static; only
+    // small compositor transforms drift. None of this consumes live data.
+    '<svg class="v5-hero-clouds" viewBox="0 0 1200 520" preserveAspectRatio="xMidYMid slice" focusable="false" aria-hidden="true">' +
+      '<defs>' +
+        '<linearGradient id="v5-cloud-cyan" gradientUnits="userSpaceOnUse" x1="45" y1="140" x2="635" y2="370">' +
+          '<stop stop-color="#22e5ed" stop-opacity="0"/><stop offset=".3" stop-color="#2ee2ec" stop-opacity=".52"/>' +
+          '<stop offset=".68" stop-color="#62f1f1" stop-opacity=".43"/><stop offset="1" stop-color="#37c7e4" stop-opacity="0"/>' +
+        '</linearGradient>' +
+        '<linearGradient id="v5-cloud-violet" gradientUnits="userSpaceOnUse" x1="610" y1="30" x2="1230" y2="340">' +
+          '<stop stop-color="#e655f5" stop-opacity="0"/><stop offset=".26" stop-color="#b850d9" stop-opacity=".57"/>' +
+          '<stop offset=".72" stop-color="#d870ec" stop-opacity=".46"/><stop offset="1" stop-color="#9d53d5" stop-opacity="0"/>' +
+        '</linearGradient>' +
+        '<linearGradient id="v5-cloud-ember" gradientUnits="userSpaceOnUse" x1="320" y1="390" x2="980" y2="100">' +
+          '<stop stop-color="#ed9760" stop-opacity="0"/><stop offset=".51" stop-color="#ffbb7f" stop-opacity=".29"/>' +
+          '<stop offset="1" stop-color="#e56e9a" stop-opacity="0"/>' +
+        '</linearGradient>' +
+        '<filter id="v5-cloud-curl" x="-25%" y="-65%" width="150%" height="230%" color-interpolation-filters="sRGB">' +
+          '<feTurbulence type="fractalNoise" baseFrequency=".008 .018" numOctaves="2" seed="11" result="cloudNoise"/>' +
+          '<feDisplacementMap in="SourceGraphic" in2="cloudNoise" scale="47" xChannelSelector="R" yChannelSelector="G"/>' +
+          '<feGaussianBlur stdDeviation="8"/>' +
+        '</filter>' +
+      '</defs>' +
+      '<g class="v5-hero-cloud v5-hero-cloud--cyan" filter="url(#v5-cloud-curl)" fill="none" stroke="url(#v5-cloud-cyan)" stroke-linecap="round">' +
+        '<path d="M -90 242 C 42 122 148 320 262 204 S 445 87 570 228 S 722 363 804 262" stroke-width="88" opacity=".57"/>' +
+        '<path d="M -72 356 C 91 224 208 407 354 278 S 559 193 675 288" stroke-width="38" opacity=".61"/>' +
+      '</g>' +
+      '<g class="v5-hero-cloud v5-hero-cloud--violet" filter="url(#v5-cloud-curl)" fill="none" stroke="url(#v5-cloud-violet)" stroke-linecap="round">' +
+        '<path d="M 520 35 C 648 189 735 -41 906 153 S 1082 318 1325 115" stroke-width="102" opacity=".6"/>' +
+        '<path d="M 706 387 C 815 231 920 402 1066 239 S 1240 133 1330 260" stroke-width="52" opacity=".48"/>' +
+      '</g>' +
+      '<g class="v5-hero-cloud v5-hero-cloud--ember" filter="url(#v5-cloud-curl)" fill="none" stroke="url(#v5-cloud-ember)" stroke-linecap="round">' +
+        '<path d="M 348 477 C 432 281 600 433 668 238 S 827 99 942 136" stroke-width="52" opacity=".33"/>' +
+      '</g>' +
+    '</svg>' +
     '<svg class="v5-hero-streams" viewBox="0 0 1200 520" preserveAspectRatio="xMidYMid slice" aria-hidden="true" focusable="false">' +
       '<defs>' +
         '<linearGradient id="v5-hero-stream-cyan" x1="0" y1="1" x2="1" y2="0">' +
