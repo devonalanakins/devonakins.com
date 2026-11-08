@@ -97,6 +97,13 @@ test("all already-public portfolio entries preserve their actual scope and links
     assert.doesNotMatch(html, /__v5_preview__/);
   }
   assert.throws(() => renderV5ProjectPage("private-unapproved"));
+  // The approved IdeaFlow vector is ideaflow-mark.svg. A dynamically
+  // constructed ideaflow.svg path silently produced a 404 on the real V5
+  // Work page despite passing the navigation-only candidate tests.
+  const ideaFlow = renderV5ProjectPage("ideaflow");
+  assert.ok(ideaFlow.includes('src="/v2/identity/ideaflow-mark.svg"'),
+    "V5 must retain the existing IdeaFlow vector asset");
+  assert.ok(!ideaFlow.includes('src="/v2/identity/ideaflow.svg"'));
 });
 test("built field template supports real HTTP no-JS date replay with no-store and same-origin form CSP", async () => {
   const assets = {

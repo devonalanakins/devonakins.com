@@ -62,6 +62,18 @@ test("manual V5 release path stays opt-in, exact-commit gated and preserves V4 d
     "github.ref == 'refs/heads/main'",
     "wrangler@4.151.3 deploy",
   ]) assert.ok(workflow.includes(expected),"Protected deployment missing: "+expected);
+  // The production V5 workflow must run legacy V4 regression assertions on
+  // a V4-built artifact, then rebuild and inspect the actual V5 artifact.
+  // Running all tests against V5 silently turned 13 V4-only checks into
+  // false failures; skipping legacy tests would conceal real regressions.
+  const legacyBuild=workflow.indexOf("V5_PUBLIC_SITE_CANDIDATE=0 npm run build");
+  const legacyTest=workflow.indexOf("V5_PUBLIC_SITE_CANDIDATE=0 npm test");
+  const v5Build=workflow.indexOf("V5_PUBLIC_SITE_CANDIDATE=1 npm run build");
+  const v5Acceptance=workflow.indexOf("node scripts/verify-v5-site-candidate.mjs");
+  assert.ok(legacyBuild>=0&&legacyBuild<legacyTest&&legacyTest<v5Build&&v5Build<v5Acceptance,
+    "V5 cutover must verify V4 first and then the selected V5 build");
+  assert.match(workflow,/if \[ "\$V5_PUBLIC_SITE_CANDIDATE" = '1' \]; then/,
+    "V5 rebuild must remain behind explicit variant selection");
   assert.equal(v5ReleaseRoutes.length,22,"new repositories stay outside first V5 release");
 });
 test("V5 read-only production verifier attests exact SHA, public routes and historical replay",async()=>{

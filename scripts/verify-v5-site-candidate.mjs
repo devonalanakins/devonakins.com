@@ -33,6 +33,18 @@ for (const path of routes) {
       path + " links to missing " + target,
     );
   }
+  // Also check referenced images in the actual compiled Worker asset table.
+  // Navigation-only checks previously missed a broken first-party IdeaFlow
+  // logo; WebKit and Chromium can render an inaccessible image without
+  // producing a failing navigation assertion.
+  for (const match of html.matchAll(/<img\b[^>]*\bsrc="(\/[^"?#]+)(?:[?#][^"]*)?"/g)) {
+    const target = match[1];
+    assert.ok(assets[target], path + " image missing " + target);
+  }
+  for (const match of html.matchAll(/<source\b[^>]*\bsrcset="(\/[^" ,?#]+)(?:[?#][^"]*)?"/g)) {
+    const target = match[1];
+    assert.ok(assets[target], path + " responsive image missing " + target);
+  }
 }
 for (const path of [
   "/studio/",
