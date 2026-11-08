@@ -40,8 +40,11 @@ test("full-site candidate publishes real sections and a dedicated atlas without 
   for (const href of ["/knowledge/", "/writing/", "/signal-field/"]) {
     assert.ok(fullHome.includes('href="' + href + '"'), href);
   }
-  const rail = fullHome.match(/<nav class="v5-locked-rail"[^>]*>([\\s\\S]*?)<\\/nav>/)?.[1];
-  assert.ok(rail, "The approved homepage must retain its navigation rail");
+  const railStart = fullHome.indexOf('<nav class="v5-locked-rail"');
+  const railEnd = fullHome.indexOf("</nav>", railStart);
+  assert.ok(railStart >= 0 && railEnd > railStart,
+    "The approved homepage must retain its navigation rail");
+  const rail = fullHome.slice(railStart, railEnd);
   for (const href of ["/knowledge/", "/writing/"])
     assert.ok(rail.includes('href="' + href + '"'), "V5 primary rail: " + href);
   assert.ok(!rail.includes('href="/source/"') &&
