@@ -86,12 +86,36 @@ def check_page(page, origin, path, axe):
             timeout=10000,
         )
         assert page.locator("[data-v5-atlas-node-id='project:mizvo'] a").get_attribute("href") == "/work/mizvo/"
+        spotlight = page.locator("[data-v5-atlas-spotlight]")
+        page.wait_for_function(
+            "() => document.querySelector('[data-v5-atlas-spotlight]')?.dataset.v5AtlasSelected === 'project:mizvo'",
+            timeout=10000,
+        )
+        assert "AGPL review build" in spotlight.inner_text()
+        assert "NOT LIVE TELEMETRY" in spotlight.inner_text()
+        assert spotlight.locator('a[href="https://github.com/devonalanakins/mizvo"]').count() == 1
         # A status update must not swallow the second native toggle, either.
         page.locator("[data-v5-atlas-node-id='project:mizvo'] summary").click()
         page.wait_for_function(
             "() => document.querySelector('[data-v5-atlas-node-id=\"project:mizvo\"]')?.open === false",
             timeout=10000,
         )
+        # Sidebar selection uses the same safe curated inspector without
+        # requiring GPU picking or a second network request.
+        explorer.locator('[data-v5-atlas-select="project:anevum"]').click()
+        page.wait_for_function(
+            "() => document.querySelector('[data-v5-atlas-spotlight]')?.dataset.v5AtlasSelected === 'project:anevum'",
+            timeout=10000,
+        )
+        assert "Anevum" in spotlight.inner_text()
+        assert "anevum.com" in spotlight.locator("a").get_attribute("href")
+        search.fill("Merit")
+        page.wait_for_function(
+            "() => !document.querySelector('[data-v5-atlas-spotlight]')?.dataset.v5AtlasSelected",
+            timeout=10000,
+        )
+        assert "Select a public system" in spotlight.inner_text()
+        search.fill("")
         canvas = page.locator("[data-v5-atlas-host] canvas")
         if canvas.count():
             assert canvas.get_attribute("aria-hidden") == "true"
@@ -360,6 +384,10 @@ def main():
                 assert page.locator("[data-v5-atlas-select]").count() == 8
                 page.locator("[data-v5-atlas-node-id='project:mizvo'] summary").click()
                 assert page.locator("[data-v5-atlas-node-id='project:mizvo']").get_attribute("open") is not None
+                assert "engineering studio" in page.locator(
+                    "[data-v5-atlas-node-id='project:mizvo'] .v5-atlas-native-summary"
+                ).inner_text()
+                assert "Select a public system" in page.locator("[data-v5-atlas-spotlight]").inner_text()
                 assert page.locator(".v5-graph-node").count() == 8
                 page.locator("#v5-graph-date").fill("2026-11-06")
                 page.locator(".v5-graph-date-form button").click()
