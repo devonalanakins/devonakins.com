@@ -58,6 +58,25 @@ def check_page(page, origin, path, axe):
     assert response.headers.get("cache-control") == "no-store"
     assert page.locator("h1").count() == 1
     if path == "field/":
+        assert page.locator("body").get_attribute("class") == "v5-page-field"
+        # The field page alone should follow the approved edge-to-edge visual
+        # reference at desktop sizes; keep a semantic, accessible h1.
+        assert page.locator("h1#v5-title").count() == 1
+        if page.viewport_size and page.viewport_size["width"] >= 1200:
+            panels = page.locator(".v5-atlas-shell").evaluate("""element => {
+                const outer=element.getBoundingClientRect();
+                const left=element.querySelector('.v5-atlas-explorer').getBoundingClientRect();
+                const center=element.querySelector('.v5-atlas-viewport').getBoundingClientRect();
+                const right=element.querySelector('.v5-atlas-index').getBoundingClientRect();
+                return { width: outer.width, centerFraction: center.width/outer.width,
+                    aligned: Math.abs(left.right-center.left)<3 &&
+                        Math.abs(center.right-right.left)<3,
+                    viewHeight: center.height };
+            }""")
+            assert panels["width"] >= page.viewport_size["width"] * .94
+            assert panels["centerFraction"] > .49
+            assert panels["viewHeight"] >= 620
+            assert panels["aligned"], "Explorer, volumetric scene and inspector must align"
         atlas = page.locator("[data-v5-atlas]")
         assert atlas.count() == 1
         assert atlas.get_attribute("data-v5-atlas-revision") == "0"
