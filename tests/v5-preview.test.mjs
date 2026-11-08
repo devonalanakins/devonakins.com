@@ -109,8 +109,13 @@ test("V5 field history date works through server-side GET without JavaScript or 
   assert.match(archived.headers["Cache-Control"], /no-store/);
   assert.match(archived.headers["X-Robots-Tag"], /noindex/);
   assert.match(archived.body, /value="2026-11-06"/);
-  assert.match(archived.body, /data-v5-graph-revision="0"/);
-  assert.match(archived.body, /No reviewed structural events yet/);
+  assert.match(archived.body, /data-v5-graph-revision="8"/);
+  assert.match(archived.body, /Mizvo portfolio source/);
+  assert.match(archived.body, /Squelch portfolio source/);
+  const beforeMerges = await get(PREVIEW_ROOT + "field/?asOf=2026-11-03");
+  assert.equal(beforeMerges.statusCode, 200);
+  assert.match(beforeMerges.body, /data-v5-graph-revision="0"/);
+  assert.match(beforeMerges.body, /No reviewed structural events yet/);
   assert.doesNotMatch(archived.body, /fetch\(|\/api\/activity\/v4|private-client/);
   const malformed = await get(PREVIEW_ROOT + "field/?asOf=%3Cscript%3E");
   assert.equal(malformed.statusCode, 200);

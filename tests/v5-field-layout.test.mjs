@@ -13,7 +13,7 @@ test("reference-scaled page class applies to the Signal Field and no other V5 pa
   assert.match(field, /<header class="v5-page-heading">/);
   assert.match(field, /id="v5-title"/);
   assert.match(field, /aria-label="Reviewed public systems atlas"/);
-  assert.match(field, /data-v5-graph-revision="0"/);
+  assert.match(field, /data-v5-graph-revision="8"/);
   assert.match(field, /noindex,nofollow,noarchive/);
   for (const page of ["home", "projects", "writing", "research", "knowledge", "about"]) {
     assert.doesNotMatch(renderV5Preview(page, { now }), /v5-page-field/, page);
@@ -31,13 +31,16 @@ test("desktop styling scopes layout to field and keeps accessible native source 
   assert.match(atlas, /data-v5-atlas-node-id="project:mizvo"/);
   assert.match(atlas, /role="status"/);
   assert.equal((atlas.match(/data-v5-atlas-select=/g) || []).length, 8);
-  assert.equal((atlas.match(/<details data-v5-atlas-node-id=/g) || []).length, 8);
+  assert.equal((atlas.match(/<details data-v5-atlas-node-id=/g) || []).length, 12);
+  assert.match(atlas, /<summary>Mizvo portfolio source<\/summary>/);
 });
 
 test("full-bleed layout introduces no public source connections, fabricated statistics or telemetry", () => {
   const field = renderV5Preview("field", { now });
   assert.match(field, /Decorative towers, halos and points are artwork/);
-  assert.match(field, /No reviewed structural events yet/);
+  assert.match(field, /Mizvo portfolio source/);
+  assert.match(field, /Squelch portfolio source/);
+  assert.match(field, /Publication review/);
   assert.match(field, /Portfolio descriptions are not live activity/);
   assert.doesNotMatch(field, /PRIVATE_CLIENT|THREADS_USER_ACCESS_TOKEN|all systems healthy/i);
   assert.doesNotMatch(field, /<iframe|fetch\(|setInterval/);
