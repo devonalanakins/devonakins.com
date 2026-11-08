@@ -74,6 +74,11 @@ export async function verifyV5Production({
       assert.match(html, /data-v5-work-summary/, "Source-qualified work state missing");
       assert.match(html, /rel="canonical" href="https:\/\/devonakins\.com\/"/);
     }
+    if (path === "/work/vesper/") {
+      assert.doesNotMatch(html,
+        /href="https:\/\/github\.com\/devonalanakins\/vesper(?:["\/?#])/,
+        "Private Vesper source link must not ship in V5");
+    }
     if (path === "/signal-field/") {
       assert.match(html, /data-v5-atlas-revision="8"/, "Approved historical graph missing");
       assert.match(html, /data-v5-atlas-node-id="publication:mizvo\/public-portfolio-source"/);
@@ -113,6 +118,8 @@ export async function verifyV5Production({
   assert.ok(["hidden", "public"].includes(packet.remote?.visibility));
   assert.ok(Array.isArray(packet.remote?.tasks) && packet.remote.tasks.length <= 16);
   if (packet.remote.visibility === "hidden") assert.deepEqual(packet.remote.tasks, []);
+  assert.ok(!packet.remote.tasks.some(task => task?.project === "Vesper"),
+    "Private Vesper work cannot be included in the public task projection");
   assert.doesNotMatch(JSON.stringify(packet),
     /refresh_cipher|access_token|client_secret|oauth_verifier|private_client/i,
     "Public API must not contain credential or private source material");
