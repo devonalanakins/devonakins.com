@@ -984,14 +984,9 @@
   transform: none;
   filter: none;
   opacity: 1;
-  -webkit-mask-image: url("/v5/portrait-cutout-mask.svg");
-  mask-image: url("/v5/portrait-cutout-mask.svg");
-  -webkit-mask-size: 100% 100%;
-  mask-size: 100% 100%;
-  -webkit-mask-position: center;
-  mask-position: center;
-  -webkit-mask-repeat: no-repeat;
-  mask-repeat: no-repeat;
+  /* Native responsive clip-path is supplied in the R10 final override. */
+  -webkit-mask-image: none;
+  mask-image: none;
 }
 .v5-hero-veil {
   position: absolute;
