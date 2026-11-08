@@ -1097,3 +1097,75 @@ a[aria-current="page"] {
 @media (forced-colors: active) {
   .v5-atlas-node-label { border: 1px solid CanvasText; color: CanvasText; background: Canvas; }
 }
+
+
+/* R21 — page-specific, screenshot-directed Signal Field composition.
+ * The locked homepage, other secondary pages and V4 are not affected.
+ * The semantic h1 remains available to screen readers and keyboard users.
+ */
+.v5-page-field .v5-frame {
+  max-width: none;
+  width: 100%;
+  padding: 0 clamp(12px, 1.1vw, 22px);
+}
+.v5-page-field .v5-page-heading {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  white-space: nowrap;
+  clip-path: inset(50%);
+  border: 0;
+}
+@media (min-width: 1101px) {
+  .v5-page-field .v5-atlas-shell {
+    width: 100%;
+    max-width: none;
+    margin: 8px 0 16px;
+    grid-template-columns: minmax(215px, 15.5%) minmax(0, 1fr) minmax(300px, 23%);
+    border-radius: 13px;
+    box-shadow: 0 0 45px #26c4e00a, inset 0 1px 0 #b9e8ff13;
+  }
+  .v5-page-field .v5-atlas-viewport {
+    min-height: clamp(620px, calc(100vh - 137px), 950px);
+    min-height: clamp(620px, calc(100dvh - 137px), 950px);
+    border-right: 1px solid #31637a;
+  }
+  .v5-page-field .v5-atlas-explorer {
+    padding: 23px 16px;
+    background: linear-gradient(140deg, #061321ef, #0a1c2ce8);
+  }
+  .v5-page-field .v5-atlas-index {
+    padding: 23px 18px;
+    border-left: 1px solid #31637a;
+    background: linear-gradient(145deg, #061321ed, #0c1f2bec);
+  }
+  .v5-page-field .v5-atlas-explorer > h2,
+  .v5-page-field .v5-atlas-spotlight > h2 { font-size: clamp(23px, 1.75vw, 29px); }
+}
+.v5-page-field .v5-graph-history {
+  max-width: none;
+  margin: 12px 0 22px;
+}
+.v5-page-field .v5-reading { margin-bottom: 28px; }
+@media (max-width: 1100px) {
+  .v5-page-field .v5-atlas-shell {
+    width: 100%;
+    max-width: none;
+    margin: 9px 0 18px;
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .v5-page-field .v5-atlas-viewport { min-height: clamp(345px, 48vw, 520px); }
+}
+@media (max-width: 600px) {
+  .v5-page-field .v5-frame { padding: 0 12px; }
+  .v5-page-field .v5-atlas-shell { margin: 8px 0 16px; border-radius: 12px; }
+  .v5-page-field .v5-atlas-viewport { min-height: 330px; }
+  .v5-page-field .v5-graph-history { padding: 17px; }
+}
+@media (forced-colors: active) {
+  .v5-page-field .v5-atlas-index,
+  .v5-page-field .v5-atlas-explorer { border-color: CanvasText; }
+}
