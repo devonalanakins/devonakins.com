@@ -10,6 +10,7 @@ import {presenceResponse} from './spotify-presence.mjs';
 
 import {createActivityTasksApi} from './activity-tasks.mjs';
 import {createLiveSignal} from './live-signal.mjs';
+import {createPublicThreadsReader} from "./threads-public.mjs";
 import {createGptSnapshotOwnerApi} from './gpt-snapshots.mjs';
 import {createGithubIntegration,createGithubEditorCatalog} from './github-integration.mjs';
 import {projectActivityHistory,validActivityHistory} from './activity-history.mjs';
@@ -147,7 +148,16 @@ export function createHandler(assets, release, options = {}) {
       pendingGithub = null;
     }
   };
-  const liveSignal=createLiveSignal({readListening:readDbPresence,clock:()=>now().getTime(),readGithub:async()=>{await githubSignal(now());return activityHistory;}});
+  const readThreads=createPublicThreadsReader({
+    fetchImpl:options.threadsFetch || fetch,
+    clock:()=>now().getTime(),
+  });
+  const liveSignal=createLiveSignal({
+    readListening:readDbPresence,
+    clock:()=>now().getTime(),
+    readGithub:async()=>{await githubSignal(now());return activityHistory;},
+    readThreads,
+  });
   const snapshot = async () => {
     if (!historicalSnapshot) {
       historicalSnapshot = (async () => {
