@@ -1,7 +1,7 @@
 import { V5_PUBLIC_ROUTES, publishV5Links } from "./public-routes.mjs";
 import { renderReadingRoom } from "./reading-room.mjs";
 import { publicNotes } from "./public-notes.mjs";
-import { projects } from "../content.mjs";
+import { approvedPublicProjects as projects } from "../publication-manifest.mjs";
 import { renderReferenceHomepage, renderReferenceNav } from "./reference-home.mjs";
 import { renderPublicGraphHistory } from "./public-graph-view.mjs";
 import { renderV5Atlas } from "./atlas-markup.mjs";
