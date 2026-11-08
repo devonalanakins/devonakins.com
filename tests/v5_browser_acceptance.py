@@ -60,6 +60,25 @@ def check_page(page, origin, path, axe):
         assert atlas.count() == 1
         assert atlas.get_attribute("data-v5-atlas-revision") == "0"
         assert page.locator("[data-v5-atlas-node-id]").count() == 8
+        explorer = page.locator(".v5-atlas-explorer")
+        assert explorer.count() == 1
+        assert explorer.locator("[data-v5-atlas-select]").count() == 8
+        page.wait_for_function(
+            "() => document.querySelector('[data-v5-atlas-controls]')?.hidden === false",
+            timeout=10000,
+        )
+        search = explorer.locator("[data-v5-atlas-search]")
+        search.fill("mIzVo")
+        assert explorer.locator("[data-v5-atlas-select]:visible").count() == 1
+        assert page.locator("[data-v5-atlas-node-id]:visible").count() == 1
+        assert "1 approved visible" in explorer.locator("[data-v5-atlas-filter-count]").inner_text()
+        search.fill("")
+        assert explorer.locator("[data-v5-atlas-select]:visible").count() == 8
+        explorer.locator("[data-v5-atlas-layer='projects']").uncheck()
+        assert explorer.locator("[data-v5-atlas-select]:visible").count() == 1
+        assert page.locator("[data-v5-atlas-node-id]:visible").count() == 1
+        explorer.locator("[data-v5-atlas-layer='projects']").check()
+        assert explorer.locator("[data-v5-atlas-select]:visible").count() == 8
         assert page.locator("[data-v5-atlas-node-id='project:mizvo'] summary").is_visible()
         page.locator("[data-v5-atlas-node-id='project:mizvo'] summary").click()
         page.wait_for_function(
@@ -337,6 +356,8 @@ def main():
                 # usable even when JavaScript is disabled.
                 assert page.goto(origin + PREVIEW + "field/").status == 200
                 assert page.locator("[data-v5-atlas-node-id]").count() == 8
+                assert page.locator("[data-v5-atlas-controls]").is_hidden()
+                assert page.locator("[data-v5-atlas-select]").count() == 8
                 page.locator("[data-v5-atlas-node-id='project:mizvo'] summary").click()
                 assert page.locator("[data-v5-atlas-node-id='project:mizvo']").get_attribute("open") is not None
                 assert page.locator(".v5-graph-node").count() == 8
