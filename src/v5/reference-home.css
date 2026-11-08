@@ -1521,3 +1521,62 @@
 @media (prefers-reduced-motion:reduce) {
  .v5-home-source-card, .v5-home-activity-card a {transition:none!important;}
 }
+
+/* OWNER-APPROVED CAP PORTRAIT 2026-11-08.
+ * Exact user-provided reference, cropped only to remove screenshot chrome.
+ * No generated replacement, baked navigation, third-party image or fabricated signal.
+ * The earlier long-haired portrait's silhouette polygon does not fit this photograph.
+ * A feathered photographic mask keeps smoke and text contrast without a duplicate face. */
+.v5-locked-home .v5-locked-hero .v5-locked-portrait {
+  z-index: 2;
+  background: url("/src/v5/assets/cap-hero-desktop.webp") center 38% / cover no-repeat;
+  -webkit-clip-path: none;
+  clip-path: none;
+  -webkit-mask-image: radial-gradient(ellipse 79% 77% at 52% 47%, #000 33%, #000e 59%, transparent 100%);
+  mask-image: radial-gradient(ellipse 79% 77% at 52% 47%, #000 33%, #000e 59%, transparent 100%);
+  opacity: .98;
+}
+.v5-locked-home .v5-locked-hero .v5-portrait-source-atmosphere {
+  display: none; /* Avoid a doubled face; existing independent volumetric smoke remains. */
+}
+@media (min-width: 901px) {
+  .v5-locked-home .v5-locked-hero {
+    background-image:
+      radial-gradient(ellipse 45% 76% at 40% 24%, #a2613642, transparent 76%),
+      radial-gradient(ellipse 58% 84% at 48% 42%, #1253674d, transparent 84%),
+      linear-gradient(0deg, #030a0f, transparent 43%);
+    background-position: center;
+    background-size: 100% 100%;
+  }
+  .v5-locked-home .v5-locked-hero .v5-locked-portrait {
+    left: 25.5%;
+    top: -8px;
+    width: clamp(495px, 48vw, 610px);
+    height: 510px;
+  }
+}
+@media (min-width: 601px) and (max-width: 900px) {
+  .v5-locked-home .v5-locked-hero .v5-locked-portrait {
+    left: 31%;
+    top: -2px;
+    width: min(60vw, 445px);
+    height: 350px;
+  }
+}
+@media (max-width: 600px) {
+  .v5-locked-home .v5-locked-hero .v5-locked-portrait {
+    left: 38%;
+    top: -9px;
+    width: 76%;
+    height: 350px;
+    opacity: .94;
+    background-image: url("/src/v5/assets/cap-hero-mobile.webp");
+    background-position: 50% 30%;
+  }
+}
+@media (max-width: 340px) {
+  .v5-locked-home .v5-locked-hero .v5-locked-portrait {
+    left: 39%;
+    width: 74%;
+  }
+}
