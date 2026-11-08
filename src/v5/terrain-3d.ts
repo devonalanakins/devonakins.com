@@ -5,6 +5,16 @@ import {
   PointLight, Points, PointsMaterial, Scene, SphereGeometry, TorusGeometry,
   WebGLRenderer,
 } from "three";
+import { terrainPublicSlugs } from "./field-terrain-state.mjs";
+
+type PublicEvidenceKind = "editor" | "remote";
+type TerrainEvidence = Readonly<Record<string, PublicEvidenceKind>>;
+type EvidenceMarker = {
+  slug: string;
+  color: number;
+  dot: Mesh<SphereGeometry, MeshBasicMaterial>;
+  halo: Mesh<SphereGeometry, MeshBasicMaterial>;
+};
 
 // This is a deterministic, visual-only rendering of the *approved public*
 // project names, NOT a representation of work, dependency edges, health, or
@@ -42,6 +52,7 @@ function addLine(
     blending: AdditiveBlending,
   }));
   group.add(line);
+  return line;
 }
 function coloredContour(group: Group, points: Point3[], opacity: number) {
   const positions = new Float32Array(points.flat());
@@ -116,10 +127,11 @@ function addRings(field: Group, x: number, y: number, color: number, central: bo
     field.add(torus);
   }
 }
-function addStructures(field: Group) {
+function addStructures(field: Group): EvidenceMarker[] {
+  const beacons: EvidenceMarker[] = [];
   const markerGeometry = new SphereGeometry(.13, 12, 8);
   const haloGeometry = new SphereGeometry(.36, 12, 8);
-  for (const [x, , color] of terrainAnchors) {
+  for (const [index, [x, , color]] of terrainAnchors.entries()) {
     const y = mountainHeight(x, 0);
     const central = x === 0;
     const dot = new Mesh(markerGeometry, new MeshBasicMaterial({ color }));
@@ -131,6 +143,7 @@ function addStructures(field: Group) {
     }));
     glow.position.set(x, y + .1, 0);
     field.add(glow);
+    beacons.push({ slug: terrainPublicSlugs[index], color, dot, halo: glow });
     addLine(field, [[x, y + .12, 0], [x, y + (central ? 4.5 : 2.5), 0]],
       color, central ? .87 : .64);
     addRings(field, x, y, color, central);
@@ -147,6 +160,7 @@ function addStructures(field: Group) {
       ], color, central ? .38 : .25);
     }
   }
+  return beacons;
 }
 function createField(scene: Scene) {
   const field = new Group();
@@ -203,9 +217,9 @@ function createField(scene: Scene) {
     addLine(field, path, color, j === 1 ? .88 : .63);
   }
   addStars(field);
-  addStructures(field);
+  const beacons = addStructures(field);
   scene.add(field);
-  return field;
+  return beacons;
 }
 function releaseGeometry(scene: Scene) {
   scene.traverse((object) => {
@@ -226,6 +240,10 @@ export function mountDecorativeTerrain(element: HTMLElement) {
   let canvas: HTMLCanvasElement | null = null;
   let visibilityListener: (() => void) | null = null;
   let motionListener: (() => void) | null = null;
+  let disposed = false;
+  let lastEvidenceSignature = "";
+  let paintEvidence: (states: TerrainEvidence) => void = () => {};
+  const noWebGL = () => ({ setEvidence: (_: TerrainEvidence) => {}, dispose: () => {} });
   try {
     canvas = document.createElement("canvas");
     canvas.className = "v5-lock-terrain-canvas";
@@ -233,7 +251,7 @@ export function mountDecorativeTerrain(element: HTMLElement) {
     canvas.tabIndex = -1;
     const gl = canvas.getContext("webgl2", { alpha: true, antialias: true })
       || canvas.getContext("webgl", { alpha: true, antialias: true });
-    if (!gl) return () => {};
+    if (!gl) return noWebGL();
     renderer = new WebGLRenderer({
       canvas, context: gl, alpha: true, antialias: true,
       powerPreference: "low-power",
@@ -249,7 +267,36 @@ export function mountDecorativeTerrain(element: HTMLElement) {
     const camera = new PerspectiveCamera(28, 1, .1, 90);
     camera.position.set(0, 9.8, 17);
     camera.lookAt(0, .5, 0);
-    createField(scene);
+    const beacons = createField(scene);
+    const setEvidence = (states: TerrainEvidence) => {
+      if (disposed) return;
+      // Only two evidence kinds can alter existing, approved public nodes.
+      // Neither GitHub history nor a private/unmapped identity lights terrain.
+      const kinds = beacons.map(({ slug }) => {
+        const kind = Object.hasOwn(states, slug) ? states[slug] : undefined;
+        return kind === "editor" || kind === "remote" ? kind : "";
+      });
+      const signature = kinds.join("|");
+      if (signature === lastEvidenceSignature) return;
+      lastEvidenceSignature = signature;
+      beacons.forEach(({ dot, halo, color }, i) => {
+        const kind = kinds[i];
+        const active = Boolean(kind);
+        const accent = kind === "editor" ? 0x66f1fa :
+          kind === "remote" ? 0xc49aff : color;
+        dot.material.color.setHex(accent);
+        dot.scale.setScalar(active ? 1.65 : 1);
+        halo.material.color.setHex(accent);
+        halo.material.opacity = active ? 0.38 : 0.12;
+        halo.scale.setScalar(active ? 1.7 : 1);
+      });
+      element.dataset.v5TerrainVerifiedCount =
+        String(kinds.filter(Boolean).length);
+      if (renderer && scene && element.dataset.webgl === "ready" && !document.hidden) {
+        renderer.render(scene, camera);
+      }
+    };
+    paintEvidence = setEvidence;
     const resize = () => {
       if (!renderer || !scene) return;
       const rect = element.getBoundingClientRect();
@@ -268,6 +315,9 @@ export function mountDecorativeTerrain(element: HTMLElement) {
     };
     element.prepend(canvas);
     element.dataset.webgl = "ready";
+    // A genuine public source must explicitly report activity before any
+    // status-specific beacon is emphasized. Initial state is disconnected.
+    setEvidence(Object.create(null));
     observer = new ResizeObserver(resize);
     observer.observe(element);
     resize();
@@ -288,22 +338,25 @@ export function mountDecorativeTerrain(element: HTMLElement) {
       if (canvas) canvas.hidden = true;
     };
     canvas.addEventListener("webglcontextlost", lost);
-    return () => {
+    return { setEvidence: paintEvidence, dispose: () => {
+      disposed = true;
       if (frame !== null) cancelAnimationFrame(frame);
       if (visibilityListener) document.removeEventListener("visibilitychange", visibilityListener);
       if (motionListener) reducedMotion.removeEventListener("change", motionListener);
       observer?.disconnect();
       if (scene) releaseGeometry(scene);
       delete element.dataset.webgl;
+      delete element.dataset.v5TerrainVerifiedCount;
       renderer?.dispose();
       canvas?.remove();
-    };
+    } };
   } catch {
     observer?.disconnect();
     if (scene) releaseGeometry(scene);
     renderer?.dispose();
     delete element.dataset.webgl;
+    delete element.dataset.v5TerrainVerifiedCount;
     canvas?.remove();
-    return () => {};
+    return noWebGL();
   }
 }

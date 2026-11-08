@@ -3,6 +3,7 @@ import { publicV5Playback } from "./public-playback.mjs";
 import { publicV5GptCapture, formatPublicGptValue, publicGptCapturedAt } from "./public-gpt-capture.mjs";
 import { publicV5Threads, threadsPublicDate } from "./public-threads.mjs";
 import { publicV5ActivationMode } from "./source-activation.mjs";
+import { publicV5TerrainStates } from "./field-terrain-state.mjs";
 const menu = document.querySelector<HTMLDetailsElement>("[data-mobile-menu]");
 menu?.addEventListener("keydown", (event) => {
   if (event.key === "Escape" && menu.open) {
@@ -59,6 +60,9 @@ document.addEventListener("pointerdown", (event) => {
 const field = document.querySelector<HTMLElement>(".v5-lock-field");
 const inspector = field?.querySelector<HTMLElement>("#v5-field-inspector");
 const fieldLinks = Array.from(field?.querySelectorAll<HTMLAnchorElement>("[data-v5-field-node]") ?? []);
+type TerrainActivity = Readonly<Record<string, "editor" | "remote">>;
+let latestTerrainActivity: TerrainActivity = Object.create(null);
+let setTerrainActivity: ((states: TerrainActivity) => void) | null = null;
 const inspectorClose = inspector?.querySelector<HTMLButtonElement>("[data-v5-field-close]");
 const inspectorTitle = inspector?.querySelector<HTMLElement>("[data-v5-field-title]");
 const inspectorSummary = inspector?.querySelector<HTMLElement>("[data-v5-field-summary]");
@@ -264,6 +268,8 @@ if (field && (publicPreviewButton || activationMode === "automatic")) {
   };
   const renderPublicEvidence = (snapshot: unknown, at: number) => {
     const projection = publicV5ProjectEvidence(snapshot, at);
+    latestTerrainActivity = publicV5TerrainStates(projection);
+    setTerrainActivity?.(latestTerrainActivity);
     const publicGpt = projection.available && snapshot && typeof snapshot === "object"
       && "gpt" in snapshot ? (snapshot as { gpt?: unknown }).gpt : null;
     renderPublicGpt(publicGpt, at);
@@ -360,8 +366,21 @@ if (terrain && window.innerWidth > 600) {
   // The GPU is an enhancement to the true semantic HTML markers, never a data
   // source. A failed WebGL import or context retains the SVG fallback.
   void import("./terrain-3d").then(({ mountDecorativeTerrain }) => {
-    mountDecorativeTerrain(terrain);
-  }).catch(() => {});
+    const controller = mountDecorativeTerrain(terrain);
+    setTerrainActivity = controller.setEvidence;
+    // A verified V4 update may arrive while the optional GPU module loads.
+    // Recheck the most recent projection instead of preserving a stale state.
+    controller.setEvidence(latestTerrainActivity);
+    window.addEventListener("pagehide", (event) => {
+      if (!event.persisted) {
+        controller.dispose();
+        setTerrainActivity = null;
+      }
+    }, { once: true });
+  }).catch(() => {
+    // Semantic links and their source-qualified states remain usable.
+    setTerrainActivity = null;
+  });
 }
 
 export {};
