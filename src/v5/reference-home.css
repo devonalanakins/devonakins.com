@@ -1580,3 +1580,17 @@
     width: 74%;
   }
 }
+
+/* WCAG 2.2 hero link targets: original icon-only 34–35px hit areas were too small. */
+.v5-locked-home .v5-locked-socials a {
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  min-height: 44px;
+}
+.v5-locked-home .v5-locked-session-link {
+  min-height: 44px;
+}
+@media (max-width: 600px) {
+  .v5-locked-home .v5-locked-socials { gap: 4px; }
+}
