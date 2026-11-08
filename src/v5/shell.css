@@ -807,3 +807,48 @@ a[aria-current="page"] {
     border: 1px solid CanvasText;
   }
 }
+
+
+/* V5 public graph archive: semantic markup is the no-JS baseline. */
+.v5-graph-history { margin: 38px auto 26px; max-width: 1120px; border: 1px solid var(--v5-border); border-radius: 18px; background: linear-gradient(145deg, #101c2b, #07121d 72%); padding: clamp(18px, 3vw, 38px); }
+.v5-graph-heading { display: flex; justify-content: space-between; align-items: start; gap: 24px; }
+.v5-graph-heading h2 { font: clamp(27px, 3.7vw, 44px)/1.1 Georgia, serif; letter-spacing: -.035em; margin: 10px 0; }
+.v5-graph-heading p:not(.v5-eyebrow), .v5-graph-asof, .v5-graph-footnote { color: var(--v5-muted); }
+.v5-graph-revision { flex: 0 0 auto; font-size: 11px; letter-spacing: .09em; }
+.v5-graph-revision strong { display: block; font-size: 24px; color: var(--v5-cyan); font-variant-numeric: tabular-nums; }
+.v5-graph-date-form { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin: 23px 0 13px; }
+.v5-graph-date-form label { color: var(--v5-muted); }
+.v5-graph-date-form input { background: #132439; color: var(--v5-ink); color-scheme: dark; border: 1px solid var(--v5-border); border-radius: 8px; min-height: 44px; padding: 8px 12px; font: inherit; max-width: 100%; }
+.v5-graph-date-form button, .v5-graph-date-form a { background: #1b3546; color: var(--v5-ink); border: 1px solid #507283; border-radius: 8px; min-height: 44px; padding: 10px 16px; font: inherit; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; }
+.v5-graph-date-form :is(button, a, input):focus-visible { outline: 2px solid var(--v5-cyan); outline-offset: 3px; }
+.v5-graph-error { color: #ffd4a3; margin: 9px 0; }
+.v5-graph-asof { font-size: 13px; margin: 12px 0 20px; }
+.v5-graph-summary { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin: 24px 0; }
+.v5-graph-summary p { padding: 14px; border: 1px solid var(--v5-border); border-radius: 10px; background: #102334; min-width: 0; }
+.v5-graph-summary strong { display: block; font-size: 25px; line-height: 1.2; color: var(--v5-cyan); font-variant-numeric: tabular-nums; }
+.v5-graph-summary span { font-size: 12px; color: var(--v5-muted); }
+.v5-graph-section { margin: 27px 0; }
+.v5-graph-section > h3 { font-size: 18px; font-weight: 650; margin: 0 0 15px; }
+.v5-graph-node-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 205px), 1fr)); gap: 12px; padding: 0; margin: 0; list-style: none; }
+.v5-graph-node { background: #112538; border: 1px solid #325367; border-radius: 11px; min-width: 0; padding: 17px; }
+.v5-graph-kind { color: var(--v5-cyan); font-size: 10px; letter-spacing: .08em; }
+.v5-graph-node h3 { font-size: 18px; margin: 8px 0; }
+.v5-graph-node h3 a { display: inline-flex; min-height: 44px; align-items: center; text-decoration: underline; text-decoration-color: #647986; text-underline-offset: 5px; }
+.v5-graph-node p, .v5-graph-empty, .v5-graph-footnote { color: var(--v5-muted); }
+.v5-graph-node p { font-size: 12px; }
+.v5-graph-proof { margin-top: 12px; }
+.v5-graph-proof a, .v5-graph-relations a, .v5-graph-timeline a { color: var(--v5-cyan); text-decoration: underline; text-underline-offset: 3px; }
+.v5-graph-relations, .v5-graph-timeline { list-style: none; margin: 0; padding: 0; }
+.v5-graph-relations li, .v5-graph-timeline li { padding: 12px 0; border-bottom: 1px solid var(--v5-border); display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.v5-graph-relations li span, .v5-graph-timeline li time { color: var(--v5-muted); }
+.v5-graph-footnote { padding-top: 15px; border-top: 1px solid var(--v5-border); font-size: 12px; }
+@media (max-width: 700px) {
+  .v5-graph-heading { flex-direction: column; gap: 12px; }
+  .v5-graph-revision strong { display: inline; margin-left: 8px; }
+  .v5-graph-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .v5-graph-date-form { align-items: stretch; }
+  .v5-graph-date-form label { width: 100%; }
+  .v5-graph-date-form input { flex: 1 1 170px; }
+  .v5-graph-date-form button, .v5-graph-date-form a { flex: 1 1 auto; }
+}
+@media (prefers-reduced-motion: reduce) { .v5-graph-history *, .v5-graph-history *::before, .v5-graph-history *::after { animation: none !important; transition: none !important; } }
