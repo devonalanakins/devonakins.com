@@ -1062,3 +1062,38 @@ a[aria-current="page"] {
   .v5-atlas-root-list a { padding: 8px; gap: 8px; }
   .v5-atlas-root-list small { line-height: 1.25; }
 }
+
+
+/* R20: richer static spatial atmosphere on the gated Signal Field only.
+   All cubes, dust and rings are ornamental; the evidence model is unchanged. */
+.v5-atlas-viewport {
+  background:
+    radial-gradient(ellipse at 47% 42%, #237b9560, transparent 46%),
+    radial-gradient(ellipse at 68% 25%, #56429439, transparent 53%),
+    radial-gradient(ellipse at 22% 81%, #096c7766, transparent 60%),
+    linear-gradient(146deg, #05111c, #081a2b 55%, #050e19);
+  box-shadow: inset 0 0 80px #02070dcc, inset 0 0 30px #36b5cc16;
+}
+.v5-atlas-node-label {
+  padding: 5px 10px;
+  border-color: #91e0ed8a;
+  border-radius: 7px;
+  background: linear-gradient(125deg, #061728f0, #12273ce8);
+  color: #f0fbfd;
+  box-shadow: 0 0 15px #52e4ed2b, inset 0 1px 0 #e0ffff14;
+  letter-spacing: .025em;
+}
+.v5-atlas-legend {
+  color: #c7e7ed;
+  text-shadow: 0 1px 3px #020711;
+}
+@media (max-width: 600px) {
+  .v5-atlas-node-label {
+    padding: 3px 6px;
+    border-color: #75bfc983;
+    box-shadow: 0 0 8px #52e4ed16;
+  }
+}
+@media (forced-colors: active) {
+  .v5-atlas-node-label { border: 1px solid CanvasText; color: CanvasText; background: Canvas; }
+}
