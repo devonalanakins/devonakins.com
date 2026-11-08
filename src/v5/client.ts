@@ -320,7 +320,7 @@ if (field && (publicPreviewButton || activationMode === "automatic")) {
       "[data-v5-home-activity-empty]"
     );
     if (activityEmpty) activityEmpty.hidden = homepage.events.length > 0;
-    if (activityList) activityList.replaceChildren(...homepage.events.map(event => {
+    if (activityList) activityList.replaceChildren(...homepage.events.map((event: {href: string; kind: string; title: string; at: string; age: string | null}) => {
       const item = document.createElement("li");
       const link = document.createElement("a");
       const body = document.createElement("span");
