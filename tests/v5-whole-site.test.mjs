@@ -36,6 +36,14 @@ test("full-site candidate publishes real sections and a dedicated atlas without 
     assert.match(html, /property="og:title"/);
   }
   const fullHome = renderV5PublicPage("home");
+  for (const [label, url] of [
+    ["GitHub profile", "https://github.com/devonalanakins"],
+    ["Instagram profile", "https://www.instagram.com/devonalanakins/"],
+    ["Facebook profile", "https://www.facebook.com/devonalanakins"],
+  ]) {
+    assert.ok(fullHome.includes('href="' + url + '" aria-label="' + label + '"'),
+      "Published V5 hero must expose the verified " + label);
+  }
   for (const label of ["Home","Work","Research","Writing","Knowledge","Systems","Activity"])
     assert.ok(fullHome.includes(">" + label + "</a>"), "Global navigation must expose " + label);
   for (const source of ["github","tasks","spotify","gpt","coding"])
