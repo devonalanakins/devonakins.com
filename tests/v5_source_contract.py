@@ -155,6 +155,27 @@ def run():
                 "https://www.threads.com/@fixtureDevon/post/CXtzA7JPq5V"
             )
             assert "noopener" in page.locator("[data-v5-threads-posts] li a").get_attribute("rel")
+            # Capture visible, untrusted-but-sanitized synthetic Threads text.
+            # These are never real owner posts, engagements or account data.
+            from pathlib import Path
+            screenshots = Path(__file__).resolve().parents[1] / "v5-review-screenshots"
+            screenshots.mkdir(exist_ok=True)
+            page.screenshot(
+                path=str(screenshots / "THREADS-FEED-SYNTHETIC-1199x1312.png"),
+                full_page=True, animations="disabled",
+            )
+            page.set_viewport_size({"width": 390, "height": 844})
+            assert page.locator("[data-v5-threads-feed]").is_visible()
+            assert page.evaluate("document.documentElement.scrollWidth <= innerWidth + 1"), (
+                "Approved Threads feed must not cause overflow on phone-sized screens"
+            )
+            page.evaluate("window.scrollTo(0, 0)")
+            page.screenshot(
+                path=str(screenshots / "THREADS-FEED-SYNTHETIC-390x844.png"),
+                full_page=True, animations="disabled",
+            )
+            page.set_viewport_size({"width": 1199, "height": 1312})
+
             assert page.locator("[data-v5-gpt-capture]").is_visible()
             assert page.locator("[data-v5-gpt-empty]").is_hidden()
             assert page.locator("[data-v5-gpt-primary]").inner_text() == "143.2M"
