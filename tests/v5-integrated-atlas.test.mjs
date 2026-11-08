@@ -141,6 +141,24 @@ test("forged valid frames cannot inject private nodes or misattribute public mil
   assert.doesNotMatch(JSON.stringify(mislabeled),/PRIVATE_CLIENT/);
 });
 
+test("duplicate root IDs and non-string provenance cannot masquerade as verified structure",()=>{
+  const frame=replayPublicGraphHistory([],NOW);
+  const duplicate=projectV5Atlas({...frame,nodes:[
+    ...frame.nodes,frame.nodes[0],
+  ]});
+  assert.equal(duplicate.valid,false);
+  assert.equal(duplicate.nodes.length,0);
+  const withoutTitle=projectV5Atlas({...frame,nodes:[...frame.nodes,{
+    ...child,state:"published",label:undefined,
+    evidenceUrl:source,reviewUrl:reviewed,
+  }]});
+  assert.equal(withoutTitle.valid,false);
+  const nonstringProof=projectV5Atlas({...frame,nodes:[...frame.nodes,{
+    ...child,state:"published",evidenceUrl:{toString:()=>source},reviewUrl:reviewed,
+  }]});
+  assert.equal(nonstringProof.valid,false);
+});
+
 test("published relation requires independent reviewed evidence even if frame.valid is forged",()=>{
   const frame=replayPublicGraphHistory([],NOW);
   const fake={id:"relation:fake-edge",type:"depends-on",
