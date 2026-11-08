@@ -56,6 +56,21 @@ def check_page(page, origin, path, axe):
     assert response.headers.get("cache-control") == "no-store"
     assert page.locator("h1").count() == 1
     if path == "field/":
+        atlas = page.locator("[data-v5-atlas]")
+        assert atlas.count() == 1
+        assert atlas.get_attribute("data-v5-atlas-revision") == "0"
+        assert page.locator("[data-v5-atlas-node-id]").count() == 8
+        assert page.locator("[data-v5-atlas-node-id='project:mizvo'] summary").is_visible()
+        page.locator("[data-v5-atlas-node-id='project:mizvo'] summary").click()
+        assert page.locator("[data-v5-atlas-node-id='project:mizvo']").get_attribute("open") is not None
+        assert page.locator("[data-v5-atlas-node-id='project:mizvo'] a").get_attribute("href") == "/work/mizvo/"
+        canvas = page.locator("[data-v5-atlas-host] canvas")
+        if canvas.count():
+            assert canvas.get_attribute("aria-hidden") == "true"
+            assert page.locator(".v5-atlas-label-layer").get_attribute("aria-hidden") == "true"
+        assert "No active reporter or unverified dependency" not in atlas.inner_text() or (
+            page.locator("[data-v5-atlas-ready]").count() == 1
+        )
         archive = page.locator(".v5-graph-history")
         assert archive.count() == 1
         assert archive.get_attribute("data-v5-graph-revision") == "0"
@@ -307,6 +322,9 @@ def main():
                 # The history form is server-rendered and must remain
                 # usable even when JavaScript is disabled.
                 assert page.goto(origin + PREVIEW + "field/").status == 200
+                assert page.locator("[data-v5-atlas-node-id]").count() == 8
+                page.locator("[data-v5-atlas-node-id='project:mizvo'] summary").click()
+                assert page.locator("[data-v5-atlas-node-id='project:mizvo']").get_attribute("open") is not None
                 assert page.locator(".v5-graph-node").count() == 8
                 page.locator("#v5-graph-date").fill("2026-11-06")
                 page.locator(".v5-graph-date-form button").click()
