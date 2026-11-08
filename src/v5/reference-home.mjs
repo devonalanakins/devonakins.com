@@ -291,7 +291,6 @@ export function renderReferenceHomepage() {
         '<div class="v5-locked-socials">' +
           protectedLink("GitHub profile", "https://github.com/devonalanakins", icon("github")) +
           protectedLink("Instagram profile", "https://www.instagram.com/devonalanakins/", icon("instagram")) +
-          protectedLink("Facebook profile", "https://www.facebook.com/devonalanakins", icon("facebook")) +
           protectedLink("Social links and contact", "/contact/", icon("user")) +
         '</div>' +
         '<a class="v5-locked-session-link" href="/studio/"><span class="v5-locked-indicator" aria-hidden="true"></span>Work source status</a>' +
