@@ -105,7 +105,13 @@ export function mountPublicAtlasExplorer() {
     root.removeEventListener("click", onSelect);
     root.removeEventListener("toggle", onDisclosure, true);
     root.removeEventListener("v5-atlas-selected", onCanvasSelection);
+    window.removeEventListener("pagehide", onPageHide);
   };
-  window.addEventListener("pagehide", dispose, { once: true });
+  // BFCache preserves the same page/controls; a persisted pagehide is not a
+  // teardown. Otherwise mobile Back navigation restores visible but dead filters.
+  const onPageHide = event => {
+    if (!event.persisted) dispose();
+  };
+  window.addEventListener("pagehide", onPageHide);
   return dispose;
 }
