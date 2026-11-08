@@ -137,6 +137,17 @@ def check_page(page, origin, path, axe):
         if canvas.count():
             assert canvas.get_attribute("aria-hidden") == "true"
             assert page.locator(".v5-atlas-label-layer").get_attribute("aria-hidden") == "true"
+            # At desktop widths, all eight approved project labels must fit
+            # inside the displayed 3D panel at initial camera position.
+            # This is checked only when WebGL actually initialized.
+            if page.viewport_size["width"] >= 1024 and (
+                atlas.get_attribute("data-v5-atlas-ready") == "true"
+            ):
+                page.wait_for_function(
+                    "() => [...document.querySelectorAll('.v5-atlas-node-label')]" +
+                    ".filter(node => !node.hidden).length === 8",
+                    timeout=10000,
+                )
         archive = page.locator(".v5-graph-history")
         assert archive.count() == 1
         assert archive.get_attribute("data-v5-graph-revision") == "0"
