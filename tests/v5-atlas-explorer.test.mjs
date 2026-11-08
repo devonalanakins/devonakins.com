@@ -51,3 +51,31 @@ test("invalid, oversized or foreign projections fail closed", () => {
     assert.deepEqual(publicAtlasVisibleSlice(source), { nodeIds: [], linkIndexes: [], count: 0 });
   }
 });
+
+test("atlas explorer renders approved project navigation and honest source-backed layer totals", async () => {
+  const { renderV5Atlas } = await import("../src/v5/atlas-markup.mjs");
+  const markup = renderV5Atlas({ now: at });
+  assert.match(markup, /aria-label="Public systems explorer"/);
+  assert.match(markup, /data-v5-atlas-controls hidden/);
+  assert.match(markup, /data-v5-atlas-search/);
+  for (const key of ATLAS_DISPLAY_LAYERS) {
+    assert.match(markup, new RegExp('data-v5-atlas-layer="' + key + '"'));
+  }
+  assert.equal((markup.match(/data-v5-atlas-select=/g) || []).length, 8);
+  assert.match(markup, /data-v5-atlas-select="project:mizvo"/);
+  assert.match(markup, /href="#v5-atlas-project-mizvo"/);
+  assert.match(markup, /id="v5-atlas-project-mizvo"/);
+  assert.match(markup, /7<\/strong><\/label>/);
+  assert.match(markup, /No live connection implied|no live connection implied/);
+  assert.doesNotMatch(markup, /<script|PRIVATE_CLIENT|real.time coding|all systems healthy/);
+});
+
+test("optional atlas controls cannot remove native no-JS directory or deep links", async () => {
+  const { renderV5Atlas } = await import("../src/v5/atlas-markup.mjs");
+  const markup = renderV5Atlas({ now: at });
+  assert.equal((markup.match(/<details data-v5-atlas-node-id=/g) || []).length, 8);
+  assert.match(markup, /<summary>Mizvo<\/summary>/);
+  assert.match(markup, /href="\/work\/mizvo\/"/);
+  assert.match(markup, /href="\/__v5_preview__\/knowledge\/"/);
+  assert.match(markup, /href="#v5-graph-timeline-title"/);
+});
