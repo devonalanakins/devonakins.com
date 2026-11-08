@@ -1171,3 +1171,73 @@
     will-change: auto;
   }
 }
+
+
+/* R12: the locked GPT card stays quiet until an owner-approved public V4
+ * snapshot is present. Capture date and units are mandatory; this cannot be
+ * mistaken for a real-time provider total or for interchangeable credits. */
+.v5-gpt-capture[hidden] { display: none !important; }
+.v5-gpt-capture {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding-top: 8px;
+  margin-top: 9px;
+  border-top: 1px solid #1e343d;
+  color: #deeff2;
+}
+.v5-gpt-capture > strong {
+  color: #b9fff2;
+  font-size: clamp(20px, 2.5vw, 28px);
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -.035em;
+  line-height: 1.15;
+  overflow-wrap: anywhere;
+}
+.v5-gpt-primary-label {
+  color: #bcd8dc;
+  font-size: 10px;
+  line-height: 1.35;
+}
+.v5-gpt-capture > time {
+  color: #8baeb2;
+  font-size: 9px;
+  line-height: 1.4;
+}
+.v5-gpt-readings {
+  list-style: none;
+  padding: 0;
+  margin: 6px 0 0;
+  max-height: 124px;
+  overflow: auto;
+  scrollbar-width: thin;
+}
+.v5-gpt-readings li {
+  display: grid;
+  grid-template-columns: minmax(0,1fr) auto;
+  gap: 2px 7px;
+  padding: 5px 0;
+  border-top: 1px solid #21404a;
+}
+.v5-gpt-readings li span { font-size: 10px; color: #c8dcdf; }
+.v5-gpt-readings li strong {
+  font-size: 11px;
+  color: #cbf7ee;
+  font-weight: 580;
+  font-variant-numeric: tabular-nums;
+}
+.v5-gpt-readings li time {
+  grid-column: 1/-1;
+  font-size: 9px;
+  color: #88afb6;
+}
+.v5-gpt-disclosure {
+  font-size: 9px;
+  color: #8fb8bc;
+  line-height: 1.4;
+  margin: 5px 0 0;
+}
+@media (forced-colors: active) {
+  .v5-gpt-capture,.v5-gpt-readings li { border-color: CanvasText; }
+}
