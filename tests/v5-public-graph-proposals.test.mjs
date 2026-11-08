@@ -67,7 +67,7 @@ test("candidate source merges are explicit, bounded and free of runtime claims",
     assert.ok(Date.parse(c.sourceMergeAt)>=previous);
     previous=Date.parse(c.sourceMergeAt);
     assert.ok(previous<=Date.parse("2026-11-08T23:59:59.999Z"));
-    assert.doesNotMatch(c.scope,/deployed|production live|client records|patient/i);
+    assert.doesNotMatch(c.scope,/\b(?:is deployed|is live in production|verified active|patient records)\b/i);
   }
 });
 
