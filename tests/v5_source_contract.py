@@ -49,6 +49,17 @@ def run():
             },
             "playback": {"durationMs": 240000, "progressMs": 35000},
         },
+        "threads": {
+            "version": 1, "state": "connected", "checkedAt": stamp(now),
+            "posts": [
+                {
+                    "href": "https://www.threads.com/@fixtureDevon/post/CXtzA7JPq5V",
+                    "text": "<img onerror=alert(1)> Verified Threads fixture",
+                    "publishedAt": stamp(now - timedelta(minutes=16)),
+                    "media": False,
+                },
+            ],
+        },
         "gpt": {
             "state": "snapshot", "scope": "owner-profile",
             "metric": "profile_7d_tokens", "period": "7d",
@@ -84,6 +95,7 @@ def run():
         "recent": [],
         "spotify": {"version": 1, "mode": "hidden", "detailsVisible": False},
         "gpt": {"state": "disconnected", "observations": []},
+        "threads": {"version": 1, "state": "disconnected", "checkedAt": None, "posts": []},
     }
 
     with server(True) as origin, sync_playwright() as playwright:
@@ -132,6 +144,17 @@ def run():
             assert page.locator("[data-v5-spotify-title]").inner_text() == "Fixture Track"
             assert page.locator("[data-v5-spotify-artist]").inner_text() == "Fixture Artist"
             assert page.locator("[data-v5-spotify-progress]").is_visible()
+            assert page.locator("[data-v5-threads-feed]").is_visible()
+            assert page.locator("[data-v5-threads-status]").inner_text() == "SOURCE CONNECTED"
+            assert page.locator("[data-v5-threads-posts] li").count() == 1
+            assert "Verified Threads fixture" in page.locator(
+                "[data-v5-threads-posts] li a"
+            ).inner_text()
+            assert page.locator("[data-v5-threads-posts] img").count() == 0
+            assert page.locator("[data-v5-threads-posts] li a").get_attribute("href") == (
+                "https://www.threads.com/@fixtureDevon/post/CXtzA7JPq5V"
+            )
+            assert "noopener" in page.locator("[data-v5-threads-posts] li a").get_attribute("rel")
             assert page.locator("[data-v5-gpt-capture]").is_visible()
             assert page.locator("[data-v5-gpt-empty]").is_hidden()
             assert page.locator("[data-v5-gpt-primary]").inner_text() == "143.2M"
@@ -196,6 +219,9 @@ def run():
             )
             assert page.locator("[data-v5-spotify-title]").inner_text() != "Fixture Track"
             assert page.locator("[data-v5-spotify-progress]").is_hidden()
+            assert page.locator("[data-v5-threads-feed]").is_hidden()
+            assert page.locator("[data-v5-threads-status]").inner_text() == "CONNECTION PENDING"
+            assert page.locator("[data-v5-threads-posts] li").count() == 0
             assert page.locator("[data-v5-gpt-capture]").is_hidden()
             assert page.locator("[data-v5-gpt-empty]").is_visible()
             assert page.locator("[data-v5-gpt-readings] li").count() == 0
