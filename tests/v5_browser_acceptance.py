@@ -89,14 +89,31 @@ def check_page(page, origin, path, axe):
         assert portrait_box.evaluate("e => Number(getComputedStyle(e).zIndex) >= 0"), (
             page.viewport_size, "approved portrait hidden behind page background")
         assert portrait_box.evaluate("e => e.getBoundingClientRect().width > 80")
-        if page.viewport_size["width"] >= 901:
-            assert page.locator(".v5-locked-hero").evaluate(
-                "e => getComputedStyle(e).backgroundImage.includes('portrait-anevum-transcosmic.webp')"
-            ), "Desktop hero must paint the approved portrait asset"
-        else:
-            assert portrait_box.evaluate(
-                "e => Number(getComputedStyle(e).opacity) > .1"
-            ), "Mobile responsive portrait should remain visible"
+        # R10: the approved first-party image is a cutout, NOT a rectangular
+        # photographic hero background. Atmosphere is a separate nonsemantic layer.
+        assert page.locator(".v5-hero-atmosphere").count() == 1
+        assert page.locator(".v5-hero-veil").count() == 1
+        assert page.locator(".v5-hero-smoke").count() == 3
+        assert page.locator(".v5-hero-atmosphere").get_attribute("aria-hidden") == "true"
+        assert page.locator(".v5-locked-hero").evaluate(
+            "e => !getComputedStyle(e).backgroundImage.includes('portrait-anevum-transcosmic.webp')"
+        ), "Hero must not contain a flat portrait background"
+        assert page.locator(".v5-locked-portrait picture img").evaluate(
+            "e => (getComputedStyle(e).maskImage || getComputedStyle(e).webkitMaskImage)"
+            ".includes('portrait-cutout-mask.svg')"
+        ), "Approved portrait silhouette mask failed to load"
+        assert portrait_box.evaluate(
+            "e => Number(getComputedStyle(e).opacity) > .9"
+        ), "Portrait cutout must remain fully visible"
+        assert page.locator(".v5-hero-atmosphere").evaluate(
+            "e => e.getBoundingClientRect().width >= innerWidth * .9"
+        ), "Ambient field must span hero width"
+        animated = page.locator(".v5-hero-smoke--cyan").evaluate(
+            "e => getComputedStyle(e).animationName"
+        )
+        reduced = page.evaluate("matchMedia('(prefers-reduced-motion: reduce)').matches")
+        assert (animated == "none") == reduced, (
+            page.viewport_size, "Ambient smoke must animate only when motion is permitted")
 
         if page.viewport_size["width"] <= 360:
             for selector in [".v5-topbar", ".v5-brand", ".v5-lock-search-toggle",
@@ -213,6 +230,11 @@ def main():
                             assert field_node.get_attribute("aria-expanded") == "false"
                             assert field_node.evaluate("e => e === document.activeElement")
                             page.screenshot(path=str(output / f"{engine}-{width}x{height}-{motion}.png"), full_page=True)
+                            # After the inspector returns focus to a project
+                            # node, Tab advances from that node, not the start
+                            # of the page. Reload before checking first-Tab
+                            # access to the skip navigation link.
+                            page.goto(origin + PREVIEW, wait_until="networkidle")
                             page.keyboard.press("Tab")
                             assert page.locator(".v5-skip").evaluate("e => e === document.activeElement")
                             page.keyboard.press("Enter")
