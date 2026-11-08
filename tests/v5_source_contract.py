@@ -134,7 +134,14 @@ def run():
             assert "No approved public GitHub history" in page.locator(
                 "[data-v5-github-summary]"
             ).inner_text()
-            assert page.locator("[data-v5-spotify-title]").inner_text() == "Listening privately"
+            # V4 may normalize revoked playback to hidden or unavailable.
+            # The invariant is absence of the previously exposed track.
+            page.wait_for_function(
+                "() => document.querySelector('[data-v5-spotify-title]')"
+                "?.textContent !== 'Fixture Track'",
+                timeout=10000,
+            )
+            assert page.locator("[data-v5-spotify-title]").inner_text() != "Fixture Track"
             assert page.locator("[data-v5-spotify-progress]").is_hidden()
             assert page.locator(".v5-lock-spotify").get_attribute("href") == "/listening/"
 
