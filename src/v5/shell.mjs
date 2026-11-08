@@ -154,7 +154,7 @@ export function renderV5Preview(key = "home", options = {}) {
 // screenshot-authoritative home markup is shared with the preview; only
 // publication metadata and links change. This function alone cannot alter
 // any deployed route or bypass the existing public V4 consent gates.
-export function renderV5PublicHomepage() {
+export function renderV5PublicHomepage({ fullSite = false } = {}) {
   let html = renderV5Preview("home");
   const exact = (before, after) => {
     if (!html.includes(before)) throw new Error("V5 public home source drift: " + before);
@@ -173,10 +173,13 @@ export function renderV5PublicHomepage() {
   html = html.replace(notice, "");
   const publicRoutes = [
     ["/__v5_preview__/projects/", "/work/"],
-    ["/__v5_preview__/knowledge/", "/source/"],
-    ["/__v5_preview__/research/", "/source/"],
-    ["/__v5_preview__/writing/", "/work/writing/"],
-    ["/__v5_preview__/field/", "/#v5-lock-field-title"],
+    // A standalone V5 home continues to preserve legacy V4 links. The
+    // explicitly selected full-site V5 release must navigate to its real
+    // Knowledge, Research, Writing, and Signal Field pages instead.
+    ["/__v5_preview__/knowledge/", fullSite ? "/knowledge/" : "/source/"],
+    ["/__v5_preview__/research/", fullSite ? "/research/" : "/source/"],
+    ["/__v5_preview__/writing/", fullSite ? "/writing/" : "/work/writing/"],
+    ["/__v5_preview__/field/", fullSite ? "/signal-field/" : "/#v5-lock-field-title"],
     ["/__v5_preview__/about/", "/about/"],
     ["/__v5_preview__/", "/"],
   ];
@@ -195,7 +198,7 @@ export function renderV5PublicHomepage() {
 export function renderV5PublicPage(key, options = {}) {
   const path = options.publicPath ?? V5_PUBLIC_ROUTES[key];
   if (!path || !Object.hasOwn(V5_PUBLIC_ROUTES,key)) throw Error("Unknown public V5 route");
-  let html = key === "home" ? renderV5PublicHomepage() : renderV5Preview(key, options);
+  let html = key === "home" ? renderV5PublicHomepage({ fullSite: true }) : renderV5Preview(key, options);
   html = html.replace('data-v5-signal-mode="preview"','data-v5-signal-mode="released-v5"')
     .replace('<meta name="robots" content="noindex,nofollow,noarchive">','<meta name="robots" content="index,follow,max-image-preview:large">')
     .replace(/<aside class="v5-preview-banner" aria-label="Preview notice">[\s\S]*?<\/aside>/g,"")
