@@ -191,6 +191,44 @@ export function renderReferenceNav() {
     '<span class="v5-lock-source-dot" aria-hidden="true"></span>SOURCES</a>';
 }
 
+
+// Purely ambient composition. No visual motion here represents project,
+// editor, AI-agent or provider activity. Everything remains decorative.
+function renderHeroAtmosphere() {
+  return '<div class="v5-hero-atmosphere" aria-hidden="true" data-v5-ambient-motion>' +
+    '<span class="v5-hero-smoke v5-hero-smoke--cyan"></span>' +
+    '<span class="v5-hero-smoke v5-hero-smoke--violet"></span>' +
+    '<span class="v5-hero-smoke v5-hero-smoke--amber"></span>' +
+    '<svg class="v5-hero-streams" viewBox="0 0 1200 520" preserveAspectRatio="xMidYMid slice" aria-hidden="true" focusable="false">' +
+      '<defs>' +
+        '<linearGradient id="v5-hero-stream-cyan" x1="0" y1="1" x2="1" y2="0">' +
+          '<stop stop-color="#12d9e8" stop-opacity=".05"/><stop offset=".35" stop-color="#49eafa" stop-opacity=".73"/>' +
+          '<stop offset=".8" stop-color="#71eaf1" stop-opacity=".24"/><stop offset="1" stop-color="#37a5c0" stop-opacity="0"/>' +
+        '</linearGradient>' +
+        '<linearGradient id="v5-hero-stream-violet" x1="0" y1="0" x2="1" y2="1">' +
+          '<stop stop-color="#aa4be8" stop-opacity="0"/><stop offset=".45" stop-color="#ea70fd" stop-opacity=".65"/>' +
+          '<stop offset="1" stop-color="#e99cf7" stop-opacity=".07"/>' +
+        '</linearGradient>' +
+        '<linearGradient id="v5-hero-stream-gold" x1="0" y1="0" x2="1" y2="1">' +
+          '<stop stop-color="#f5b46e" stop-opacity=".08"/><stop offset=".55" stop-color="#ffba6d" stop-opacity=".72"/>' +
+          '<stop offset="1" stop-color="#f37e87" stop-opacity="0"/>' +
+        '</linearGradient>' +
+        '<filter id="v5-hero-stream-haze" x="-30%" y="-150%" width="160%" height="400%">' +
+          '<feGaussianBlur stdDeviation="12"/></filter>' +
+      '</defs>' +
+      '<g class="v5-hero-stream v5-hero-stream--cyan" fill="none" stroke="url(#v5-hero-stream-cyan)">' +
+        '<path d="M -95 372 C 140 220, 198 497, 382 307 S 710 127, 815 298" stroke-width="54" filter="url(#v5-hero-stream-haze)" opacity=".5"/>' +
+        '<path d="M -95 372 C 140 220, 198 497, 382 307 S 710 127, 815 298" stroke-width="2.2" opacity=".58"/>' +
+      '</g>' +
+      '<g class="v5-hero-stream v5-hero-stream--violet" fill="none" stroke="url(#v5-hero-stream-violet)">' +
+        '<path d="M 580 75 C 805 20, 897 294, 1209 109 S 1330 360, 1520 278" stroke-width="80" filter="url(#v5-hero-stream-haze)" opacity=".5"/>' +
+        '<path d="M 580 75 C 805 20, 897 294, 1209 109 S 1330 360, 1520 278" stroke-width="2" opacity=".48"/>' +
+      '</g>' +
+      '<path class="v5-hero-arc" d="M 458 480 A 245 245 0 0 1 887 134" fill="none" stroke="url(#v5-hero-stream-gold)" stroke-width="1.8" opacity=".75"/>' +
+    '</svg>' +
+  '</div>';
+}
+
 export function renderReferenceHomepage() {
   const rail = navRail.map(([label, glyph, href], i) =>
     '<a href="' + href + '"' + (i === 0 ? ' aria-current="location"' : "") +
@@ -200,8 +238,10 @@ export function renderReferenceHomepage() {
     .map(featuredProject).join("");
   return '<div class="v5-locked-home" data-v5-exact-reference="2026-11-07">' +
     '<section class="v5-locked-hero" aria-labelledby="v5-title">' +
+      renderHeroAtmosphere() +
       '<nav class="v5-locked-rail" aria-label="Screenshot side navigation">' + rail + '</nav>' +
       '<div class="v5-locked-portrait"><picture><source media="(max-width: 600px)" type="image/webp" srcset="/src/v5/assets/portrait-anevum-transcosmic-mobile.webp"><img src="/src/v5/assets/portrait-anevum-transcosmic.webp" alt="Cinematic portrait artwork of Devon Akins in a dark eclipse-graphic T-shirt and fitted jeans" width="1122" height="1402" fetchpriority="high" decoding="async"></picture></div>' +
+      '<div class="v5-hero-veil" aria-hidden="true"></div>' +
       '<div class="v5-locked-identity"><h1 id="v5-title">Devon Alan Akins</h1>' +
         '<p class="v5-locked-roles">Developer · Researcher · Builder · Father<br>Writer · Systems Architect</p>' +
         '<div class="v5-locked-accent"></div>' +
