@@ -1,5 +1,6 @@
 import { projects } from "../content.mjs";
 import { renderReferenceHomepage, renderReferenceNav } from "./reference-home.mjs";
+import { renderPublicGraphHistory } from "./public-graph-view.mjs";
 
 export const PREVIEW_ROOT = "/__v5_preview__/";
 export const previewPages = [
@@ -109,7 +110,7 @@ function home() {
     <div class="v5-cards">${["merit", "rhen-language", "anevum"].map((slug) => projectCard(projects.find((p) => p.slug === slug))).join("")}</div>
   </section>`;
 }
-function secondary(key) {
+function secondary(key, options = {}) {
   const page = previewPages.find((entry) => entry.key === key);
   const heading = (eyebrow, title, description) =>
     `<header class="v5-page-heading"><p class="v5-eyebrow">${eyebrow}</p><h1 id="v5-title">${title}</h1><p>${description}</p></header>`;
@@ -117,9 +118,10 @@ function secondary(key) {
     return `${heading("THE WORKSHOP", "Projects & systems", "Original software, creative worlds and practical tools. Status descriptions come from the existing public portfolio; they are not live telemetry.")}
     <div class="v5-cards v5-project-grid">${catalog.map(projectCard).join("")}</div>`;
   if (key === "field")
-    return `${heading("THE SIGNAL FIELD", "A connected body of work.", "Explore the existing public project identities. This first preview is a static composition; the semantic 3D atlas, inspector and replay are not implemented yet.")}
-    <section class="v5-field-stage" aria-label="Static project composition">${fieldComposition()}</section><p class="v5-art-note">Decorative geometry · project links lead to the current portfolio</p>
-    ${ribbon()}<section class="v5-card v5-reading"><h2>Structure needs evidence.</h2><p>The future atlas will distinguish enduring project structure from temporary activity. A project being listed here does not mean its reporter is connected or that it is currently running.</p><a class="v5-text-link" href="/studio/">View the current Live Studio <span aria-hidden="true">↗</span></a></section>`;
+    return `${heading("THE SIGNAL FIELD", "A connected body of work.", "Explore the approved public directory and reviewed structural history. The visual landscape is decorative; active work is distinct from durable milestones.")}
+    <section class="v5-field-stage" aria-label="Decorative public project composition">${fieldComposition()}</section><p class="v5-art-note">Decorative project geometry · no inferred dependencies or live activity</p>
+    ${renderPublicGraphHistory({ requestedDate: options.asOf ?? null, now: options.now ?? Date.now() })}
+    ${ribbon()}<section class="v5-card v5-reading"><h2>Live evidence stays separate.</h2><p>Editor observations, participating agent tasks and GitHub history do not create permanent graph nodes. This gated preview does not request private provider data.</p><a class="v5-text-link" href="/studio/">View the current Live Studio <span aria-hidden="true">↗</span></a></section>`;
   if (key === "writing")
     return `${heading("ORIGINAL WORKS", "Stories. Worlds. Possibilities.", "Writing, revision and the worlds behind the pages.")}
     <section class="v5-card v5-reading"><p class="v5-eyebrow">BOOKS & MANUSCRIPTS</p><h2>Making room for the story.</h2><p>${esc(projects.find((p) => p.slug === "writing").description)}</p><a class="v5-text-link" href="/work/writing/">Books & writing <span aria-hidden="true">↗</span></a></section>`;
@@ -132,7 +134,7 @@ function secondary(key) {
   return `${heading("THE PERSON BEHIND THE PROJECTS", "Hello. I’m Devon.", "Father, author and independent developer. I build useful software, write fiction and help improve the systems behind family businesses.")}
     <section class="v5-card v5-reading"><h2>Curiosity, made useful.</h2><p>I care about software people can understand, original work worth finishing, and making space for family along the way.</p><div class="v5-actions"><a class="v5-button" href="/about/">Read my biography</a><a class="v5-secondary" href="/contact/">Get in touch</a></div></section>`;
 }
-export function renderV5Preview(key = "home") {
+export function renderV5Preview(key = "home", options = {}) {
   if (!previewPages.some((page) => page.key === key))
     throw new Error("Unknown V5 preview page");
   const nav = (className) =>
@@ -142,7 +144,7 @@ export function renderV5Preview(key = "home") {
   <body><a class="v5-skip" href="#v5-main">Skip to content</a><div class="v5-frame">
     ${key === "home" ? "" : previewNotice}
     <header class="v5-topbar"><a class="v5-brand" href="${PREVIEW_ROOT}" aria-label="Devon Akins home"><img src="/brand-mark-mono.svg" alt="" width="34" height="34"><span>DEVONAKINS.COM<small>SOFTWARE · WORLDS · POSSIBILITIES</small></span></a>${key === "home" ? renderReferenceNav() : nav("v5-desktop-nav")}<details class="v5-mobile-menu" data-mobile-menu><summary>Menu</summary>${nav("v5-mobile-nav")}</details></header>
-    <main id="v5-main" tabindex="-1">${key === "home" ? renderReferenceHomepage() : secondary(key)}</main>
+    <main id="v5-main" tabindex="-1">${key === "home" ? renderReferenceHomepage() : secondary(key, options)}</main>
     <footer class="v5-footer"><a href="${PREVIEW_ROOT}">The Living Mind <span>V5</span></a><p>Original work. Open questions. A growing body of ideas.</p><nav aria-label="More"><a href="/listening/">Listening</a><a href="/gpt/">GPT captures</a><a href="/contact/">Contact</a></nav></footer>
     ${key === "home" ? previewNotice : ""}
   </div></body></html>`;

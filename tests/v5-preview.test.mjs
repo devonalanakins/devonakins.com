@@ -102,6 +102,23 @@ test("all seven preview pages retain semantic navigation and source-qualified em
   assert.doesNotMatch(home, /696464828|2700000000|all systems healthy/i);
   assert.throws(() => renderV5Preview("../owner"));
 });
+test("V5 field history date works through server-side GET without JavaScript or provider calls", async () => {
+  const get = middleware("1");
+  const archived = await get(PREVIEW_ROOT + "field/?asOf=2026-11-06");
+  assert.equal(archived.statusCode, 200);
+  assert.match(archived.headers["Cache-Control"], /no-store/);
+  assert.match(archived.headers["X-Robots-Tag"], /noindex/);
+  assert.match(archived.body, /value="2026-11-06"/);
+  assert.match(archived.body, /data-v5-graph-revision="0"/);
+  assert.match(archived.body, /No reviewed structural events yet/);
+  assert.doesNotMatch(archived.body, /fetch\(|\/api\/activity\/v4|private-client/);
+  const malformed = await get(PREVIEW_ROOT + "field/?asOf=%3Cscript%3E");
+  assert.equal(malformed.statusCode, 200);
+  assert.match(malformed.body, /Choose a valid UTC date/);
+  assert.doesNotMatch(malformed.body, /<script>/);
+  assert.equal((await middleware("0")(PREVIEW_ROOT + "field/?asOf=2026-11-06")).statusCode, 404);
+});
+
 test("production Worker and compiled assets exclude V5 even when the preview flag is set", async () => {
   const site = createHandler(assets, { version: "test", commit: "synthetic" });
   for (const page of previewPages) {
