@@ -181,8 +181,13 @@ def main():
                 assert page.locator('[data-v5-project-card]:visible').count()==1
                 page.locator('[data-v5-project-search]').fill('NO_MATCH_XYZ')
                 assert page.locator('[data-v5-project-empty]').is_visible()
-                page.goto(origin+'/knowledge/',wait_until='networkidle');page.locator('a[href="/knowledge/sources-and-meaning/"]').first.click();assert page.locator('h1').inner_text()=='What a live signal actually means'
-                page.locator('a[href="/knowledge/public-and-private/"]').first.click();assert 'Publishing a view' in page.locator('h1').inner_text()
+                page.goto(origin+'/knowledge/',wait_until='networkidle')
+                with page.expect_navigation(url="**/knowledge/sources-and-meaning/", wait_until="domcontentloaded"):
+                    page.locator('a[href="/knowledge/sources-and-meaning/"]').first.click()
+                assert page.locator('h1').inner_text()=='What an activity record actually means'
+                with page.expect_navigation(url="**/knowledge/public-and-private/", wait_until="domcontentloaded"):
+                    page.locator('a[href="/knowledge/public-and-private/"]').first.click()
+                assert page.locator('h1').inner_text()=='Publishing a view, keeping a boundary'
                 assert not errors,(width,errors);assert not blocked,blocked
                 records.append({'engine':args.engine,'viewport':[width,height],'routes':len(ROUTES),'result':'pass'});context.close()
                 if args.constrained: browser.close();browser=getattr(p,args.engine).launch(**options)
