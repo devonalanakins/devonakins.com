@@ -81,6 +81,10 @@ jobs:
             V5_PUBLIC_SITE_CANDIDATE=1 npm run build
             node scripts/verify-v5-site-candidate.mjs
           fi
+      - name: Verify approved GitHub repository links remain public
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: node scripts/verify-public-portfolio-links.mjs
       - name: Require dedicated Cloudflare CI credentials
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
