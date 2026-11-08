@@ -96,10 +96,10 @@ function renderExplorer(layout) {
     key + '" checked' + (count === 0 ? ' disabled' : '') +
     '><span>' + label + '</span><strong>' + count + '</strong></label>';
   return '<aside class="v5-atlas-explorer" aria-label="Public systems explorer">' +
-    '<p class="v5-eyebrow">SIGNAL FIELD · V5</p>' +
+    '<p class="v5-eyebrow">SYSTEMS MAP</p>' +
     '<h2>Systems explorer</h2>' +
     '<p class="v5-atlas-explorer-note">Inspect the curated public catalog. Project names are not live connections.</p>' +
-    '<nav class="v5-atlas-quicklinks" aria-label="Signal Field sections">' +
+    '<nav class="v5-atlas-quicklinks" aria-label="Systems map sections">' +
       '<a href="#v5-atlas-viewport" aria-current="location">Atlas view</a>' +
       '<a href="#v5-graph-timeline-title">Growth timeline</a>' +
       '<a href="#v5-graph-relations-title">Reviewed relationships</a>' +
@@ -167,7 +167,7 @@ export function renderV5Atlas({ requestedDate = null, now = Date.now() } = {}) {
       '<div class="v5-atlas-host" data-v5-atlas-host aria-hidden="true"></div>' +
       '<div class="v5-atlas-still" data-v5-atlas-still aria-hidden="true">' +
         '<span class="v5-atlas-still-mark">DA</span>' +
-        '<span>THE LIVING MIND</span>' +
+        '<span>PUBLIC PROJECTS</span>' +
       '</div>' +
       '<div class="v5-camera-controls" data-v5-camera-controls hidden role="group" aria-label="3D camera controls">' +
       [['left','Orbit left'],['right','Orbit right'],['up','Orbit up'],['down','Orbit down'],['in','Zoom in'],['out','Zoom out'],['focus','Focus selected'],['reset','Reset view']].map(([action,label]) =>
