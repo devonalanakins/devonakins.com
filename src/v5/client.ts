@@ -1,4 +1,5 @@
 import { publicV5ProjectEvidence } from "./public-evidence.mjs";
+import { publicHomepageSourceSummary } from "./homepage-source-summary.mjs";
 import { publicV5AtlasSignals } from "./atlas-live-evidence.mjs";
 import { publicV5Playback } from "./public-playback.mjs";
 import { publicV5GptCapture, formatPublicGptValue, publicGptCapturedAt } from "./public-gpt-capture.mjs";
@@ -134,6 +135,17 @@ if (field && (publicPreviewButton || activationMode === "automatic")) {
     const details = publicV5Playback(value, Date.now());
     spotifyLink.dataset.v5SpotifyState = details.state;
     spotifyLink.href = details.href;
+    // One source of truth: the compact homepage strip echoes the existing
+    // consent-filtered Spotify renderer; no separate poll or credential.
+    const compact = document.querySelector<HTMLElement>("[data-v5-home-spotify]");
+    const compactCard = document.querySelector<HTMLElement>('[data-v5-home-source="spotify"]');
+    if (compact) compact.textContent = details.state === "playing"
+      ? "Playing · " + details.title + " — " + details.artist
+      : details.state === "private" ? "Private playback"
+      : details.state === "off_air" ? "Not playing"
+      : "Playback unavailable";
+    if (compactCard) compactCard.dataset.v5HomeState =
+      details.state === "playing" ? "current" : "unavailable";
     if (spotifyTitle) spotifyTitle.textContent = details.title;
     if (spotifyArtist) spotifyArtist.textContent = details.artist;
     if (spotifyCover) {
@@ -275,6 +287,60 @@ if (field && (publicPreviewButton || activationMode === "automatic")) {
       && "gpt" in snapshot ? (snapshot as { gpt?: unknown }).gpt : null;
     renderPublicGpt(publicGpt, at);
     renderPublicThreads(projection.available ? snapshot : null, at);
+    const homepage = publicHomepageSourceSummary(projection, at);
+    const put = (selector: string, value: string) => {
+      const target = document.querySelector<HTMLElement>(selector);
+      if (target) target.textContent = value;
+    };
+    put("[data-v5-home-github]", homepage.github);
+    put("[data-v5-home-tasks]", homepage.tasks);
+    put("[data-v5-home-coding]", homepage.coding);
+    for (const [key, isCurrent] of [
+      ["github", homepage.available && homepage.events.length > 0],
+      ["tasks", Boolean(homepage.focus && homepage.focus.kind === "remote") ||
+        homepage.tasks.includes(" · ")],
+      ["coding", homepage.coding.startsWith("Editor observed · ")],
+    ] as const) {
+      const card = document.querySelector<HTMLElement>(
+        '[data-v5-home-source="' + key + '"]'
+      );
+      if (card) card.dataset.v5HomeState = isCurrent
+        ? (key === "github" ? "recent" : "current") : "unavailable";
+    }
+    const capture = publicV5GptCapture(publicGpt, at);
+    const recorded = capture.headline || capture.readings[0] || null;
+    put("[data-v5-home-gpt]", recorded
+      ? "Captured " + publicGptCapturedAt(recorded.asOf) : "Capture unavailable");
+    const gptCard = document.querySelector<HTMLElement>('[data-v5-home-source="gpt"]');
+    if (gptCard) gptCard.dataset.v5HomeState = recorded ? "recorded" : "unavailable";
+    const activityList = document.querySelector<HTMLOListElement>(
+      "[data-v5-home-activity-list]"
+    );
+    const activityEmpty = document.querySelector<HTMLElement>(
+      "[data-v5-home-activity-empty]"
+    );
+    if (activityEmpty) activityEmpty.hidden = homepage.events.length > 0;
+    if (activityList) activityList.replaceChildren(...homepage.events.map(event => {
+      const item = document.createElement("li");
+      const link = document.createElement("a");
+      const body = document.createElement("span");
+      const title = document.createElement("strong");
+      const age = document.createElement("time");
+      link.href = event.href;
+      title.textContent = event.kind + " · " + event.title;
+      age.dateTime = event.at;
+      age.textContent = event.age;
+      body.append(title);
+      link.append(body, age);
+      item.append(link);
+      return item;
+    }));
+    put("[data-v5-home-focus]", homepage.focus
+      ? homepage.focus.title : "No current public work observed");
+    put("[data-v5-home-focus-detail]", homepage.focus
+      ? homepage.focus.source + " · observed " + homepage.focus.age
+      : homepage.available ? "No fresh approved editor or participating task observations."
+      : "Public work source unavailable or sharing disabled.");
     if (publicPreviewStatus) publicPreviewStatus.textContent = projection.available
       ? "Public V4 source checked · consented evidence only"
       : "Public source unavailable, disabled or stale";
