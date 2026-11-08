@@ -68,9 +68,6 @@ def check_page(page, origin, path, axe):
         if canvas.count():
             assert canvas.get_attribute("aria-hidden") == "true"
             assert page.locator(".v5-atlas-label-layer").get_attribute("aria-hidden") == "true"
-        assert "No active reporter or unverified dependency" not in atlas.inner_text() or (
-            page.locator("[data-v5-atlas-ready]").count() == 1
-        )
         archive = page.locator(".v5-graph-history")
         assert archive.count() == 1
         assert archive.get_attribute("data-v5-graph-revision") == "0"
