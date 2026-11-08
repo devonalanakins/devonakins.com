@@ -18,6 +18,21 @@ const POSITIONS = Object.freeze({
 });
 const ROOT_IDS = Object.freeze(Object.keys(POSITIONS));
 const ROOT_SET = new Set(ROOT_IDS);
+const ROOT_LABELS = Object.freeze({
+  "project:devonstation": "DevonStation",
+  "project:mizvo": "Mizvo",
+  "section:knowledge-overview": "Knowledge",
+  "project:anevum": "Anevum",
+  "project:rhen-language": "Rhen",
+  "project:merit": "Merit",
+  "project:vesper": "Vesper",
+  "project:squelch": "Squelch",
+});
+const CHILD_ID = /^(feature|component|integration|publication):([a-z][a-z0-9-]{1,35})\/([a-z][a-z0-9-]{1,47})$/;
+const RELATION_ID = /^relation:[a-z][a-z0-9-]{2,63}$/;
+const TITLE = /^[A-Za-z0-9][A-Za-z0-9 _.,:()\/&+\-]{0,69}$/;
+const REVIEW_URL = /^https:\/\/github\.com\/devonalanakins\/devonakins\.com\/pull\/[1-9][0-9]*$/;
+const EVIDENCE_URL = /^https:\/\/github\.com\/devonalanakins\/(?:devonakins\.com|devon-station|mizvo|rhen|merit|vesper|squelch|anevum)\/(?:pull\/[1-9][0-9]*|commit\/[0-9a-f]{40})$/;
 const NODE_TYPES = new Set(["feature", "component", "integration", "publication"]);
 const RELATION_TYPES = new Set(["contains", "implements", "documents", "depends-on", "integrates-with"]);
 const hash = str => {
@@ -33,13 +48,16 @@ export function projectV5Atlas(frame) {
   const entries = new Map();
   const roots = frame?.nodes;
   if (!Array.isArray(roots) || frame?.schema !== 1 ||
+      !Number.isSafeInteger(frame.revision) || frame.revision < 0 ||
+      frame.revision > 128 ||
       roots.length < ROOT_IDS.length || roots.length > 96)
     return { version: V5_ATLAS_LAYOUT_VERSION, valid: false, revision: 0,
       nodes: [], links: [] };
   for (const [id, position] of Object.entries(POSITIONS)) {
     const node = roots.find(n => n?.id === id && n?.state === "catalogued" &&
-      (n.type === "project" || n.type === "section") &&
-      typeof n.label === "string" && n.label.length > 0 && n.label.length <= 70);
+      n.parent === null &&
+      n.type === (id.startsWith("section:") ? "section" : "project") &&
+      n.label === ROOT_LABELS[id]);
     if (!node) return { version: V5_ATLAS_LAYOUT_VERSION, valid: false, revision: 0,
       nodes: [], links: [] };
     entries.set(id, Object.freeze({
@@ -56,12 +74,17 @@ export function projectV5Atlas(frame) {
   const nodes = [...entries.values()];
   for (const node of roots) {
     if (ROOT_SET.has(node.id)) continue;
-    if (!NODE_TYPES.has(node.type) || typeof node.id !== "string" ||
-        !/^(?:feature|component|integration|publication):[a-z0-9-]+\/[a-z0-9-]+$/.test(node.id) ||
+    const identity = typeof node?.id === "string" ? CHILD_ID.exec(node.id) : null;
+    const parent = typeof node?.parent === "string" ? entries.get(node.parent) : null;
+    const parentSlug = parent?.id.startsWith("project:")
+      ? parent.id.slice("project:".length)
+      : typeof parent?.id === "string" ? CHILD_ID.exec(parent.id)?.[2] : null;
+    if (!identity || !NODE_TYPES.has(node.type) || node.type !== identity[1] ||
+        !TITLE.test(node.label) || entries.has(node.id) ||
         !["published", "retired"].includes(node.state) ||
-        typeof node.label !== "string" || node.label.length > 70 ||
-        typeof node.parent !== "string" || !entries.has(node.parent) ||
-        (node.state === "published" && entries.get(node.parent).state === "retired")) {
+        !parent || parentSlug !== identity[2] ||
+        (node.state === "published" && parent.state === "retired") ||
+        !REVIEW_URL.test(node.reviewUrl) || !EVIDENCE_URL.test(node.evidenceUrl)) {
       // Never display an unexplained or unapproved relationship.
       return { version: V5_ATLAS_LAYOUT_VERSION, valid: false, revision: 0,
         nodes: [...entries.values()].filter(n => ROOT_SET.has(n.id)), links: [] };
@@ -90,12 +113,14 @@ export function projectV5Atlas(frame) {
     return { version: V5_ATLAS_LAYOUT_VERSION, valid: false, revision: 0,
       nodes: nodes.filter(n => ROOT_SET.has(n.id)), links: [] };
   for (const relation of frame.relations) {
-    if (!relation || !RELATION_TYPES.has(relation.type) ||
+    if (!relation || !RELATION_ID.test(relation.id) ||
+        !RELATION_TYPES.has(relation.type) ||
         relation.state !== "published" || relation.from === relation.to ||
         !entries.has(relation.from) || !entries.has(relation.to) ||
         entries.get(relation.from).state === "retired" ||
         entries.get(relation.to).state === "retired" ||
-        !/^https:\/\/github\.com\/devonalanakins\/devonakins\.com\/pull\/[1-9]\d*$/.test(relation.reviewUrl)) {
+        !REVIEW_URL.test(relation.reviewUrl) ||
+        !EVIDENCE_URL.test(relation.evidenceUrl)) {
       return { version: V5_ATLAS_LAYOUT_VERSION, valid: false, revision: 0,
         nodes: nodes.filter(n => ROOT_SET.has(n.id)), links: [] };
     }
