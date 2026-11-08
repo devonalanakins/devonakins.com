@@ -188,7 +188,7 @@ def check_page(page, origin, path, axe):
             core = page.locator("[data-v5-atlas-core-label]")
             assert core.count() == 1, "3D nucleus should have one visual identity label"
             assert core.locator("strong").inner_text() == "DEVON AKINS"
-            assert "SIGNAL FIELD" in core.inner_text()
+            assert "PUBLIC PROJECTS" in core.inner_text()
             assert page.locator("[data-v5-atlas-node-id]").count() == 12, (
                 "Decorative core and skyline cannot create extra semantic structures")
             if atlas.get_attribute("data-v5-atlas-ready") == "true":
