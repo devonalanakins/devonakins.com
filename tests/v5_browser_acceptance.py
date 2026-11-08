@@ -154,6 +154,13 @@ def check_page(page, origin, path, axe):
         selected = page.locator("#v5-graph-date")
         selected.fill("2026-11-06")
         page.locator(".v5-graph-date-form button").click()
+        # A native GET navigation may complete asynchronously in WebKit.
+        # Require the actual archived route before testing its new document.
+        # If form submission fails, this will still fail (with a useful URL).
+        page.wait_for_url(
+            "**/__v5_preview__/field/?asOf=2026-11-06",
+            wait_until="domcontentloaded", timeout=15000,
+        )
         assert "?asOf=2026-11-06" in page.url
         assert page.locator("#v5-graph-date").input_value() == "2026-11-06"
         assert page.locator(".v5-graph-history").get_attribute("data-v5-graph-revision") == "0"
