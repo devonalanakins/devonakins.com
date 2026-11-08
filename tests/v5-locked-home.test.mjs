@@ -24,6 +24,11 @@ test("locked V5 screenshot modules occupy one semantic preview home", () => {
   assert.match(body, /data-v5-field-evidence hidden/);
   assert.match(body, /data-v5-work-summary/);
   assert.match(body, /data-v5-github-summary/);
+  assert.match(body, /data-v5-threads-status/);
+  assert.match(body, /data-v5-threads-empty/);
+  assert.match(body, /data-v5-threads-feed hidden/);
+  assert.match(body, /data-v5-threads-posts/);
+  assert.match(body, /Official Threads API/);
   assert.match(body, /data-v5-gpt-empty/);
   assert.match(body, /data-v5-gpt-capture hidden/);
   assert.match(body, /data-v5-gpt-primary/);
