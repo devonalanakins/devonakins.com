@@ -383,4 +383,19 @@ if (terrain && window.innerWidth > 600) {
   });
 }
 
+
+if (document.querySelector("[data-v5-atlas]")) {
+  // PR #68's full-screen 3D atlas, reconciled with R15/R16 dated public history.
+  // Same local first-party vetted manifest as the semantic index; zero fetches.
+  void import("./atlas-client").then(({ mountV5Atlas }) => {
+    mountV5Atlas();
+  }).catch(() => {
+    const host = document.querySelector<HTMLElement>("[data-v5-atlas-host]");
+    const state = document.querySelector<HTMLElement>("[data-v5-atlas-status]");
+    if (host) host.dataset.v5AtlasFallback = "true";
+    if (state) state.textContent =
+      "Optional 3D renderer could not load. The public index remains accessible.";
+  });
+}
+
 export {};
