@@ -41,7 +41,7 @@ const catalog = [
   "vesper",
 ].map((slug) => projects.find((project) => project.slug === slug));
 const identity = (project) =>
-  ({ "rhen-language": "rhen", devonstation: "devonstation-mark" })[
+  ({ "rhen-language": "rhen", devonstation: "devonstation-mark", ideaflow: "ideaflow-mark" })[
     project.slug
   ] || project.slug;
 const projectLink = (project) => `/work/${project.slug}/`;
