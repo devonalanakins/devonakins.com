@@ -78,6 +78,10 @@ test("full-site candidate publishes real sections and a dedicated atlas without 
   for (const n of publicNotes)
     assert.ok(knowledge.includes("/knowledge/" + n.slug + "/"));
   assert.match(renderV5PublicPage("research"), /RESEARCH PROTOTYPE/);
+  const research = renderV5PublicPage("research");
+  assert.doesNotMatch(research, /href="undefined"|href="https:\/\/github\.com\/devonalanakins\/vesper"/,
+    "Public research must not link to missing or private source");
+  assert.match(research, /Source repository is private/);
   assert.match(
     renderV5PublicPage("writing"),
     /Future works are not presented as released books/,
