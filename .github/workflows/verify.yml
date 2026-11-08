@@ -4,6 +4,10 @@ on:
   pull_request:
 permissions:
   contents: read
+# Latest reviewed PR head wins; protected main checks are never cancelled.
+concurrency:
+  group: verify-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 jobs:
   verify:
     runs-on: ubuntu-24.04 # Pinned: Playwright 1.57 browser builds do not support Ubuntu 26.04
