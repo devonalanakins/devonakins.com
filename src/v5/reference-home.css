@@ -1304,6 +1304,22 @@
 }
 
 
+/* Mobile project status chips must show their complete, source-qualified
+ * descriptions. Their single-line ellipsis previously cut off important
+ * qualifiers (such as "not deployed") on 165px carousel cards. Let the
+ * existing flex card grow naturally; never hide release-status language. */
+@media (max-width: 600px) {
+  .v5-lock-project .v5-lock-state {
+    flex-shrink: 0;
+    white-space: normal;
+    overflow: visible;
+    text-overflow: clip;
+    overflow-wrap: anywhere;
+    line-height: 1.35;
+    min-height: 0;
+  }
+}
+
 /* V5 fidelity: preserve the authentic smoke surrounding the approved subject.
  * The original image is reused once as a masked atmospheric texture behind
  * the isolated silhouette, never as an unmasked rectangular hero background.
