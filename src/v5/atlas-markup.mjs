@@ -29,7 +29,7 @@ function item(node, source, profile) {
     esc(terms[node.type] || "Reviewed public structure") + ' · ' +
     (root ? "Catalog identity only. This is not a verified active reporter." :
       node.state === "retired" ? "Historical, retired structure." :
-        "Published from an explicitly reviewed public milestone.") + '</p>' +
+        "Documented by an owner-approved, source-backed historical milestone.") + '</p>' +
     (profile ? '<p class="v5-atlas-native-summary">' + esc(profile.summary) + '</p>' : "") +
     (target ? '<a class="v5-text-link" href="' + esc(target) +
       '">Open public context</a>' : "") + proof + '</details>';
@@ -67,7 +67,7 @@ function renderReviewedTemplates(layout, sources) {
         typeof source.reviewUrl !== "string") return "";
     return '<template data-v5-atlas-profile="' + esc(node.id) + '">' +
       '<article class="v5-atlas-profile" data-v5-atlas-profile-view="' + esc(node.id) + '">' +
-        '<p class="v5-eyebrow">REVIEWED PUBLIC SOURCE · HISTORICAL</p>' +
+        '<p class="v5-eyebrow">APPROVED PUBLIC SOURCE · HISTORICAL</p>' +
         '<h3>' + esc(node.label) + '</h3>' +
         '<p class="v5-atlas-profile-context">DOCUMENTED STRUCTURE · NOT LIVE TELEMETRY</p>' +
         '<p class="v5-atlas-profile-status">' +
@@ -194,7 +194,7 @@ export function renderV5Atlas({ requestedDate = null, now = Date.now() } = {}) {
       '<p class="v5-eyebrow">THE STRUCTURAL MAP</p>' +
       '<h2>Explore the structure.</h2>' +
       '<p data-v5-atlas-status role="status">3D rendering is optional. The complete public index works without JavaScript or graphics.</p>' +
-      '<p class="v5-atlas-caveat">Only approved public identities and separately reviewed structural milestones appear here. Decorative towers, halos and points are artwork: not features, real deployments, measured activity or software dependencies. Only independently reviewed lines represent structural relationships.</p>' +
+      '<p class="v5-atlas-caveat">Only explicitly approved, source-backed public structures appear here. Decorative towers, halos and points are artwork: not features, real deployments, measured activity or software dependencies. Dated documentation links do not establish deployed software or active work.</p>' +
       '<div class="v5-atlas-details">' + layout.nodes.map(node =>
         item(node, sources.get(node.id), profileMap.get(node.id))).join("") + '</div>' +
     '</aside>' +

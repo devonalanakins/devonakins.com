@@ -81,6 +81,9 @@ test("gated atlas markup includes source-qualified contextual inspector and no-J
   assert.match(html, /Publication provenance/);
   assert.match(html, /Source commit/);
   assert.match(html, /DOCUMENTED STRUCTURE · NOT LIVE TELEMETRY/);
+  assert.match(html, /APPROVED PUBLIC SOURCE · HISTORICAL/);
+  assert.match(html, /Dated documentation links do not establish deployed software or active work/);
+  assert.doesNotMatch(html, /Only independently reviewed lines/);
   assert.match(html, /data-v5-atlas-profile="project:mizvo"/);
   assert.match(html, /AGPL review build/);
   assert.match(html, /CURATED PORTFOLIO STATUS · NOT LIVE TELEMETRY/);
