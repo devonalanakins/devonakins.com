@@ -462,6 +462,18 @@ export function mountV5Atlas() {
     ]));
     const slice = publicAtlasVisibleSlice(graph, { search, ...enabled });
     visibleNodeIds = new Set(slice.nodeIds);
+    // Filtering away a selected entry clears the 3D selection as well as the
+    // semantic inspector. Otherwise a previously selected publication child
+    // keeps its floating label after the search is reset (9 labels for 8
+    // approved roots) and its highlight falsely remains selected.
+    if (selectedId && !visibleNodeIds.has(selectedId)) {
+      selectedId = null;
+      for (const mesh of meshes) mesh.scale.setScalar(1);
+      for (const group of architecturalGroups.values()) group.scale.setScalar(1);
+      status.textContent = "Selection cleared by current visibility filter. " +
+        "Choose a public system from the directory; no activity is implied.";
+      syncEvidence();
+    }
     const visibleLinks = new Set(slice.linkIndexes);
     for (const mesh of meshes) mesh.visible = visibleNodeIds.has(mesh.userData.nodeId);
     for (const [id, group] of architecturalGroups) group.visible = visibleNodeIds.has(id);

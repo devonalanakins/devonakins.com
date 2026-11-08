@@ -154,6 +154,10 @@ def check_page(page, origin, path, axe):
             timeout=10000,
         )
         assert "Select a public system" in spotlight.inner_text()
+        if atlas.get_attribute("data-v5-atlas-ready") == "true":
+            assert "Selection cleared by current visibility filter" in page.locator(
+                "[data-v5-atlas-status]"
+            ).inner_text(), "3D selection must clear when the inspector resets"
         search.fill("")
         # A mobile back-forward cache restore must preserve source-free
         # explorer listeners and a responsive optional Three.js viewport.
