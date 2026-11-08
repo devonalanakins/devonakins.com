@@ -36,6 +36,17 @@ test("full-site candidate publishes real sections and a dedicated atlas without 
     assert.match(html, /property="og:title"/);
   }
   const fullHome = renderV5PublicPage("home");
+  for (const label of ["Home","Work","Research","Writing","Knowledge","Systems","Activity"])
+    assert.ok(fullHome.includes(">" + label + "</a>"), "Global navigation must expose " + label);
+  for (const source of ["github","tasks","spotify","gpt","coding"])
+    assert.ok(fullHome.includes('data-v5-home-source="' + source + '"'),
+      "Home must preserve the verified " + source + " source");
+  assert.ok(fullHome.includes('data-v5-home-activity-list'));
+  assert.ok(fullHome.includes('data-v5-home-focus'));
+  const about = renderV5PublicPage("about");
+  assert.ok(about.includes("Building ideas into something useful"));
+  assert.ok(about.includes('href="/work/">Explore my work'));
+  assert.ok(!about.includes("Read my biography"), "About must not link to itself");
   // A complete V5 release must never strand homepage navigation on V4.
   for (const href of ["/knowledge/", "/writing/", "/signal-field/"]) {
     assert.ok(fullHome.includes('href="' + href + '"'), href);
