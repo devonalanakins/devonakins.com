@@ -132,6 +132,15 @@ def run():
                 timeout=10000,
             )
             assert len(calls) == 1, "Must reuse exactly one existing V4 reader"
+            # The GPU is optional. When available, verify that exactly the
+            # public editor/remote nodes light; history remains neutral.
+            gpu_ready = page.locator(".v5-lock-terrain").get_attribute("data-webgl") == "ready"
+            if gpu_ready:
+                page.wait_for_function(
+                    "() => document.querySelector('.v5-lock-terrain')"
+                    "?.dataset.v5TerrainVerifiedCount === '2'",
+                    timeout=10000,
+                )
             assert page.locator('a[data-v5-field-slug="mizvo"]').get_attribute(
                 "data-v5-verified"
             ) == "editor"
@@ -228,6 +237,12 @@ def run():
             )
             assert len(calls) >= 2
             assert page.locator("[data-v5-field-node][data-v5-verified]").count() == 0
+            if gpu_ready:
+                page.wait_for_function(
+                    "() => document.querySelector('.v5-lock-terrain')"
+                    "?.dataset.v5TerrainVerifiedCount === '0'",
+                    timeout=10000,
+                )
             assert "No approved public GitHub history" in page.locator(
                 "[data-v5-github-summary]"
             ).inner_text()
@@ -268,6 +283,10 @@ def run():
                 timeout=10000,
             )
             assert page.locator("[data-v5-field-node][data-v5-verified]").count() == 0
+            if gpu_ready:
+                assert page.locator(".v5-lock-terrain").get_attribute(
+                    "data-v5-terrain-verified-count"
+                ) == "0", "Transport failure must not resurrect stale GPU activity"
             assert not blocked, "No other API or external URL should be requested"
             assert page.evaluate("document.documentElement.scrollWidth <= innerWidth + 1")
 
