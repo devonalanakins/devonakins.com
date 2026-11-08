@@ -466,10 +466,10 @@ def main():
                                 assert page.locator(".v5-mobile-nav").is_hidden()
                                 assert page.locator("summary").evaluate("e => e === document.activeElement")
                                 page.locator("summary").click()
-                                page.locator(".v5-mobile-nav a").filter(has_text="Projects").click()
+                                page.locator(".v5-mobile-nav a").filter(has_text="Work").click()
                                 assert page.url.endswith("projects/")
                             else:
-                                page.locator(".v5-desktop-nav a").filter(has_text="Projects").click()
+                                page.locator(".v5-desktop-nav a").filter(has_text="Work").click()
                                 assert page.url.endswith("projects/")
                             page.goto(origin + PREVIEW, wait_until="networkidle")
                             if width <= 600:
