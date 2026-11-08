@@ -38,7 +38,7 @@ test("locked V5 screenshot modules occupy one semantic preview home", () => {
   assert.match(body, /Public Knowledge section preview/);
   assert.match(body, /Approved public project catalog/);
   assert.match(body, /data-v5-field-slug="rhen-language"/);
-  assert.ok(body.includes("PROVENANCE REQUIRED"));
+  assert.ok(body.includes("CHECK DATES &amp; SOURCES"));
   assert.match(body, /portrait-anevum-transcosmic\.webp/);
   assert.match(body, /portrait-anevum-transcosmic-mobile\.webp/);
   assert.equal((body.match(/class="v5-hero-atmosphere"/g) || []).length, 1);
