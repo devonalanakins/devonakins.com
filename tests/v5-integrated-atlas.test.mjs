@@ -111,6 +111,47 @@ test("invalid graph input cannot create edges or unknown private nodes",()=>{
   assert.equal(hostile.nodes.length,8);
   assert.doesNotMatch(JSON.stringify(hostile),/private-client|SECRET|secret/);
 });
+test("forged valid frames cannot inject private nodes or misattribute public milestones",()=>{
+  const frame=replayPublicGraphHistory([],NOW);
+  const root=frame.nodes.find(n=>n.id==="project:mizvo");
+  const cases=[
+    [{...child,id:"component:private-client/secret",state:"published",
+      evidenceUrl:source,reviewUrl:reviewed}],
+    [{...child, state:"published",parent:"project:merit",
+      evidenceUrl:source,reviewUrl:reviewed}],
+    [{...child,state:"published",evidenceUrl:source,reviewUrl:null}],
+    [{...child,state:"published",evidenceUrl:
+      "https://github.com/devonalanakins/private-client/pull/1",reviewUrl:reviewed}],
+    [{...child,state:"published",label:"<script>PRIVATE</script>",
+      evidenceUrl:source,reviewUrl:reviewed}],
+    [{...child,state:"published",evidenceUrl:source,reviewUrl:reviewed},
+     {...child,state:"published",evidenceUrl:source,reviewUrl:reviewed}],
+  ];
+  for (const injected of cases) {
+    const graph=projectV5Atlas({...frame,valid:true,nodes:[...frame.nodes,...injected]});
+    assert.equal(graph.valid,false,JSON.stringify(injected));
+    assert.equal(graph.links.length,0);
+    assert.equal(graph.nodes.length,8);
+    assert.doesNotMatch(JSON.stringify(graph),/private-client|PRIVATE|secret/);
+  }
+  const mislabeled=projectV5Atlas({...frame,valid:true,nodes:frame.nodes.map(n=>
+    n.id===root.id?{...n,label:"PRIVATE_CLIENT"}:n,
+  )});
+  assert.equal(mislabeled.valid,false);
+  assert.doesNotMatch(JSON.stringify(mislabeled),/PRIVATE_CLIENT/);
+});
+
+test("published relation requires independent reviewed evidence even if frame.valid is forged",()=>{
+  const frame=replayPublicGraphHistory([],NOW);
+  const fake={id:"relation:fake-edge",type:"depends-on",
+    from:"project:mizvo",to:"project:merit",state:"published",
+    reviewUrl:reviewed,evidenceUrl:null};
+  const graph=projectV5Atlas({...frame,valid:true,relations:[fake]});
+  assert.equal(graph.valid,false);
+  assert.equal(graph.links.length,0);
+  assert.equal(graph.nodes.length,8);
+});
+
 test("the date-aware semantic inspector and the visual atlas share one version",()=>{
   const html=renderV5Preview("field",{asOf:"2026-11-06",now:NOW});
   assert.match(html,/data-v5-atlas-version="1"/);
