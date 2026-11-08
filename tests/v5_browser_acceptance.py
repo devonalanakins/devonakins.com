@@ -98,10 +98,16 @@ def check_page(page, origin, path, axe):
         assert page.locator(".v5-locked-hero").evaluate(
             "e => !getComputedStyle(e).backgroundImage.includes('portrait-anevum-transcosmic.webp')"
         ), "Hero must not contain a flat portrait background"
-        assert page.locator(".v5-locked-portrait picture img").evaluate(
+        assert portrait_box.evaluate(
             "e => getComputedStyle(e).clipPath.startsWith('polygon(')"
             " && getComputedStyle(e).clipPath.length > 150"
-        ), "Approved person cutout must be a real scalable silhouette"
+        ), "Visible portrait must have a true scalable silhouette"
+        assert portrait_box.evaluate(
+            "e => getComputedStyle(e).backgroundImage.includes('portrait-anevum-transcosmic')"
+        ), "Visible cutout must use the original approved first-party portrait"
+        assert page.locator(".v5-locked-portrait picture img").evaluate(
+            "e => getComputedStyle(e).opacity === '0'"
+        ), "Accessible image should not paint a second rectangular copy"
         assert portrait_box.evaluate(
             "e => Number(getComputedStyle(e).opacity) > .9"
         ), "Portrait cutout must remain fully visible"
