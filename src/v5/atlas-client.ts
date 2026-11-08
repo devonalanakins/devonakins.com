@@ -4,6 +4,7 @@ import { replayPublicGraphHistory } from "./public-graph-history.mjs";
 import { projectV5Atlas } from "./atlas-layout.mjs";
 import { publicAtlasVisibleSlice } from "./atlas-explorer-model.mjs";
 import { projectPublicAtlasArchitecture, PUBLIC_ATLAS_ROOT_COLORS } from "./atlas-architecture.mjs";
+import { fitPublicAtlasCamera } from "./atlas-camera-fit.mjs";
 
 /**
  * Reconciled from PR #68's progressive public Three.js catalog.
@@ -58,11 +59,16 @@ export function mountV5Atlas() {
   controls.enableZoom = true;
   controls.enableRotate = true;
   controls.minDistance = 6;
-  controls.maxDistance = 20;
+  // Wide three-column layouts need more initial distance than the old fixed
+  // 13.2-unit camera. Keep manual orbit/zoom available after initial framing.
+  controls.maxDistance = 60;
   controls.minPolarAngle = .28;
   controls.maxPolarAngle = Math.PI - .28;
   controls.target.set(0, 0, 0);
   controls.update();
+  let cameraAdjustedByUser = false;
+  const markCameraAdjusted = () => { cameraAdjustedByUser = true; };
+  controls.addEventListener("start", markCameraAdjusted);
 
   scene.add(new THREE.AmbientLight(0xa8dced, 1.15));
   const cyan = new THREE.PointLight(0x70e6f6, 36, 22);
@@ -289,6 +295,12 @@ export function mountV5Atlas() {
     if (width < 1 || height < 1) return;
     renderer.setSize(width, height, false);
     camera.aspect = width / height;
+    if (!cameraAdjustedByUser) {
+      const fit = fitPublicAtlasCamera(graph.nodes, width, height);
+      camera.position.set(0, fit.distance * fit.pitch, fit.distance);
+      controls.maxDistance = Math.max(20, fit.distance * 1.8);
+      controls.update();
+    }
     camera.updateProjectionMatrix();
     render();
   };
@@ -390,6 +402,7 @@ export function mountV5Atlas() {
     disposed = true;
     observer.disconnect();
     controls.removeEventListener("change", render);
+    controls.removeEventListener("start", markCameraAdjusted);
     controls.dispose();
     root.removeEventListener("toggle", onIndex, true);
     root.removeEventListener("v5-atlas-filter", applyVisibility);
