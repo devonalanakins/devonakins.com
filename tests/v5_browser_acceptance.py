@@ -326,7 +326,7 @@ def check_page(page, origin, path, axe):
             """e => {
                 const s = getComputedStyle(e);
                 const mask = s.maskImage || s.webkitMaskImage || '';
-                return s.clipPath === 'none' && mask.includes('radial-gradient');
+                return s.clipPath === 'none' && mask.includes('linear-gradient');
             }"""
         ), "Approved cap portrait must feather without an obsolete silhouette polygon"
         assert portrait_box.evaluate(
