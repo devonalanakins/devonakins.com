@@ -3,6 +3,7 @@ import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { replayPublicGraphHistory } from "./public-graph-history.mjs";
 import { projectV5Atlas } from "./atlas-layout.mjs";
 import { publicAtlasVisibleSlice } from "./atlas-explorer-model.mjs";
+import { projectPublicAtlasArchitecture, PUBLIC_ATLAS_ROOT_COLORS } from "./atlas-architecture.mjs";
 
 /**
  * Reconciled from PR #68's progressive public Three.js catalog.
@@ -87,16 +88,57 @@ export function mountV5Atlas() {
   ring.rotation.x = .68;
   scene.add(ring);
 
-  const rootColors: Record<string, number> = {
-    "project:devonstation": 0x70baff,
-    "project:mizvo": 0x46e4fb,
-    "section:knowledge-overview": 0xa9a4fa,
-    "project:anevum": 0xffb979,
-    "project:rhen-language": 0xb995ff,
-    "project:merit": 0x78e8d3,
-    "project:vesper": 0xe8bc85,
-    "project:squelch": 0xfa83ed,
-  };
+  // Static presentation geometry. These rings and points are environmental
+  // artwork, not network links, live traffic, or historical milestones.
+  for (const [radius, tilt, color, opacity] of [
+    [1.18, 0.38, 0x45cce6, 0.28],
+    [1.42, 1.04, 0xa77bd8, 0.19],
+    [1.66, -0.48, 0x61c7b7, 0.13],
+  ] as const) {
+    const orbit = new THREE.Mesh(
+      new THREE.TorusGeometry(radius, .009, 5, 104),
+      new THREE.MeshBasicMaterial({
+        color, transparent: true, opacity, depthWrite: false,
+      }),
+    );
+    orbit.rotation.set(tilt, tilt * .65, tilt * .38);
+    scene.add(orbit);
+  }
+  const dustPositions: number[] = [];
+  for (let i = 0; i < 90; i++) {
+    const theta = i * 2.39996323;
+    const spread = 1.8 + (i % 13) * .30;
+    dustPositions.push(
+      Math.cos(theta) * spread,
+      -2.25 + (i % 11) * .35,
+      Math.sin(theta) * spread * .65,
+    );
+  }
+  const dustGeometry = new THREE.BufferGeometry();
+  dustGeometry.setAttribute("position", new THREE.Float32BufferAttribute(dustPositions, 3));
+  scene.add(new THREE.Points(
+    dustGeometry,
+    new THREE.PointsMaterial({
+      color: 0x80deed, size: .036, transparent: true, opacity: .44,
+      depthWrite: false, sizeAttenuation: true,
+    }),
+  ));
+  const gridVertices: number[] = [];
+  for (let i = -8; i <= 8; i++) {
+    const n = i * .62;
+    gridVertices.push(n, -2.65, -3.6, n, -2.65, 3.6);
+    gridVertices.push(-5.05, -2.65, n * .66, 5.05, -2.65, n * .66);
+  }
+  const gridGeometry = new THREE.BufferGeometry();
+  gridGeometry.setAttribute("position", new THREE.Float32BufferAttribute(gridVertices, 3));
+  scene.add(new THREE.LineSegments(
+    gridGeometry,
+    new THREE.LineBasicMaterial({
+      color: 0x4bb5cb, transparent: true, opacity: .085, depthWrite: false,
+    }),
+  ));
+
+  const rootColors: Record<string, number> = PUBLIC_ATLAS_ROOT_COLORS;
   const colors: Record<string, number> = {
     feature: 0x6ce8e1, component: 0x8db7e5,
     integration: 0xd0a9f2, publication: 0xf3c286,
@@ -110,6 +152,64 @@ export function mountV5Atlas() {
   const reviewedLines: { index: number; line: THREE.Line }[] = [];
   const annotated: { id: string; point: THREE.Vector3; label: HTMLElement }[] = [];
   let visibleNodeIds = new Set(graph.nodes.map(node => node.id));
+  const architecturalGroups = new Map<string, THREE.Group>();
+  const architecture = projectPublicAtlasArchitecture(graph);
+  if (architecture.valid) {
+    for (const cluster of architecture.clusters) {
+      // Nine equally decorative geometric facets per approved identity:
+      // never DOM nodes, source components, selectable work, or metrics.
+      const group = new THREE.Group();
+      group.position.set(...(cluster.position as [number, number, number]));
+      const block = new THREE.InstancedMesh(
+        new THREE.BoxGeometry(1, 1, 1),
+        new THREE.MeshStandardMaterial({
+          color: cluster.color, emissive: cluster.color,
+          emissiveIntensity: .29, metalness: .42, roughness: .28,
+        }),
+        cluster.facets.length,
+      );
+      const matrix = new THREE.Matrix4();
+      const orientation = new THREE.Quaternion();
+      cluster.facets.forEach((facet, index) => {
+        matrix.compose(
+          new THREE.Vector3(...(facet.offset as [number, number, number])),
+          orientation,
+          new THREE.Vector3(...(facet.scale as [number, number, number])),
+        );
+        block.setMatrixAt(index, matrix);
+      });
+      block.instanceMatrix.needsUpdate = true;
+      block.computeBoundingSphere();
+      group.add(block);
+
+      const plinth = new THREE.Mesh(
+        new THREE.CylinderGeometry(.70, .76, .035, 48),
+        new THREE.MeshStandardMaterial({
+          color: 0x0c2636, emissive: cluster.color, emissiveIntensity: .08,
+          transparent: true, opacity: .64, metalness: .45, roughness: .29,
+        }),
+      );
+      plinth.position.y = -.36;
+      group.add(plinth);
+
+      for (const [radius, thickness, opacity, elevation] of [
+        [.74, .014, .50, -.34], [.86, .008, .24, -.31],
+      ] as const) {
+        const halo = new THREE.Mesh(
+          new THREE.TorusGeometry(radius, thickness, 5, 64),
+          new THREE.MeshBasicMaterial({
+            color: cluster.color, transparent: true, opacity, depthWrite: false,
+          }),
+        );
+        halo.rotation.x = Math.PI / 2;
+        halo.position.y = elevation;
+        group.add(halo);
+      }
+      scene.add(group);
+      architecturalGroups.set(cluster.id, group);
+    }
+  }
+  root.dataset.v5AtlasDecorativeClusters = String(architecturalGroups.size);
   for (const node of graph.nodes) {
     const color = rootColors[node.id] ?? colors[node.type] ?? 0x9bc7d8;
     const material = new THREE.MeshStandardMaterial({
@@ -204,6 +304,7 @@ export function mountV5Atlas() {
     visibleNodeIds = new Set(slice.nodeIds);
     const visibleLinks = new Set(slice.linkIndexes);
     for (const mesh of meshes) mesh.visible = visibleNodeIds.has(mesh.userData.nodeId);
+    for (const [id, group] of architecturalGroups) group.visible = visibleNodeIds.has(id);
     for (const spoke of rootSpokes) spoke.line.visible = visibleNodeIds.has(spoke.id);
     for (const entry of reviewedLines) entry.line.visible = visibleLinks.has(entry.index);
     render();
@@ -222,6 +323,8 @@ export function mountV5Atlas() {
       material.emissiveIntensity = key === id ? .83 : .14;
     }
     for (const mesh of meshes) mesh.scale.setScalar(mesh.userData.nodeId === id ? 1.30 : 1);
+    for (const [key, group] of architecturalGroups)
+      group.scale.setScalar(key === id ? 1.08 : 1);
     status.textContent = node.label + " selected. " +
       (node.parent ? "Public reviewed structure." : "Approved public directory identity.") +
       " No active reporter or unverified dependency is implied.";
@@ -297,7 +400,8 @@ export function mountV5Atlas() {
     window.removeEventListener("pagehide", pagehide);
     window.removeEventListener("pageshow", pageshow);
     scene.traverse(object => {
-      if (object instanceof THREE.Mesh || object instanceof THREE.Line) {
+      if (object instanceof THREE.Mesh || object instanceof THREE.Line ||
+          object instanceof THREE.Points) {
         object.geometry.dispose();
         const all = Array.isArray(object.material) ? object.material : [object.material];
         all.forEach(material => material.dispose());
@@ -307,6 +411,7 @@ export function mountV5Atlas() {
     canvas.remove();
     labels.replaceChildren();
     delete root.dataset.v5AtlasReady;
+    delete root.dataset.v5AtlasDecorativeClusters;
   };
   document.addEventListener("visibilitychange", visible);
   canvas.addEventListener("webglcontextlost", contextLost);
