@@ -99,9 +99,9 @@ def check_page(page, origin, path, axe):
             "e => !getComputedStyle(e).backgroundImage.includes('portrait-anevum-transcosmic.webp')"
         ), "Hero must not contain a flat portrait background"
         assert page.locator(".v5-locked-portrait picture img").evaluate(
-            "e => (getComputedStyle(e).maskImage || getComputedStyle(e).webkitMaskImage)"
-            ".includes('portrait-cutout-mask.svg')"
-        ), "Approved portrait silhouette mask failed to load"
+            "e => getComputedStyle(e).clipPath.startsWith('polygon(')"
+            " && getComputedStyle(e).clipPath.length > 150"
+        ), "Approved person cutout must be a real scalable silhouette"
         assert portrait_box.evaluate(
             "e => Number(getComputedStyle(e).opacity) > .9"
         ), "Portrait cutout must remain fully visible"
