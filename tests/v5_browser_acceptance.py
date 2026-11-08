@@ -270,6 +270,24 @@ def check_page(page, origin, path, axe):
         assert page.locator("[data-v5-search-toggle]").count() == 1
         assert page.locator(".v5-locked-portrait picture img").count() == 1
         portrait_box = page.locator(".v5-locked-portrait")
+        portrait_aura = page.locator(".v5-portrait-source-atmosphere")
+        assert portrait_aura.count() == 1
+        assert portrait_aura.get_attribute("aria-hidden") == "true"
+        assert portrait_aura.evaluate("""e => {
+            const s = getComputedStyle(e);
+            const mask = s.maskImage || s.webkitMaskImage || "";
+            return s.pointerEvents === 'none' &&
+              s.mixBlendMode === 'screen' &&
+              mask.includes('radial-gradient') &&
+              s.backgroundImage.includes('portrait-anevum-transcosmic');
+        }"""), "Source smoke must be faded, first-party, non-interactive artwork"
+        if page.viewport_size and page.viewport_size["width"] >= 901:
+            assert portrait_aura.evaluate("""e => {
+                const p = document.querySelector('.v5-locked-portrait');
+                const a = e.getBoundingClientRect(), b = p.getBoundingClientRect();
+                return Math.abs(a.x - b.x) < 1 && Math.abs(a.y - b.y) < 1 &&
+                  Math.abs(a.width - b.width) < 1 && a.width >= 495;
+            }"""), "Cutout and authentic smoke must remain aligned at desktop widths"
         assert portrait_box.evaluate("e => Number(getComputedStyle(e).zIndex) >= 0"), (
             page.viewport_size, "approved portrait hidden behind page background")
         assert portrait_box.evaluate("e => e.getBoundingClientRect().width > 80")

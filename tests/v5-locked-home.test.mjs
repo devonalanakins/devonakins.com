@@ -42,6 +42,7 @@ test("locked V5 screenshot modules occupy one semantic preview home", () => {
   assert.match(body, /portrait-anevum-transcosmic\.webp/);
   assert.match(body, /portrait-anevum-transcosmic-mobile\.webp/);
   assert.equal((body.match(/class="v5-hero-atmosphere"/g) || []).length, 1);
+  assert.equal((body.match(/class="v5-portrait-source-atmosphere"/g) || []).length, 1);
   assert.equal((body.match(/class="v5-hero-veil"/g) || []).length, 1);
   assert.equal((body.match(/class="v5-hero-smoke /g) || []).length, 3);
   assert.match(body, /data-v5-ambient-motion/);
@@ -97,6 +98,9 @@ test("locked CSS includes responsive screenshot geometry and reduced-motion guar
   assert.match(css, /svg\.v5-lock-project-art\s*\{/);
   assert.match(css, /v5-lock-project-brand/);
   assert.ok(css.includes("clip-path: polygon("), "Portrait must clip without a bundled mask URL");
+  assert.match(css, /v5-portrait-source-atmosphere/);
+  assert.match(css, /mix-blend-mode: screen/);
+  assert.match(css, /mask-image: radial-gradient/);
   assert.match(css, /v5-smoke-cyan/);
   assert.match(css, /v5-smoke-violet/);
   assert.match(css, /v5-smoke-amber/);

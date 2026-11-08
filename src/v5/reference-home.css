@@ -1302,3 +1302,67 @@
   .v5-frame:has(.v5-locked-home) .v5-brand > span{font-size:11px;letter-spacing:.13em;min-width:0}
   .v5-frame:has(.v5-locked-home) .v5-mobile-menu{flex:none}
 }
+
+
+/* V5 fidelity: preserve the authentic smoke surrounding the approved subject.
+ * The original image is reused once as a masked atmospheric texture behind
+ * the isolated silhouette, never as an unmasked rectangular hero background.
+ * Existing separately animated, CSS/SVG plumes remain the living backdrop.
+ * No provider activity, runtime status, new image or third-party asset. */
+.v5-portrait-source-atmosphere {
+  position: absolute;
+  z-index: 1;
+  left: 28.5%;
+  top: -8px;
+  width: clamp(390px, 42vw, 520px);
+  aspect-ratio: 1122 / 1402;
+  pointer-events: none;
+  background: url("/src/v5/assets/portrait-anevum-transcosmic.webp")
+    center / 100% 100% no-repeat;
+  opacity: .64;
+  mix-blend-mode: screen;
+  filter: saturate(1.18) contrast(1.06);
+  -webkit-mask-image: radial-gradient(
+    ellipse 73% 72% at 51% 38%,
+    #000 0%, #000 36%, #000a 56%, transparent 96%
+  );
+  mask-image: radial-gradient(
+    ellipse 73% 72% at 51% 38%,
+    #000 0%, #000 36%, #000a 56%, transparent 96%
+  );
+}
+@media (min-width: 901px) {
+  /* Grow the original subject, not a replacement photo; align the smoke and
+   * silhouette by sharing the same geometry, without moving the sidebar. */
+  .v5-locked-hero .v5-locked-portrait,
+  .v5-locked-hero .v5-portrait-source-atmosphere {
+    left: 25.5%;
+    top: -8px;
+    width: clamp(495px, 48vw, 610px);
+  }
+}
+@media (min-width: 601px) and (max-width: 900px) {
+  .v5-locked-hero .v5-portrait-source-atmosphere {
+    left: 32%;
+    width: min(60vw, 445px);
+  }
+}
+@media (max-width: 600px) {
+  .v5-locked-hero .v5-portrait-source-atmosphere {
+    left: 38%;
+    width: 76%;
+    top: -9px;
+    background-image: url("/src/v5/assets/portrait-anevum-transcosmic-mobile.webp");
+    opacity: .43;
+  }
+}
+@media (max-width: 340px) {
+  .v5-locked-hero .v5-portrait-source-atmosphere {
+    left: 42%;
+    width: 75%;
+    top: -10px;
+  }
+}
+@media (forced-colors: active) {
+  .v5-portrait-source-atmosphere { display: none; }
+}

@@ -273,6 +273,10 @@ export function renderReferenceHomepage() {
   return '<div class="v5-locked-home" data-v5-exact-reference="2026-11-07">' +
     '<section class="v5-locked-hero" aria-labelledby="v5-title">' +
       renderHeroAtmosphere() +
+      // Restore the source artwork's real cyan/copper smoke as a softly
+      // faded, purely decorative backdrop behind the isolated portrait.
+      // Uses the same first-party asset, not a second subject image.
+      '<div class="v5-portrait-source-atmosphere" aria-hidden="true"></div>' +
       '<nav class="v5-locked-rail" aria-label="Screenshot side navigation">' + rail + '</nav>' +
       '<div class="v5-locked-portrait"><picture><source media="(max-width: 600px)" type="image/webp" srcset="/src/v5/assets/portrait-anevum-transcosmic-mobile.webp"><img src="/src/v5/assets/portrait-anevum-transcosmic.webp" alt="Cinematic portrait artwork of Devon Akins in a dark eclipse-graphic T-shirt and fitted jeans" width="1122" height="1402" fetchpriority="high" decoding="async"></picture></div>' +
       '<div class="v5-hero-veil" aria-hidden="true"></div>' +
