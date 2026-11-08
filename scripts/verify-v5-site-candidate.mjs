@@ -37,11 +37,11 @@ for (const path of routes) {
   // Navigation-only checks previously missed a broken first-party IdeaFlow
   // logo; WebKit and Chromium can render an inaccessible image without
   // producing a failing navigation assertion.
-  for (const match of html.matchAll(/<img\\b[^>]*\\bsrc="(\\/[^"?#]+)(?:[?#][^"]*)?"/g)) {
+  for (const match of html.matchAll(/<img\b[^>]*\bsrc="(\/[^"?#]+)(?:[?#][^"]*)?"/g)) {
     const target = match[1];
     assert.ok(assets[target], path + " image missing " + target);
   }
-  for (const match of html.matchAll(/<source\\b[^>]*\\bsrcset="(\\/[^" ,?#]+)(?:[?#][^"]*)?"/g)) {
+  for (const match of html.matchAll(/<source\b[^>]*\bsrcset="(\/[^" ,?#]+)(?:[?#][^"]*)?"/g)) {
     const target = match[1];
     assert.ok(assets[target], path + " responsive image missing " + target);
   }
