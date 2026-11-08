@@ -18,16 +18,20 @@ const history=[
   record(3,"publish-relation",link),
 ];
 
-test("starts with exactly eight catalogued public identities and no invented graph/history",()=>{
-  const f=replayPublicGraphHistory();
+test("draft V5 history publishes exactly four owner-approved portfolio sources",()=>{
+  const f=replayPublicGraphHistory(undefined,Date.parse("2026-11-08T18:00:00.000Z"));
   assert.equal(f.schema,PUBLIC_GRAPH_HISTORY_VERSION);
   assert.equal(f.valid,true);
-  assert.equal(f.revision,0);
-  assert.equal(f.nodes.length,8);
-  assert.equal(f.relations.length,0);
-  assert.equal(f.changes.length,0);
+  assert.equal(f.revision,8);
+  assert.equal(f.nodes.length,12);
+  assert.equal(f.nodes.filter(n=>n.parent===null).length,8);
+  assert.equal(f.nodes.filter(n=>n.type==="publication").length,4);
+  assert.equal(f.relations.length,4);
+  assert.equal(f.changes.length,8);
   assert.equal(f.nodes.find(x=>x.id==="section:knowledge-overview").type,"section");
-  assert.equal(PUBLIC_GRAPH_REVIEWED_RECORDS.length,0);
+  assert.equal(PUBLIC_GRAPH_REVIEWED_RECORDS.length,8);
+  assert.ok(f.relations.every(r=>r.type==="documents" && r.from.startsWith("publication:")));
+  assert.doesNotMatch(JSON.stringify(f),/private-client|patient|active reporter/i);
 });
 
 test("replays reviewed nodes and typed relationship in deterministic revision order",()=>{

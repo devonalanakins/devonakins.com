@@ -80,8 +80,9 @@ def check_page(page, origin, path, axe):
             assert panels["aligned"], "Explorer, volumetric scene and inspector must align"
         atlas = page.locator("[data-v5-atlas]")
         assert atlas.count() == 1
-        assert atlas.get_attribute("data-v5-atlas-revision") == "0"
-        assert page.locator("[data-v5-atlas-node-id]").count() == 8
+        assert atlas.get_attribute("data-v5-atlas-revision") == "8"
+        assert page.locator("[data-v5-atlas-node-id]").count() == 12
+        assert page.locator('[data-v5-atlas-node-id="publication:mizvo/public-portfolio-source"]').count() == 1
         explorer = page.locator(".v5-atlas-explorer")
         assert explorer.count() == 1
         assert explorer.locator("[data-v5-atlas-select]").count() == 8
@@ -98,13 +99,13 @@ def check_page(page, origin, path, axe):
         search = explorer.locator("[data-v5-atlas-search]")
         search.fill("mIzVo")
         assert explorer.locator("[data-v5-atlas-select]:visible").count() == 1
-        assert page.locator("[data-v5-atlas-node-id]:visible").count() == 1
-        assert "1 approved visible" in explorer.locator("[data-v5-atlas-filter-count]").inner_text()
+        assert page.locator("[data-v5-atlas-node-id]:visible").count() == 2
+        assert "2 approved visible" in explorer.locator("[data-v5-atlas-filter-count]").inner_text()
         search.fill("")
         assert explorer.locator("[data-v5-atlas-select]:visible").count() == 8
         explorer.locator("[data-v5-atlas-layer='projects']").uncheck()
         assert explorer.locator("[data-v5-atlas-select]:visible").count() == 1
-        assert page.locator("[data-v5-atlas-node-id]:visible").count() == 1
+        assert page.locator("[data-v5-atlas-node-id]:visible").count() == 5
         explorer.locator("[data-v5-atlas-layer='projects']").check()
         assert explorer.locator("[data-v5-atlas-select]:visible").count() == 8
         assert page.locator("[data-v5-atlas-node-id='project:mizvo'] summary").is_visible()
@@ -150,7 +151,7 @@ def check_page(page, origin, path, axe):
         page.evaluate("window.dispatchEvent(new PageTransitionEvent('pageshow', {persisted: true}))")
         search.fill("Rhen")
         assert explorer.locator("[data-v5-atlas-select]:visible").count() == 1
-        assert page.locator("[data-v5-atlas-node-id]:visible").count() == 1
+        assert page.locator("[data-v5-atlas-node-id]:visible").count() == 2
         search.fill("")
         assert explorer.locator("[data-v5-atlas-select]:visible").count() == 8
         canvas = page.locator("[data-v5-atlas-host] canvas")
@@ -174,8 +175,8 @@ def check_page(page, origin, path, axe):
             assert core.count() == 1, "3D nucleus should have one visual identity label"
             assert core.locator("strong").inner_text() == "DEVON AKINS"
             assert "SIGNAL FIELD" in core.inner_text()
-            assert page.locator("[data-v5-atlas-node-id]").count() == 8, (
-                "Decorative core and skyline cannot create semantic project nodes")
+            assert page.locator("[data-v5-atlas-node-id]").count() == 12, (
+                "Decorative core and skyline cannot create extra semantic structures")
             if atlas.get_attribute("data-v5-atlas-ready") == "true":
                 assert atlas.get_attribute("data-v5-atlas-ambient") == "decorative", (
                     "Bounded static atmosphere must mount with the reviewed eight-root atlas")
@@ -211,10 +212,11 @@ def check_page(page, origin, path, axe):
                     )
         archive = page.locator(".v5-graph-history")
         assert archive.count() == 1
-        assert archive.get_attribute("data-v5-graph-revision") == "0"
-        assert page.locator(".v5-graph-node").count() == 8
+        assert archive.get_attribute("data-v5-graph-revision") == "8"
+        assert page.locator(".v5-graph-node").count() == 12
         assert page.locator(".v5-graph-date-form input[type=date]").count() == 1
-        assert "No reviewed structural events yet" in archive.inner_text()
+        assert "Mizvo portfolio source" in archive.inner_text()
+        assert "Squelch portfolio source" in archive.inner_text()
         assert page.locator(".v5-graph-date-form button").evaluate(
             "e => e.getBoundingClientRect().height >= 43"
         )
@@ -235,8 +237,8 @@ def check_page(page, origin, path, axe):
         )
         assert "?asOf=2026-11-06" in page.url
         assert page.locator("#v5-graph-date").input_value() == "2026-11-06"
-        assert page.locator(".v5-graph-history").get_attribute("data-v5-graph-revision") == "0"
-        assert page.locator(".v5-graph-node").count() == 8
+        assert page.locator(".v5-graph-history").get_attribute("data-v5-graph-revision") == "8"
+        assert page.locator(".v5-graph-node").count() == 12
         page.goto(origin + PREVIEW + path + "?asOf=2026-11-99", wait_until="networkidle")
         assert "Choose a valid UTC date" in page.locator(".v5-graph-error").inner_text()
     if not path and page.locator("[data-v5-exact-reference]").count():
@@ -520,7 +522,7 @@ def main():
                 # The history form is server-rendered and must remain
                 # usable even when JavaScript is disabled.
                 assert page.goto(origin + PREVIEW + "field/").status == 200
-                assert page.locator("[data-v5-atlas-node-id]").count() == 8
+                assert page.locator("[data-v5-atlas-node-id]").count() == 12
                 assert page.locator("[data-v5-atlas-controls]").is_hidden()
                 assert page.locator("[data-v5-atlas-select]").count() == 8
                 page.locator("[data-v5-atlas-node-id='project:mizvo'] summary").click()
@@ -529,7 +531,7 @@ def main():
                     "[data-v5-atlas-node-id='project:mizvo'] .v5-atlas-native-summary"
                 ).inner_text()
                 assert "Select a public system" in page.locator("[data-v5-atlas-spotlight]").inner_text()
-                assert page.locator(".v5-graph-node").count() == 8
+                assert page.locator(".v5-graph-node").count() == 12
                 page.locator("#v5-graph-date").fill("2026-11-06")
                 page.locator(".v5-graph-date-form button").click()
                 assert "asOf=2026-11-06" in page.url

@@ -73,7 +73,9 @@ test("atlas explorer renders approved project navigation and honest source-backe
 test("optional atlas controls cannot remove native no-JS directory or deep links", async () => {
   const { renderV5Atlas } = await import("../src/v5/atlas-markup.mjs");
   const markup = renderV5Atlas({ now: at });
-  assert.equal((markup.match(/<details data-v5-atlas-node-id=/g) || []).length, 8);
+  assert.equal((markup.match(/<details data-v5-atlas-node-id=/g) || []).length, 12);
+  assert.match(markup, /<summary>Mizvo portfolio source<\/summary>/);
+  assert.match(markup, /Reviewed publication/);
   assert.match(markup, /<summary>Mizvo<\/summary>/);
   assert.match(markup, /href="\/work\/mizvo\/"/);
   assert.match(markup, /href="\/__v5_preview__\/knowledge\/"/);

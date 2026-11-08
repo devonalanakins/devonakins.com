@@ -1,9 +1,9 @@
 {
   "schema": "devonakins-living-mind-v5/graph-publication-proposals-v1",
-  "state": "PROPOSED_NOT_PUBLISHED",
+  "state": "OWNER_APPROVED_IN_DRAFT",
   "intendedReviewPr": 77,
   "disclosure": "These are source-merged public portfolio claims, not independently approved V5 graph milestones or proof of a running project/deployment.",
-  "publicationRule": "Do not import this file in public runtime. Independent owner review must confirm each node and its provenance before explicit promotion into PUBLIC_GRAPH_REVIEWED_RECORDS.",
+  "publicationRule": "Only four pinned website portfolio-source publications and four documents relationships are owner-approved inside draft PR #77. Proposal JSON is not imported at runtime. Independent engineering, real-source privacy acceptance and final production release signoff remain separate gates.",
   "candidates": [
     {
       "id": "publication:squelch/public-portfolio-source",
@@ -53,5 +53,7 @@
       "sourceMergeCommit": "4a4922e324b85f41aa0d7f7c40c8f6d15a3eacd4",
       "scope": "Site source for provisional Mizvo AGPL review-build portfolio entry. No app deployment, staff or customers implied."
     }
-  ]
+  ],
+  "ownerApproval": "2026-11-08: scoped conversational owner approval of four source publications for draft V5 only; engineering assistant checkpoint on PR #77",
+  "approvalReviewUrl": "https://github.com/devonalanakins/devonakins.com/pull/77"
 }

@@ -28,18 +28,23 @@ const proposedRecords = (candidates=manifest.candidates) => {
   ]);
 };
 
-test("public graph remains unpopulated until independent publication approval",()=>{
+test("approved draft V5 graph remains literal, bounded and independent of proposal JSON",()=>{
   assert.equal(manifest.schema,"devonakins-living-mind-v5/graph-publication-proposals-v1");
-  assert.equal(manifest.state,"PROPOSED_NOT_PUBLISHED");
-  assert.equal(PUBLIC_GRAPH_REVIEWED_RECORDS.length,0);
-  const live=replayPublicGraphHistory(undefined,Date.parse("2026-11-08T18:00:00.000Z"));
-  assert.equal(live.valid,true);
-  assert.equal(live.revision,0);
-  assert.equal(live.nodes.length,8);
-  assert.equal(live.relations.length,0);
+  assert.equal(manifest.state,"OWNER_APPROVED_IN_DRAFT");
+  assert.equal(manifest.approvalReviewUrl,review);
+  assert.equal(PUBLIC_GRAPH_REVIEWED_RECORDS.length,8);
+  const actual=PUBLIC_GRAPH_REVIEWED_RECORDS.map(({schema,sequence,effectiveAt,action,evidenceUrl,reviewUrl,value})=>
+    ({schema,sequence,effectiveAt,action,evidenceUrl,reviewUrl,value}));
+  assert.deepEqual(actual,proposedRecords());
+  assert.ok(PUBLIC_GRAPH_REVIEWED_RECORDS.every(r=>Object.isFrozen(r)&&Object.isFrozen(r.value)));
+  const current=replayPublicGraphHistory(undefined,Date.parse("2026-11-08T18:00:00.000Z"));
+  assert.equal(current.valid,true);
+  assert.equal(current.revision,8);
+  assert.equal(current.nodes.length,12);
+  assert.equal(current.relations.length,4);
   const html=renderV5Atlas({now:Date.parse("2026-11-08T18:00:00.000Z")});
-  assert.match(html,/data-v5-atlas-revision="0"/);
-  assert.doesNotMatch(html,/Squelch portfolio source|Mizvo portfolio source/);
+  assert.match(html,/data-v5-atlas-revision="8"/);
+  assert.match(html,/Squelch portfolio source|Mizvo portfolio source/);
   const publicSource=readFileSync(new URL("../src/v5/public-graph-history.mjs",import.meta.url),"utf8");
   assert.doesNotMatch(publicSource,/V5_PUBLIC_GRAPH_PROPOSALS|public-graph-proposals/);
 });
@@ -71,9 +76,10 @@ test("candidate source merges are explicit, bounded and free of runtime claims",
   }
 });
 
-test("dry-run of approved-shape candidates gives dated nodes and only evidence-backed document links",()=>{
+test("owner-approved literal records replay with exactly four source documents links",()=>{
   const records=proposedRecords();
   assert.equal(records.length,8);
+  assert.deepEqual([...PUBLIC_GRAPH_REVIEWED_RECORDS],records);
   const today=replayPublicGraphHistory(records,Date.parse("2026-11-08T18:00:00.000Z"));
   assert.equal(today.valid,true);
   assert.equal(today.revision,8);

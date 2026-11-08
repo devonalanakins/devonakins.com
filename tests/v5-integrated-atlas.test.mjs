@@ -173,13 +173,14 @@ test("published relation requires independent reviewed evidence even if frame.va
 test("the date-aware semantic inspector and the visual atlas share one version",()=>{
   const html=renderV5Preview("field",{asOf:"2026-11-06",now:NOW});
   assert.match(html,/data-v5-atlas-version="1"/);
-  assert.match(html,/data-v5-atlas-revision="0"/);
+  assert.match(html,/data-v5-atlas-revision="8"/);
   assert.match(html,/data-v5-atlas-at="2026-11-06T23:59:59.999Z"/);
-  assert.match(html,/data-v5-graph-revision="0"/);
-  assert.equal((html.match(/data-v5-atlas-node-id=/g)||[]).length,8);
+  assert.match(html,/data-v5-graph-revision="8"/);
+  assert.equal((html.match(/data-v5-atlas-node-id=/g)||[]).length,12);
   assert.match(html,/data-v5-atlas-node-id="project:merit"/);
-  assert.match(html,/No reviewed structural events yet/);
-  assert.match(html,/No component milestones have been reviewed/);
+  assert.match(html,/Mizvo portfolio source/);
+  assert.match(html,/Squelch portfolio source/);
+  assert.match(html,/Growth timeline/);
 });
 test("the atlas uses native links and details, never JS-only navigation",()=>{
   const html=renderV5Atlas({now:NOW});

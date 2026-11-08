@@ -22,14 +22,14 @@ test("strict UTC date parser clamps current day and rejects future/invalid dates
   }
 });
 
-test("public archive starts empty and never claims project activity or invented milestones",()=>{
+test("default public archive contains four verified portfolio sources, not product releases",()=>{
   const html=renderPublicGraphHistory({now});
-  assert.match(html,/data-v5-graph-revision="0"/);
-  assert.match(html,/No component milestones have been reviewed/);
-  assert.match(html,/No verified public relationships have been published/);
-  assert.match(html,/No reviewed structural events yet/);
+  assert.match(html,/data-v5-graph-revision="8"/);
+  assert.match(html,/Squelch portfolio source/);
+  assert.match(html,/Mizvo portfolio source/);
+  assert.match(html,/>documents<\/span>/);
   assert.match(html,/Approved directory entry; no connection or historical launch is implied/);
-  assert.equal((html.match(/class="v5-graph-node"/g)||[]).length,8);
+  assert.equal((html.match(/class="v5-graph-node"/g)||[]).length,12);
   assert.match(html,/name="asOf" type="date" required/);
   assert.match(html,/method="get" action="\/__v5_preview__\/field\/"/);
   assert.doesNotMatch(html,/fetch\(|\/api\/|secret|D1|private-client/);

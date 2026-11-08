@@ -371,6 +371,11 @@ export function mountV5Atlas() {
     scene.add(line);
     reviewedLines.push({ index, line });
   }
+  // Preserve the original eight-system 3D label composition. Newly approved
+  // publication children appear in the semantic directory immediately and
+  // receive a camera label on selection, not as a cluttered initial halo.
+  const rootLabelIds = new Set(graph.nodes.filter(node => node.parent === null)
+    .map(node => node.id));
   // Camera-tracked visual nucleus. The static accessible page heading and
   // no-WebGL fallback still carry meaning; this label adds no semantic node.
   const coreLabel = document.createElement("span");
@@ -402,7 +407,7 @@ export function mountV5Atlas() {
       const p = point.clone().project(camera);
       const visible = visibleNodeIds.has(id) && p.z >= -1 && p.z <= 1 &&
         p.x >= -1 && p.x <= 1 && p.y >= -1 && p.y <= 1;
-      label.hidden = !visible;
+      label.hidden = !visible || (!rootLabelIds.has(id) && selectedId !== id);
       if (visible) {
         label.style.left = ((p.x + 1) * 50) + "%";
         label.style.top = ((1 - p.y) * 50) + "%";

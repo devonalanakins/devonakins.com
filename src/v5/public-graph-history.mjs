@@ -48,9 +48,69 @@ const roots = () => ROOT_IDS.map((id, i) => ({
   evidenceUrl: null, reviewUrl: null,
 }));
 
-// Explicitly EMPTY until a source-specific public milestone is reviewed and
-// added to this repository. No estimated or fictional graph growth is seeded.
-export const PUBLIC_GRAPH_REVIEWED_RECORDS = Object.freeze([]);
+// Owner-authorized in the active conversation for this draft V5 candidate.
+// Source commits are pinned to PUBLIC website portfolio merges; reviewUrl
+// points to the scoped authorization and engineering record on PR #77.
+// This is NOT a deployed product or an independently accepted V5 release.
+// The records are literal and never read from the proposal JSON or providers.
+export const PUBLIC_GRAPH_REVIEWED_RECORDS = Object.freeze([
+  Object.freeze({
+    schema: PUBLIC_GRAPH_HISTORY_VERSION, sequence: 1,
+    effectiveAt: "2026-11-04T00:26:13.000Z", action: "publish-node",
+    evidenceUrl: "https://github.com/devonalanakins/devonakins.com/commit/d7e9c4cd4f599485dd8dbf028f386295e6811623",
+    reviewUrl: "https://github.com/devonalanakins/devonakins.com/pull/77",
+    value: Object.freeze({"id":"publication:squelch/public-portfolio-source","type":"publication","label":"Squelch portfolio source","parent":"project:squelch"}),
+  }),
+  Object.freeze({
+    schema: PUBLIC_GRAPH_HISTORY_VERSION, sequence: 2,
+    effectiveAt: "2026-11-04T00:26:13.000Z", action: "publish-relation",
+    evidenceUrl: "https://github.com/devonalanakins/devonakins.com/commit/d7e9c4cd4f599485dd8dbf028f386295e6811623",
+    reviewUrl: "https://github.com/devonalanakins/devonakins.com/pull/77",
+    value: Object.freeze({"id":"relation:squelch-portfolio-documents","type":"documents","from":"publication:squelch/public-portfolio-source","to":"project:squelch"}),
+  }),
+  Object.freeze({
+    schema: PUBLIC_GRAPH_HISTORY_VERSION, sequence: 3,
+    effectiveAt: "2026-11-04T04:59:08.000Z", action: "publish-node",
+    evidenceUrl: "https://github.com/devonalanakins/devonakins.com/commit/310b90386bb02749a784e1b57b1d0b17ba01cadf",
+    reviewUrl: "https://github.com/devonalanakins/devonakins.com/pull/77",
+    value: Object.freeze({"id":"publication:merit/public-portfolio-source","type":"publication","label":"Merit portfolio source","parent":"project:merit"}),
+  }),
+  Object.freeze({
+    schema: PUBLIC_GRAPH_HISTORY_VERSION, sequence: 4,
+    effectiveAt: "2026-11-04T04:59:08.000Z", action: "publish-relation",
+    evidenceUrl: "https://github.com/devonalanakins/devonakins.com/commit/310b90386bb02749a784e1b57b1d0b17ba01cadf",
+    reviewUrl: "https://github.com/devonalanakins/devonakins.com/pull/77",
+    value: Object.freeze({"id":"relation:merit-portfolio-documents","type":"documents","from":"publication:merit/public-portfolio-source","to":"project:merit"}),
+  }),
+  Object.freeze({
+    schema: PUBLIC_GRAPH_HISTORY_VERSION, sequence: 5,
+    effectiveAt: "2026-11-04T04:59:08.000Z", action: "publish-node",
+    evidenceUrl: "https://github.com/devonalanakins/devonakins.com/commit/310b90386bb02749a784e1b57b1d0b17ba01cadf",
+    reviewUrl: "https://github.com/devonalanakins/devonakins.com/pull/77",
+    value: Object.freeze({"id":"publication:rhen-language/public-portfolio-source","type":"publication","label":"Rhen language portfolio source","parent":"project:rhen-language"}),
+  }),
+  Object.freeze({
+    schema: PUBLIC_GRAPH_HISTORY_VERSION, sequence: 6,
+    effectiveAt: "2026-11-04T04:59:08.000Z", action: "publish-relation",
+    evidenceUrl: "https://github.com/devonalanakins/devonakins.com/commit/310b90386bb02749a784e1b57b1d0b17ba01cadf",
+    reviewUrl: "https://github.com/devonalanakins/devonakins.com/pull/77",
+    value: Object.freeze({"id":"relation:rhen-language-portfolio-documents","type":"documents","from":"publication:rhen-language/public-portfolio-source","to":"project:rhen-language"}),
+  }),
+  Object.freeze({
+    schema: PUBLIC_GRAPH_HISTORY_VERSION, sequence: 7,
+    effectiveAt: "2026-11-05T05:34:39.000Z", action: "publish-node",
+    evidenceUrl: "https://github.com/devonalanakins/devonakins.com/commit/4a4922e324b85f41aa0d7f7c40c8f6d15a3eacd4",
+    reviewUrl: "https://github.com/devonalanakins/devonakins.com/pull/77",
+    value: Object.freeze({"id":"publication:mizvo/public-portfolio-source","type":"publication","label":"Mizvo portfolio source","parent":"project:mizvo"}),
+  }),
+  Object.freeze({
+    schema: PUBLIC_GRAPH_HISTORY_VERSION, sequence: 8,
+    effectiveAt: "2026-11-05T05:34:39.000Z", action: "publish-relation",
+    evidenceUrl: "https://github.com/devonalanakins/devonakins.com/commit/4a4922e324b85f41aa0d7f7c40c8f6d15a3eacd4",
+    reviewUrl: "https://github.com/devonalanakins/devonakins.com/pull/77",
+    value: Object.freeze({"id":"relation:mizvo-portfolio-documents","type":"documents","from":"publication:mizvo/public-portfolio-source","to":"project:mizvo"}),
+  }),
+]);
 
 function emptyFrame(at, valid = true) {
   const t = Number.isFinite(at) && at >= 0 && at <= 8.64e15 ? at : 0;

@@ -45,7 +45,8 @@ def check_atlas_live_evidence(browser, origin, local_tls):
     page.route('**/*',route)
     try:
         assert page.goto(origin+'/signal-field/',wait_until='networkidle').status==200
-        assert page.locator('[data-v5-atlas-node-id]').count()==8
+        assert page.locator('[data-v5-atlas-node-id]').count()==12
+        assert page.locator('[data-v5-atlas-revision]').get_attribute('data-v5-atlas-revision')=='8'
         page.wait_for_function("""() =>
             document.querySelector('[data-v5-atlas-node-id="project:mizvo"]')
               ?.dataset.v5AtlasLiveKind === 'editor' &&
@@ -171,6 +172,13 @@ def main():
             with page.expect_navigation():page.locator('.v5-graph-date-form button').click()
             assert 'asOf=2026-11-06' in page.url;assert page.locator('#v5-graph-date').input_value()=='2026-11-06'
             assert page.locator('[data-v5-atlas-at]').get_attribute('data-v5-atlas-at')=='2026-11-06T23:59:59.999Z'
+            assert page.locator('[data-v5-atlas-revision]').get_attribute('data-v5-atlas-revision')=='8'
+            assert page.locator('[data-v5-atlas-node-id]').count()==12
+            # Before any source-merge date, archived public structure is empty.
+            page.goto(origin+'/signal-field/?asOf=2026-11-03')
+            assert page.locator('[data-v5-atlas-revision]').get_attribute('data-v5-atlas-revision')=='0'
+            assert page.locator('[data-v5-atlas-node-id]').count()==8
+            assert page.locator('.v5-graph-node').count()==8
             page.locator('[data-v5-atlas-node-id="project:mizvo"] summary').click();assert page.locator('[data-v5-atlas-node-id="project:mizvo"]').get_attribute('open') is not None
             page.goto(origin+'/knowledge/');page.locator('a[href="/knowledge/sources-and-meaning/"]').first.click();assert page.locator('h1').is_visible();context.close()
             check_atlas_live_evidence(browser,origin,local_tls)

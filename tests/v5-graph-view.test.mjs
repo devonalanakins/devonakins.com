@@ -43,13 +43,15 @@ test("date chooser uses UTC day boundaries, current-day ceiling and no future da
   }
 });
 
-test("unconnected default archive has eight approved root links and no fabricated growth", () => {
+test("owner-approved archive shows source-backed publications but no active-product claims", () => {
   const html = renderPublicGraphHistory({ now });
-  assert.match(html, /data-v5-graph-revision="0"/);
+  assert.match(html, /data-v5-graph-revision="8"/);
   assert.match(html, /data-v5-graph-version="1"/);
-  assert.equal(count(html, 'class="v5-graph-node"'), 8);
-  assert.match(html, /No reviewed structural events yet/);
-  assert.match(html, /No verified public relationships have been published/);
+  assert.equal(count(html, 'class="v5-graph-node"'), 12);
+  assert.match(html, /Squelch portfolio source/);
+  assert.match(html, /Mizvo portfolio source/);
+  assert.match(html, /Review #8/);
+  assert.match(html, />documents<\/span>/);
   assert.match(html, /Approved directory entry; no connection or historical launch is implied/);
   assert.match(html, /action="\/__v5_preview__\/field\/"/);
   assert.match(html, /method="get"/);
@@ -107,7 +109,7 @@ test("Signal Field preview embeds the semantic dated timeline without modifying 
   assert.match(field, /Structure as of \(UTC\)/);
   assert.match(field, /value="2026-11-04"/);
   assert.match(field, /noindex,nofollow,noarchive/);
-  assert.equal(count(field, 'class="v5-graph-node"'), 8);
+  assert.equal(count(field, 'class="v5-graph-node"'), 11);
   assert.doesNotMatch(field, /\/api\/activity\/v4|THREADS_USER_ACCESS_TOKEN/);
   const home = renderV5Preview("home", { asOf: "2026-11-04", now });
   assert.doesNotMatch(home, /v5-graph-date|Public systems atlas/);
