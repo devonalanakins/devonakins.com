@@ -35,6 +35,31 @@ def main():
                     assert not page.locator('a[href*="/__v5_preview__/"]').count(),path
                     page.evaluate(axe)
                     violations=page.evaluate("async()=> (await axe.run(document,{runOnly:{type:'tag',values:['wcag2a','wcag2aa','wcag21aa','wcag22aa']}})).violations.map(v=>({id:v.id,nodes:v.nodes.map(n=>n.target)}))")
+                    if violations and args.engine == 'webkit':
+                        # WebKit occasionally reports target-size violations that
+                        # Chromium does not. Capture actual geometry and the
+                        # elements at each target centre before changing CSS;
+                        # never exempt the failures from acceptance.
+                        diagnostics = page.evaluate("""() => {
+                          const selectors = ['.v5-skip','.v5-brand',
+                            '.v5-desktop-nav a','.v5-locked-session-link',
+                            '.v5-lock-field-cta','.v5-footer > a'];
+                          return Object.fromEntries(selectors.map(sel => {
+                            const node = document.querySelector(sel);
+                            if (!node) return [sel,null];
+                            const r = node.getBoundingClientRect(),
+                              style = getComputedStyle(node),
+                              x = r.left+r.width/2, y = r.top+r.height/2;
+                            const hit = document.elementFromPoint(x,y);
+                            return [sel,{rect:{x:r.x,y:r.y,width:r.width,height:r.height},
+                              hit:hit?.tagName+'.'+String(hit?.className||'').slice(0,100),
+                              contained:node===hit||node.contains(hit),
+                              display:style.display, visibility:style.visibility,
+                              pointerEvents:style.pointerEvents,
+                              transform:style.transform}];
+                          }));
+                        }""")
+                        print("WebKit target diagnostics:",json.dumps(diagnostics,sort_keys=True),flush=True)
                     assert not violations,(width,path,violations)
                     if path in ['/','/signal-field/','/knowledge/sources-and-meaning/']:
                         page.screenshot(path=str(out/f'{args.engine}-{width}-{path.strip("/").replace("/","-") or "home"}.png'),full_page=True,animations='disabled',timeout=20000)
