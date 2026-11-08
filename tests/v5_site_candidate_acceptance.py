@@ -175,11 +175,28 @@ def main():
                         print("WebKit stylesheet diagnostics:",json.dumps(resources,sort_keys=True),flush=True)
                         print("WebKit target diagnostics:",json.dumps(diagnostics,sort_keys=True),flush=True)
                     assert not violations,(width,path,violations)
-                    if path in ['/','/signal-field/','/knowledge/sources-and-meaning/']:
+                    visual_reference_routes=['/','/signal-field/','/knowledge/sources-and-meaning/']
+                    secondary_visual_routes=['/work/','/research/','/writing/','/about/']
+                    if path in visual_reference_routes or (
+                        width in (320,390,1199) and path in secondary_visual_routes
+                    ):
                         page.screenshot(path=str(out/f'{args.engine}-{width}-{path.strip("/").replace("/","-") or "home"}.png'),full_page=True,animations='disabled',timeout=20000)
-                page.goto(origin+'/work/',wait_until='networkidle');page.locator('[data-v5-project-search]').fill('Mizvo')
+                page.goto(origin+'/work/',wait_until='networkidle')
+                search=page.locator('[data-v5-project-search]')
+                category=page.locator('[data-v5-project-category]')
+                search.fill('Mizvo')
                 assert page.locator('[data-v5-project-card]:visible').count()==1
-                page.locator('[data-v5-project-search]').fill('NO_MATCH_XYZ')
+                search.fill('')
+                for kind, expected in [
+                    ('archive','Vesper Legacy'),('writing','Books & writing'),
+                    ('operations','Business operations'),
+                ]:
+                    category.select_option(kind)
+                    cards=page.locator('[data-v5-project-card]:visible')
+                    assert cards.count()==1,(kind,cards.count())
+                    assert expected in cards.first.inner_text(),(kind,expected)
+                category.select_option('')
+                search.fill('NO_MATCH_XYZ')
                 assert page.locator('[data-v5-project-empty]').is_visible()
                 page.goto(origin+'/knowledge/',wait_until='networkidle')
                 with page.expect_navigation(url="**/knowledge/sources-and-meaning/", wait_until="domcontentloaded"):
