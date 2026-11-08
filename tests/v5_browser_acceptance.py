@@ -148,7 +148,9 @@ def check_page(page, origin, path, axe):
         )
         assert page.evaluate("document.documentElement.scrollWidth <= innerWidth + 1")
         # The date form must work through server-rendered GET, not client JS.
-        page.context.set_default_timeout(10000)
+        # Do not reduce the entire browser context timeout. That setting
+        # persists into later full-page captures and unrelated page checks,
+        # making slow font loading appear as a 10s application failure.
         selected = page.locator("#v5-graph-date")
         selected.fill("2026-11-06")
         page.locator(".v5-graph-date-form button").click()
@@ -338,7 +340,7 @@ def main():
                                 page.goto(origin + PREVIEW + "field/", wait_until="networkidle")
                                 page.screenshot(
                                     path=str(output / f"{engine}-atlas-{width}x{height}-{motion}.png"),
-                                    full_page=True, animations="disabled",
+                                    full_page=True, animations="disabled", timeout=30000,
                                 )
                             page.goto(origin + PREVIEW, wait_until="networkidle")
                             if width <= 900:
@@ -366,7 +368,10 @@ def main():
                             assert page.locator("#v5-field-inspector").is_hidden()
                             assert field_node.get_attribute("aria-expanded") == "false"
                             assert field_node.evaluate("e => e === document.activeElement")
-                            page.screenshot(path=str(output / f"{engine}-{width}x{height}-{motion}.png"), full_page=True)
+                            page.screenshot(
+                                path=str(output / f"{engine}-{width}x{height}-{motion}.png"),
+                                full_page=True, animations="disabled", timeout=30000,
+                            )
                             # After the inspector returns focus to a project
                             # node, Tab advances from that node, not the start
                             # of the page. Reload before checking first-Tab
