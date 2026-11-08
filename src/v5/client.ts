@@ -456,7 +456,7 @@ if (atlasRoot) {
     if (activityStatus) activityStatus.textContent = "Checking authorized public V4 evidence…";
     try {
       const { startLiveSignal } = await import("../live-signal-client");
-      startLiveSignal(undefined, renderAtlasActivity);
+      startLiveSignal(() => {}, renderAtlasActivity);
     } catch {
       renderAtlasActivity(null, Date.now());
     }
