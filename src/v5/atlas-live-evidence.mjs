@@ -10,7 +10,6 @@ const ROOTS = Object.freeze([
   ["project:anevum", "anevum", "Anevum"],
   ["project:rhen-language", "rhen-language", "Rhen"],
   ["project:merit", "merit", "Merit"],
-  ["project:vesper", "vesper", "Vesper"],
   ["project:squelch", "squelch", "Squelch"],
 ]);
 const SOURCES = Object.freeze({
