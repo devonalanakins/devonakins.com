@@ -68,6 +68,12 @@ test("invalid or forged root catalogs fail closed rather than generating private
       i===0 ? { ...n, position: [Infinity,0,0] } : n) },
     { ...graph, nodes: graph.nodes.map((n,i) =>
       i===0 ? { ...n, state: "active" } : n) },
+    { ...graph, nodes: graph.nodes.map((n,i) =>
+      i===0 ? { ...n, type: "private-client" } : n) },
+    { ...graph, nodes: graph.nodes.map((n,i) =>
+      i===0 ? { ...n, label: "PRIVATE_CLIENT" } : n) },
+    { ...graph, nodes: graph.nodes.map((n,i) =>
+      i===0 ? { ...n, parent: "project:mizvo" } : n) },
   ];
   for (const input of bad) {
     const result = projectPublicAtlasArchitecture(input);
