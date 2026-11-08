@@ -280,7 +280,7 @@ export function renderReferenceHomepage() {
       // Uses the same first-party asset, not a second subject image.
       '<div class="v5-portrait-source-atmosphere" aria-hidden="true"></div>' +
       '<nav class="v5-locked-rail" aria-label="Page shortcuts">' + rail + '</nav>' +
-      '<div class="v5-locked-portrait"><picture><source media="(max-width: 600px)" type="image/webp" srcset="/src/v5/assets/portrait-anevum-transcosmic-mobile.webp"><img src="/src/v5/assets/portrait-anevum-transcosmic.webp" alt="Cinematic portrait artwork of Devon Akins in a dark eclipse-graphic T-shirt and fitted jeans" width="1122" height="1402" fetchpriority="high" decoding="async"></picture></div>' +
+      '<div class="v5-locked-portrait"><picture><source media="(max-width: 600px)" type="image/webp" srcset="/src/v5/assets/cap-hero-mobile.webp"><img src="/src/v5/assets/cap-hero-desktop.webp" alt="Cinematic portrait of Devon Akins wearing a backward cap" width="582" height="533" fetchpriority="high" decoding="async"></picture></div>' +
       '<div class="v5-hero-veil" aria-hidden="true"></div>' +
       '<div class="v5-locked-identity"><h1 id="v5-title">Devon Alan Akins</h1>' +
         '<p class="v5-locked-roles">Developer · Researcher · Builder · Father<br>Writer · Systems Architect</p>' +
