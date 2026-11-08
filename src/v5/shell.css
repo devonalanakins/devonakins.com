@@ -856,8 +856,8 @@ a[aria-current="page"] {
 
 /* R17: an opt-in, request-free 3D view of the reviewed structural atlas. */
 .v5-atlas-shell {
-  display: grid; grid-template-columns: minmax(0, 1.65fr) minmax(285px, .85fr);
-  margin: 26px auto 38px; max-width: 1120px; overflow: hidden;
+  display: grid; grid-template-columns: minmax(215px, .72fr) minmax(0, 1.65fr) minmax(280px, .88fr);
+  margin: 26px auto 38px; max-width: 1450px; overflow: hidden;
   border: 1px solid var(--v5-border); border-radius: 16px;
   background: linear-gradient(140deg, #061421, #091522 78%);
 }
@@ -917,7 +917,7 @@ a[aria-current="page"] {
 }
 .v5-atlas-proof { margin: 4px 13px 11px; }
 .v5-atlas-proof a { margin: 0 12px 0 0; }
-@media (max-width: 940px) {
+@media (max-width: 1100px) {
   .v5-atlas-shell { grid-template-columns: minmax(0, 1fr); }
   .v5-atlas-viewport { min-height: 390px; border-right: 0; border-bottom: 1px solid var(--v5-border); }
   .v5-atlas-index { padding: 24px; }
@@ -938,4 +938,65 @@ a[aria-current="page"] {
 @media (forced-colors: active) {
   .v5-atlas-shell, .v5-atlas-details details { border: 1px solid CanvasText; }
   .v5-atlas-details summary { color: CanvasText; }
+}
+
+
+/* R18: functional public catalog explorer. Every number is derived from the
+   reviewed graph, and the catalog remains navigable when JS/WebGL is off. */
+.v5-atlas-explorer {
+  min-width: 0; padding: 26px 17px; border-right: 1px solid var(--v5-border);
+  background: linear-gradient(160deg, #0a1a2a, #08121e);
+}
+.v5-atlas-explorer h2 { font: 25px/1.16 Georgia, serif; margin: 10px 0 13px; letter-spacing: -.02em; }
+.v5-atlas-explorer-note { font-size: 12px; color: var(--v5-muted); margin-bottom: 17px; }
+.v5-atlas-quicklinks { display: grid; gap: 4px; margin: 0 0 22px; }
+.v5-atlas-quicklinks a {
+  display: flex; align-items: center; min-height: 44px; padding: 9px 12px;
+  border: 1px solid transparent; border-radius: 8px; color: #d4e6f0;
+  font-size: 12px;
+}
+.v5-atlas-quicklinks a:first-child { background: #12374a; border-color: #42899c; color: #adf8f8; }
+.v5-atlas-filter-search { display: grid; gap: 8px; margin: 18px 0; }
+.v5-atlas-filter-search label, .v5-atlas-layer-list legend {
+  font-size: 11px; letter-spacing: .04em; color: var(--v5-muted);
+}
+.v5-atlas-filter-search input {
+  background: #091622; color: var(--v5-ink); border: 1px solid #477083;
+  min-height: 44px; padding: 10px 12px; border-radius: 8px; font: inherit; width: 100%;
+}
+.v5-atlas-filter-search input::placeholder { color: #a8bfcc; }
+.v5-atlas-layer-list { border: 0; margin: 0 0 25px; padding: 0; min-width: 0; }
+.v5-atlas-layer-list legend { margin-bottom: 7px; }
+.v5-atlas-layer { display: flex; align-items: center; gap: 9px; min-height: 44px; font-size: 12px; cursor: pointer; }
+.v5-atlas-layer input { accent-color: var(--v5-cyan); width: 17px; height: 17px; flex-shrink: 0; }
+.v5-atlas-layer span { flex: 1; min-width: 0; }
+.v5-atlas-layer strong { font-size: 11px; color: #b4dce7; font-variant-numeric: tabular-nums; }
+.v5-atlas-explorer nav > h3 { font-size: 12px; letter-spacing: .06em; text-transform: uppercase; margin: 0 0 10px; }
+.v5-atlas-root-list { list-style: none; padding: 0; margin: 0; display: grid; gap: 5px; }
+.v5-atlas-root-list a {
+  display: flex; align-items: center; gap: 12px; border-radius: 9px;
+  padding: 9px 10px; min-height: 50px; background: #102237;
+  border: 1px solid #2b4659; font-size: 13px;
+}
+.v5-atlas-root-list a:hover, .v5-atlas-root-list a:focus-visible { border-color: #67cde0; background: #174056; }
+.v5-atlas-root-glyph {
+  width: 22px; height: 22px; flex-shrink: 0; border: 1px solid #6dd9ee;
+  border-radius: 5px; transform: rotate(-16deg); box-shadow: inset 0 0 8px #1da4cb68;
+}
+.v5-atlas-root-list a span:last-child { min-width: 0; overflow-wrap: anywhere; }
+.v5-atlas-root-list small { display: block; font-size: 10px; color: var(--v5-muted); margin-top: 2px; }
+.v5-atlas-visible-status { font-size: 11px; color: var(--v5-muted); margin-top: 16px; }
+.v5-atlas-explorer a:focus-visible, .v5-atlas-filter-search input:focus-visible,
+.v5-atlas-layer input:focus-visible { outline: 2px solid var(--v5-cyan); outline-offset: 3px; }
+.v5-atlas-root-list li[hidden], .v5-atlas-details details[hidden] { display: none; }
+@media (max-width: 1100px) {
+  .v5-atlas-explorer { border-right: 0; border-bottom: 1px solid var(--v5-border); padding: 20px; }
+  .v5-atlas-root-list { grid-template-columns: repeat(2,minmax(0,1fr)); }
+  .v5-atlas-layer-list { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); column-gap: 15px; }
+  .v5-atlas-layer-list legend { grid-column: 1 / -1; }
+}
+@media (max-width: 600px) {
+  .v5-atlas-explorer { padding: 17px; }
+  .v5-atlas-root-list { grid-template-columns: minmax(0,1fr); }
+  .v5-atlas-quicklinks { grid-template-columns: repeat(2,minmax(0,1fr)); }
 }
