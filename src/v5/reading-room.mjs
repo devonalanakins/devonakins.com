@@ -64,7 +64,7 @@ export function renderReadingRoom(
       ]
         .map((slug) => {
           const p = projects.find((p) => p.slug === slug);
-          return `<article class="v5-card v5-reading"><p class="v5-eyebrow">RESEARCH PROTOTYPE</p><h2>${esc(p.title)}</h2><p>${esc(p.summary)}</p><p class="v5-card-state">${esc(p.status)}</p><p>${esc(p.detail)}</p>${link("/work/" + p.slug + "/", "Project context")}${link(p.url, "Inspect public research")}</article>`;
+          return `<article class="v5-card v5-reading"><p class="v5-eyebrow">RESEARCH PROTOTYPE</p><h2>${esc(p.title)}</h2><p>${esc(p.summary)}</p><p class="v5-card-state">${esc(p.status)}</p><p>${esc(p.detail)}</p>${link("/work/" + p.slug + "/", "Project context")}${p.url ? link(p.url, "Inspect public research") : '<p class="v5-reading-disclosure">Source repository is private; the reviewed concept is public.</p>'}</article>`;
         })
         .join(
           "",
