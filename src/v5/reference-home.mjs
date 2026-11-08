@@ -322,7 +322,12 @@ export function renderReferenceHomepage() {
     '</section>' +
     '<div class="v5-lock-triple">' +
       '<section class="v5-lock-panel" aria-labelledby="v5-lock-github-title"><h2 id="v5-lock-github-title">' + icon("github") + ' GitHub Activity <small>PROVIDER-SOURCED</small></h2><p class="v5-lock-empty" data-v5-github-summary>Waiting for verified, allowlisted GitHub events.</p><a href="https://github.com/devonalanakins">View GitHub →</a></section>' +
-      '<section class="v5-lock-panel" aria-labelledby="v5-lock-threads-title"><h2 id="v5-lock-threads-title">' + icon("nodes") + ' Threads Feed <small>CONNECTION PENDING</small></h2><p class="v5-lock-empty">Public Threads posts will appear only through a permitted integration after account authorization and publication review.</p><a href="/contact/">Public social profiles →</a></section>' +
+      '<section class="v5-lock-panel" aria-labelledby="v5-lock-threads-title"><h2 id="v5-lock-threads-title">' + icon("nodes") + ' Threads Feed <small data-v5-threads-status>CONNECTION PENDING</small></h2>' +
+        '<p class="v5-lock-empty" data-v5-threads-empty>Public Threads posts will appear only through a permitted integration after account authorization and publication review.</p>' +
+        '<div class="v5-threads-feed" data-v5-threads-feed hidden>' +
+          '<ul data-v5-threads-posts aria-label="Approved public Threads posts"></ul>' +
+          '<p class="v5-threads-provenance">Official Threads API · owner-approved public posts · <time data-v5-threads-checked></time></p>' +
+        '</div><a href="/contact/">Public social profiles →</a></section>' +
       '<section class="v5-lock-panel" aria-labelledby="v5-lock-gpt-title"><h2 id="v5-lock-gpt-title">' + icon("signal") + ' GPT Analytics <small>MANUAL CAPTURES</small></h2>' +
         '<p class="v5-lock-empty" data-v5-gpt-empty>Owner-recorded values will display here with their capture date. No automated token total is claimed.</p>' +
         '<div class="v5-gpt-capture" data-v5-gpt-capture hidden>' +
