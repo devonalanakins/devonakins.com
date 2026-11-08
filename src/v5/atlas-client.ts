@@ -3,7 +3,10 @@ import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { replayPublicGraphHistory } from "./public-graph-history.mjs";
 import { projectV5Atlas } from "./atlas-layout.mjs";
 import { publicAtlasVisibleSlice } from "./atlas-explorer-model.mjs";
-import { projectPublicAtlasArchitecture, PUBLIC_ATLAS_ROOT_COLORS } from "./atlas-architecture.mjs";
+import {
+  projectPublicAtlasArchitecture, projectPublicAtlasAtmosphere,
+  PUBLIC_ATLAS_ROOT_COLORS,
+} from "./atlas-architecture.mjs";
 import { fitPublicAtlasCamera } from "./atlas-camera-fit.mjs";
 
 /**
@@ -169,6 +172,46 @@ export function mountV5Atlas() {
   let visibleNodeIds = new Set(graph.nodes.map(node => node.id));
   const architecturalGroups = new Map<string, THREE.Group>();
   const architecture = projectPublicAtlasArchitecture(graph);
+  const atmosphere = projectPublicAtlasAtmosphere(architecture);
+  // Optional locally painted alpha mask. If 2D canvas is unavailable,
+  // all semantic controls and the sparse Three.js structure still work.
+  let hazeTexture: THREE.CanvasTexture | null = null;
+  if (atmosphere.valid) {
+    try {
+      const maskCanvas = document.createElement("canvas");
+      maskCanvas.width = maskCanvas.height = 96;
+      const mask = maskCanvas.getContext("2d");
+      if (mask) {
+        const gradient = mask.createRadialGradient(48, 48, 4, 48, 48, 46);
+        gradient.addColorStop(0, "rgba(255,255,255,0.62)");
+        gradient.addColorStop(.30, "rgba(255,255,255,0.30)");
+        gradient.addColorStop(.70, "rgba(255,255,255,0.07)");
+        gradient.addColorStop(1, "rgba(255,255,255,0)");
+        mask.fillStyle = gradient;
+        mask.fillRect(0, 0, 96, 96);
+        hazeTexture = new THREE.CanvasTexture(maskCanvas);
+        hazeTexture.colorSpace = THREE.SRGBColorSpace;
+      }
+    } catch {
+      // The deterministic particle volumes are the fallback.
+    }
+    const ambientGeometry = new THREE.BufferGeometry();
+    ambientGeometry.setAttribute("position",
+      new THREE.Float32BufferAttribute(atmosphere.backdrop, 3));
+    scene.add(new THREE.Points(ambientGeometry, new THREE.PointsMaterial({
+      color: 0x7fc6d8, size: .055, transparent: true, opacity: .31,
+      blending: THREE.AdditiveBlending, depthWrite: false,
+    })));
+    if (hazeTexture) {
+      const centralHaze = new THREE.Sprite(new THREE.SpriteMaterial({
+        map: hazeTexture, color: 0x5ccce0, transparent: true, opacity: .30,
+        blending: THREE.AdditiveBlending, depthWrite: false,
+      }));
+      centralHaze.scale.set(4.6, 3.4, 1);
+      centralHaze.renderOrder = -2;
+      scene.add(centralHaze);
+    }
+  }
   if (architecture.valid) {
     for (const cluster of architecture.clusters) {
       // Twenty-four equally decorative facets per approved identity:
@@ -243,11 +286,34 @@ export function mountV5Atlas() {
           opacity: .74, depthWrite: false, sizeAttenuation: true,
         }),
       ));
+
+      const cloud = atmosphere.valid
+        ? atmosphere.clouds.find(item => item.id === cluster.id) : null;
+      if (cloud) {
+        const cloudGeometry = new THREE.BufferGeometry();
+        cloudGeometry.setAttribute("position",
+          new THREE.Float32BufferAttribute(cloud.positions, 3));
+        group.add(new THREE.Points(cloudGeometry, new THREE.PointsMaterial({
+          color: cluster.color, size: .061, transparent: true, opacity: .55,
+          blending: THREE.AdditiveBlending, depthWrite: false,
+        })));
+        if (hazeTexture) {
+          const haze = new THREE.Sprite(new THREE.SpriteMaterial({
+            map: hazeTexture, color: cluster.color, transparent: true,
+            opacity: .34, blending: THREE.AdditiveBlending, depthWrite: false,
+          }));
+          haze.position.set(0, -.16, 0);
+          haze.scale.set(2.9, 1.8, 1);
+          haze.renderOrder = -2;
+          group.add(haze);
+        }
+      }
       scene.add(group);
       architecturalGroups.set(cluster.id, group);
     }
   }
   root.dataset.v5AtlasDecorativeClusters = String(architecturalGroups.size);
+  if (atmosphere.valid) root.dataset.v5AtlasAmbient = "decorative";
   for (const node of graph.nodes) {
     const color = rootColors[node.id] ?? colors[node.type] ?? 0x9bc7d8;
     const material = new THREE.MeshStandardMaterial({
@@ -550,13 +616,17 @@ export function mountV5Atlas() {
         object.geometry.dispose();
         const all = Array.isArray(object.material) ? object.material : [object.material];
         all.forEach(material => material.dispose());
+      } else if (object instanceof THREE.Sprite) {
+        object.material.dispose();
       }
     });
+    hazeTexture?.dispose();
     renderer.dispose();
     canvas.remove();
     labels.replaceChildren();
     delete root.dataset.v5AtlasReady;
     delete root.dataset.v5AtlasDecorativeClusters;
+    delete root.dataset.v5AtlasAmbient;
   };
   document.addEventListener("visibilitychange", visible);
   canvas.addEventListener("webglcontextlost", contextLost);

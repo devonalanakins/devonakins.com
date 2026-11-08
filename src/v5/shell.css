@@ -1266,3 +1266,24 @@ a[aria-current="page"] {
 @media (forced-colors: active) {
   .v5-atlas-root-list [data-v5-atlas-live-kind], .v5-atlas-node-label[data-v5-atlas-live-kind] { border-color: CanvasText; }
 }
+
+
+/* Approved V5 atlas atmosphere: subdued depth with no inferred graph edges.
+ * Purely visual gradients behind the accessible semantic catalog and canvas. */
+.v5-page-field .v5-atlas-viewport::before {
+  content: "";
+  position: absolute;
+  inset: -9%;
+  z-index: 1;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 31% 24% at 18% 49%, #28b9e32b, transparent 100%),
+    radial-gradient(ellipse 37% 29% at 79% 46%, #b56bf12a, transparent 100%),
+    radial-gradient(ellipse 40% 32% at 54% 33%, #2bd6e927, transparent 100%),
+    radial-gradient(ellipse 32% 25% at 63% 79%, #eea56818, transparent 100%),
+    radial-gradient(ellipse 48% 39% at 41% 69%, #167f9830, transparent 100%);
+  filter: blur(27px);
+}
+@media (forced-colors: active) {
+  .v5-page-field .v5-atlas-viewport::before { display: none; }
+}

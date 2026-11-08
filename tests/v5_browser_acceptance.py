@@ -176,6 +176,9 @@ def check_page(page, origin, path, axe):
             assert "SIGNAL FIELD" in core.inner_text()
             assert page.locator("[data-v5-atlas-node-id]").count() == 8, (
                 "Decorative core and skyline cannot create semantic project nodes")
+            if atlas.get_attribute("data-v5-atlas-ready") == "true":
+                assert atlas.get_attribute("data-v5-atlas-ambient") == "decorative", (
+                    "Bounded static atmosphere must mount with the reviewed eight-root atlas")
             assert page.locator(".v5-atlas-label-layer").get_attribute("aria-hidden") == "true"
             # At desktop widths, all eight approved project labels must fit
             # inside the displayed 3D panel at initial camera position.

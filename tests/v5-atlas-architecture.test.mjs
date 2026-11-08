@@ -83,3 +83,45 @@ test("invalid or forged root catalogs fail closed rather than generating private
     assert.deepEqual(result.clusters, []);
   }
 });
+
+
+test("bounded atmosphere is deterministic, disconnected and private-catalog blind", async () => {
+  const { projectPublicAtlasAtmosphere, PUBLIC_ATLAS_ATMOSPHERE_VERSION } =
+    await import("../src/v5/atlas-architecture.mjs");
+  const result = projectPublicAtlasAtmosphere(visual);
+  assert.equal(result.version, PUBLIC_ATLAS_ATMOSPHERE_VERSION);
+  assert.equal(result.valid, true);
+  assert.deepEqual(result, projectPublicAtlasAtmosphere(visual));
+  assert.equal(result.clouds.length, 8);
+  assert.equal(result.backdrop.length, 640 * 3);
+  assert.deepEqual(Object.keys(result).sort(), ["backdrop","clouds","valid","version"]);
+  for (const [index, cloud] of result.clouds.entries()) {
+    assert.deepEqual(Object.keys(cloud).sort(), ["color","id","positions"]);
+    assert.equal(cloud.id, visual.clusters[index].id);
+    assert.equal(cloud.color, visual.clusters[index].color);
+    assert.equal(cloud.positions.length, 128 * 3);
+    assert.ok(cloud.positions.every(n => Number.isFinite(n) && Math.abs(n) < 7));
+    assert.ok(Object.isFrozen(cloud.positions));
+  }
+  assert.ok(result.backdrop.every(n => Number.isFinite(n) && Math.abs(n) < 7));
+  assert.ok(Object.isFrozen(result.backdrop));
+  assert.equal(graph.nodes.length, 8, "Mist must not add or imply graph identities");
+  assert.equal(graph.links.length, 0, "Mist cannot assert unreviewed relations");
+});
+test("ambient scene refuses forged identities, geometry and presentation versions", async () => {
+  const { projectPublicAtlasAtmosphere } = await import("../src/v5/atlas-architecture.mjs");
+  for (const invalid of [
+    null, undefined, {}, { ...visual, valid:false },
+    { ...visual, version:999 },
+    { ...visual, clusters:visual.clusters.slice(1) },
+    { ...visual, clusters:[...visual.clusters,visual.clusters[0]] },
+    { ...visual, clusters:visual.clusters.map((c,i)=>i===1?{...c,id:"project:private-client"}:c) },
+    { ...visual, clusters:visual.clusters.map((c,i)=>i===1?{...c,color:0xffffff}:c) },
+    { ...visual, clusters:visual.clusters.map((c,i)=>i===1?{...c,position:[Infinity,0,0]}:c) },
+  ]) {
+    const result = projectPublicAtlasAtmosphere(invalid);
+    assert.equal(result.valid,false);
+    assert.deepEqual(result.clouds,[]);
+    assert.deepEqual(result.backdrop,[]);
+  }
+});
