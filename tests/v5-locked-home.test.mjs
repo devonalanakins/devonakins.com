@@ -79,7 +79,7 @@ test("locked CSS includes responsive screenshot geometry and reduced-motion guar
   assert.match(css, /v5-lock-project-art/);
   assert.match(css, /svg\.v5-lock-project-art\s*\{/);
   assert.match(css, /v5-lock-project-brand/);
-  assert.match(css, /portrait-cutout-mask\\.svg/);
+  assert.ok(css.includes('portrait-cutout-mask.svg'));
   assert.match(css, /v5-smoke-cyan/);
   assert.match(css, /v5-smoke-violet/);
   assert.match(css, /v5-smoke-amber/);
