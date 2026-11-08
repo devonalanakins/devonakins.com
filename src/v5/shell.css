@@ -1047,3 +1047,18 @@ a[aria-current="page"] {
   .v5-atlas-spotlight, .v5-atlas-profile-source { border-color: CanvasText; }
   .v5-atlas-profile .v5-atlas-profile-status { border-left-color: CanvasText; }
 }
+
+
+/* Mobile first viewport: expose the approved spatial view before the
+   directory. DOM/keyboard order remains controls -> atlas -> inspector;
+   the canvas is aria-hidden, while semantic controls stay first in DOM. */
+@media (max-width: 600px) {
+  .v5-atlas-viewport { order: -1; min-height: 330px; }
+  .v5-atlas-explorer { order: 0; }
+  .v5-atlas-index { order: 1; }
+}
+@media (min-width: 360px) and (max-width: 600px) {
+  .v5-atlas-root-list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .v5-atlas-root-list a { padding: 8px; gap: 8px; }
+  .v5-atlas-root-list small { line-height: 1.25; }
+}
