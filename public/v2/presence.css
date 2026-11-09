@@ -15,3 +15,9 @@
 .presence-field input,.presence-field textarea{width:100%;box-sizing:border-box;min-height:46px;padding:10px;border:1px solid #4e596b;border-radius:8px;background:#111722;color:#f1f3f6;font:inherit}.presence-field input:focus-visible,.presence-field textarea:focus-visible{outline:2px solid #8ec5d3;outline-offset:4px}.presence-field[hidden]{display:none}.presence-project-card{margin-top:20px}.presence-project-choices{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin:20px 0}.presence-project-choices label{display:flex;gap:12px;align-items:center;min-height:44px;color:#d1dae4}.presence-project-choices input{width:22px;height:22px;flex:none}#editor-pair-code{font-family:monospace;font-size:13px}
 /* Private mobile reporter management. */
 .task-owner-row{display:flex;align-items:center;flex-wrap:wrap;gap:10px;padding-block:14px;border-bottom:1px solid #ffffff22}.task-owner-row strong,.task-owner-row span{flex:1 1 200px}.task-owner-row button{min-height:44px}#task-token{width:100%;max-width:100%;padding:12px;font:13px monospace;color:#e9e5dc;background:#111722;border:1px solid #667183;overflow-wrap:anywhere}#task-credential{margin-block:16px}
+
+/* Private provider readiness: statuses are configuration reports, never live badges. */
+.source-readiness-list{list-style:none;margin:18px 0 24px;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,250px),1fr));gap:10px}
+.source-readiness-list li{display:grid;align-content:start;gap:7px;padding:14px;border:1px solid #465463;border-radius:12px;background:#0b1620;min-height:90px}
+.source-readiness-list li strong{font-size:15px;color:#e8e6e2}
+.source-readiness-list li span{font-size:13px;line-height:1.5;color:#c6d4db}
