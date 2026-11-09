@@ -172,9 +172,9 @@ test("owner integration actions use current protected routes and accessible link
   assert.match(css,/min-height:44px/);
   assert.match(js,/\/api\/presence\/owner\?channel=threads/);
   assert.match(js,/threadsChecking/);
-  assert.match(js,/\/api\/threads\/auth\/start/);
-  assert.match(js,/\/api\/threads\/auth\/status/);
-  assert.match(js,/\/api\/threads\/auth\/disconnect/);
+  assert.match(js,/\/api\/threads\/auth\//);
+  assert.match(js,/changeThreadsAuthorization\("start"\)/);
+  assert.match(js,/changeThreadsAuthorization\("disconnect"\)/);
   assert.match(js,/Test Threads connection privately|Checking the authorized Threads account/);
   assert.doesNotMatch(js,/THREADS_USER_ACCESS_TOKEN|SPOTIFY_CLIENT_SECRET|innerHTML=/);
 });
