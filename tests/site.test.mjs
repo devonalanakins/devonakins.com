@@ -437,7 +437,7 @@ test("current engineering showcase distinguishes Merit, Rhen language and RHEN m
   assert.match(markets, /not the experimental Rhen programming language/);
   const vesper = await (await get("/work/vesper/")).text();
   assert.match(vesper, /Vesper/);
-  assert.match(vesper, /https:\/\/github\.com\/devonalanakins\/vesper/);
+  assert.doesNotMatch(vesper, /href="https:\/\/github\.com\/devonalanakins\/vesper(?:["\\/?#])/, "Private Vesper repository cannot be linked");
   assert.match(vesper, /not a live brokerage service/);
   const source = await (await get("/source/")).text();
   assert.match(source, /Merit — engineering integrity toolkit/);

@@ -201,6 +201,7 @@ assert.equal(new Set(portfolio.map(([path]) => path)).size, portfolio.length, "u
 const archiveResponse = await request("/work/", { cache: "no-store" });
 assert.equal(archiveResponse.status, 200, "work archive response");
 const archiveMarkup = await archiveResponse.text();
+assert.doesNotMatch(archiveMarkup,/brandicade/i,"Private Brandicade excluded from public directory");
 for (const [path] of portfolio) {
   assert.ok(archiveMarkup.includes('href="' + path + '"'), path + " must appear in the public archive");
 }
@@ -227,7 +228,7 @@ for (const [path, title] of portfolio) {
   }
   if (path === "/work/vesper/") {
     assert.match(page, /not a live brokerage service/, "Vesper research is explicitly not live");
-    assert.match(page, /github\.com\/devonalanakins\/vesper/, "Vesper source repository");
+    assert.doesNotMatch(page, /href="https:\/\/github\.com\/devonalanakins\/vesper(?:["\\/?#])/, "No private Vesper source link");
   }
   if (path === "/work/mizvo/") {
     assert.match(page, /AGPL review build · not deployed/, "Mizvo is not a live service");
@@ -254,6 +255,12 @@ assert.equal(retiredProject.headers.get("location"), origin + "/work/squelch/?fr
 const image = await request("/v2/crossed-arms.webp");
 assert.equal(image.status, 200, "portrait asset");
 assert.match(image.headers.get("content-type") || "", /image\/webp/);
+const withdrawn = await request("/work/brandicade/", { redirect:"manual",cache:"no-store" });
+assert.equal(withdrawn.status, 404, "Private Brandicade page must not be public");
+const publicSitemap = await request("/sitemap.xml", {cache:"no-store"});
+assert.equal(publicSitemap.status,200,"Sitemap must remain accessible");
+assert.doesNotMatch(await publicSitemap.text(), /brandicade/i,
+  "Private Brandicade must not be indexed");
 const missing = await request("/missing-this-page/");
 assert.equal(missing.status, 404, "genuine 404");
 

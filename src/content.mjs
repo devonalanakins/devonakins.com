@@ -81,8 +81,6 @@ export const projects = [
     detail: "Initial repository README and an offline synthetic analysis prototype are in stacked draft pull requests. This is not a live brokerage service, production trading strategy, audited financial result, or permission to move money.",
     boundary: "No live trades, account balances, tokens, banking access, client information, or performance claims are published.",
     tags: ["Research", "Financial systems", "Redesign"],
-    url: "https://github.com/devonalanakins/vesper",
-    urlLabel: "View Vesper research",
     next: "Review the existing draft PRs, complete offline tests and design acceptance, and preserve independent approval for any broker interaction.",
   },
   {
