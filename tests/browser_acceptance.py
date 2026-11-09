@@ -898,6 +898,10 @@ def check_presence_control(browser, engine, origin, output, axe_source):
             assert writes[-1]["action"] == "projects" and writes[-1]["projects"] == ["mizvo"]
             assert page.evaluate("document.documentElement.scrollWidth <= innerWidth + 1")
             assert page.locator("#presence-off").bounding_box()["height"] >= 44
+            assert page.locator("#owner-source-readiness > li").count() >= 1
+            assert page.locator("#owner-source-readiness").evaluate(
+                "e => [...e.childNodes].every(n => n.nodeType === 1 && n.tagName === 'LI')"
+            ), "Owner readiness must preserve list semantics when a legacy response has no sources"
             if axe_source:
                 page.add_script_tag(content=axe_source)
                 violations = page.evaluate("""async () => (await axe.run(document, {
