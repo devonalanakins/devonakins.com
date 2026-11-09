@@ -143,6 +143,7 @@ function render(data) {
     (preview.project ? " · " + preview.project : "") +
     " · " +
     preview.source;
+  el("manual-expiry").textContent = data.manualExpiresAt ? "Status expires " + new Date(data.manualExpiresAt).toLocaleString() : "No temporary status.";
   el("session-expiry").textContent = data.sessionExpiresAt
     ? (data.paused ? "Paused. " : "") +
       "Expires " +
@@ -230,7 +231,7 @@ el("session-end").onclick = () => mutate("end");
 el("manual-set").onclick = () =>
   mutate("manual", {
     status: el("presence-manual").value,
-    minutes: Number(el("presence-duration").value),
+    minutes: Number(el("presence-manual-duration").value),
     ...(el("presence-manual").value === "custom"
       ? {
           label: el("presence-custom-label").value,
@@ -239,8 +240,14 @@ el("manual-set").onclick = () =>
       : {}),
   });
 el("presence-manual").onchange = () => {
-  el("custom-status-fields").hidden = el("presence-manual").value !== "custom";
+  const custom = el("presence-manual").value === "custom";
+  el("custom-status-fields").hidden = !custom;
+  const duration = el("presence-manual-duration");
+  for (const option of duration.options) option.disabled = !custom && Number(option.value) > 30;
+  if (!custom && Number(duration.value) > 30) duration.value = "30";
+  if (custom && Number(duration.value) === 30) duration.value = "1440";
 };
+el("presence-manual").dispatchEvent(new Event("change"));
 el("projects-save").onclick = () =>
   mutate("projects", {
     projects: [
