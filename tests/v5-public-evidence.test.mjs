@@ -94,7 +94,7 @@ test("only fresh authorized task evidence is active; terminal tasks, private and
 test("private Knowledge and unknown project identities are not inferred",()=>{
  const r=publicV5ProjectEvidence(response({
    work:publicWork({project:"Knowledge"}),
-   remote:{visibility:"public",tasks:[remoteTask({project:"DevonAkins.com"})]},
+   remote:{visibility:"public",tasks:[remoteTask({project:"Private Client"})]},
    recent:[github({project:"Knowledge",projectSlug:"knowledge",url:"https://github.com/devonalanakins/knowledge"})],
  }),at);
  assert.equal(Object.keys(r.nodes).length,0);
