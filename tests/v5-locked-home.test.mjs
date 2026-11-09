@@ -9,6 +9,12 @@ test("locked V5 screenshot modules occupy one semantic preview home", () => {
   assert.match(body, /data-v5-exact-reference="2026-11-07"/);
   assert.match(body, /<h1 id="v5-title">Devon Alan Akins<\/h1>/);
   assert.match(body, /class="v5-locked-hero-actions"/);
+  // Page shortcuts link to other routes; none should masquerade as the active page.
+  const rail = body.match(/<nav class="v5-locked-rail"[^>]*>([\s\S]*?)<\/nav>/)?.[1];
+  assert.ok(rail, "Homepage page-shortcut rail exists");
+  assert.doesNotMatch(rail, /aria-current=/,
+    "Off-page Activity shortcut must not be announced as the current location");
+
   assert.match(body, /href="\/work\/">Explore My Work/);
   assert.match(body, /href="\/about\/">About Me/);
   assert.match(body, /ENGINEER.*RESEARCHER.*WRITER.*CREATOR/);
