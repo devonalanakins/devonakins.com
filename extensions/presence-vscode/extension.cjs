@@ -467,7 +467,11 @@ function createCompanion(
 exports.createCompanion = createCompanion;
 exports.activate = (context) => {
   const companion = createCompanion(vscode, context);
-  cleanup = companion.dispose;
+  const codex = require("./codex-workspace.cjs").registerCodexWorkspace(vscode, context);
+  cleanup = () => {
+    codex.dispose();
+    companion.dispose();
+  };
   return companion.ready;
 };
 exports.deactivate = () => {
