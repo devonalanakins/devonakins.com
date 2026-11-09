@@ -79,6 +79,7 @@ export function projectPublicPresence(input, now = Date.now()) {
     typeof manual === "object" &&
     !Array.isArray(manual) &&
     MANUAL_STATUSES.has(manual.state) &&
+    manual.state !== "custom" &&
     manual.approved === true
   ) {
     const asOf = freshTime(manual.asOf, now, manual.state === "custom" ? PROFILE_NOTE_TTL_MS : MANUAL_TTL_MS);
