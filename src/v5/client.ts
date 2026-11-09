@@ -160,8 +160,8 @@ if (profileNote) {
   });
 }
 
-// Preview-only source check. The existing V4 polling client supplies the
-// consent-filtered read model. No additional poller, publisher or owner API.
+// Source-qualified V4 polling is distinct from the owner-note reader above.
+// V4 remains the only authority for editor, task, GitHub and Spotify state.
 const publicPreviewButton = document.querySelector<HTMLButtonElement>("[data-v5-preview-connect]");
 const publicPreviewStatus = document.querySelector<HTMLElement>("[data-v5-preview-source-state]");
 const activationMode = publicV5ActivationMode(
