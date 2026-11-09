@@ -63,6 +63,6 @@ test("owner view links to existing protected controls and includes no provider c
   const html=renderPresenceOwner();
   assert.match(html,/id="owner-source-readiness"/);
   assert.match(html,/Threads requires a separately approved Meta account authorization/);
-  assert.match(html,/href="\\/owner\\/listening\\/"/);
+  assert.ok(html.includes('href="/owner/listening/"'));
   assert.doesNotMatch(html,/THREADS_USER_ACCESS_TOKEN/);
 });
