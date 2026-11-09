@@ -165,6 +165,22 @@ test("owner disconnect revokes pending grants and stored tokens, including delay
   assert.equal((await storedThreadsStatus(f.env,now)).connected,false);
 });
 
+test("real Worker dispatch enforces owner authentication and keeps new routes private",async()=>{
+  const f=fixture();
+  const worker=createHandler({}, {version:"test"}, {now:()=>new Date(now)});
+  const url=root+"/api/threads/auth/status";
+  assert.equal((await worker.fetch(new Request(url),f.env,{})).status,403);
+  const status=await worker.fetch(new Request(url),f.env,owner);
+  assert.equal(status.status,200);
+  assert.equal((await status.json()).connected,false);
+  const crossSite=await worker.fetch(new Request(root+"/api/threads/auth/start",{
+    method:"POST",headers:{Origin:"https://attacker.example"}
+  }),f.env,owner);
+  assert.equal(crossSite.status,403);
+  const unknown=await worker.fetch(new Request(root+"/api/threads/auth/unrecognized"),f.env,owner);
+  assert.equal(unknown.status,404);
+});
+
 test("missing private migration or app settings fail closed and no OAuth attempt starts",async()=>{
   const absent=fixture(false);
   assert.equal((await absent.get("/api/threads/auth/status")).status,200);
