@@ -92,6 +92,8 @@ export function validPresence(value: unknown, at = Date.now()): Presence {
     return hidden;
   if (!active && v.project !== null) return hidden;
   const time = typeof v.asOf === "string" ? Date.parse(v.asOf) : NaN;
+  // The legacy live-presence ticker cannot inherit the longer lifetime
+  // of separately published profile notes.
   const ttl = ["editor-heartbeat", "spotify-playback"].includes(v.source)
     ? 120_000
     : 30 * 60_000;

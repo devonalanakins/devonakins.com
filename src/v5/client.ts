@@ -1,5 +1,6 @@
 import { publicV5ProjectEvidence } from "./public-evidence.mjs";
 import { publicHomepageSourceSummary } from "./homepage-source-summary.mjs";
+import { publicHomepageTimeline } from "./homepage-timeline.mjs";
 import { publicV5AtlasSignals } from "./atlas-live-evidence.mjs";
 import { publicV5Playback } from "./public-playback.mjs";
 import { publicV5GptCapture, formatPublicGptValue, publicGptCapturedAt } from "./public-gpt-capture.mjs";
@@ -110,8 +111,64 @@ inspector?.addEventListener("keydown", (event) => {
   }
 });
 
-// Preview-only source check. The existing V4 polling client supplies the
-// consent-filtered read model. No additional poller, publisher or owner API.
+// Owner-written profile notes are deliberately independent of live editing.
+// The endpoint is public only when both owner consent and release gates allow.
+const profileNote = document.querySelector<HTMLElement>("[data-v5-profile-note]");
+// A design preview must never fetch live owner notes on its own. Reuse the
+// existing server-issued release marker instead of introducing a new toggle.
+const profileNoteReleased = publicV5ActivationMode(
+  window.location.pathname,
+  document.documentElement.dataset.v5SignalMode,
+) === "automatic";
+if (profileNote && profileNoteReleased) {
+  const noteText = profileNote.querySelector<HTMLElement>("[data-v5-profile-note-text]");
+  const noteExpiry = profileNote.querySelector<HTMLElement>("[data-v5-profile-note-expiry]");
+  const hideNote = () => {
+    profileNote.hidden = true;
+    if (noteText) noteText.textContent = "";
+    if (noteExpiry) noteExpiry.textContent = "";
+  };
+  const refreshNote = async () => {
+    if (document.hidden) { hideNote(); return; }
+    try {
+      const response = await fetch("/api/presence/note", {
+        cache: "no-store", credentials: "omit",
+        headers: { Accept: "application/json" },
+        signal: AbortSignal.timeout(8000),
+      });
+      if (!response.ok) throw new Error("Unavailable");
+      const note: unknown = await response.json();
+      if (!note || typeof note !== "object" || Array.isArray(note)) throw new Error("Invalid");
+      const value = note as Record<string, unknown>;
+      const posted = typeof value.postedAt === "string" ? Date.parse(value.postedAt) : NaN;
+      const expires = typeof value.expiresAt === "string" ? Date.parse(value.expiresAt) : NaN;
+      const now = Date.now();
+      if (value.version !== 1 || value.visibility !== "public" ||
+        typeof value.text !== "string" || value.text !== value.text.trim() ||
+        value.text.length < 1 || value.text.length > 60 ||
+        /[\p{Cc}\p{Cf}]/u.test(value.text) ||
+        !Number.isFinite(posted) || !Number.isFinite(expires) ||
+        posted > now + 10_000 || expires <= now ||
+        expires - posted > 7 * 24 * 60 * 60_000 ||
+        Object.keys(value).sort().join("|") !== "expiresAt|postedAt|text|version|visibility")
+        throw new Error("Invalid");
+      if (noteText) noteText.textContent = value.text;
+      if (noteExpiry) noteExpiry.textContent = "Expires " + new Date(expires).toLocaleString();
+      profileNote.hidden = false;
+    } catch { hideNote(); }
+  };
+  void refreshNote();
+  const timer = window.setInterval(() => { void refreshNote(); }, 60_000);
+  window.addEventListener("pagehide", hideNote);
+  window.addEventListener("pageshow", () => { void refreshNote(); });
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden) hideNote();
+    else void refreshNote();
+  });
+}
+
+// Source-qualified V4 polling is distinct from the owner-note reader above.
+// V4 remains the only authority for editor, task, GitHub and Spotify state.
 const publicPreviewButton = document.querySelector<HTMLButtonElement>("[data-v5-preview-connect]");
 const publicPreviewStatus = document.querySelector<HTMLElement>("[data-v5-preview-source-state]");
 const activationMode = publicV5ActivationMode(
@@ -339,17 +396,27 @@ if ((field || workLivePanel) && (publicPreviewButton || activationMode === "auto
     const activityEmpty = document.querySelector<HTMLElement>(
       "[data-v5-home-activity-empty]"
     );
-    if (activityEmpty) activityEmpty.hidden = homepage.events.length > 0;
-    if (activityList) activityList.replaceChildren(...homepage.events.map((event: {href: string; kind: string; title: string; at: string; age: string | null}) => {
+    const timeline = publicHomepageTimeline(homepage, projection.available ? snapshot : null, at);
+    const threadsActivity = document.querySelector<HTMLElement>("[data-v5-home-threads-status]");
+    if (threadsActivity) threadsActivity.textContent = timeline.threadsConnected
+      ? "Threads · Official posts connected" : "Threads · Connection pending";
+    if (activityEmpty) activityEmpty.hidden = timeline.entries.length > 0;
+    if (activityList) activityList.replaceChildren(...timeline.entries.map(event => {
       const item = document.createElement("li");
+      item.dataset.activitySource = event.source;
       const link = document.createElement("a");
       const body = document.createElement("span");
       const title = document.createElement("strong");
       const age = document.createElement("time");
       link.href = event.href;
-      title.textContent = event.kind + " · " + event.title;
+      if (event.source === "threads") {
+        link.target = "_blank";
+        link.rel = "noopener noreferrer";
+        link.setAttribute("aria-label", "Open original Threads post");
+      }
+      title.textContent = event.heading;
       age.dateTime = event.at;
-      age.textContent = event.age;
+      age.textContent = event.detail;
       body.append(title);
       link.append(body, age);
       item.append(link);

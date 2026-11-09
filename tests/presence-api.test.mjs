@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {DatabaseSync} from 'node:sqlite';
 import {readFileSync} from 'node:fs';
-import {createPresenceOwnerApi, publicPresence, presenceRow, listeningDisclosure} from '../src/presence-api.mjs';
+import {createPresenceOwnerApi, publicPresence, publicProfileNote, presenceRow, listeningDisclosure} from '../src/presence-api.mjs';
 import {createHandler} from '../src/worker.mjs';
 
 const start=Date.parse('2026-11-06T17:00:00.000Z');
@@ -35,9 +35,41 @@ test('custom public statuses require explicit review, expire and obey privacy sh
   for(const extra of [{label:'Editing a chapter',labelApproved:false},{label:'Hidden\nline',labelApproved:true},{label:'a'.repeat(61),labelApproved:true}])
     assert.equal((await f.write('manual',{status:'custom',minutes:15,...extra})).status,400);
   assert.equal((await f.write('manual',{status:'custom',minutes:15,label:'Editing a new chapter',labelApproved:true})).status,200);
-  const view=await publicPresence(f.env,hidden,f.clock);assert.equal(view.state,'custom');assert.equal(view.label,'Editing a new chapter');
-  f.advance(16*60_000);assert.equal((await publicPresence(f.env,hidden,f.clock)).state,'offline');
+  const view=await publicPresence(f.env,hidden,f.clock);assert.equal(view.state,'offline');
+  const note=await publicProfileNote(f.env,f.clock);
+  assert.equal(note.visibility,'public');assert.equal(note.text,'Editing a new chapter');
+  f.advance(16*60_000);
+  assert.equal((await publicPresence(f.env,hidden,f.clock)).state,'offline');
+  assert.equal((await publicProfileNote(f.env,f.clock)).visibility,'hidden');
   await f.write('off');assert.equal((await publicPresence(f.env,hidden,f.clock)).visibility,'hidden');
+});
+test('24-hour public profile note persists independently of session and expires, obeying opt-in',async()=>{
+  const f=fixture();
+  assert.equal((await publicProfileNote(f.env,f.clock)).visibility,'hidden');
+  await f.write('settings',{enabled:true,privateWork:false,shareListening:false});f.advance();
+  assert.equal((await f.write('manual',{status:'custom',minutes:1440,label:'Building DevonAkins.com',labelApproved:true})).status,200);
+  assert.equal((await publicProfileNote(f.env,f.clock)).text,'Building DevonAkins.com');
+  assert.equal((await publicPresence(f.env,hidden,f.clock)).state,'offline','owner note is not live coding');
+  f.advance();
+  assert.equal((await f.write('start',{projectSlug:'merit',minutes:15})).status,200);
+  assert.equal((await publicPresence(f.env,hidden,f.clock)).state,'developing');
+  assert.equal((await publicProfileNote(f.env,f.clock)).text,'Building DevonAkins.com');
+  f.advance();
+  await f.write('settings',{enabled:true,privateWork:true,shareListening:false});
+  assert.equal((await publicProfileNote(f.env,f.clock)).visibility,'hidden','private mode wins');
+  f.advance();
+  await f.write('settings',{enabled:true,privateWork:false,shareListening:false});
+  f.advance(24*60*60_000);
+  assert.equal((await publicProfileNote(f.env,f.clock)).visibility,'hidden','expiry is truthful');
+});
+test('public note rejects excessive lifetime and immediately revokes on stop',async()=>{
+  const f=fixture();await f.write('settings',{enabled:true,privateWork:false,shareListening:false});f.advance();
+  assert.equal((await f.write('manual',{status:'custom',minutes:10081,label:'No',labelApproved:true})).status,400);
+  assert.equal((await f.write('manual',{status:'sleeping',minutes:1440})).status,400);
+  assert.equal((await f.write('manual',{status:'custom',minutes:10080,label:'Approved message',labelApproved:true})).status,200);
+  assert.equal((await publicProfileNote(f.env,f.clock)).visibility,'public');
+  await f.write('off');
+  assert.equal((await publicProfileNote(f.env,f.clock)).visibility,'hidden');
 });
 test('owner project choices constrain sessions and remove an active disallowed label',async()=>{
   const f=fixture();await activate(f);f.advance();
@@ -146,6 +178,42 @@ test('actual Worker routes reject anonymous owner writes, never cache presence, 
   assert.equal((await music.json()).mode,'hidden');assert.equal(music.headers.get('X-Content-Type-Options'),'nosniff');
   const head=await handler.fetch(new Request('https://devonakins.com/api/listening/now',{method:'HEAD'}),f.env);
   assert.equal(await head.text(),'');
+});
+
+
+test('public note HTTP endpoint is gated, noncacheable, and separately revocable',async()=>{
+  const f=fixture();
+  const worker=createHandler({}, {version:'test'}, {now:()=>new Date(f.clock())});
+  const read=(method='GET')=>worker.fetch(new Request(
+    'https://devonakins.com/api/presence/note',{method}),f.env);
+  const empty={version:1,visibility:'hidden'};
+  let response=await read();
+  assert.equal(response.status,200);
+  assert.deepEqual(await response.json(),empty);
+  assert.match(response.headers.get('Cache-Control'),/no-store/);
+  assert.match(response.headers.get('CDN-Cache-Control'),/no-store/);
+  assert.equal(response.headers.get('X-Content-Type-Options'),'nosniff');
+  assert.equal((await read('POST')).status,405,'public read endpoint must not accept writes');
+
+  await f.write('settings',{enabled:true,privateWork:false,shareListening:false});
+  f.advance();
+  await f.write('manual',{status:'custom',minutes:1440,label:'Building a public project',labelApproved:true});
+  response=await read();
+  assert.equal(response.status,200);
+  const visible=await response.json();
+  assert.equal(visible.visibility,'public');
+  assert.equal(visible.text,'Building a public project');
+  assert.equal(Date.parse(visible.expiresAt)-Date.parse(visible.postedAt),24*60*60_000);
+  const head=await read('HEAD');
+  assert.equal(head.status,200);
+  assert.equal(await head.text(),'');
+  assert.match(head.headers.get('Cache-Control'),/no-store/);
+
+  f.env.PRESENCE_PUBLIC_RELEASE_APPROVED='false';
+  assert.deepEqual(await (await read()).json(),empty,'release approval revocation');
+  f.env.PRESENCE_PUBLIC_RELEASE_APPROVED='true';
+  await f.write('off');
+  assert.deepEqual(await (await read()).json(),empty,'owner stop immediately revokes');
 });
 
 test('owner status discloses configuration only, and never to unauthenticated visitors',async()=>{

@@ -117,6 +117,39 @@ export async function publicPresence(env, readListening, clock = Date.now) {
   }
 }
 
+// Separate, opt-in public profile note. Dated by the owner's actual save;
+// the short-lived editor/task indicators stay independent.
+const hiddenProfileNote = () => ({ version: 1, visibility: "hidden" });
+export async function publicProfileNote(env, clock = Date.now) {
+  if (!presenceConfigured(env) || !publicApproved(env)) return hiddenProfileNote();
+  try {
+    const at = clock();
+    const row = await presenceRow(env);
+    if (
+      row?.public_enabled !== 1 || row.private_work === 1 ||
+      row.manual_state !== "custom" ||
+      !validManualLabel(row.manual_label) ||
+      !Number.isFinite(row.manual_at) || !Number.isFinite(row.manual_until) ||
+      row.manual_at > at + 10_000 || row.manual_until <= at ||
+      at - row.manual_at >= PRESENCE_PROJECTOR_POLICY.profileNoteTtlSeconds * 1000
+    ) return hiddenProfileNote();
+    // Do not expose an in-flight note if Stop all / private mode revoked it.
+    const current = await presenceRow(env);
+    if (!current || current.revision !== row.revision ||
+        current.public_enabled !== 1 || current.private_work === 1)
+      return hiddenProfileNote();
+    return {
+      version: 1,
+      visibility: "public",
+      text: row.manual_label,
+      postedAt: iso(row.manual_at),
+      expiresAt: iso(row.manual_until),
+    };
+  } catch {
+    return hiddenProfileNote();
+  }
+}
+
 export function nextPresenceState(row, data, at) {
   if (
     !data ||
@@ -224,10 +257,12 @@ export function nextPresenceState(row, data, at) {
       session_until: at + data.minutes * 60_000,
       paused: 0,
       project_slug: data.projectSlug,
-      manual_state: null,
-      manual_label: null,
-      manual_at: 0,
-      manual_until: 0,
+      // An explicitly posted note survives starting or resuming a work session.
+      // Other manual states (away, sleeping, etc.) do not.
+      manual_state: row.manual_state === "custom" ? row.manual_state : null,
+      manual_label: row.manual_state === "custom" ? row.manual_label : null,
+      manual_at: row.manual_state === "custom" ? row.manual_at : 0,
+      manual_until: row.manual_state === "custom" ? row.manual_until : 0,
     };
   }
   if (data.action === "pause") return { ...next, paused: 1 };
@@ -241,21 +276,24 @@ export function nextPresenceState(row, data, at) {
       project_slug: null,
     };
   if (data.action === "manual") {
-    if (!manualStates.includes(data.status) || ![15, 30].includes(data.minutes))
+    const isNote = data.status === "custom";
+    if (!manualStates.includes(data.status) ||
+        !(isNote ? [15, 30, 60, 1440, 10080] : [15, 30]).includes(data.minutes))
       throw new Error("Invalid status");
     if (
       data.status === "custom" &&
       (data.labelApproved !== true || !validManualLabel(data.label))
     )
       throw new Error("Review the public label first");
-    // Manual mode ends any old session so it cannot unexpectedly reappear.
+    // An owner note is independent of short-lived editor/session evidence.
+    // Other manual states deliberately end prior owner-declared sessions.
     return {
       ...next,
-      session_source: null,
-      session_at: 0,
-      session_until: 0,
-      paused: 0,
-      project_slug: null,
+      session_source: isNote ? next.session_source : null,
+      session_at: isNote ? next.session_at : 0,
+      session_until: isNote ? next.session_until : 0,
+      paused: isNote ? next.paused : 0,
+      project_slug: isNote ? next.project_slug : null,
       manual_state: data.status,
       manual_label: data.status === "custom" ? data.label : null,
       manual_at: at,
@@ -300,6 +338,7 @@ function status(row, env, at) {
     sessionExpiresAt: row.session_until > at ? iso(row.session_until) : null,
     projectSlug: row.project_slug,
     manualState: row.manual_state,
+    manualExpiresAt: row.manual_until > at ? iso(row.manual_until) : null,
     serverTime: iso(at),
     preview: projectPublicPresence(presenceInput(row, env, at), at),
     projects: approvedProjects(row),
