@@ -139,7 +139,7 @@ if (profileNote) {
       if (value.version !== 1 || value.visibility !== "public" ||
         typeof value.text !== "string" || value.text !== value.text.trim() ||
         value.text.length < 1 || value.text.length > 60 ||
-        /[\\p{Cc}\\p{Cf}]/u.test(value.text) ||
+        /[\p{Cc}\p{Cf}]/u.test(value.text) ||
         !Number.isFinite(posted) || !Number.isFinite(expires) ||
         posted > now + 10_000 || expires <= now ||
         expires - posted > 7 * 24 * 60 * 60_000 ||
