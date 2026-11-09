@@ -88,6 +88,48 @@ test('missing CLI and runner failure fail closed', async () => {
   assert.equal(missing, 'unavailable');
 });
 
+test('Windows npm codex.cmd shim uses only the fixed cmd.exe fallback and sanitized environment', async () => {
+  const calls = [];
+  const result = await inspectCodexAuthentication({
+    platform: 'win32',
+    environment: { PATH: 'C:\\node', OPENAI_API_KEY: 'SECRET' },
+    runner(file, args, options, cb) {
+      calls.push({ file, args, options });
+      if (file === 'codex') {
+        const err = new Error('Windows npm shim not executable');
+        err.code = 'ENOENT';
+        return cb(err, '');
+      }
+      assert.equal(file, 'cmd.exe');
+      assert.deepEqual(args, ['/d', '/s', '/c', 'codex login status']);
+      cb(null, 'Logged in using ChatGPT', '');
+    },
+  });
+  assert.equal(result, 'chatgpt');
+  assert.equal(calls.length, 2);
+  for (const call of calls) {
+    assert.equal(call.options.shell, false);
+    assert.equal(call.options.env.OPENAI_API_KEY, undefined);
+  }
+});
+
+test('non-Windows probe and non-ENOENT failures do not invoke a shell fallback', async () => {
+  for (const [platform, code] of [['linux', 'ENOENT'], ['win32', 'EACCES']]) {
+    let calls = 0;
+    const value = await inspectCodexAuthentication({
+      platform,
+      runner(file, args, options, cb) {
+        calls++;
+        const err = new Error('Synthetic failure');
+        err.code = code;
+        cb(err, '');
+      },
+    });
+    assert.equal(value, 'unavailable');
+    assert.equal(calls, 1);
+  }
+});
+
 test('ChatGPT login opens a trusted VS Code workspace without API-key environment', async () => {
   const f = fixture();
   await f.client.start();
