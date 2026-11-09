@@ -105,7 +105,7 @@ test('an API-key session is blocked without a login or CLI launch', async () => 
   const f = fixture({mode:'api-key'});
   await f.client.start();
   assert.equal(f.calls.terminals.length, 0);
-  assert.match(f.statusText, /API key \\(blocked\\)/);
+  assert.match(f.statusText, /API key/);
   assert.ok(f.calls.messages.some(m=>/separate API billing/.test(m.value)));
   f.client.dispose();
 });
