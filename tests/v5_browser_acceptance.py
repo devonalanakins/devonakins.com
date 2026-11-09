@@ -326,7 +326,7 @@ def check_page(page, origin, path, axe):
             """e => {
                 const s = getComputedStyle(e);
                 const mask = s.maskImage || s.webkitMaskImage || '';
-                return s.clipPath === 'none' && mask.includes('linear-gradient');
+                return s.clipPath === 'none' && mask.includes(innerWidth <= 600 ? 'radial-gradient' : 'linear-gradient');
             }"""
         ), "Approved cap portrait must feather without an obsolete silhouette polygon"
         assert portrait_box.evaluate(
@@ -393,6 +393,22 @@ def check_page(page, origin, path, axe):
                     r.width <= innerWidth * .75 &&
                     css.backgroundRepeat === 'no-repeat';
             }"""), "Mobile cap portrait must remain compact, nonrepeating and decorative"
+            # Accessibility isn't just an element's nominal 44px size: it
+            # must be unobscured by the old fixed-height identity container.
+            # Verify the three social links fit in the visible hero region.
+            assert page.locator(".v5-locked-socials a").evaluate_all("""items => {
+                const hero=document.querySelector('.v5-locked-hero').getBoundingClientRect();
+                return items.length === 3 && items.every(e => {
+                    const r=e.getBoundingClientRect();
+                    return r.width >= 44 && r.height >= 44 &&
+                        r.top >= hero.top && r.bottom <= hero.bottom &&
+                        r.left >= hero.left && r.right <= hero.right;
+                });
+            }"""), "Mobile social links must remain visible, accessible and unclipped"
+            assert page.locator(".v5-locked-manifesto").evaluate("""e => {
+                const r=e.getBoundingClientRect();
+                return getComputedStyle(e).display !== 'none' && r.height > 20;
+            }"""), "Purpose statement cannot disappear on narrow phones"
         # On a narrow 568px phone, the first source card must be usable in
         # the first viewport, not hidden behind decorative hero whitespace.
         if page.viewport_size == {"width": 320, "height": 568}:
