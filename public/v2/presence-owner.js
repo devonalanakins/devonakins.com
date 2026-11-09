@@ -7,6 +7,7 @@ let operationSequence = 0;
 let confirmedStopOperation = 0;
 let cloudState = null;
 let cloudGeneration = 0;
+let threadsChecking = false;
 function notice(text) {
   el("presence-notice").textContent = text;
 }
@@ -25,7 +26,7 @@ function renderSourceReadiness(sources) {
     tasks=sources.tasks||{},gpt=sources.gpt||{};
   const rows=[
     ["Threads",t.configured
-      ? "Configured for public read; provider observation not yet verified."
+      ? "Configured for public read; use the private test to verify the account."
       : !t.authorizationConfigured
         ? "Meta authorization not configured. Read-only feed stays disconnected."
         : "Credentials configured; account, global sharing and publication gates still require approval."],
@@ -102,6 +103,9 @@ function lock(value) {
   if (!value && (!cloudState || !cloudState.publishingAllowed))
     el("cloud-enabled").disabled = true;
   // Emergency stop stays available while a slower ordinary save is pending.
+  if (!value) el("threads-check").disabled = threadsChecking ||
+    !state?.sources?.threads?.authorizationConfigured ||
+    !state?.sources?.threads?.usernameConfigured;
   if (state) el("presence-off").disabled = false;
 }
 function render(data) {
@@ -263,6 +267,47 @@ el("presence-save").onclick = () =>
     editorEnabled: el("presence-editor-enabled").checked,
   });
 el("presence-off").onclick = () => mutate("off");
+/** Explicit request only. The token is kept in Cloudflare; never entered in
+ * this page, included in a URL, or returned in the response. */
+async function checkThreadsConnection() {
+  const ready=state?.sources?.threads;
+  if (busy || threadsChecking || !ready?.authorizationConfigured ||
+      !ready?.usernameConfigured) return;
+  threadsChecking=true;
+  const status=el("threads-check-result");
+  el("threads-check").disabled=true;
+  status.textContent="Checking the authorized Threads account…";
+  try {
+    const response=await fetch("/api/presence/owner?channel=threads",{
+      method:"POST",credentials:"same-origin",cache:"no-store",
+      headers:{Accept:"application/json"},
+      signal:AbortSignal.timeout(10000),
+    });
+    if(!response.ok ||
+      !response.headers.get("Content-Type")?.includes("application/json"))
+      throw Error("Private provider check unavailable. Check your owner sign-in.");
+    const result=await response.json();
+    if(result?.version!==1)throw Error("Invalid provider check.");
+    const messages={
+      verified:"Official Threads account verified. This check did not enable public sharing.",
+      "account-mismatch":"This Threads token belongs to a different account. No posts were shared.",
+      denied:"Meta rejected the token. Reauthorize with read-only threads_basic access.",
+      unavailable:"The Meta connection could not be verified. No sharing was changed.",
+      "not-configured":"The private Threads account credentials are not configured.",
+    };
+    status.textContent=messages[result.connection] ||
+      "The Threads connection could not be verified.";
+  } catch(error) {
+    status.textContent=error?.message || "Threads connection check unavailable.";
+  } finally {
+    threadsChecking=false;
+    el("threads-check").disabled=busy ||
+      !state?.sources?.threads?.authorizationConfigured ||
+      !state?.sources?.threads?.usernameConfigured;
+  }
+}
+el("threads-check").onclick=checkThreadsConnection;
+
 lock(true);
 load()
   .then(() => {

@@ -70,7 +70,7 @@ for (const module of [
   "github-integration", "github-integration-auth", "github-integration-page",
   "presence-preferences", "presence-editor-api",
   "cloud-presence-model", "cloud-presence-api", "activity-tasks", "live-signal", "activity-history",
-  "listening-collections", "threads-public",
+  "listening-collections", "threads-public", "threads-owner-probe",
 ]) {
   await writeFile(".release/" + module + ".mjs", await readFile("src/" + module + ".mjs"));
 }

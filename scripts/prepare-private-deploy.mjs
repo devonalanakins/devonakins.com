@@ -18,6 +18,8 @@ const ownerReleaseGates = [
   "PRESENCE_PUBLIC_RELEASE_APPROVED",
   "LISTENING_PUBLIC_RELEASE_APPROVED",
   "GPT_SNAPSHOT_PUBLIC_RELEASE_APPROVED",
+  "THREADS_PUBLIC_RELEASE_APPROVED",
+  "THREADS_PUBLIC_FEED_ENABLED",
 ];
 // Legacy API read/write gates are *not* the owner-reviewed snapshot feature.
 const privateGates = [
@@ -29,6 +31,7 @@ const plainNames = new Set([
   "LISTENING_ACCESS_AUD",
   "LISTENING_ACCESS_AUDS",
   "SPOTIFY_CLIENT_ID",
+  "THREADS_PUBLIC_USERNAME",
   "PRESENCE_ENABLED",
   "PRESENCE_EDITOR_ENABLED",
   "LISTENING_COLLECTIONS_ENABLED",
@@ -48,6 +51,10 @@ export function privateDeploymentConfig(base, settings, database) {
          /[\u0000-\u001f\u007f]/.test(b.text)))
       throw Error("Invalid deployed plain-text binding");
   }
+  const threadsHandle = bindings.find((b) => b.name === "THREADS_PUBLIC_USERNAME");
+  if (threadsHandle && (threadsHandle.type !== "plain_text" ||
+      !/^[A-Za-z0-9._]{1,30}$/.test(threadsHandle.text)))
+    throw Error("Invalid Threads owner handle");
   const dbs = bindings.filter((b) => b.type === "d1");
   if (
     dbs.length !== 1 ||
@@ -66,7 +73,8 @@ export function privateDeploymentConfig(base, settings, database) {
       (b) =>
         !(
           b.type === "d1" ||
-          (b.type === "secret_text" && b.name === "LISTENING_TOKEN_KEY") ||
+          (b.type === "secret_text" &&
+            ["LISTENING_TOKEN_KEY", "THREADS_USER_ACCESS_TOKEN"].includes(b.name)) ||
           (b.type === "plain_text" && plainNames.has(b.name))
         ),
     )

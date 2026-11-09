@@ -240,3 +240,37 @@ test('owner status discloses configuration only, and never to unauthenticated vi
   assert.equal(unauthenticated.status,403);
   assert.ok(!JSON.stringify(await unauthenticated.json()).includes('sources'));
 });
+
+test("Threads credential check is owner-only, same-origin POST and cannot enable publication",async()=>{
+  const f=fixture(),seen=[];
+  const env={...f.env,THREADS_USER_ACCESS_TOKEN:"s".repeat(40),
+    THREADS_PUBLIC_USERNAME:"fixtureDevon",THREADS_PUBLIC_FEED_ENABLED:"false",
+    THREADS_PUBLIC_RELEASE_APPROVED:"false"};
+  const worker=createHandler({}, {version:"test"},{
+    now:()=>new Date(f.clock()),
+    threadsFetch:async(url,init)=>{
+      seen.push({url,init});
+      return Response.json({id:"278695012345",username:"fixtureDevon",secret:"DO_NOT_SHOW"});
+    },
+  });
+  const url="https://devonakins.com/api/presence/owner?channel=threads";
+  const request=(method="POST",origin="https://devonakins.com")=>
+    new Request(url,{method,headers:{Origin:origin}});
+  assert.equal((await worker.fetch(request(),env,{})).status,403,"Access identity required");
+  assert.equal((await worker.fetch(request(),"",owner)).status,403,"empty env has no owner");
+  assert.equal((await worker.fetch(request("GET"),env,owner)).status,405);
+  assert.equal((await worker.fetch(request("POST","https://untrusted.test"),env,owner)).status,403);
+  assert.equal(seen.length,0,"failed auth and CSRF checks must not contact Meta");
+  const response=await worker.fetch(request(),env,owner);
+  assert.equal(response.status,200);
+  assert.match(response.headers.get("Cache-Control"),/no-store/);
+  assert.match(response.headers.get("CDN-Cache-Control"),/no-store/);
+  const payload=await response.json();
+  assert.deepEqual(payload,{version:1,connection:"verified",
+    checkedAt:new Date(f.clock()).toISOString()});
+  assert.equal(seen.length,1);
+  assert.equal(new URL(seen[0].url).searchParams.has("access_token"),false);
+  assert.doesNotMatch(JSON.stringify(payload),/fixtureDevon|DO_NOT_SHOW|s{40}/);
+  assert.equal(env.THREADS_PUBLIC_FEED_ENABLED,"false");
+  assert.equal(env.THREADS_PUBLIC_RELEASE_APPROVED,"false");
+});

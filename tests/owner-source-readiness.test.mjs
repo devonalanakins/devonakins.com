@@ -65,7 +65,16 @@ test("owner view links to existing protected controls and includes no provider c
   assert.match(html,/id="owner-source-readiness"/);
   assert.match(html,/Threads requires a separately approved Meta account authorization/);
   assert.ok(html.includes('href="/owner/listening/"'));
+  assert.match(html,/id="threads-check"/);
+  assert.match(html,/id="threads-check-result" role="status"/);
   assert.doesNotMatch(html,/THREADS_USER_ACCESS_TOKEN/);
+});
+
+test("release packager includes the owner probe imported by the Worker",()=>{
+  const script=readFileSync(new URL("../scripts/build-worker.mjs",import.meta.url),"utf8");
+  assert.match(script,/"threads-owner-probe"/);
+  const worker=readFileSync(new URL("../src/worker.mjs",import.meta.url),"utf8");
+  assert.match(worker,/createThreadsOwnerProbe/);
 });
 
 test("owner summary reports only authorized, nonsecret pairing metadata", async()=>{
@@ -131,5 +140,8 @@ test("owner integration actions use current protected routes and accessible link
   assert.match(js,/link\.rel="noopener noreferrer"/);
   assert.match(css,/source-readiness-action:focus-visible/);
   assert.match(css,/min-height:44px/);
+  assert.match(js,/\/api\/presence\/owner\?channel=threads/);
+  assert.match(js,/threadsChecking/);
+  assert.match(js,/Test Threads connection privately|Checking the authorized Threads account/);
   assert.doesNotMatch(js,/THREADS_USER_ACCESS_TOKEN|SPOTIFY_CLIENT_SECRET|innerHTML=/);
 });

@@ -63,6 +63,59 @@ function date(value,now) {
   return Number.isFinite(at) && at>0 && at<=now+60_000
     ? new Date(at).toISOString():null;
 }
+/**
+ * Explicit owner-only proof of the existing Threads token/account binding.
+ * No public release flags are read or changed and no post data is requested.
+ * Results contain no account identifiers, provider payloads or credentials.
+ */
+export async function probeThreadsAuthorization(env={},{
+  fetchImpl=fetch,clock=Date.now,
+}={}) {
+  const unconfigured={version:1,connection:"not-configured",checkedAt:null};
+  const token=env.THREADS_USER_ACCESS_TOKEN;
+  const username=env.THREADS_PUBLIC_USERNAME;
+  if(typeof token!=="string" || token.length<20 ||
+     typeof username!=="string" || !USERNAME.test(username))
+    return unconfigured;
+  const endpoint=new URL("https://graph.threads.net/v1.0/me");
+  endpoint.searchParams.set("fields","id,username");
+  const observed=(connection)=>{
+    const now=clock();
+    return {version:1,connection,
+      checkedAt:Number.isFinite(now)?new Date(now).toISOString():null};
+  };
+  try {
+    const response=await fetchImpl(endpoint.toString(),{
+      method:"GET",
+      headers:{Authorization:"Bearer "+token,Accept:"application/json"},
+      redirect:"error",
+      signal:AbortSignal.timeout(3500),
+    });
+    // Authentication and network failures are distinct, but neither exposes
+    // response text, request headers, account identifiers or token values.
+    if(response?.status===401 || response?.status===403)return observed("denied");
+    if(!response?.ok)return observed("unavailable");
+    const size=Number(response.headers?.get?.("Content-Length") || 0);
+    if(!Number.isFinite(size) || size>2048)return observed("unavailable");
+    const raw=await response.text();
+    if(raw.length>2048)return observed("unavailable");
+    const data=JSON.parse(raw);
+    if(!data || typeof data!=="object" || Array.isArray(data) ||
+       !ID.test(data.id??"") ||
+       typeof data.username!=="string" || !USERNAME.test(data.username))
+      return observed("unavailable");
+    // Never report success if a different account was authorized or the
+    // server-side token / selected username changed while fetching.
+    if(env.THREADS_USER_ACCESS_TOKEN!==token ||
+       env.THREADS_PUBLIC_USERNAME!==username)
+      return observed("unavailable");
+    return observed(data.username.toLowerCase()===username.toLowerCase()
+      ?"verified":"account-mismatch");
+  } catch {
+    return observed("unavailable");
+  }
+}
+
 /** Never export provider IDs, attachments, insights, token, cursor, or replies. */
 export function publicThreadsPosts(payload,username,now=Date.now()) {
   if(!USERNAME.test(username??"") || !Number.isFinite(now) ||

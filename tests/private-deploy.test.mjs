@@ -23,6 +23,8 @@ const ownerGates = [
   "PRESENCE_PUBLIC_RELEASE_APPROVED",
   "LISTENING_PUBLIC_RELEASE_APPROVED",
   "GPT_SNAPSHOT_PUBLIC_RELEASE_APPROVED",
+  "THREADS_PUBLIC_RELEASE_APPROVED",
+  "THREADS_PUBLIC_FEED_ENABLED",
 ];
 const legacyGates = ["GPT_USAGE_READ_ENABLED", "GPT_USAGE_WRITE_ENABLED"];
 const gates = [...ownerGates, ...legacyGates];
@@ -107,6 +109,28 @@ test("foreign database, extra bindings, missing key, malformed release gate and 
   const malformed = settings();
   malformed.bindings.find(b => b.name === "LISTENING_OWNER_EMAIL").text = "owner@example.test\nFORGED_FIELD";
   assert.throws(() => privateDeploymentConfig(base, malformed, database));
+});
+
+test("release safely preserves an authorized Threads token binding without copying its value",()=>{
+  const configured=settings();
+  configured.bindings.push({type:"secret_text",name:"THREADS_USER_ACCESS_TOKEN"});
+  configured.bindings.push({type:"plain_text",name:"THREADS_PUBLIC_USERNAME",text:"fixtureDevon"});
+  const config=privateDeploymentConfig(base,configured,database);
+  const parsed=clean(config);
+  assert.equal(parsed.keep_vars,true);
+  assert.equal(parsed.vars.THREADS_PUBLIC_USERNAME,"fixtureDevon");
+  assert.equal(parsed.vars.THREADS_PUBLIC_RELEASE_APPROVED,"false");
+  assert.equal(parsed.vars.THREADS_PUBLIC_FEED_ENABLED,"false");
+  assert.doesNotMatch(config,/THREADS_USER_ACCESS_TOKEN|fixture-secret-value/);
+  const malformed=settings();
+  malformed.bindings.push({type:"plain_text",name:"THREADS_PUBLIC_USERNAME",text:"bad user"});
+  assert.throws(()=>privateDeploymentConfig(base,malformed,database));
+  const wrongKind=settings();
+  wrongKind.bindings.push({type:"plain_text",name:"THREADS_USER_ACCESS_TOKEN",text:"exposed"});
+  assert.throws(()=>privateDeploymentConfig(base,wrongKind,database));
+  const forged=settings();
+  forged.bindings.push({type:"secret_text",name:"UNREVIEWED_PROVIDER_TOKEN"});
+  assert.throws(()=>privateDeploymentConfig(base,forged,database));
 });
 
 test("a competing checked-in binding is not silently overwritten", () => {
