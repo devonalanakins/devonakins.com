@@ -92,11 +92,11 @@ export function validPresence(value: unknown, at = Date.now()): Presence {
     return hidden;
   if (!active && v.project !== null) return hidden;
   const time = typeof v.asOf === "string" ? Date.parse(v.asOf) : NaN;
+  // The legacy live-presence ticker cannot inherit the longer lifetime
+  // of separately published profile notes.
   const ttl = ["editor-heartbeat", "spotify-playback"].includes(v.source)
     ? 120_000
-    : v.source === "owner-manual" && v.state === "custom"
-      ? 7 * 24 * 60 * 60_000
-      : 30 * 60_000;
+    : 30 * 60_000;
   if (
     !Number.isFinite(time) ||
     new Date(time).toISOString() !== v.asOf ||
