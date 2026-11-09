@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {readFileSync} from "node:fs";
+import {DatabaseSync} from "node:sqlite";
 import {ownerSourceReadiness} from "../src/owner-source-readiness.mjs";
 import {ownerThreadsReadiness} from "../src/threads-public.mjs";
 import {renderPresenceOwner} from "../src/presence-owner-page.mjs";
@@ -66,6 +67,9 @@ test("owner view links to existing protected controls and includes no provider c
   assert.match(html,/Threads requires a separately approved Meta account authorization/);
   assert.ok(html.includes('href="/owner/listening/"'));
   assert.match(html,/id="threads-check"/);
+  assert.match(html,/id="threads-connect"/);
+  assert.match(html,/id="threads-disconnect"/);
+  assert.match(html,/id="threads-connection-status"/);
   assert.match(html,/id="threads-check-result" role="status"/);
   assert.doesNotMatch(html,/THREADS_USER_ACCESS_TOKEN/);
 });
@@ -73,8 +77,10 @@ test("owner view links to existing protected controls and includes no provider c
 test("release packager includes the owner probe imported by the Worker",()=>{
   const script=readFileSync(new URL("../scripts/build-worker.mjs",import.meta.url),"utf8");
   assert.match(script,/"threads-owner-probe"/);
+  assert.match(script,/"threads-owner-oauth"/);
   const worker=readFileSync(new URL("../src/worker.mjs",import.meta.url),"utf8");
   assert.match(worker,/createThreadsOwnerProbe/);
+  assert.match(worker,/createThreadsOwnerOAuth/);
 });
 
 test("owner summary reports only authorized, nonsecret pairing metadata", async()=>{
@@ -130,6 +136,30 @@ test("expired or mismatched pairing and missing D1 cannot impersonate activity",
   assert.equal(empty.tasks.connectedSourceCount,null);
 });
 
+test("encrypted Threads authorization appears in private readiness without enabling public posts",async()=>{
+  const sql=new DatabaseSync(":memory:");
+  sql.exec(readFileSync(new URL("../migrations/0011_threads_private_oauth.sql",import.meta.url),"utf8"));
+  const now=Date.parse("2026-11-09T20:00:00.000Z");
+  sql.prepare("UPDATE threads_connection SET token_cipher=?,username=?,token_expires_at=?,verified_at=? WHERE id=1")
+    .run("encrypted-private-fixture","privateFixture",now+86400000,now);
+  const privateEnv={...env,LISTENING_TOKEN_KEY:"not-exposed",
+    THREADS_USER_ACCESS_TOKEN:undefined,THREADS_PUBLIC_USERNAME:undefined,
+    THREADS_PUBLIC_RELEASE_APPROVED:"false",THREADS_PUBLIC_FEED_ENABLED:"false",
+    LISTENING_DB:{prepare(statement){
+      const query=sql.prepare(statement);let values=[];
+      return {bind(...args){values=args;return this;},
+        async first(){return query.get(...values)||null;}};
+    }},
+  };
+  const data=await ownerSourceReadiness(privateEnv,null,now);
+  assert.equal(data.threads.privateConnected,true);
+  assert.equal(data.threads.authorizationConfigured,true);
+  assert.equal(data.threads.usernameConfigured,true);
+  assert.equal(data.threads.configured,false);
+  assert.equal(data.threads.providerObserved,false);
+  assert.doesNotMatch(JSON.stringify(data),/privateFixture|encrypted-private-fixture|not-exposed/);
+});
+
 test("owner integration actions use current protected routes and accessible links",()=>{
   const js=readFileSync(new URL("../public/v2/presence-owner.js",import.meta.url),"utf8");
   const css=readFileSync(new URL("../public/v2/presence.css",import.meta.url),"utf8");
@@ -142,6 +172,9 @@ test("owner integration actions use current protected routes and accessible link
   assert.match(css,/min-height:44px/);
   assert.match(js,/\/api\/presence\/owner\?channel=threads/);
   assert.match(js,/threadsChecking/);
+  assert.match(js,/\/api\/threads\/auth\/start/);
+  assert.match(js,/\/api\/threads\/auth\/status/);
+  assert.match(js,/\/api\/threads\/auth\/disconnect/);
   assert.match(js,/Test Threads connection privately|Checking the authorized Threads account/);
   assert.doesNotMatch(js,/THREADS_USER_ACCESS_TOKEN|SPOTIFY_CLIENT_SECRET|innerHTML=/);
 });
