@@ -799,7 +799,12 @@ def check_presence_control(browser, engine, origin, output, axe_source):
                 if data["action"] == "projects":
                     state["projects"] = data["projects"]
                 if data["action"] == "manual":
-                    state["preview"] = {"state":data["status"],"label":data.get("label"),"project":None,"source":"owner-manual"}
+                    state["manualState"] = data["status"]
+                    state["manualExpiresAt"] = (
+                        "2099-01-01T00:00:00.000Z" if data["status"] == "custom" else None
+                    )
+                    # The owner note is no longer classified as live work.
+                    # It must never alter the public work-session projection.
                 if data["action"] == "pause":
                     delayed.update({"route":route,"body":json.dumps(state)})
                     return
@@ -885,13 +890,21 @@ def check_presence_control(browser, engine, origin, output, axe_source):
                 assert not page.locator("#presence-enabled").is_checked()
                 assert "Broadcasting stopped" in page.locator("#presence-notice").inner_text()
             page.select_option("#presence-manual","custom")
+            assert page.locator("#custom-status-fields").is_visible()
+            assert page.locator("#presence-manual-duration").input_value() == "1440", (
+                "Custom public notes default to a 24-hour duration"
+            )
             page.fill("#presence-custom-label","Editing a new chapter")
             page.locator("#presence-label-approved").check()
             page.locator("#manual-set").click()
             page.wait_for_function("document.querySelector('#presence-notice').textContent === 'Saved.'")
             assert writes[-1]["status"] == "custom" and writes[-1]["labelApproved"] is True
             assert writes[-1]["label"] == "Editing a new chapter"
-            page.wait_for_function("document.querySelector('#presence-preview').textContent.includes('Editing a new chapter')")
+            assert writes[-1]["minutes"] == 1440
+            assert "Status expires" in page.locator("#manual-expiry").inner_text()
+            assert "Editing a new chapter" not in page.locator("#presence-preview").inner_text(), (
+                "A temporary note cannot masquerade as verified live work"
+            )
             page.locator('[data-public-project][value="merit"]').uncheck()
             page.locator("#projects-save").click()
             page.wait_for_function("document.querySelector('#presence-notice').textContent === 'Saved.'")
