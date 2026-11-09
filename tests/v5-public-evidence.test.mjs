@@ -99,3 +99,47 @@ test("private Knowledge and unknown project identities are not inferred",()=>{
  }),at);
  assert.equal(Object.keys(r.nodes).length,0);
 });
+
+
+test("existing V4 approvals for DevonAkins.com and Brandicade survive V5 without exposing Knowledge", () => {
+  const v = response({
+    work: publicWork({ project: "DevonAkins.com" }),
+    remote: { visibility: "public", tasks: [remoteTask({ project: "Brandicade" })] },
+    recent: [
+      github({ project: "DevonAkins.com", projectSlug: "devonakins-com",
+        url: "https://github.com/devonalanakins/devonakins.com" }),
+      github({ project: "Brandicade", projectSlug: "brandicade",
+        url: "https://github.com/devonalanakins/brandicade" }),
+      github({ project: "Knowledge", projectSlug: "knowledge",
+        url: "https://github.com/devonalanakins/knowledge" }),
+    ],
+  });
+  const r = publicV5ProjectEvidence(v, at);
+  assert.equal(r.available, true);
+  assert.deepEqual(r.nodes["devonakins-com"].active, {
+    kind: "editor", source: "Editor observed", at: iso(-20000)
+  });
+  assert.equal(r.nodes.brandicade.active.source, "Codex task");
+  assert.deepEqual(r.recent.map(e => e.slug),
+    ["devonakins-com", "brandicade"]);
+  assert.equal(Object.hasOwn(r.nodes, "knowledge"), false,
+    "Private Knowledge must not enter homepage history or activity");
+});
+
+test("forged GitHub identities cannot promote private events into approved V5 nodes", () => {
+  const r = publicV5ProjectEvidence(response({
+    work: publicWork({ project: "Knowledge" }),
+    remote: {visibility:"public",tasks:[remoteTask({project:"Private Client"})]},
+    recent:[
+      github({project:"DevonAkins.com",projectSlug:"devonakins-com",
+        url:"https://github.com/devonalanakins/private-client"}),
+      github({project:"Brandicade",projectSlug:"brandicade",
+        url:"https://github.com/devonalanakins/knowledge"}),
+      github({project:"Knowledge",projectSlug:"knowledge",
+        url:"https://github.com/devonalanakins/knowledge"}),
+    ],
+  }),at);
+  assert.equal(r.available,true);
+  assert.deepEqual(Object.keys(r.nodes),[]);
+  assert.deepEqual(r.recent,[]);
+});

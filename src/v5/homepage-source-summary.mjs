@@ -3,6 +3,7 @@
 // promoted to a live work session and silence never implies a connection.
 const approvedTitles = Object.freeze({
   devonstation: "DevonStation", mizvo: "Mizvo",
+  "devonakins-com": "DevonAkins.com", brandicade: "Brandicade",
   anevum: "Anevum", "rhen-language": "Rhen", merit: "Merit",
 squelch: "Squelch",
 });

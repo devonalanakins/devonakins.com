@@ -91,3 +91,34 @@ test("foreign or unapproved link properties never enter the displayed feed",()=>
   assert.equal(state.events.length,0);
   assert.equal(state.github,"No recent approved events");
 });
+
+
+test("the homepage preserves approved public website and Brandicade evidence without suggesting deployment", () => {
+  const value = {
+    version:4, asOf:iso(-1000),
+    recent:[
+      {project:"DevonAkins.com",projectSlug:"devonakins-com",kind:"Commit",
+        at:iso(-90000),url:"https://github.com/devonalanakins/devonakins.com"},
+      {project:"Brandicade",projectSlug:"brandicade",kind:"Pull request",
+        at:iso(-180000),url:"https://github.com/devonalanakins/brandicade"},
+      {project:"Knowledge",projectSlug:"knowledge",kind:"Commit",
+        at:iso(-210000),url:"https://github.com/devonalanakins/knowledge"},
+    ],
+    work:{visibility:"public",source:"editor-heartbeat",
+      project:"DevonAkins.com",state:"developing",asOf:iso(-1000)},
+    remote:{visibility:"public",tasks:[{project:"Brandicade",source:"codex",
+      state:"running",checkpoint:null,asOf:iso(-2000),expiresAt:iso(100000)}]},
+  };
+  const state = publicHomepageSourceSummary(publicV5ProjectEvidence(value,now),now);
+  assert.equal(state.available,true);
+  assert.match(state.github,/Commit · DevonAkins\.com/);
+  assert.match(state.tasks,/Codex task · Brandicade/);
+  assert.match(state.coding,/Editor observed · DevonAkins\.com/);
+  assert.equal(state.focus?.title,"DevonAkins.com");
+  assert.deepEqual(state.events.map(e=>e.href),[
+    "https://github.com/devonalanakins/devonakins.com",
+    "https://github.com/devonalanakins/brandicade",
+  ]);
+  assert.doesNotMatch(JSON.stringify(state),/knowledge|private-client/i);
+  assert.doesNotMatch(JSON.stringify(state),/deployed|production live/i);
+});
