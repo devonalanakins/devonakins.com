@@ -156,6 +156,16 @@ def run():
             assert page.locator("[data-v5-threads-feed]").is_visible()
             assert page.locator("[data-v5-threads-status]").inner_text() == "SOURCE CONNECTED"
             assert page.locator("[data-v5-threads-posts] li").count() == 1
+            assert "Official posts connected" in page.locator(
+                "[data-v5-home-threads-status]"
+            ).inner_text()
+            assert page.locator('[data-v5-home-activity-list] [data-activity-source="threads"]').count() == 1
+            assert "Verified Threads fixture" in page.locator(
+                '[data-v5-home-activity-list] [data-activity-source="threads"]'
+            ).inner_text()
+            assert page.locator(
+                '[data-v5-home-activity-list] [data-activity-source="threads"] img'
+            ).count() == 0, "Threads text must not execute provider HTML"
             assert "Verified Threads fixture" in page.locator(
                 "[data-v5-threads-posts] li a"
             ).inner_text()
@@ -258,6 +268,10 @@ def run():
             assert page.locator("[data-v5-threads-feed]").is_hidden()
             assert page.locator("[data-v5-threads-status]").inner_text() == "CONNECTION PENDING"
             assert page.locator("[data-v5-threads-posts] li").count() == 0
+            assert page.locator('[data-v5-home-activity-list] [data-activity-source="threads"]').count() == 0
+            assert "Connection pending" in page.locator(
+                "[data-v5-home-threads-status]"
+            ).inner_text()
             assert page.locator("[data-v5-gpt-capture]").is_hidden()
             assert page.locator("[data-v5-gpt-empty]").is_visible()
             assert page.locator("[data-v5-gpt-readings] li").count() == 0
