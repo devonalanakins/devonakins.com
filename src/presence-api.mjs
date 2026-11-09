@@ -278,7 +278,7 @@ export function nextPresenceState(row, data, at) {
   if (data.action === "manual") {
     const isNote = data.status === "custom";
     if (!manualStates.includes(data.status) ||
-        !(isNote ? [15, 60, 1440, 10080] : [15, 30]).includes(data.minutes))
+        !(isNote ? [15, 30, 60, 1440, 10080] : [15, 30]).includes(data.minutes))
       throw new Error("Invalid status");
     if (
       data.status === "custom" &&
