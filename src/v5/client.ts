@@ -152,7 +152,8 @@ if (profileNote) {
   };
   void refreshNote();
   const timer = window.setInterval(() => { void refreshNote(); }, 60_000);
-  window.addEventListener("pagehide", () => { window.clearInterval(timer); hideNote(); }, { once: true });
+  window.addEventListener("pagehide", hideNote);
+  window.addEventListener("pageshow", () => { void refreshNote(); });
   document.addEventListener("visibilitychange", () => {
     if (document.hidden) hideNote();
     else void refreshNote();
