@@ -202,6 +202,17 @@ def main():
                 assert empty.is_visible(), "No-results message must become visible after filtering"
                 search.fill('')
                 assert empty.is_hidden(), "Clearing the filter must hide the no-results message"
+                page.goto(origin+'/about/',wait_until='networkidle')
+                portrait=page.locator('.v5-about-portrait img')
+                assert portrait.count()==1, "About needs one real, first-party portrait"
+                portrait.scroll_into_view_if_needed()
+                page.wait_for_function("""() => {
+                    const image=document.querySelector('.v5-about-portrait img');
+                    return !!(image && image.complete && image.naturalWidth>0)
+                }""",timeout=10000)
+                assert page.locator('.v5-about-path').count()==3
+                for destination in ['/work/','/research/','/writing/']:
+                    assert page.locator('.v5-about-path[href="'+destination+'"]').count()==1
                 page.goto(origin+'/knowledge/',wait_until='networkidle')
                 with page.expect_navigation(url="**/knowledge/sources-and-meaning/", wait_until="domcontentloaded"):
                     page.locator('a[href="/knowledge/sources-and-meaning/"]').first.click()
