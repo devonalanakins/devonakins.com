@@ -8,6 +8,8 @@ let confirmedStopOperation = 0;
 let cloudState = null;
 let cloudGeneration = 0;
 let threadsChecking = false;
+let threadsAuthState = null;
+let threadsAuthBusy = false;
 function notice(text) {
   el("presence-notice").textContent = text;
 }
@@ -25,7 +27,9 @@ function renderSourceReadiness(sources) {
     gh=sources.github||{},ed=sources.editor||{},
     tasks=sources.tasks||{},gpt=sources.gpt||{};
   const rows=[
-    ["Threads",t.configured
+    ["Threads",t.privateConnected
+      ? "Private Meta authorization stored. Public Threads posts remain a separate opt-in."
+      : t.configured
       ? "Configured for public read; use the private test to verify the account."
       : !t.authorizationConfigured
         ? "Meta authorization not configured. Read-only feed stays disconnected."
@@ -106,6 +110,13 @@ function lock(value) {
   if (!value) el("threads-check").disabled = threadsChecking ||
     !state?.sources?.threads?.authorizationConfigured ||
     !state?.sources?.threads?.usernameConfigured;
+  if (!value) {
+    el("threads-connect").disabled = !threadsAuthState?.appConfigured ||
+      !threadsAuthState?.storageReady || !!threadsAuthState?.connected ||
+      threadsAuthBusy;
+    el("threads-disconnect").disabled = !threadsAuthState?.connected ||
+      threadsAuthBusy;
+  }
   if (state) el("presence-off").disabled = false;
 }
 function render(data) {
@@ -308,10 +319,91 @@ async function checkThreadsConnection() {
 }
 el("threads-check").onclick=checkThreadsConnection;
 
+/** No Meta credentials enter the browser. Only the owner click starts OAuth. */
+function renderThreadsAuthorization(data) {
+  if(!data || data.version!==1)throw Error("Invalid Threads status.");
+  threadsAuthState=data;
+  const message=data.connected
+    ? "Official Threads authorization securely stored. Expires " +
+      new Date(data.expiresAt).toLocaleDateString() +
+      ". Public posts are not enabled."
+    : !data.appConfigured
+      ? "Meta Threads App ID and secret are not configured on the Worker."
+      : !data.storageReady
+        ? "Private Threads database migration is pending."
+        : "No authorized Threads account connected. Public sharing is off.";
+  el("threads-connection-status").textContent=message;
+  lock(busy || threadsAuthBusy || !state);
+}
+async function loadThreadsAuthorization() {
+  try {
+    const response=await fetch("/api/threads/auth/status",{
+      credentials:"same-origin",cache:"no-store",
+      headers:{Accept:"application/json"},signal:AbortSignal.timeout(10000),
+    });
+    if(!response.ok || !response.headers.get("Content-Type")?.includes("application/json"))
+      throw Error("Private connection status unavailable.");
+    renderThreadsAuthorization(await response.json());
+    // The OAuth callback never returns tokens in a query string.
+    const result=new URLSearchParams(location.search).get("threads");
+    if(result==="connected")
+      el("threads-connection-status").textContent=
+        "Meta account authorized privately. Posts remain disconnected.";
+    else if(result && ["callback","expired","reused","authorization"].includes(result))
+      el("threads-connection-status").textContent=
+        "Meta authorization was not completed. No sharing was changed.";
+  } catch(error) {
+    threadsAuthState=null;
+    el("threads-connection-status").textContent=
+      error?.message || "Private Threads connection unavailable.";
+    lock(busy || !state);
+  }
+}
+async function changeThreadsAuthorization(action) {
+  if(busy || threadsAuthBusy || !threadsAuthState?.storageReady ||
+     (action==="start" && (!threadsAuthState.appConfigured || threadsAuthState.connected)) ||
+     (action==="disconnect" && !threadsAuthState.connected))return;
+  threadsAuthBusy=true;
+  lock(true);
+  el("threads-connection-status").textContent=
+    action==="start"?"Preparing secure Meta authorization…":"Disconnecting Threads…";
+  try {
+    const response=await fetch("/api/threads/auth/"+action,{
+      method:"POST",credentials:"same-origin",cache:"no-store",
+      headers:{Accept:"application/json"},signal:AbortSignal.timeout(12000),
+    });
+    if(!response.headers.get("Content-Type")?.includes("application/json"))
+      throw Error("Owner sign-in required.");
+    const data=await response.json();
+    if(!response.ok)throw Error(data?.error || "Private Threads request unavailable.");
+    if(action==="start"){
+      const target=new URL(data.authorizeUrl);
+      if(!["threads.net","www.threads.net"].includes(target.hostname) ||
+         target.protocol!=="https:" || target.pathname!=="/oauth/authorize" ||
+         target.searchParams.get("scope")!=="threads_basic" ||
+         !target.searchParams.get("state"))
+        throw Error("Meta authorization destination was rejected.");
+      window.location.assign(target.href);
+    } else {
+      await Promise.all([loadThreadsAuthorization(),load()]);
+      el("threads-check-result").textContent="Threads disconnected. Public posts remain off.";
+    }
+  } catch(error) {
+    el("threads-connection-status").textContent=
+      error?.message || "Private Threads operation unavailable.";
+  } finally {
+    threadsAuthBusy=false;
+    lock(busy || !state);
+  }
+}
+el("threads-connect").onclick=()=>changeThreadsAuthorization("start");
+el("threads-disconnect").onclick=()=>changeThreadsAuthorization("disconnect");
+
 lock(true);
 load()
   .then(() => {
     lock(false);
+    void loadThreadsAuthorization();
     notice(
       state.publishingAllowed
         ? "Controls ready. Public sharing requires your opt-in."
