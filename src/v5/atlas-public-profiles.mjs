@@ -14,7 +14,7 @@ const ROOT_CATALOG = Object.freeze([
   ["project:anevum", "anevum", "https://anevum.com"],
   ["project:rhen-language", "rhen-language", "https://github.com/devonalanakins/rhen"],
   ["project:merit", "merit", "https://github.com/devonalanakins/merit"],
-  ["project:vesper", "vesper", "https://github.com/devonalanakins/vesper"],
+  ["project:vesper", "vesper", null],
   ["project:squelch", "squelch", "https://github.com/devonalanakins/squelch"],
 ]);
 

@@ -7,7 +7,6 @@ const projects = {
   devonstation: "DevonStation",
   squelch: "Squelch",
   anevum: "Anevum",
-  brandicade: "Brandicade",
   vesper: "Vesper",
   knowledge: "Knowledge",
   "devonakins-com": "DevonAkins.com",

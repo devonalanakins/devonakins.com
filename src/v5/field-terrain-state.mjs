@@ -14,7 +14,7 @@ export function publicV5TerrainStates(projection) {
   }
   for (const slug of terrainPublicSlugs) {
     // Knowledge is a public section label, never a source of private status.
-    if (slug === "knowledge-overview") continue;
+    if (slug === "knowledge-overview" || slug === "vesper") continue;
     const node = Object.hasOwn(projection.nodes, slug) ? projection.nodes[slug] : null;
     const kind = node?.active?.kind;
     if (kind === "editor" || kind === "remote") states[slug] = kind;

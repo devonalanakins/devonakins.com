@@ -22,7 +22,7 @@ const ROOT_SET = new Set(ROOT_IDS);
 const PROJECT_SLUGS = new Set(terrainPublicSlugs.filter(s => s !== "knowledge-overview"));
 const NODE_TYPES = new Set(["feature", "component", "integration", "publication"]);
 const RELATION_TYPES = new Set(["contains", "implements", "documents", "depends-on", "integrates-with"]);
-const REPOS = "(?:devonakins\\.com|devon-station|mizvo|rhen|merit|vesper|squelch|anevum)";
+const REPOS = "(?:devonakins\\.com|devon-station|mizvo|rhen|merit|squelch|anevum)";
 const REVIEW_URL = /^https:\/\/github\.com\/devonalanakins\/devonakins\.com\/pull\/[1-9][0-9]*$/;
 const PROOF_URL = new RegExp("^https://github\\.com/devonalanakins/" + REPOS + "/(?:pull/[1-9][0-9]*|commit/[0-9a-f]{40})$");
 const CHILD_ID = /^(feature|component|integration|publication):([a-z][a-z0-9-]{1,35})\/([a-z][a-z0-9-]{1,47})$/;

@@ -15,7 +15,7 @@ test("only verified current editor and remote work can light public terrain node
     nodes: {
       mizvo: { active: { kind: "editor" } },
       merit: { active: { kind: "remote" } },
-      vesper: { active: null, lastEvent: { kind: "Pull request" } },
+      vesper: { active: { kind: "remote" }, lastEvent: { kind: "Pull request" } },
       "knowledge-overview": { active: { kind: "editor" } },
       "private-client": { active: { kind: "remote" } },
       anevum: { active: { kind: "historical" } },

@@ -328,7 +328,7 @@ test("production verifier requires the exact built version and public snapshot",
   const { projects } = await import("../src/content.mjs");
   assert.ok(verifier.includes('projects.map(({ slug, title }) => ["/work/" + slug + "/", title])'),
     "verification must dynamically include every public portfolio project");
-  for (const slug of ["merit", "rhen-language", "squelch", "brandicade", "rhen", "vesper", "mizvo"]) {
+  for (const slug of ["merit", "rhen-language", "squelch", "rhen", "vesper", "mizvo"]) {
     assert.ok(projects.some((project) => project.slug === slug),
       slug + " must exist in generated portfolio and dynamic production verifier");
   }
@@ -412,7 +412,8 @@ test("current engineering showcase distinguishes Merit, Rhen language and RHEN m
   assert.ok(home.includes('href="/work/merit/"'));
   assert.ok(home.includes('href="/work/rhen-language/"'));
   const archive = await (await get("/work/")).text();
-  for (const slug of ["merit", "rhen-language", "vesper", "squelch", "brandicade", "rhen"]) {
+  assert.ok(!archive.toLowerCase().includes("brandicade"), "Private project excluded from public Work");
+  for (const slug of ["merit", "rhen-language", "vesper", "squelch", "rhen"]) {
     assert.ok(archive.includes('href="/work/' + slug + '/"'), slug);
     const response = await get("/work/" + slug + "/");
     assert.equal(response.status, 200, slug);
@@ -436,7 +437,7 @@ test("current engineering showcase distinguishes Merit, Rhen language and RHEN m
   assert.match(markets, /not the experimental Rhen programming language/);
   const vesper = await (await get("/work/vesper/")).text();
   assert.match(vesper, /Vesper/);
-  assert.match(vesper, /https:\/\/github\.com\/devonalanakins\/vesper/);
+  assert.doesNotMatch(vesper, /href="https:\/\/github\.com\/devonalanakins\/vesper(?:["\\/?#])/, "Private Vesper repository cannot be linked");
   assert.match(vesper, /not a live brokerage service/);
   const source = await (await get("/source/")).text();
   assert.match(source, /Merit — engineering integrity toolkit/);
