@@ -266,8 +266,8 @@ function renderHeroAtmosphere() {
 }
 
 export function renderReferenceHomepage() {
-  const rail = navRail.map(([label, glyph, href], i) =>
-    '<a href="' + href + '"' + (i === 0 ? ' aria-current="location"' : "") +
+  const rail = navRail.map(([label, glyph, href]) =>
+    '<a href="' + href + '"' +
     '>' + icon(glyph) + '<span>' + label + '</span></a>',
   ).join("");
   const cards = ["mizvo", "rhen-language", "merit", "vesper", "squelch"]
