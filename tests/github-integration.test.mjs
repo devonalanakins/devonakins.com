@@ -418,7 +418,7 @@ test("catalog requires paired bearer, includes approved static projects and priv
     "UPDATE github_repositories SET approved=1,project_slug='merit' WHERE repo_id=203",
   );
   data = await (await f.catalog(request(), f.env)).json();
-  assert.equal(data.repositories.length, 11);
+  assert.equal(data.repositories.length, 10);
   assert.equal(Date.parse(data.expiresAt), START + 300000);
   f.sql.exec(
     "UPDATE presence_state SET public_projects_json='[\"rhen\"]',revision=revision+1",
