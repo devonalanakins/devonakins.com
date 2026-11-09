@@ -179,7 +179,7 @@ test('unavailable or unknown CLI distinguishes official IDE sign-in and cannot l
 
 test('signed-out CLI nonzero status preserves the explicit sign-in-required state', async () => {
   const mode = await inspectCodexAuthentication({
-    runner(file,args,options,callback) { callback(new Error('exit code 1'), 'Not logged in\\n'); }
+    runner(file,args,options,callback) { callback(new Error('exit code 1'), 'Not logged in'); }
   });
   assert.equal(mode,'not-logged-in');
 });
