@@ -15,7 +15,9 @@ function renderSourceReadiness(sources) {
   const root=el("owner-source-readiness");
   if (!root) return;
   if (!sources || sources.version!==1) {
-    root.replaceChildren(document.createTextNode("Provider configuration is unavailable."));
+    const item=document.createElement("li");
+    item.textContent="Provider configuration is unavailable.";
+    root.replaceChildren(item);
     return;
   }
   const t=sources.threads||{},sp=sources.spotify||{},
