@@ -389,10 +389,13 @@ def check_page(page, origin, path, axe):
             assert page.locator(".v5-locked-portrait").evaluate("""e => {
                 const r = e.getBoundingClientRect();
                 const css = getComputedStyle(e);
+                const sizeH = Number.parseFloat(css.backgroundSize.split(' ').at(-1));
                 return r.height > 140 && r.height <= 205 &&
                     r.width <= innerWidth * .75 &&
-                    css.backgroundRepeat === 'no-repeat';
-            }"""), "Mobile cap portrait must remain compact, nonrepeating and decorative"
+                    sizeH >= 180 && sizeH <= 225 &&
+                    css.backgroundRepeat === 'no-repeat' &&
+                    css.maskImage.includes('radial-gradient');
+            }"""), "Mobile portrait must show approved full crop, softened edges and compact bounds"
             # Accessibility isn't just an element's nominal 44px size: it
             # must be unobscured by the old fixed-height identity container.
             # Verify the three social links fit in the visible hero region.
