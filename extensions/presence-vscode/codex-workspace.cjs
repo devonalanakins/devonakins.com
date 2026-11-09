@@ -70,7 +70,10 @@ const terminalEnvironment = Object.freeze(
   Object.fromEntries(CREDENTIAL_ENV_KEYS.map((key) => [key, null])),
 );
 
-function registerCodexWorkspace(api, context, { inspect = inspectCodexAuthentication } = {}) {
+function registerCodexWorkspace(api, context, {
+  inspect = inspectCodexAuthentication,
+  readProfile = () => require('./codex-profile-usage.cjs').readCodexProfile(),
+} = {}) {
   let disposed = false;
   let starting = false;
   const status = api.window.createStatusBarItem(api.StatusBarAlignment.Right, 0);
@@ -202,6 +205,37 @@ function registerCodexWorkspace(api, context, { inspect = inspectCodexAuthentica
       return false;
     }
   }
+  async function profileUsage() {
+    if (disposed) return false;
+    if (api.workspace.isTrusted !== true) {
+      await api.window.showWarningMessage('Trust the workspace before reading local Codex profile data.');
+      return false;
+    }
+    const permission = await api.window.showInformationMessage(
+      'Read your own ChatGPT profile metrics locally via the official Codex app-server? Nothing will be sent to DevonAkins.com.',
+      'Read local profile',
+    );
+    if (disposed || permission !== 'Read local profile') return false;
+    let result;
+    try { result = await readProfile(); } catch { result = { state: 'unavailable' }; }
+    if (disposed) return false;
+    if (result?.state === 'available' && Number.isSafeInteger(result.reading?.lifetimeTokens)) {
+      const reading = result.reading;
+      const count = new Intl.NumberFormat('en-US').format(reading.lifetimeTokens);
+      await api.window.showInformationMessage(
+        'ChatGPT profile lifetime tokens: ' + count +
+        '. Local observation: ' + reading.observedAt +
+        '. This does not prove a specific Codex session contributed, and nothing was uploaded or published.',
+      );
+      return true;
+    }
+    await api.window.showWarningMessage(
+      result?.state === 'api-key-blocked'
+        ? 'The Codex app-server is authenticated using an API key, not ChatGPT. Profile reading was blocked.'
+        : 'No supported ChatGPT profile reading is available from the local Codex app-server. Check Codex CLI installation and ChatGPT sign-in. The official IDE can still be used independently.',
+    );
+    return false;
+  }
   async function usage() {
     if (disposed) return;
     await api.env.openExternal(api.Uri.parse('https://chatgpt.com/'));
@@ -211,6 +245,7 @@ function registerCodexWorkspace(api, context, { inspect = inspectCodexAuthentica
   }
   const registrations = [
     ['codexIde', openIde],
+    ['codexProfile', profileUsage],
     ['codexAccount', async () => {
       const mode = await account();
       if (!disposed && mode === 'chatgpt') await api.window.showInformationMessage(
@@ -235,7 +270,7 @@ function registerCodexWorkspace(api, context, { inspect = inspectCodexAuthentica
     status.dispose();
   };
   context.subscriptions.push({ dispose });
-  return { account, start, login, usage, openIde, dispose };
+  return { account, start, login, usage, openIde, profileUsage, dispose };
 }
 
 module.exports = {
