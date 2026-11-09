@@ -130,13 +130,26 @@ function secondary(key, options = {}) {
     ${renderPublicGraphHistory({ requestedDate: options.asOf ?? null, now: options.now ?? Date.now() })}
     <!-- V5_FIELD_END -->${ribbon()}<section class="v5-card v5-reading"><h2>Live evidence stays separate.</h2><p>Editor observations, participating agent tasks and GitHub history do not create permanent graph nodes. This gated preview does not request private provider data.</p><a class="v5-text-link" href="/studio/">View public activity <span aria-hidden="true">↗</span></a></section>`;
   return `${heading("THE PERSON BEHIND THE WORK", "Devon Alan Akins", "Independent developer, researcher, writer, creator and father.")}
-    <section class="v5-card v5-reading"><h2>Building ideas into something useful</h2>
-      <p>I work across software engineering, research, original writing and creative systems. My goal is to make tools people can understand and work worth sharing, without sacrificing curiosity or independence.</p>
-      <h2>What shapes the work</h2>
-      <p>Science, mathematics, psychology and storytelling continually inform my projects. I favor accessible design, transparent engineering and open-source work that can be inspected and improved.</p>
-      <h2>What matters outside the screen</h2>
-      <p>Family and fatherhood are central to how I choose my priorities. Sustainable progress matters more to me than endless new projects.</p>
-      <div class="v5-actions"><a class="v5-button" href="/work/">Explore my work</a><a class="v5-secondary" href="/contact/">Get in touch</a></div></section>`;
+    <div class="v5-about-feature">
+      <figure class="v5-about-portrait">
+        <picture><source media="(max-width: 600px)" type="image/webp" srcset="/src/v5/assets/cap-hero-mobile.webp"><img src="/src/v5/assets/cap-hero-desktop.webp" alt="Portrait of Devon Alan Akins wearing a backward cap" width="582" height="533" loading="lazy" decoding="async"></picture>
+        <figcaption>Software · Writing · Research</figcaption>
+      </figure>
+      <section class="v5-card v5-reading v5-about-story" aria-labelledby="v5-about-story-title">
+        <p class="v5-eyebrow">THE PERSON / THE PRACTICE</p>
+        <h2 id="v5-about-story-title">Building ideas into something useful</h2>
+        <p>I work across software engineering, research, original writing and creative systems. My goal is to make tools people can understand and work worth sharing, without sacrificing curiosity or independence.</p>
+        <p>Science, mathematics, psychology and storytelling continually inform my projects. I favor accessible design, transparent engineering and open-source work that can be inspected and improved.</p>
+        <h3>What matters outside the screen</h3>
+        <p>Family and fatherhood are central to how I choose my priorities. Sustainable progress matters more to me than endless new projects.</p>
+        <div class="v5-actions"><a class="v5-button" href="/work/">Explore my work</a><a class="v5-secondary" href="/contact/">Get in touch</a></div>
+      </section>
+    </div>
+    <section class="v5-about-paths" aria-label="Explore Devon's work">
+      <a class="v5-card v5-about-path" href="/work/"><span>01 / SOFTWARE</span><h2>Things I build</h2><p>Source-backed projects and the problems they aim to solve.</p></a>
+      <a class="v5-card v5-about-path" href="/research/"><span>02 / RESEARCH</span><h2>Questions I follow</h2><p>Experiments and explanations, clearly separated from discoveries.</p></a>
+      <a class="v5-card v5-about-path" href="/writing/"><span>03 / WRITING</span><h2>Stories I write</h2><p>Original worlds, manuscripts, revision and creative work.</p></a>
+    </section>`;
 }
 export function renderV5Preview(key = "home", options = {}) {
   if (!previewPages.some((page) => page.key === key))
