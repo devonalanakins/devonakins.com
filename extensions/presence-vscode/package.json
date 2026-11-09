@@ -1,9 +1,9 @@
 {
   "name": "devonakins-presence",
   "displayName": "DevonAkins Presence",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "publisher": "devonalanakins",
-  "description": "Privacy-first approved editor presence and guarded Codex ChatGPT-plan sessions.",
+  "description": "Privacy-first editor presence and official Codex IDE/ChatGPT-plan launcher.",
   "license": "MIT",
   "engines": {
     "vscode": "^1.100.0"
@@ -43,12 +43,16 @@
         "title": "Devon Presence: Forget Pairing"
       },
       {
+        "command": "devonPresence.codexIde",
+        "title": "Devon Presence: Open Official Codex IDE"
+      },
+      {
         "command": "devonPresence.codexAccount",
         "title": "Devon Presence: Check Codex ChatGPT Sign-in"
       },
       {
         "command": "devonPresence.codexStart",
-        "title": "Devon Presence: Start Codex with ChatGPT"
+        "title": "Devon Presence: Start Codex CLI with ChatGPT"
       },
       {
         "command": "devonPresence.codexLogin",
