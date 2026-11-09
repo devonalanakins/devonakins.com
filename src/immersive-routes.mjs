@@ -34,7 +34,6 @@ const PUBLIC_PROJECT_IDENTITIES = Object.freeze({
   "rhen-language": { file: "rhen.svg", width: 560, kind: "wordmark" },
   vesper: { file: "vesper.svg", width: 590, kind: "wordmark" },
   squelch: { file: "squelch.svg", width: 770, kind: "wordmark" },
-  brandicade: { file: "brandicade.svg", width: 646, kind: "wordmark" },
   anevum: { file: "anevum.svg", width: 434, kind: "wordmark" },
   ideaflow: { file: "ideaflow-mark.svg", width: 112, kind: "emblem" },
   devonstation: { file: "devonstation-mark.svg", width: 112, kind: "emblem" },
