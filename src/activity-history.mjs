@@ -7,7 +7,6 @@ export const PUBLIC_REPOSITORIES = Object.freeze({
   "devon-station": "devonstation",
   squelch: "squelch",
   "anevum-web": "anevum",
-  vesper: "vesper",
   knowledge: "knowledge",
 });
 export function projectActivityHistory(events, at = Date.now()) {

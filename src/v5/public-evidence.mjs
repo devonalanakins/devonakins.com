@@ -9,7 +9,6 @@ const names = Object.freeze({
   Anevum: "anevum",
   Rhen: "rhen-language",
   Merit: "merit",
-  Vesper: "vesper",
   Squelch: "squelch",
 });
 const historySlugs = Object.freeze({
@@ -18,7 +17,6 @@ const historySlugs = Object.freeze({
   anevum: "anevum",
   rhen: "rhen-language",
   merit: "merit",
-  vesper: "vesper",
   squelch: "squelch",
 });
 const sources = Object.freeze({
