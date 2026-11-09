@@ -198,11 +198,11 @@ export function createThreadsOwnerOAuth({fetcher=fetch,clock=Date.now}={}){
     try {
       const now=clock();
       if(path==="/api/threads/auth/callback"&&request.method==="GET")
-        return finish(request,env,now,fetcher);
+        return await finish(request,env,now,fetcher);
       if(request.method!=="POST")return ownerError("Method not allowed",405);
       if(!validOwnerOrigin(request))return ownerError("Cross-site operation denied",403);
-      if(path==="/api/threads/auth/start")return begin(env,now);
-      if(path==="/api/threads/auth/disconnect")return disconnect(env);
+      if(path==="/api/threads/auth/start")return await begin(env,now);
+      if(path==="/api/threads/auth/disconnect")return await disconnect(env);
       return ownerError("Method not allowed",405);
     } catch {
       return ownerError("Private Threads connection unavailable");
