@@ -1782,14 +1782,17 @@
     background-repeat:no-repeat;
     background-image:url("/src/v5/assets/cap-hero-mobile.webp");
     opacity:.92;
-    -webkit-mask-image:linear-gradient(0deg,transparent 0%,#000 32%,#000 80%,transparent 100%);
-    mask-image:linear-gradient(0deg,transparent 0%,#000 32%,#000 80%,transparent 100%);
+    /* Fade the sides as well as the top/bottom: the cap photo must not look
+       like a sharp rectangle over the atmospheric hero. */
+    -webkit-mask-image:radial-gradient(ellipse 68% 74% at 54% 43%,#000 30%,#000e 47%,transparent 100%);
+    mask-image:radial-gradient(ellipse 68% 74% at 54% 43%,#000 30%,#000e 47%,transparent 100%);
   }
   .v5-locked-home .v5-locked-hero .v5-locked-identity {
     position:relative;
     left:auto;top:auto;
     width:100%;
     max-width:100%;
+    height:auto; /* Override the earlier 280px fixed mobile panel that clipped socials. */
     padding:158px 2px 0;
   }
   .v5-locked-home .v5-locked-identity .v5-locked-roles {
@@ -1799,6 +1802,7 @@
   .v5-locked-home .v5-locked-identity .v5-locked-roles span {padding:0 3px;}
   .v5-locked-home .v5-locked-identity h1 {font-size:clamp(29px,8vw,38px);margin-bottom:8px;}
   .v5-locked-home .v5-locked-identity .v5-locked-manifesto {
+    display:block; /* Purpose must remain readable even on 320px screens. */
     max-width:100%;font-size:12px;line-height:1.48;margin:0 0 11px;
   }
   .v5-locked-home .v5-locked-hero-actions {gap:7px;margin-bottom:9px;}
