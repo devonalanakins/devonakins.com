@@ -1,7 +1,7 @@
 {
   "name": "devonakins-presence",
   "displayName": "DevonAkins Presence",
-  "version": "0.4.1",
+  "version": "0.4.2",
   "publisher": "devonalanakins",
   "description": "Privacy-first editor presence and official Codex IDE/ChatGPT-plan launcher.",
   "license": "MIT",
@@ -45,6 +45,10 @@
       {
         "command": "devonPresence.codexIde",
         "title": "Devon Presence: Open Official Codex IDE"
+      },
+      {
+        "command": "devonPresence.codexProfile",
+        "title": "Devon Presence: Read Local ChatGPT Profile Tokens"
       },
       {
         "command": "devonPresence.codexAccount",
