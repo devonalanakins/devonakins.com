@@ -122,7 +122,16 @@ function secondary(key, options = {}) {
   const heading = (eyebrow, title, description) =>
     `<header class="v5-page-heading"><p class="v5-eyebrow">${eyebrow}</p><h1 id="v5-title">${title}</h1><p>${description}</p></header>`;
   if (key === "projects")
-    return `${heading("THE WORKSHOP", "Projects & systems", "Original software, creative worlds and practical tools. Status descriptions come from the existing public portfolio; they are not live telemetry.")}
+    return `${heading("THE WORKSHOP", "Projects & systems", "Original software, creative worlds and practical tools. Project status describes reviewed work; fresh activity is identified separately below.")}
+    <section class="v5-card v5-work-live" data-v5-work-live aria-labelledby="v5-work-live-title">
+      <header class="v5-work-live-heading"><div><p class="v5-eyebrow">CONSENTED PUBLIC SIGNALS</p><h2 id="v5-work-live-title">Work in the open</h2></div><a href="/studio/" class="v5-text-link">View activity source <span aria-hidden="true">↗</span></a></header>
+      <dl class="v5-work-live-grid">
+        <div><dt>EDITOR</dt><dd data-v5-work-live-editor>No verified observation loaded</dd></div>
+        <div><dt>PARTICIPATING TASKS</dt><dd data-v5-work-live-tasks>No verified observation loaded</dd></div>
+        <div><dt>PUBLIC GITHUB HISTORY</dt><dd data-v5-work-live-github>No verified history loaded</dd></div>
+      </dl>
+      <p class="v5-work-live-disclosure" data-v5-work-live-status>Public source not yet checked. A past commit does not prove that work is happening now.</p>
+    </section>
     <form class="v5-directory-controls" role="search" data-v5-directory-controls hidden><label>Find a project<input type="search" maxlength="120" data-v5-project-search placeholder="Name, purpose or subject"></label><label>Category<select data-v5-project-category><option value="">All categories</option>${["Software","Research","Creative","Writing","Operations","Archive"].map(c=>`<option value="${c.toLowerCase()}">${c}</option>`).join("")}</select></label><p role="status" data-v5-project-count>${projects.length} public projects</p></form><div class="v5-cards v5-project-grid">${projects.map(projectCard).join("")}</div><p class="v5-card v5-reading" data-v5-project-empty hidden>No matching public projects. Try another name or category.</p>`;
   if (key === "field")
     return `${heading("SYSTEMS MAP", "A connected body of work.", "Explore approved public identities, inspect reviewed structural relationships in 3D, and replay the dated record without implying live work.")}
