@@ -3,7 +3,7 @@ import { projectPublicGithubEvents, unavailablePublicGithub, projectPublicTeleme
 import { createD1PresenceReader } from "./listening-d1-presence.mjs";
 import { createListeningOwnerApi } from "./listening-owner-api.mjs";
 import {handleObservationRequest, OBSERVATION_READ_PATH, OBSERVATION_WRITE_PATH} from './gpt-observation-bridge.mjs';
-import {createPresenceOwnerApi, publicPresence, listeningDisclosure} from './presence-api.mjs';
+import {createPresenceOwnerApi, publicPresence, publicProfileNote, listeningDisclosure} from './presence-api.mjs';
 import {createPresenceEditorApi} from './presence-editor-api.mjs';
 import {createCloudPresenceApi, publicCloudPresence} from './cloud-presence-api.mjs';
 import {createListeningCollections} from './listening-collections.mjs';
@@ -249,6 +249,10 @@ export function createHandler(assets, release, options = {}) {
         if (request.method === 'HEAD') return new Response(null,{headers});
         const data=await publicPresence(env,readDbPresence,()=>now().getTime());
         return new Response(JSON.stringify(data),{headers});
+      }
+      if (url.pathname === '/api/presence/note') {
+        const headers={...securityHeaders,'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store','CDN-Cache-Control':'no-store'};
+        return new Response(request.method === 'HEAD' ? null : JSON.stringify(await publicProfileNote(env,()=>now().getTime())),{headers});
       }
       if (url.pathname === '/api/presence/cloud') {
         const headers={...securityHeaders,'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store','CDN-Cache-Control':'no-store'};
