@@ -124,6 +124,18 @@ test("public site uses human-first labels, never release or internal interface n
 
 test("Work directory filters follow reviewed public presentation categories, not legacy implementation labels", () => {
   const work = renderV5PublicPage("projects");
+  for(const part of ["editor","tasks","github","status"])
+    assert.ok(work.includes('data-v5-work-live-' + part),
+      "Work index needs a source-qualified " + part + " state");
+  assert.ok(work.includes('data-v5-work-live aria-labelledby="v5-work-live-title"'));
+  assert.ok(work.includes('href="/studio/"'), "Work activity must link to existing public source");
+  assert.match(work, /A past commit does not prove that work is happening now/);
+  assert.doesNotMatch(work, /Editor active now|Live task running|Simulated signal/);
+  const previewWork = renderV5Preview("projects");
+  assert.match(previewWork, /data-v5-signal-mode="preview"/);
+  const projectDetail = renderV5ProjectPage("merit");
+  assert.doesNotMatch(projectDetail, /data-v5-work-live/,
+    "Detail pages remain public descriptions rather than unapproved live readers");
   const categories = ["software", "research", "creative", "writing", "operations", "archive"];
   for (const category of categories)
     assert.ok(work.includes('<option value="' + category + '">'),
