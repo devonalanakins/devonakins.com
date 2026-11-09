@@ -70,6 +70,13 @@ test("owner view links to existing protected controls and includes no provider c
   assert.doesNotMatch(html,/THREADS_USER_ACCESS_TOKEN/);
 });
 
+test("release packager includes the owner probe imported by the Worker",()=>{
+  const script=readFileSync(new URL("../scripts/build-worker.mjs",import.meta.url),"utf8");
+  assert.match(script,/"threads-owner-probe"/);
+  const worker=readFileSync(new URL("../src/worker.mjs",import.meta.url),"utf8");
+  assert.match(worker,/createThreadsOwnerProbe/);
+});
+
 test("owner summary reports only authorized, nonsecret pairing metadata", async()=>{
   const at=Date.parse("2026-11-09T04:00:00.000Z");
   const input={...env, LISTENING_DB:{prepare(sql){
