@@ -6,7 +6,7 @@ import { ownerThreadsReadiness } from "./threads-public.mjs";
 import { ownerRow, ownerStatus } from "./listening-owner-core.mjs";
 
 const on=(env,key)=>env?.[key]==="true";
-export async function ownerSourceReadiness(env={},presence=null){
+export async function ownerSourceReadiness(env={},presence=null,at=Date.now()){
   const threads=ownerThreadsReadiness(env);
   const spotify={
     appConfigured:false,
@@ -36,6 +36,38 @@ export async function ownerSourceReadiness(env={},presence=null){
       spotify.connection="unverified";
     }
   }
+  // Owner-only, read-only pairing summary. A stored token hash is NOT an
+  // observed edit or a provider-wide integration. Never return identifiers,
+  // hashes, repo names, private events or user-supplied text.
+  let editorPaired=null, editorLastObservedAt=null, connectedSourceCount=null;
+  let publicSourceCount=null;
+  if(typeof env.LISTENING_DB?.prepare==="function" &&
+      Number.isFinite(at) && Number.isSafeInteger(presence?.editor_generation)){
+    try{
+      const row=await env.LISTENING_DB.prepare(
+        "SELECT generation,token_hash,token_until,last_at FROM presence_editor WHERE id=1"
+      ).first();
+      editorPaired=Boolean(row?.token_hash &&
+        row.generation===presence.editor_generation &&
+        Number.isFinite(row.token_until) && row.token_until>at);
+      if(editorPaired && Number.isFinite(row.last_at) && row.last_at>0 &&
+          row.last_at<=at+10_000)
+        editorLastObservedAt=new Date(row.last_at).toISOString();
+    }catch{ editorPaired=null; editorLastObservedAt=null; }
+    try{
+      const row=await env.LISTENING_DB.prepare(
+        "SELECT COUNT(*) AS total,"+
+        "SUM(CASE WHEN public_enabled=1 THEN 1 ELSE 0 END) AS sharing "+
+        "FROM activity_sources WHERE revoked=0 AND token_until>? AND generation=?"
+      ).bind(at,presence.editor_generation).first();
+      if(Number.isSafeInteger(row?.total) && row.total>=0 && row.total<=32 &&
+          (row.sharing===null ||
+           (Number.isSafeInteger(row.sharing) && row.sharing>=0 && row.sharing<=row.total))){
+        connectedSourceCount=row.total;
+        publicSourceCount=row.sharing??0;
+      }
+    }catch{ connectedSourceCount=null; publicSourceCount=null; }
+  }
   return {
     version:1,
     checkedAt:null, // Never assert a live provider check from config reads.
@@ -53,12 +85,16 @@ export async function ownerSourceReadiness(env={},presence=null){
       ownerSharingSelected:presence?.editor_enabled===1 && presence?.public_enabled===1 &&
         presence?.private_work!==1,
       observed:"not-checked",
+      paired:editorPaired,
+      lastObservedAt:editorLastObservedAt,
     },
     tasks:{
       reportersSupported:true,
       publicSharingSelected:presence?.public_enabled===1&&
         presence?.private_work!==1&&on(env,"PRESENCE_PUBLIC_RELEASE_APPROVED"),
       observed:"not-checked",
+      connectedSourceCount,
+      publicSourceCount,
     },
     gpt:{
       captureToolAvailable:typeof env.LISTENING_DB?.prepare==="function",
