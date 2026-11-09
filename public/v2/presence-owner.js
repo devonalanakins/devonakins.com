@@ -39,19 +39,36 @@ function renderSourceReadiness(sources) {
     ["GitHub",gh.appIntegrationEnabled && gh.authorizationConfigured
       ? "Central repository integration configured; live event observation not checked."
       : "Public event reader exists; central authenticated repository integration not verified."],
-    ["Editor",ed.serverEnabled
-      ? (ed.ownerSharingSelected
-          ? "Editor sharing selected; current edit observation not checked."
-          : "Editor receiver enabled; no approved public observation asserted.")
-      : "Editor receiver not enabled."],
-    ["Remote tasks",tasks.reportersSupported
-      ? "Participating task reporters supported; active tasks not checked."
-      : "Task reporting unavailable."],
+    ["Editor",!ed.serverEnabled ? "Editor receiver not enabled."
+      : ed.paired===false
+        ? "Receiver ready; no editor paired. Open the editor controls to pair VS Code."
+        : ed.paired===true
+          ? (ed.ownerSharingSelected
+              ? "Editor paired and sharing selected; a fresh real edit is still required."
+              : "Editor paired; public sharing is not currently selected.")
+          : "Editor receiver enabled; pairing status not verified."],
+    ["Remote tasks",!tasks.reportersSupported ? "Task reporting unavailable."
+      : Number.isSafeInteger(tasks.connectedSourceCount)
+        ? (tasks.connectedSourceCount===0
+            ? "No trusted runner connected. Connect one workspace for real task checkpoints."
+            : tasks.connectedSourceCount+" connected runner source(s); "+
+              tasks.publicSourceCount+" selected for sharing. Active work not checked.")
+        : "Participating task reporters supported; active connections not checked."],
     ["GPT / Codex",gpt.captureToolAvailable
       ? "Owner-recorded, dated captures supported; automatic account telemetry not available."
       : "Capture storage not configured."],
     ["Instagram / Facebook","Instagram profile link only; Facebook destination unverified. No authenticated social feed is asserted."],
   ];
+  // Direct navigation uses existing owner-approved controls. This map
+  // cannot authorize an integration or enable public sharing by itself.
+  const actions={
+    "Threads":["https://developers.meta.com/","Open Meta developer setup"],
+    "Spotify":["/owner/listening/","Manage Spotify connection"],
+    "GitHub":["/owner/github/","Manage repository connections"],
+    "Editor":["#editor-title","Pair or review VS Code editor"],
+    "Remote tasks":["#reporters-title","Connect a trusted workspace"],
+    "GPT / Codex":["/owner/gpt/","Record dated measurements"],
+  };
   root.replaceChildren(...rows.map(([name,description])=>{
     const item=document.createElement("li");
     const title=document.createElement("strong");
@@ -59,6 +76,18 @@ function renderSourceReadiness(sources) {
     title.textContent=name;
     detail.textContent=description;
     item.append(title,detail);
+    const action=actions[name];
+    if(action){
+      const link=document.createElement("a");
+      link.href=action[0];
+      link.textContent=action[1];
+      link.className="source-readiness-action";
+      if(link.protocol==="https:" && link.origin!==location.origin){
+        link.target="_blank";
+        link.rel="noopener noreferrer";
+      }
+      item.append(link);
+    }
     return item;
   }));
 }
