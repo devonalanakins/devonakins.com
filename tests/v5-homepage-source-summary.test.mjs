@@ -122,3 +122,25 @@ test("the homepage preserves approved public website and Brandicade evidence wit
   assert.doesNotMatch(JSON.stringify(state),/knowledge|private-client/i);
   assert.doesNotMatch(JSON.stringify(state),/deployed|production live/i);
 });
+
+
+test("homepage output independently pins each approved public slug to its exact repository",()=>{
+  const state=publicHomepageSourceSummary({available:true,nodes:{},recent:[
+    {slug:"mizvo",kind:"Commit",at:iso(-1000),
+      url:"https://github.com/devonalanakins/private-client"},
+    {slug:"merit",kind:"Pull request",at:iso(-2000),
+      url:"https://github.com/devonalanakins/mizvo"},
+    {slug:"brandicade",kind:"Commit",at:iso(-3000),
+      url:"https://github.com/devonalanakins/brandicade"},
+    {slug:"devonakins-com",kind:"Release",at:iso(-4000),
+      url:"https://github.com/devonalanakins/devonakins.com"},
+    {slug:"knowledge",kind:"Commit",at:iso(-5000),
+      url:"https://github.com/devonalanakins/knowledge"},
+  ]},now);
+  assert.deepEqual(state.events.map(event=>event.href),[
+    "https://github.com/devonalanakins/brandicade",
+    "https://github.com/devonalanakins/devonakins.com",
+  ]);
+  assert.equal(state.events.length,2);
+  assert.doesNotMatch(JSON.stringify(state.events),/private-client|knowledge|devonalanakins\/mizvo/);
+});

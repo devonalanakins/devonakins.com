@@ -7,6 +7,18 @@ const approvedTitles = Object.freeze({
   anevum: "Anevum", "rhen-language": "Rhen", merit: "Merit",
 squelch: "Squelch",
 });
+// Independent output guard: a source event can link only to its own reviewed
+// public repository. The homepage must never accept an arbitrary owner repo.
+const approvedGithubURLs = Object.freeze({
+  devonstation: "https://github.com/devonalanakins/devon-station",
+  "devonakins-com": "https://github.com/devonalanakins/devonakins.com",
+  brandicade: "https://github.com/devonalanakins/brandicade",
+  mizvo: "https://github.com/devonalanakins/mizvo",
+  anevum: "https://github.com/devonalanakins/anevum-web",
+  "rhen-language": "https://github.com/devonalanakins/rhen",
+  merit: "https://github.com/devonalanakins/merit",
+  squelch: "https://github.com/devonalanakins/squelch",
+});
 const labels = Object.freeze({
   editor: "Editor observed", remote: "Participating task",
 });
@@ -48,7 +60,8 @@ export function publicHomepageSourceSummary(projection, at = Date.now()) {
     ["Commit", "Pull request", "Release"].includes(e.kind) &&
     typeof e.at === "string" && age(e.at, at) !== null &&
     typeof e.url === "string" &&
-    /^https:\/\/github\.com\/devonalanakins\/[a-z0-9.-]+$/.test(e.url)
+    Object.hasOwn(approvedGithubURLs, e.slug) &&
+    e.url === approvedGithubURLs[e.slug]
   ).slice(0,4).map(e => ({
     title: approvedTitles[e.slug], kind: e.kind, at:e.at,
     age:age(e.at,at), href:e.url,
