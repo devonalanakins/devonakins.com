@@ -24,6 +24,7 @@ Dated, independently observed GPT numbers --> private /owner/gpt capture
 | VS Code command | Behavior |
 | --- | --- |
 | Devon Presence: Open Official Codex IDE | Opens OpenAI's installed Codex VS Code sidebar using the documented `chatgpt.openSidebar` command. Does not inspect account credentials, require the CLI, or assert a usage total. |
+| Devon Presence: Read Local ChatGPT Profile Tokens | After explicit consent, starts the local Codex app-server read-only protocol, checks ChatGPT authentication, reads only allowlisted profile summary fields and displays lifetime tokens privately. Requires an accessible Codex CLI; **never uploads or publishes**. |
 | Devon Presence: Check Codex ChatGPT Sign-in | Locally executes the documented `codex login status` check. Strictly recognizes the sign-in *mode*, not the actual account, workspace seat, provider, or usage totals. |
 | Devon Presence: Start Codex CLI with ChatGPT | Requires a trusted workspace and the CLI's exact `Logged in using ChatGPT` status. Prompts for a project folder in a multi-root workspace; runs `codex` in a terminal. |
 | Devon Presence: Open Codex ChatGPT Sign-in | With explicit user confirmation, starts official `codex login` in a local terminal. |
@@ -39,6 +40,20 @@ The companion does not implement a replacement AI agent, authenticate directly w
 - A `config.toml` custom provider or manually changed runtime configuration could still change where Codex sends requests. **The user must check `/status` within Codex**, confirm the intended ChatGPT account/workspace/provider, and verify an actual inference run before making billing/usage claims.
 - A local CLI mode check is not an independent proof of OpenAI billing or of which workspace member is being credited.
 
+## First-party token source — local read-only probe (0.4.2)
+
+OpenAI documents the Codex app-server stdio protocol, including `account/read` and `account/usage/read`. The latter can return `lifetimeTokens`, `peakDailyTokens`, `currentStreakDays`, `longestStreakDays`, `longestRunningTurnSec` and optional daily buckets. See [Codex app-server reference](https://learn.chatgpt.com/docs/app-server).
+
+The owner-only **Read Local ChatGPT Profile Tokens** command has the following fixed flow:
+
+1. Ask for explicit confirmation in a trusted VS Code workspace.
+2. Start `codex app-server` locally over stdio; use a fixed `cmd.exe` command on Windows to support npm shims; suppress stderr and impose time/response-size bounds.
+3. Send `initialize`, `initialized`, then `account/read` with `refreshToken:false`. Reject non-ChatGPT session types rather than reading API-key usage.
+4. Only after that check, call documented `account/usage/read`. Strictly allowlist five nonnegative safe-integer fields; never echo account identifiers, emails, auth tokens, raw JSONL or daily bucket details.
+5. Show the result in a local VS Code information message with the **local observation time**, not an invented provider update time. End the process. No disk persistence, network upload, cron job, website mutation or paid API request is performed by the companion.
+
+The official Codex IDE can still work without the separate CLI. This local profile reader needs an accessible Codex CLI to launch app-server, and provider/workspace access must be checked on the real device. It is a read-only capability, not yet a continuous sync service. A future scoped, revocable pairing channel and explicit public-metric consent must be independently approved and tested before live publication.
+
 ## Activity and privacy
 
 The existing VS Code Presence companion remains separate and initially paused, requiring pairing at the protected `/owner/presence/` page and explicit approval of source/repository. It can send the approved public project slug and edit timestamp, never Git remote, file content, prompt, raw repository path or credential. Private/unmapped repos remain excluded; local pause and server-wide Stop all broadcasting remain active.
@@ -52,7 +67,7 @@ The protected `/owner/gpt/` form already supports source-observed and individual
 - [x] Local isolated Node tests: exact status parsing, missing CLI, API-key rejection and environment cleaning, trusted-workspace launch, multi-root selection, user-controlled sign-in/usage, disposal.
 - [ ] GitHub PR CI: full `npm test`, `npm run build` and optional VSIX packaging.
 - [ ] Real VS Code Extension Development Host or verified VSIX installation on owner's laptop.
-- [ ] Official Codex IDE authenticated to the intended ChatGPT workspace and a real coding turn verified on the owner's laptop; CLI installation is optional. If using the CLI, `codex login status` and in-session `/status` must confirm the intended configuration.
+- [ ] Official Codex IDE authenticated to the intended ChatGPT workspace and a real coding turn verified on the owner's laptop; CLI installation is optional for IDE use. If using the CLI or local profile reader, confirm CLI availability, account source and profile metric parity on the owner's device.
 - [ ] One real successful Codex coding turn and official OpenAI usage view checked before/after; no API-key charges.
 - [ ] Existing paired Presence acceptance: approved repo reports only after opt-in; private repo and stop controls remain private.
 - [ ] If the owner elects to publish an updated GPT number, enter the actual source reading through protected `/owner/gpt/`; verify source date and privacy switches before any public release.
@@ -61,7 +76,7 @@ No merge, deployment, usage update, or publication is implied by this feature br
 
 ## Future option: authenticated private analytics
 
-A future supported scoped workspace analytics API/export could supply appropriately scoped, dated readings, subject to verified entitlement and user approval. Never infer the lifetime profile total from local Codex sessions, combine different metric types, or scrape private ChatGPT sessions. The Codex app-server is a possible foundation for a richer custom coding UI, but this release deliberately reuses the established runtime.
+The documented Codex app-server `account/usage/read` now gives a **local** first-party profile summary source on compatible ChatGPT-authenticated installations. It is not an authenticated public Cloudflare feed, and is not proof that the website already receives usage updates. A future explicitly approved scoped pairing/upload bridge could transmit only selected, dated numerical readings; a workspace analytics API/export could supply other supported scopes, subject to eligibility and user approval. Never infer the lifetime profile total from local Codex sessions, combine different metric types, or scrape private ChatGPT sessions. The Codex app-server is a possible foundation for a richer custom coding UI, but this release deliberately reuses the established runtime.
 
 ## References
 
