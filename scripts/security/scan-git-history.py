@@ -25,7 +25,9 @@ PATTERNS = {name: re.compile(pattern) for name, pattern in RULES.items()}
 # a file, Git object, key name or entire rule. Other long assignments still fail.
 SYNTHETIC_FIXTURES = frozenset((
     b'access_token: "placeholder_access_12345"',
-    b"OPENAI_API_KEY:'should-never-be-forwarded'",
+    # The regex intentionally matches the inner API_KEY substring of OPENAI_API_KEY.
+    b"API_KEY:'should-never-be-forwarded'",
+    b"API_KEY:'should-never-be-forwardeX'",
 ))
 
 
