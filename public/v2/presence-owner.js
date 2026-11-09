@@ -245,7 +245,7 @@ el("presence-manual").onchange = () => {
   const duration = el("presence-manual-duration");
   for (const option of duration.options) option.disabled = !custom && Number(option.value) > 30;
   if (!custom && Number(duration.value) > 30) duration.value = "30";
-  if (custom && Number(duration.value) === 30) duration.value = "1440";
+  if (custom && Number(duration.value) <= 30) duration.value = "1440";
 };
 el("presence-manual").dispatchEvent(new Event("change"));
 el("projects-save").onclick = () =>
