@@ -32,7 +32,7 @@ The launcher does not implement a replacement AI agent, authenticate directly wi
 
 ## API-billing guard
 
-- Before launching, a bounded shell-free status probe verifies the locally configured CLI sign-in method.
+- Before launching, a bounded shell-free status probe verifies the locally configured CLI sign-in method. On Windows, an npm-installed `codex.cmd` shim may be unavailable to shell-free `execFile`; on that exact `ENOENT` case, a tightly fixed `cmd.exe /d /s /c codex login status` fallback probes the same authentication mode without interpolating user input, paths or prompt text.
 - `OPENAI_API_KEY`, `CODEX_API_KEY`, `CODEX_ACCESS_TOKEN`, `OPENAI_BASE_URL`, and `OPENAI_API_BASE` are excluded from the probe environment and unset in the VS Code terminal.
 - The extension refuses to start a coding session when the CLI reports API-key authentication. Missing or unrecognized authentication fails closed and offers explicit official ChatGPT sign-in.
 - A `config.toml` custom provider or manually changed runtime configuration could still change where Codex sends requests. **The user must check `/status` within Codex**, confirm the intended ChatGPT account/workspace/provider, and verify an actual inference run before making billing/usage claims.
