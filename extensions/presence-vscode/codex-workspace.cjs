@@ -28,25 +28,37 @@ function codexAuthenticationMode(stdout) {
   return 'unknown';
 }
 
-function inspectCodexAuthentication({ runner = execFile, environment = process.env } = {}) {
+function inspectCodexAuthentication({
+  runner = execFile, environment = process.env, platform = process.platform,
+} = {}) {
   return new Promise((resolve) => {
-    try {
-      runner('codex', ['login', 'status'], {
-        shell: false,
-        windowsHide: true,
-        timeout: 5000,
-        maxBuffer: 1024,
-        env: withoutApiCredentials(environment),
-      }, (error, stdout) => {
-        if (error) {
-          resolve('unavailable');
-          return;
-        }
-        resolve(codexAuthenticationMode(stdout));
-      });
-    } catch {
-      resolve('unavailable');
+    const options = {
+      shell: false,
+      windowsHide: true,
+      timeout: 5000,
+      maxBuffer: 1024,
+      env: withoutApiCredentials(environment),
+    };
+    // npm on Windows may expose only codex.cmd. Node execFile cannot launch
+    // .cmd directly, so fall back to cmd.exe with a FIXED command string.
+    // No prompt, repository path, account data or user input reaches cmd.exe.
+    function run(file, args, allowWindowsFallback) {
+      const missingShim = (error) =>
+        allowWindowsFallback && platform === 'win32' && error?.code === 'ENOENT';
+      try {
+        runner(file, args, options, (error, stdout) => {
+          if (missingShim(error)) {
+            run('cmd.exe', ['/d', '/s', '/c', 'codex login status'], false);
+            return;
+          }
+          resolve(error ? 'unavailable' : codexAuthenticationMode(stdout));
+        });
+      } catch (error) {
+        if (missingShim(error)) run('cmd.exe', ['/d', '/s', '/c', 'codex login status'], false);
+        else resolve('unavailable');
+      }
     }
+    run('codex', ['login', 'status'], true);
   });
 }
 
