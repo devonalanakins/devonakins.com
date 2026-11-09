@@ -134,7 +134,7 @@ function render(data) {
           !window.confirm(
             "Publish fixed workflow states under " +
               projects[select.value] +
-              " when Live Signal broadcasting is enabled? Repository metadata and workflow titles stay private.",
+              " when public sharing is enabled? Repository metadata and workflow titles stay private.",
           )
         )
           return;

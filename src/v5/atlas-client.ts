@@ -384,7 +384,7 @@ export function mountV5Atlas() {
   const coreTitle = document.createElement("strong");
   coreTitle.textContent = "DEVON AKINS";
   const coreSubtitle = document.createElement("span");
-  coreSubtitle.textContent = "SIGNAL FIELD · V5";
+  coreSubtitle.textContent = "PUBLIC PROJECTS";
   coreLabel.append(coreTitle, coreSubtitle);
   labels.append(coreLabel);
 

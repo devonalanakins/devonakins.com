@@ -412,7 +412,7 @@ test("current engineering showcase distinguishes Merit, Rhen language and RHEN m
   assert.ok(home.includes('href="/work/merit/"'));
   assert.ok(home.includes('href="/work/rhen-language/"'));
   const archive = await (await get("/work/")).text();
-  assert.ok(!archive.toLowerCase().includes("brandicade"), "Private project excluded from public Work");
+  assert.ok(!archive.includes("brandicade"), "Unapproved personal project must not appear in Work");
   for (const slug of ["merit", "rhen-language", "vesper", "squelch", "rhen"]) {
     assert.ok(archive.includes('href="/work/' + slug + '/"'), slug);
     const response = await get("/work/" + slug + "/");
@@ -437,7 +437,7 @@ test("current engineering showcase distinguishes Merit, Rhen language and RHEN m
   assert.match(markets, /not the experimental Rhen programming language/);
   const vesper = await (await get("/work/vesper/")).text();
   assert.match(vesper, /Vesper/);
-  assert.doesNotMatch(vesper, /href="https:\/\/github\.com\/devonalanakins\/vesper(?:["\\/?#])/, "Private Vesper repository cannot be linked");
+  assert.doesNotMatch(vesper, /href="https:\/\/github\.com\/devonalanakins\/vesper(?:["\/?#])/, "Private source cannot be published");
   assert.match(vesper, /not a live brokerage service/);
   const source = await (await get("/source/")).text();
   assert.match(source, /Merit — engineering integrity toolkit/);

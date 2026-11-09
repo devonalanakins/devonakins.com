@@ -1,4 +1,4 @@
-import { projects } from "../content.mjs";
+import { approvedPublicProjects as projects } from "../publication-manifest.mjs";
 
 // This is the screenshot's semantic layout, not a bitmap or a simulated feed.
 // Data slots stay unavailable until independently authenticated/consented sources
@@ -23,6 +23,9 @@ const icon = (name) => {
     orbit: '<ellipse cx="12" cy="12" rx="10" ry="5" transform="rotate(-30 12 12)"/><circle cx="12" cy="12" r="2"/>',
     nodes: '<circle cx="5" cy="6" r="2"/><circle cx="18" cy="4" r="2"/><circle cx="12" cy="20" r="2"/><path d="m7 6 9-2M6 8l5 10m6-12-4 12"/>',
     github: '<path d="M9 19c-4 1-4-2-6-2m12 4v-3a3 3 0 0 0-1-2c4-.4 7-2 7-7a5 5 0 0 0-1-4c.1-1-.2-2-1-3-2 0-3 1-4 1a13 13 0 0 0-6 0C8 2 7 2 5 2c-.8 1-1.1 2-1 3a5 5 0 0 0-1 4c0 5 3 7 7 7a3 3 0 0 0-1 2v3"/>',
+    instagram: '<rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.4" cy="6.6" r=".9" fill="currentColor" stroke="none"/>',
+    facebook: '<path d="M14.2 21V12h3l.5-3.5h-3.5V6.7c0-1.1.4-1.7 1.8-1.7H18V2.2A29 29 0 0 0 15.4 2C12.6 2 11 3.6 11 6.6v1.9H8V12h3v9"/>',
+    threads: '<path d="M16.8 7.3c-1.4-2.1-4.6-2.5-6.7-1.5-2.3 1.1-3.6 3.7-3.6 6.6 0 4.2 2.3 6.9 6 7.1 3.4.2 6.1-2.2 6.1-5.5 0-3.3-3.1-5.7-6.4-4.6-1.6.5-2.2 2.2-1.4 3.4 1.1 1.6 4.3.9 5.9-.9.7-.8 1.1-1.9 1.1-3.1 0-2.8-1.5-5.4-5.1-6.2"/>',
     search: '<circle cx="10" cy="10" r="7"/><path d="m15 15 7 7"/>',
     music: '<path d="M9 18V5l12-2v13M9 9l12-2"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>',
     user: '<circle cx="12" cy="8" r="4"/><path d="M4 22a8 8 0 0 1 16 0"/>',
@@ -32,7 +35,7 @@ const icon = (name) => {
   return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + (paths[name] || paths.orbit) + "</svg>";
 };
 const navRail = [
-  ["Live Signal", "signal", "/studio/"],
+  ["Activity", "signal", "/studio/"],
   ["Projects", "layers", "/__v5_preview__/projects/"],
   ["Knowledge", "book", "/__v5_preview__/knowledge/"],
   ["GitHub", "github", "https://github.com/devonalanakins"],
@@ -120,7 +123,7 @@ function terrain() {
     const summary = entry?.summary ||
       "Public Knowledge section preview. Private wiki records are not exposed.";
     const status = entry?.status || "Public preview only";
-    const source = entry ? "Approved public project catalog" : "V5 public section";
+    const source = entry ? "Approved public project catalog" : "Public section";
     const href = entry ? projectHref(entry.slug) : "/__v5_preview__/knowledge/";
     const safe = (value) => escapeHtml(value);
     return '<span class="v5-lock-beam v5-lock-' + color +
@@ -161,12 +164,12 @@ function fieldInspector() {
 export function renderReferenceNav() {
   const items = [
     ["Home", "/__v5_preview__/"],
-    ["Projects", "/__v5_preview__/projects/"],
-    ["Knowledge", "/__v5_preview__/knowledge/"],
-    ["Anevum", "/work/anevum/"],
-    ["Mizvo", "/work/mizvo/"],
+    ["Work", "/__v5_preview__/projects/"],
+    ["Research", "/__v5_preview__/research/"],
     ["Writing", "/__v5_preview__/writing/"],
-    ["Media", "/listening/"],
+    ["Knowledge", "/__v5_preview__/knowledge/"],
+    ["Systems", "/__v5_preview__/field/"],
+    ["Activity", "/studio/"],
   ];
   const nav = '<nav class="v5-desktop-nav v5-lock-top-nav" aria-label="Primary">' +
     items.map(([label, href], i) =>
@@ -264,8 +267,8 @@ function renderHeroAtmosphere() {
 }
 
 export function renderReferenceHomepage() {
-  const rail = navRail.map(([label, glyph, href], i) =>
-    '<a href="' + href + '"' + (i === 0 ? ' aria-current="location"' : "") +
+  const rail = navRail.map(([label, glyph, href]) =>
+    '<a href="' + href + '"' +
     '>' + icon(glyph) + '<span>' + label + '</span></a>',
   ).join("");
   const cards = ["mizvo", "rhen-language", "merit", "vesper", "squelch"]
@@ -277,24 +280,32 @@ export function renderReferenceHomepage() {
       // faded, purely decorative backdrop behind the isolated portrait.
       // Uses the same first-party asset, not a second subject image.
       '<div class="v5-portrait-source-atmosphere" aria-hidden="true"></div>' +
-      '<nav class="v5-locked-rail" aria-label="Screenshot side navigation">' + rail + '</nav>' +
-      '<div class="v5-locked-portrait"><picture><source media="(max-width: 600px)" type="image/webp" srcset="/src/v5/assets/portrait-anevum-transcosmic-mobile.webp"><img src="/src/v5/assets/portrait-anevum-transcosmic.webp" alt="Cinematic portrait artwork of Devon Akins in a dark eclipse-graphic T-shirt and fitted jeans" width="1122" height="1402" fetchpriority="high" decoding="async"></picture></div>' +
+      '<nav class="v5-locked-rail" aria-label="Page shortcuts">' + rail + '</nav>' +
+      '<div class="v5-locked-portrait"><picture><source media="(max-width: 600px)" type="image/webp" srcset="/src/v5/assets/cap-hero-mobile.webp"><img src="/src/v5/assets/cap-hero-desktop.webp" alt="Cinematic portrait of Devon Akins wearing a backward cap" width="582" height="533" fetchpriority="high" decoding="async"></picture></div>' +
       '<div class="v5-hero-veil" aria-hidden="true"></div>' +
-      '<div class="v5-locked-identity"><h1 id="v5-title">Devon Alan Akins</h1>' +
-        '<p class="v5-locked-roles">Developer · Researcher · Builder · Father<br>Writer · Systems Architect</p>' +
+      '<div class="v5-locked-identity">' +
+        '<p class="v5-locked-roles">ENGINEER <span aria-hidden="true">/</span> RESEARCHER <span aria-hidden="true">/</span> WRITER <span aria-hidden="true">/</span> CREATOR</p>' +
+        '<h1 id="v5-title">Devon Alan Akins</h1>' +
         '<div class="v5-locked-accent"></div>' +
-        '<p class="v5-locked-manifesto">Building real tools, exploring real ideas,<br>and turning research into things<br>that actually work.</p>' +
+        '<p class="v5-locked-manifesto">I build software, explore complex systems, write fiction, and investigate the nature of intelligence, creativity, and human potential.</p>' +
+        '<div class="v5-locked-hero-actions"><a class="v5-lock-primary-cta" href="/work/">Explore My Work <span aria-hidden="true">→</span></a><a class="v5-lock-secondary-cta" href="/about/">About Me</a></div>' +
         '<div class="v5-locked-socials">' +
           protectedLink("GitHub profile", "https://github.com/devonalanakins", icon("github")) +
-          protectedLink("Social links and contact", "/contact/", icon("user")) +
-          protectedLink("Public projects", "/__v5_preview__/projects/", icon("nodes")) +
+          protectedLink("Instagram profile", "https://www.instagram.com/devonalanakins/", icon("instagram")) +
+          '<span class="v5-social-pending" title="Facebook profile URL pending verification">' + icon("facebook") + '<span class="v5-social-pending-label">Facebook link pending</span></span>' +
+          '<span class="v5-social-pending" title="Threads profile URL pending verification">' + icon("threads") + '<span class="v5-social-pending-label">Threads link pending</span></span>' +
+          protectedLink("Contact", "/contact/", icon("user")) +
         '</div>' +
         '<a class="v5-locked-session-link" href="/studio/"><span class="v5-locked-indicator" aria-hidden="true"></span>Work source status</a>' +
+        '<div class="v5-profile-note" data-v5-profile-note hidden aria-live="polite">' +
+          '<span class="v5-profile-note-symbol" aria-hidden="true">' + icon("nodes") + '</span>' +
+          '<div><span class="v5-profile-note-eyebrow">A note from Devon</span><p data-v5-profile-note-text></p><small data-v5-profile-note-expiry></small></div>' +
+        '</div>' +
         '<p class="v5-locked-identity-small">Verified signals only · no session asserted</p>' +
       '</div>' +
       '<section class="v5-locked-signal" aria-labelledby="v5-lock-signal-title">' +
         '<header class="v5-lock-signal-heading"><div>' + icon("signal") +
-        '<div><h2 id="v5-lock-signal-title">Live Signal <span>V5</span></h2><p>REAL WORK · REAL EVIDENCE</p></div></div><span class="v5-lock-wave" aria-hidden="true"></span></header>' +
+        '<div><h2 id="v5-lock-signal-title">Activity &amp; sources</h2><p>RECORDED · SOURCE-QUALIFIED</p></div></div><span class="v5-lock-wave" aria-hidden="true"></span></header>' +
         '<a class="v5-lock-spotify v5-lock-evidence" data-v5-signal="spotify" href="/listening/">' +
           '<span class="v5-lock-music-tile">' + icon("music") +
             '<img data-v5-spotify-cover alt="" hidden decoding="async" referrerpolicy="no-referrer"></span>' +
@@ -305,12 +316,12 @@ export function renderReferenceHomepage() {
           '<span class="v5-lock-open" aria-hidden="true">' + icon("arrow") + '</span>' +
         '</a>' +
         '<a class="v5-lock-work v5-lock-evidence" data-v5-signal="work" href="/studio/">' +
-          '<span class="v5-lock-panel-title">' + icon("code") + ' Current Work Session <small>NOT VERIFIED</small></span>' +
+          '<span class="v5-lock-panel-title">' + icon("code") + ' Work status <small>NOT VERIFIED</small></span>' +
           '<span class="v5-lock-no-work" data-v5-work-summary>No fresh, verified work session</span>' +
           '<span class="v5-lock-work-hint" data-v5-work-provenance>Editor / GitHub / participating agent sources are separate</span>' +
         '</a>' +
         '<section class="v5-lock-metrics" aria-label="Evidence-based activity metrics">' +
-          '<header class="v5-lock-panel-title">' + icon("signal") + ' Live Metrics <small>PROVENANCE REQUIRED</small></header>' +
+          '<header class="v5-lock-panel-title">' + icon("signal") + ' Recorded &amp; recent <small>CHECK DATES &amp; SOURCES</small></header>' +
           '<div class="v5-lock-metric-grid">' +
             '<a data-v5-signal="gpt" href="/gpt/"><span>GPT CAPTURE</span><strong>—</strong><small>Manual · dated</small></a>' +
             '<a href="/studio/"><span>COMMITS</span><strong>—</strong><small>Verified events</small></a>' +
@@ -320,8 +331,39 @@ export function renderReferenceHomepage() {
         '</section>' +
       '</section>' +
     '</section>' +
+    // Render source truth without assuming a source is connected. The existing
+    // single authorized V4 reader hydrates these states on released pages.
+    '<section class="v5-home-source-strip" aria-labelledby="v5-home-source-title">' +
+      '<header><h2 id="v5-home-source-title">From my work</h2><p>Public, consented sources · Current only when verified</p></header>' +
+      '<div class="v5-home-source-grid">' +
+        '<a href="/studio/" class="v5-home-source-card" data-v5-home-source="github">' +
+          icon("github") + '<span><strong>GitHub</strong><small data-v5-home-github>Source unavailable</small></span></a>' +
+        '<a href="/studio/" class="v5-home-source-card" data-v5-home-source="tasks">' +
+          icon("nodes") + '<span><strong>Tasks</strong><small data-v5-home-tasks>Source unavailable</small></span></a>' +
+        '<a href="/listening/" class="v5-home-source-card" data-v5-home-source="spotify">' +
+          icon("music") + '<span><strong>Listening</strong><small data-v5-home-spotify>Playback unavailable</small></span></a>' +
+        '<a href="/gpt/" class="v5-home-source-card" data-v5-home-source="gpt">' +
+          icon("signal") + '<span><strong>GPT</strong><small data-v5-home-gpt>Capture unavailable</small></span></a>' +
+        '<a href="/studio/" class="v5-home-source-card" data-v5-home-source="coding">' +
+          icon("code") + '<span><strong>Editor</strong><small data-v5-home-coding>Source unavailable</small></span></a>' +
+      '</div>' +
+    '</section>' +
+    '<div class="v5-home-activity-grid">' +
+      '<section class="v5-home-activity-card" aria-labelledby="v5-home-activity-title">' +
+        '<header><h2 id="v5-home-activity-title">Recent activity</h2><a href="/studio/">Full activity →</a></header>' +
+        '<p class="v5-home-threads-state" data-v5-home-threads-status>Threads · Connection pending</p>' +
+        '<p data-v5-home-activity-empty>No recent approved public GitHub or Threads events available.</p>' +
+        '<ol data-v5-home-activity-list aria-label="Verified public GitHub and Threads activity"></ol>' +
+      '</section>' +
+      '<section class="v5-home-activity-card v5-home-focus-card" aria-labelledby="v5-home-focus-title">' +
+        '<header><h2 id="v5-home-focus-title">Current focus</h2><a href="/work/">Explore work →</a></header>' +
+        '<strong data-v5-home-focus>No current public work observed</strong>' +
+        '<p data-v5-home-focus-detail>Editor and participating task observations remain private unless explicitly shared and recent.</p>' +
+        '<p class="v5-home-evidence-caption">Evidence · not a progress estimate</p>' +
+      '</section>' +
+    '</div>' +
     '<section class="v5-lock-projects" aria-labelledby="v5-lock-projects-title">' +
-      '<div class="v5-lock-heading"><h2 id="v5-lock-projects-title">' + icon("layers") + 'Active Projects</h2><span>Public portfolio · not a claim of live activity</span><a href="/__v5_preview__/projects/">View All Projects →</a></div>' +
+      '<div class="v5-lock-heading"><h2 id="v5-lock-projects-title">' + icon("layers") + 'Selected projects</h2><span>Public portfolio · not a claim of live activity</span><a href="/__v5_preview__/projects/">View All Projects →</a></div>' +
       '<div class="v5-lock-project-grid">' + cards + '</div>' +
     '</section>' +
     '<div class="v5-lock-triple">' +
@@ -343,10 +385,10 @@ export function renderReferenceHomepage() {
         '</div><a href="/gpt/">View GPT profile →</a></section>' +
     '</div>' +
     '<section class="v5-lock-field" aria-labelledby="v5-lock-field-title">' +
-      '<header><h2 id="v5-lock-field-title">The Signal Field</h2><p>A living view of everything in motion — verified events only.</p></header>' +
+      '<header><h2 id="v5-lock-field-title">Systems Map</h2><p>Explore approved public projects and documented relationships.</p></header>' +
       terrain() + fieldInspector() +
       '<p class="v5-lock-art-disclosure">Static project composition · no activity or dependency claims</p>' +
-      '<a class="v5-lock-field-cta" href="/__v5_preview__/field/">Explore the Signal Field →</a>' +
+      '<a class="v5-lock-field-cta" href="/__v5_preview__/field/">Explore the systems map →</a>' +
     '</section>' +
   '</div>';
 }

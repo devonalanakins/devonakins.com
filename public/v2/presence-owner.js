@@ -10,6 +10,87 @@ let cloudGeneration = 0;
 function notice(text) {
   el("presence-notice").textContent = text;
 }
+/** Read-only owner display; no API call, credential reveal or publication toggle. */
+function renderSourceReadiness(sources) {
+  const root=el("owner-source-readiness");
+  if (!root) return;
+  if (!sources || sources.version!==1) {
+    const item=document.createElement("li");
+    item.textContent="Provider configuration is unavailable.";
+    root.replaceChildren(item);
+    return;
+  }
+  const t=sources.threads||{},sp=sources.spotify||{},
+    gh=sources.github||{},ed=sources.editor||{},
+    tasks=sources.tasks||{},gpt=sources.gpt||{};
+  const rows=[
+    ["Threads",t.configured
+      ? "Configured for public read; provider observation not yet verified."
+      : !t.authorizationConfigured
+        ? "Meta authorization not configured. Read-only feed stays disconnected."
+        : "Credentials configured; account, global sharing and publication gates still require approval."],
+    ["Spotify",sp.connection==="authorization-stored"
+      ? "Authorization stored; current playback not verified. Use Spotify connection to test sharing."
+      : sp.connection==="reauthorization-required"
+        ? "Reauthorization required before playback sharing."
+        : sp.appConfigured
+          ? "App configured; account playback connection not confirmed."
+          : "Spotify application not configured."],
+    ["GitHub",gh.appIntegrationEnabled && gh.authorizationConfigured
+      ? "Central repository integration configured; live event observation not checked."
+      : "Public event reader exists; central authenticated repository integration not verified."],
+    ["Editor",!ed.serverEnabled ? "Editor receiver not enabled."
+      : ed.paired===false
+        ? "Receiver ready; no editor paired. Open the editor controls to pair VS Code."
+        : ed.paired===true
+          ? (ed.ownerSharingSelected
+              ? "Editor paired and sharing selected; a fresh real edit is still required."
+              : "Editor paired; public sharing is not currently selected.")
+          : "Editor receiver enabled; pairing status not verified."],
+    ["Remote tasks",!tasks.reportersSupported ? "Task reporting unavailable."
+      : Number.isSafeInteger(tasks.connectedSourceCount)
+        ? (tasks.connectedSourceCount===0
+            ? "No trusted runner connected. Connect one workspace for real task checkpoints."
+            : tasks.connectedSourceCount+" connected runner source(s); "+
+              tasks.publicSourceCount+" selected for sharing. Active work not checked.")
+        : "Participating task reporters supported; active connections not checked."],
+    ["GPT / Codex",gpt.captureToolAvailable
+      ? "Owner-recorded, dated captures supported; automatic account telemetry not available."
+      : "Capture storage not configured."],
+    ["Instagram / Facebook","Instagram profile link only; Facebook destination unverified. No authenticated social feed is asserted."],
+  ];
+  // Direct navigation uses existing owner-approved controls. This map
+  // cannot authorize an integration or enable public sharing by itself.
+  const actions={
+    "Threads":["https://developers.meta.com/","Open Meta developer setup"],
+    "Spotify":["/owner/listening/","Manage Spotify connection"],
+    "GitHub":["/owner/github/","Manage repository connections"],
+    "Editor":["#editor-title","Pair or review VS Code editor"],
+    "Remote tasks":["#reporters-title","Connect a trusted workspace"],
+    "GPT / Codex":["/owner/gpt/","Record dated measurements"],
+  };
+  root.replaceChildren(...rows.map(([name,description])=>{
+    const item=document.createElement("li");
+    const title=document.createElement("strong");
+    const detail=document.createElement("span");
+    title.textContent=name;
+    detail.textContent=description;
+    item.append(title,detail);
+    const action=actions[name];
+    if(action){
+      const link=document.createElement("a");
+      link.href=action[0];
+      link.textContent=action[1];
+      link.className="source-readiness-action";
+      if(link.protocol==="https:" && link.origin!==location.origin){
+        link.target="_blank";
+        link.rel="noopener noreferrer";
+      }
+      item.append(link);
+    }
+    return item;
+  }));
+}
 function lock(value) {
   document.querySelectorAll("button,input,select").forEach((node) => {
     // Concurrent workspace controls own their request lock and disclosure gate.
@@ -26,6 +107,7 @@ function lock(value) {
 function render(data) {
   if (state && data.revision < state.revision) return false;
   state = data;
+  renderSourceReadiness(data.sources);
   const project = el("presence-project");
   project.replaceChildren(new Option("No public project", ""));
   const catalog =
@@ -61,6 +143,7 @@ function render(data) {
     (preview.project ? " · " + preview.project : "") +
     " · " +
     preview.source;
+  el("manual-expiry").textContent = data.manualExpiresAt ? "Status expires " + new Date(data.manualExpiresAt).toLocaleString() : "No temporary status.";
   el("session-expiry").textContent = data.sessionExpiresAt
     ? (data.paused ? "Paused. " : "") +
       "Expires " +
@@ -148,7 +231,7 @@ el("session-end").onclick = () => mutate("end");
 el("manual-set").onclick = () =>
   mutate("manual", {
     status: el("presence-manual").value,
-    minutes: Number(el("presence-duration").value),
+    minutes: Number(el("presence-manual-duration").value),
     ...(el("presence-manual").value === "custom"
       ? {
           label: el("presence-custom-label").value,
@@ -157,8 +240,14 @@ el("manual-set").onclick = () =>
       : {}),
   });
 el("presence-manual").onchange = () => {
-  el("custom-status-fields").hidden = el("presence-manual").value !== "custom";
+  const custom = el("presence-manual").value === "custom";
+  el("custom-status-fields").hidden = !custom;
+  const duration = el("presence-manual-duration");
+  for (const option of duration.options) option.disabled = !custom && Number(option.value) > 30;
+  if (!custom && Number(duration.value) > 30) duration.value = "30";
+  if (custom && Number(duration.value) <= 30) duration.value = "1440";
 };
+el("presence-manual").dispatchEvent(new Event("change"));
 el("projects-save").onclick = () =>
   mutate("projects", {
     projects: [

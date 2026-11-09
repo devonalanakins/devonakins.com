@@ -4,6 +4,10 @@ on:
   pull_request:
 permissions:
   contents: read
+# Latest reviewed PR head wins; protected main checks are never cancelled.
+concurrency:
+  group: verify-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 jobs:
   verify:
     runs-on: ubuntu-24.04 # Pinned: Playwright 1.57 browser builds do not support Ubuntu 26.04
@@ -27,6 +31,10 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run build
+      - name: Verify approved GitHub sources remain publicly accessible
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: node scripts/verify-public-portfolio-links.mjs
       # Only tested default-branch work may receive the scoped reporter secret.
       # PRs and other branches run the same tests without any reporter credential.
       - name: Test and report private CI activity (trusted main push)
@@ -114,7 +122,7 @@ jobs:
           retention-days: 7
 
   v5_candidate:
-    if: github.head_ref == 'release/living-mind-v5' || github.ref == 'refs/heads/release/living-mind-v5'
+    if: github.head_ref == 'release/living-mind-v5' || github.ref == 'refs/heads/release/living-mind-v5' || github.head_ref == 'design/public-website-experience' || github.ref == 'refs/heads/design/public-website-experience'
     needs: verify
     runs-on: ubuntu-24.04
     timeout-minutes: 20

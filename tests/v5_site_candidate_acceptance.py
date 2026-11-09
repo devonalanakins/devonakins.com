@@ -96,6 +96,34 @@ def check_atlas_live_evidence(browser, origin, local_tls):
             document.querySelector('[data-v5-atlas-node-id="project:merit"]')
               ?.dataset.v5AtlasLiveKind === 'remote'""",timeout=10000)
         assert page.locator('[data-v5-atlas-live-list] li').count()==2
+        # The published Work directory reuses this same consent-filtered V4
+        # reader. Preview and individual project-detail routes remain static.
+        mode['value']='active'
+        assert page.goto(origin+'/work/',wait_until='networkidle').status==200
+        page.wait_for_function("""() =>
+            document.querySelector('[data-v5-work-live-editor]')
+              ?.textContent.includes('Editor observed · Mizvo') &&
+            document.querySelector('[data-v5-work-live-tasks]')
+              ?.textContent.includes('Codex task · Merit')""",timeout=10000)
+        assert 'No recent approved events' in page.locator('[data-v5-work-live-github]').inner_text()
+        assert 'GitHub history is not live work' in page.locator('[data-v5-work-live-status]').inner_text()
+        assert page.locator('[data-v5-work-live]').get_attribute('data-v5-work-live-state')=='available'
+        page.evaluate("window.dispatchEvent(new PageTransitionEvent('pagehide',{persisted:true}))")
+        assert 'Source unavailable' in page.locator('[data-v5-work-live-editor]').inner_text()
+        assert 'No active work is asserted' in page.locator('[data-v5-work-live-status]').inner_text()
+        mode['value']='private'
+        page.evaluate("window.dispatchEvent(new PageTransitionEvent('pageshow',{persisted:true}))")
+        page.wait_for_function("""() =>
+            document.querySelector('[data-v5-work-live-editor]')
+              ?.textContent.includes('No current coding observation') &&
+            document.querySelector('[data-v5-work-live-tasks]')
+              ?.textContent.includes('No current shared tasks')""",timeout=10000)
+        mode['value']='unavailable'
+        page.evaluate("window.dispatchEvent(new PageTransitionEvent('pageshow',{persisted:true}))")
+        page.wait_for_function("""() =>
+            document.querySelector('[data-v5-work-live]')
+              ?.dataset.v5WorkLiveState === 'unavailable'""",timeout=10000)
+        assert 'No active work is asserted' in page.locator('[data-v5-work-live-status]').inner_text()
         assert not errors,errors
         assert not blocked,blocked
     finally:context.close()
@@ -175,14 +203,51 @@ def main():
                         print("WebKit stylesheet diagnostics:",json.dumps(resources,sort_keys=True),flush=True)
                         print("WebKit target diagnostics:",json.dumps(diagnostics,sort_keys=True),flush=True)
                     assert not violations,(width,path,violations)
-                    if path in ['/','/signal-field/','/knowledge/sources-and-meaning/']:
+                    visual_reference_routes=['/','/signal-field/','/knowledge/sources-and-meaning/']
+                    secondary_visual_routes=['/work/','/research/','/writing/','/about/']
+                    if path in visual_reference_routes or (
+                        width in (320,390,1199) and path in secondary_visual_routes
+                    ):
                         page.screenshot(path=str(out/f'{args.engine}-{width}-{path.strip("/").replace("/","-") or "home"}.png'),full_page=True,animations='disabled',timeout=20000)
-                page.goto(origin+'/work/',wait_until='networkidle');page.locator('[data-v5-project-search]').fill('Mizvo')
+                page.goto(origin+'/work/',wait_until='networkidle')
+                search=page.locator('[data-v5-project-search]')
+                category=page.locator('[data-v5-project-category]')
+                empty=page.locator('[data-v5-project-empty]')
+                assert empty.is_hidden(), "Empty-result message must stay hidden with project cards"
+                search.fill('Mizvo')
                 assert page.locator('[data-v5-project-card]:visible').count()==1
-                page.locator('[data-v5-project-search]').fill('NO_MATCH_XYZ')
-                assert page.locator('[data-v5-project-empty]').is_visible()
-                page.goto(origin+'/knowledge/',wait_until='networkidle');page.locator('a[href="/knowledge/sources-and-meaning/"]').first.click();assert page.locator('h1').inner_text()=='What a live signal actually means'
-                page.locator('a[href="/knowledge/public-and-private/"]').first.click();assert 'Publishing a view' in page.locator('h1').inner_text()
+                search.fill('')
+                for kind, expected in [
+                    ('archive','Vesper Legacy'),('writing','Books & writing'),
+                    ('operations','Business operations'),
+                ]:
+                    category.select_option(kind)
+                    cards=page.locator('[data-v5-project-card]:visible')
+                    assert cards.count()==1,(kind,cards.count())
+                    assert expected in cards.first.inner_text(),(kind,expected)
+                category.select_option('')
+                search.fill('NO_MATCH_XYZ')
+                assert empty.is_visible(), "No-results message must become visible after filtering"
+                search.fill('')
+                assert empty.is_hidden(), "Clearing the filter must hide the no-results message"
+                page.goto(origin+'/about/',wait_until='networkidle')
+                portrait=page.locator('.v5-about-portrait img')
+                assert portrait.count()==1, "About needs one real, first-party portrait"
+                portrait.scroll_into_view_if_needed()
+                page.wait_for_function("""() => {
+                    const image=document.querySelector('.v5-about-portrait img');
+                    return !!(image && image.complete && image.naturalWidth>0)
+                }""",timeout=10000)
+                assert page.locator('.v5-about-path').count()==3
+                for destination in ['/work/','/research/','/writing/']:
+                    assert page.locator('.v5-about-path[href="'+destination+'"]').count()==1
+                page.goto(origin+'/knowledge/',wait_until='networkidle')
+                with page.expect_navigation(url="**/knowledge/sources-and-meaning/", wait_until="domcontentloaded"):
+                    page.locator('a[href="/knowledge/sources-and-meaning/"]').first.click()
+                assert page.locator('h1').inner_text()=='What an activity record actually means'
+                with page.expect_navigation(url="**/knowledge/public-and-private/", wait_until="domcontentloaded"):
+                    page.locator('a[href="/knowledge/public-and-private/"]').first.click()
+                assert page.locator('h1').inner_text()=='Publishing a view, keeping a boundary'
                 assert not errors,(width,errors);assert not blocked,blocked
                 records.append({'engine':args.engine,'viewport':[width,height],'routes':len(ROUTES),'result':'pass'});context.close()
                 if args.constrained: browser.close();browser=getattr(p,args.engine).launch(**options)

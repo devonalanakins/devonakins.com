@@ -1,0 +1,144 @@
+import test from "node:test";
+import assert from "node:assert/strict";
+import { renderReferenceHomepage } from "../src/v5/reference-home.mjs";
+import { publicV5ProjectEvidence } from "../src/v5/public-evidence.mjs";
+import { publicHomepageSourceSummary } from "../src/v5/homepage-source-summary.mjs";
+
+const now = Date.parse("2026-11-08T18:00:00.000Z");
+const iso = offset => new Date(now + offset).toISOString();
+
+test("the approved homepage contains exactly five independent source cells and a readable feed/focus", () => {
+  const html=renderReferenceHomepage();
+  for (const source of ["github","tasks","spotify","gpt","coding"])
+    assert.ok(html.includes('data-v5-home-source="' + source + '"'), source);
+  assert.equal((html.match(/data-v5-home-source="/g)||[]).length,5);
+  assert.match(html, /data-v5-home-activity-list/);
+  assert.match(html, /data-v5-home-activity-empty/);
+  assert.match(html, /data-v5-home-focus-detail/);
+  assert.match(html, /No current public work observed/);
+  assert.match(html, /Source unavailable/);
+  assert.doesNotMatch(html,/Active · \d+ repos|\d+ in progress|Now playing:.*Hans Zimmer/);
+});
+
+test("fresh, specifically shared task and editor observations remain separate from GitHub history", () => {
+  const value = {
+    version:4, asOf:iso(-1000),
+    recent:[{project:"Mizvo",projectSlug:"mizvo",kind:"Commit",
+      at:iso(-300_000),url:"https://github.com/devonalanakins/mizvo"}],
+    work:{visibility:"public",source:"editor-heartbeat",
+      project:"Mizvo",state:"developing",asOf:iso(-1_000)},
+    remote:{visibility:"public",tasks:[{
+      project:"Merit",source:"chatgpt-work",state:"running",
+      checkpoint:null,asOf:iso(-2_000),expiresAt:iso(100_000)
+    }]}
+  };
+  const projection=publicV5ProjectEvidence(value,now);
+  const state=publicHomepageSourceSummary(projection,now);
+  assert.equal(state.available,true);
+  assert.match(state.github,/Commit · Mizvo/);
+  assert.match(state.tasks,/Work task · Merit/);
+  assert.match(state.coding,/Editor observed · Mizvo/);
+  assert.equal(state.focus?.title,"Mizvo");
+  assert.equal(state.focus?.kind,"editor");
+  assert.equal(state.events.length,1);
+  assert.equal(state.events[0].href,"https://github.com/devonalanakins/mizvo");
+});
+
+test("dated commits alone never imply a current coding session or running task",()=>{
+  const value={version:4,asOf:iso(-1000),recent:[{
+    project:"Mizvo",projectSlug:"mizvo",kind:"Commit",at:iso(-300_000),
+    url:"https://github.com/devonalanakins/mizvo"
+  }]};
+  const state=publicHomepageSourceSummary(publicV5ProjectEvidence(value,now),now);
+  assert.equal(state.events.length,1);
+  assert.equal(state.focus,null);
+  assert.equal(state.tasks,"No current shared tasks");
+  assert.equal(state.coding,"No current coding observation");
+});
+
+test("missing, expired and revoked public sources fail closed",()=>{
+  const before=publicHomepageSourceSummary(null,now);
+  assert.equal(before.available,false);
+  assert.equal(before.events.length,0);
+  const stale=publicHomepageSourceSummary(publicV5ProjectEvidence({
+    version:4,asOf:iso(-70_000),recent:[]
+  },now),now);
+  assert.equal(stale.available,false);
+  const hidden=publicHomepageSourceSummary(publicV5ProjectEvidence({
+    version:4,asOf:iso(-1_000),recent:[],
+    work:{visibility:"hidden",source:"editor-heartbeat",project:"Mizvo",
+      state:"developing",asOf:iso(-1_000)},
+    remote:{visibility:"private",tasks:[{
+      project:"Merit",source:"chatgpt-work",state:"running",
+      checkpoint:null,asOf:iso(-1_000),expiresAt:iso(100_000)
+    }]}
+  },now),now);
+  assert.equal(hidden.focus,null);
+  assert.equal(hidden.events.length,0);
+  assert.equal(hidden.coding,"No current coding observation");
+  assert.equal(hidden.tasks,"No current shared tasks");
+});
+
+test("foreign or unapproved link properties never enter the displayed feed",()=>{
+  const state=publicHomepageSourceSummary({
+    available:true,nodes:{},recent:[
+      {slug:"mizvo",kind:"Commit",at:iso(-1000),
+        url:"https://example.com/impersonate"},
+      {slug:"private-unapproved",kind:"Commit",at:iso(-1000),
+        url:"https://github.com/devonalanakins/mizvo"}
+    ]
+  },now);
+  assert.equal(state.events.length,0);
+  assert.equal(state.github,"No recent approved events");
+});
+
+
+test("a private project is excluded even when a stale V4 reader asserts activity", () => {
+  const value = {
+    version:4, asOf:iso(-1000),
+    recent:[
+      {project:"DevonAkins.com",projectSlug:"devonakins-com",kind:"Commit",
+        at:iso(-90000),url:"https://github.com/devonalanakins/devonakins.com"},
+      {project:"Brandicade",projectSlug:"brandicade",kind:"Pull request",
+        at:iso(-180000),url:"https://github.com/devonalanakins/brandicade"},
+      {project:"Knowledge",projectSlug:"knowledge",kind:"Commit",
+        at:iso(-210000),url:"https://github.com/devonalanakins/knowledge"},
+    ],
+    work:{visibility:"public",source:"editor-heartbeat",
+      project:"DevonAkins.com",state:"developing",asOf:iso(-1000)},
+    remote:{visibility:"public",tasks:[{project:"Brandicade",source:"codex",
+      state:"running",checkpoint:null,asOf:iso(-2000),expiresAt:iso(100000)}]},
+  };
+  const state = publicHomepageSourceSummary(publicV5ProjectEvidence(value,now),now);
+  assert.equal(state.available,true);
+  assert.match(state.github,/Commit · DevonAkins\.com/);
+  assert.equal(state.tasks,"No current shared tasks");
+  assert.match(state.coding,/Editor observed · DevonAkins\.com/);
+  assert.equal(state.focus?.title,"DevonAkins.com");
+  assert.deepEqual(state.events.map(e=>e.href),[
+    "https://github.com/devonalanakins/devonakins.com",
+  ]);
+  assert.doesNotMatch(JSON.stringify(state),/knowledge|private-client|brandicade/i);
+  assert.doesNotMatch(JSON.stringify(state),/deployed|production live/i);
+});
+
+
+test("homepage output independently pins each approved public slug to its exact repository",()=>{
+  const state=publicHomepageSourceSummary({available:true,nodes:{},recent:[
+    {slug:"mizvo",kind:"Commit",at:iso(-1000),
+      url:"https://github.com/devonalanakins/private-client"},
+    {slug:"merit",kind:"Pull request",at:iso(-2000),
+      url:"https://github.com/devonalanakins/mizvo"},
+    {slug:"brandicade",kind:"Commit",at:iso(-3000),
+      url:"https://github.com/devonalanakins/brandicade"},
+    {slug:"devonakins-com",kind:"Release",at:iso(-4000),
+      url:"https://github.com/devonalanakins/devonakins.com"},
+    {slug:"knowledge",kind:"Commit",at:iso(-5000),
+      url:"https://github.com/devonalanakins/knowledge"},
+  ]},now);
+  assert.deepEqual(state.events.map(event=>event.href),[
+    "https://github.com/devonalanakins/devonakins.com",
+  ]);
+  assert.equal(state.events.length,1);
+  assert.doesNotMatch(JSON.stringify(state.events),/private-client|knowledge|brandicade|devonalanakins\/mizvo/);
+});

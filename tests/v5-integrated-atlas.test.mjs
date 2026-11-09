@@ -122,6 +122,8 @@ test("forged valid frames cannot inject private nodes or misattribute public mil
     [{...child,state:"published",evidenceUrl:source,reviewUrl:null}],
     [{...child,state:"published",evidenceUrl:
       "https://github.com/devonalanakins/private-client/pull/1",reviewUrl:reviewed}],
+    [{...child,state:"published",evidenceUrl:
+      "https://github.com/devonalanakins/vesper/pull/1",reviewUrl:reviewed}],
     [{...child,state:"published",label:"<script>PRIVATE</script>",
       evidenceUrl:source,reviewUrl:reviewed}],
     [{...child,state:"published",evidenceUrl:source,reviewUrl:reviewed},

@@ -55,7 +55,9 @@ test("external links are restricted to explicit public project destinations", ()
   }
   assert.equal(profiles.find(p=>p.id==="project:devonstation").url, null);
   assert.equal(profiles.find(p=>p.id==="project:vesper").url, null,
-    "Private Vesper source must not appear as a public atlas link");
+    "Private repository must never be a visitor-facing atlas destination");
+  assert.doesNotMatch(renderV5Atlas({ now: NOW }), /href="https:\/\/github\.com\/devonalanakins\/vesper(?:["\/?#])/,
+    "Rendered atlas must not contain the private source link");
 });
 
 test("forged or malformed public structural identity cannot produce profiles", () => {

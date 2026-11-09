@@ -74,7 +74,10 @@ test("manual V5 release path stays opt-in, exact-commit gated and preserves V4 d
     "V5 cutover must verify V4 first and then the selected V5 build");
   assert.match(workflow,/if \[ "\$V5_PUBLIC_SITE_CANDIDATE" = '1' \]; then/,
     "V5 rebuild must remain behind explicit variant selection");
-  assert.equal(v5ReleaseRoutes.length,21,"new repositories stay outside first V5 release");
+  assert.equal(v5ReleaseRoutes.length,21,
+    "Only still-approved public projects belong in the first V5 release");
+  assert.ok(!v5ReleaseRoutes.includes("/work/brandicade/"),
+    "Withdrawn private project must never regain a public V5 release route");
 });
 test("V5 read-only production verifier attests exact SHA, public routes and historical replay",async()=>{
   const f=fixture();

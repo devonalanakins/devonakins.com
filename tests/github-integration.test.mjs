@@ -409,11 +409,15 @@ test("catalog requires paired bearer, includes approved static projects and priv
   f.install(repo("private-client", 204, true));
   let data = await (await f.catalog(request(), f.env)).json();
   assert.equal(data.repositories.length, 8);
+  assert.ok(!data.repositories.some(r => r.name === "brandicade"),
+    "Withdrawn private project must not enter the editor catalog");
   assert.equal(
     data.repositories.find((r) => r.name === "anevum-web").projectSlug,
     "anevum",
   );
   assert.ok(!JSON.stringify(data).includes("private-client"));
+  assert.ok(!data.repositories.some((r) => r.name === "vesper"),
+    "A now-private repository must not enter the default editor catalog");
   f.sql.exec(
     "UPDATE github_repositories SET approved=1,project_slug='merit' WHERE repo_id=203",
   );
@@ -730,6 +734,8 @@ test("known-private built-in repository is omitted from the paired-editor catalo
   ).json();
   assert.ok(!data.repositories.some((r) => r.name === "merit"));
   assert.equal(data.repositories.length, 7);
+  assert.ok(!data.repositories.some(r => r.name === "brandicade"),
+    "Revoked project must remain absent alongside other known-private repos");
 });
 
 test("an older concurrent running callback cannot revive an already completed workflow", async () => {

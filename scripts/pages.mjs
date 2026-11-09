@@ -1,5 +1,6 @@
 import { mkdir, readFile, writeFile } from "node:fs/promises";
-import { pages, projects } from "../src/content.mjs";
+import { pages } from "../src/content.mjs";
+import { approvedPublicProjects as projects } from "../src/publication-manifest.mjs";
 import { promotePortraitHome } from "../src/portrait-home.mjs";
 import { renderV5PublicHomepage, renderV5PublicPage, renderV5ProjectPage } from "../src/v5/shell.mjs";
 import { V5_PUBLIC_ROUTES } from "../src/v5/public-routes.mjs";

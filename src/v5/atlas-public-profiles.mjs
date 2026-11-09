@@ -5,7 +5,7 @@
  * never private Knowledge, arbitrary repository discovery, event payloads,
  * agent status or inferred graph relations. A portfolio status is not live.
  */
-import { projects } from "../content.mjs";
+import { approvedPublicProjects as projects } from "../publication-manifest.mjs";
 
 const ROOT_CATALOG = Object.freeze([
   ["project:devonstation", "devonstation", null],

@@ -1,4 +1,6 @@
 import { publicV5ProjectEvidence } from "./public-evidence.mjs";
+import { publicHomepageSourceSummary } from "./homepage-source-summary.mjs";
+import { publicHomepageTimeline } from "./homepage-timeline.mjs";
 import { publicV5AtlasSignals } from "./atlas-live-evidence.mjs";
 import { publicV5Playback } from "./public-playback.mjs";
 import { publicV5GptCapture, formatPublicGptValue, publicGptCapturedAt } from "./public-gpt-capture.mjs";
@@ -109,15 +111,72 @@ inspector?.addEventListener("keydown", (event) => {
   }
 });
 
-// Preview-only source check. The existing V4 polling client supplies the
-// consent-filtered read model. No additional poller, publisher or owner API.
+// Owner-written profile notes are deliberately independent of live editing.
+// The endpoint is public only when both owner consent and release gates allow.
+const profileNote = document.querySelector<HTMLElement>("[data-v5-profile-note]");
+// A design preview must never fetch live owner notes on its own. Reuse the
+// existing server-issued release marker instead of introducing a new toggle.
+const profileNoteReleased = publicV5ActivationMode(
+  window.location.pathname,
+  document.documentElement.dataset.v5SignalMode,
+) === "automatic";
+if (profileNote && profileNoteReleased) {
+  const noteText = profileNote.querySelector<HTMLElement>("[data-v5-profile-note-text]");
+  const noteExpiry = profileNote.querySelector<HTMLElement>("[data-v5-profile-note-expiry]");
+  const hideNote = () => {
+    profileNote.hidden = true;
+    if (noteText) noteText.textContent = "";
+    if (noteExpiry) noteExpiry.textContent = "";
+  };
+  const refreshNote = async () => {
+    if (document.hidden) { hideNote(); return; }
+    try {
+      const response = await fetch("/api/presence/note", {
+        cache: "no-store", credentials: "omit",
+        headers: { Accept: "application/json" },
+        signal: AbortSignal.timeout(8000),
+      });
+      if (!response.ok) throw new Error("Unavailable");
+      const note: unknown = await response.json();
+      if (!note || typeof note !== "object" || Array.isArray(note)) throw new Error("Invalid");
+      const value = note as Record<string, unknown>;
+      const posted = typeof value.postedAt === "string" ? Date.parse(value.postedAt) : NaN;
+      const expires = typeof value.expiresAt === "string" ? Date.parse(value.expiresAt) : NaN;
+      const now = Date.now();
+      if (value.version !== 1 || value.visibility !== "public" ||
+        typeof value.text !== "string" || value.text !== value.text.trim() ||
+        value.text.length < 1 || value.text.length > 60 ||
+        /[\p{Cc}\p{Cf}]/u.test(value.text) ||
+        !Number.isFinite(posted) || !Number.isFinite(expires) ||
+        posted > now + 10_000 || expires <= now ||
+        expires - posted > 7 * 24 * 60 * 60_000 ||
+        Object.keys(value).sort().join("|") !== "expiresAt|postedAt|text|version|visibility")
+        throw new Error("Invalid");
+      if (noteText) noteText.textContent = value.text;
+      if (noteExpiry) noteExpiry.textContent = "Expires " + new Date(expires).toLocaleString();
+      profileNote.hidden = false;
+    } catch { hideNote(); }
+  };
+  void refreshNote();
+  const timer = window.setInterval(() => { void refreshNote(); }, 60_000);
+  window.addEventListener("pagehide", hideNote);
+  window.addEventListener("pageshow", () => { void refreshNote(); });
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden) hideNote();
+    else void refreshNote();
+  });
+}
+
+// Source-qualified V4 polling is distinct from the owner-note reader above.
+// V4 remains the only authority for editor, task, GitHub and Spotify state.
 const publicPreviewButton = document.querySelector<HTMLButtonElement>("[data-v5-preview-connect]");
 const publicPreviewStatus = document.querySelector<HTMLElement>("[data-v5-preview-source-state]");
 const activationMode = publicV5ActivationMode(
   window.location.pathname,
   document.documentElement.dataset.v5SignalMode,
 );
-if (field && (publicPreviewButton || activationMode === "automatic")) {
+const workLivePanel = document.querySelector<HTMLElement>("[data-v5-work-live]");
+if ((field || workLivePanel) && (publicPreviewButton || activationMode === "automatic")) {
   if (activationMode === "manual-preview" && publicPreviewButton) {
     publicPreviewButton.hidden = false;
   }
@@ -134,6 +193,17 @@ if (field && (publicPreviewButton || activationMode === "automatic")) {
     const details = publicV5Playback(value, Date.now());
     spotifyLink.dataset.v5SpotifyState = details.state;
     spotifyLink.href = details.href;
+    // One source of truth: the compact homepage strip echoes the existing
+    // consent-filtered Spotify renderer; no separate poll or credential.
+    const compact = document.querySelector<HTMLElement>("[data-v5-home-spotify]");
+    const compactCard = document.querySelector<HTMLElement>('[data-v5-home-source="spotify"]');
+    if (compact) compact.textContent = details.state === "playing"
+      ? "Playing · " + details.title + " — " + details.artist
+      : details.state === "private" ? "Private playback"
+      : details.state === "off_air" ? "Not playing"
+      : "Playback unavailable";
+    if (compactCard) compactCard.dataset.v5HomeState =
+      details.state === "playing" ? "current" : "unavailable";
     if (spotifyTitle) spotifyTitle.textContent = details.title;
     if (spotifyArtist) spotifyArtist.textContent = details.artist;
     if (spotifyCover) {
@@ -275,6 +345,89 @@ if (field && (publicPreviewButton || activationMode === "automatic")) {
       && "gpt" in snapshot ? (snapshot as { gpt?: unknown }).gpt : null;
     renderPublicGpt(publicGpt, at);
     renderPublicThreads(projection.available ? snapshot : null, at);
+    const homepage = publicHomepageSourceSummary(projection, at);
+    const put = (selector: string, value: string) => {
+      const target = document.querySelector<HTMLElement>(selector);
+      if (target) target.textContent = value;
+    };
+    put("[data-v5-home-github]", homepage.github);
+    put("[data-v5-home-tasks]", homepage.tasks);
+    put("[data-v5-home-coding]", homepage.coding);
+    if (workLivePanel) {
+      // One consent-filtered V4 projection, one reader. Historical GitHub
+      // events remain history, not proof of a running editor or agent.
+      const set = (part: string, value: string) => {
+        const target = workLivePanel.querySelector<HTMLElement>(
+          "[data-v5-work-live-" + part + "]",
+        );
+        if (target) target.textContent = value;
+      };
+      set("editor", homepage.coding);
+      set("tasks", homepage.tasks);
+      set("github", homepage.github);
+      set("status", homepage.available
+        ? "Read-only public source checked. Editor and task observations expire; GitHub history is not live work."
+        : "Public source unavailable, disabled or stale. No active work is asserted.");
+      workLivePanel.dataset.v5WorkLiveState = homepage.available
+        ? "available" : "unavailable";
+    }
+
+    for (const [key, isCurrent] of [
+      ["github", homepage.available && homepage.events.length > 0],
+      ["tasks", Boolean(homepage.focus && homepage.focus.kind === "remote") ||
+        homepage.tasks.includes(" · ")],
+      ["coding", homepage.coding.startsWith("Editor observed · ")],
+    ] as const) {
+      const card = document.querySelector<HTMLElement>(
+        '[data-v5-home-source="' + key + '"]'
+      );
+      if (card) card.dataset.v5HomeState = isCurrent
+        ? (key === "github" ? "recent" : "current") : "unavailable";
+    }
+    const capture = publicV5GptCapture(publicGpt, at);
+    const recorded = capture.headline || capture.readings[0] || null;
+    put("[data-v5-home-gpt]", recorded
+      ? "Captured " + publicGptCapturedAt(recorded.asOf) : "Capture unavailable");
+    const gptCard = document.querySelector<HTMLElement>('[data-v5-home-source="gpt"]');
+    if (gptCard) gptCard.dataset.v5HomeState = recorded ? "recorded" : "unavailable";
+    const activityList = document.querySelector<HTMLOListElement>(
+      "[data-v5-home-activity-list]"
+    );
+    const activityEmpty = document.querySelector<HTMLElement>(
+      "[data-v5-home-activity-empty]"
+    );
+    const timeline = publicHomepageTimeline(homepage, projection.available ? snapshot : null, at);
+    const threadsActivity = document.querySelector<HTMLElement>("[data-v5-home-threads-status]");
+    if (threadsActivity) threadsActivity.textContent = timeline.threadsConnected
+      ? "Threads · Official posts connected" : "Threads · Connection pending";
+    if (activityEmpty) activityEmpty.hidden = timeline.entries.length > 0;
+    if (activityList) activityList.replaceChildren(...timeline.entries.map(event => {
+      const item = document.createElement("li");
+      item.dataset.activitySource = event.source;
+      const link = document.createElement("a");
+      const body = document.createElement("span");
+      const title = document.createElement("strong");
+      const age = document.createElement("time");
+      link.href = event.href;
+      if (event.source === "threads") {
+        link.target = "_blank";
+        link.rel = "noopener noreferrer";
+        link.setAttribute("aria-label", "Open original Threads post");
+      }
+      title.textContent = event.heading;
+      age.dateTime = event.at;
+      age.textContent = event.detail;
+      body.append(title);
+      link.append(body, age);
+      item.append(link);
+      return item;
+    }));
+    put("[data-v5-home-focus]", homepage.focus
+      ? homepage.focus.title : "No current public work observed");
+    put("[data-v5-home-focus-detail]", homepage.focus
+      ? homepage.focus.source + " · observed " + homepage.focus.age
+      : homepage.available ? "No fresh approved editor or participating task observations."
+      : "Public work source unavailable or sharing disabled.");
     if (publicPreviewStatus) publicPreviewStatus.textContent = projection.available
       ? "Public V4 source checked · consented evidence only"
       : "Public source unavailable, disabled or stale";
@@ -327,7 +480,7 @@ if (field && (publicPreviewButton || activationMode === "automatic")) {
       line.textContent = message;
     }
   };
-  field.addEventListener("click", (event) => {
+  field?.addEventListener("click", (event) => {
     if (event.target instanceof Element && event.target.closest("[data-v5-field-node]")) {
       // The existing node handler runs first, without fabricating evidence.
       renderPublicEvidence(latestV4, Date.now());

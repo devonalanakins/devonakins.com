@@ -54,7 +54,7 @@ def run():
             "posts": [
                 {
                     "href": "https://www.threads.com/@fixtureDevon/post/CXtzA7JPq5V",
-                    "text": "<img onerror=alert(1)> Verified Threads fixture",
+                    "text": "<img onerror=alert(1)> Verified Threads fixture " + ("longunbrokenthreadstext" * 10),
                     "publishedAt": stamp(now - timedelta(minutes=16)),
                     "media": False,
                 },
@@ -124,6 +124,9 @@ def run():
         try:
             assert page.goto(origin + PREVIEW, wait_until="networkidle").status == 200
             assert not calls, "Preview must not auto-read any source"
+            assert not [u for u in blocked if "/api/presence/note" in u], (
+                "Design preview must not auto-fetch the owner profile note"
+            )
             assert page.locator("[data-v5-field-node][data-v5-verified]").count() == 0
 
             page.locator("[data-v5-preview-connect]").click()
@@ -132,6 +135,9 @@ def run():
                 timeout=10000,
             )
             assert len(calls) == 1, "Must reuse exactly one existing V4 reader"
+            assert not [u for u in blocked if "/api/presence/note" in u], (
+                "Manual V4 preview is not authorization to read the owner note"
+            )
             # The GPU is optional. When available, verify that exactly the
             # public editor/remote nodes light; history remains neutral.
             gpu_ready = page.locator(".v5-lock-terrain").get_attribute("data-webgl") == "ready"
@@ -156,6 +162,16 @@ def run():
             assert page.locator("[data-v5-threads-feed]").is_visible()
             assert page.locator("[data-v5-threads-status]").inner_text() == "SOURCE CONNECTED"
             assert page.locator("[data-v5-threads-posts] li").count() == 1
+            assert "Official posts connected" in page.locator(
+                "[data-v5-home-threads-status]"
+            ).inner_text()
+            assert page.locator('[data-v5-home-activity-list] [data-activity-source="threads"]').count() == 1
+            assert "Verified Threads fixture" in page.locator(
+                '[data-v5-home-activity-list] [data-activity-source="threads"]'
+            ).inner_text()
+            assert page.locator(
+                '[data-v5-home-activity-list] [data-activity-source="threads"] img'
+            ).count() == 0, "Threads text must not execute provider HTML"
             assert "Verified Threads fixture" in page.locator(
                 "[data-v5-threads-posts] li a"
             ).inner_text()
@@ -258,6 +274,10 @@ def run():
             assert page.locator("[data-v5-threads-feed]").is_hidden()
             assert page.locator("[data-v5-threads-status]").inner_text() == "CONNECTION PENDING"
             assert page.locator("[data-v5-threads-posts] li").count() == 0
+            assert page.locator('[data-v5-home-activity-list] [data-activity-source="threads"]').count() == 0
+            assert "Connection pending" in page.locator(
+                "[data-v5-home-threads-status]"
+            ).inner_text()
             assert page.locator("[data-v5-gpt-capture]").is_hidden()
             assert page.locator("[data-v5-gpt-empty]").is_visible()
             assert page.locator("[data-v5-gpt-readings] li").count() == 0

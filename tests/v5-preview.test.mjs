@@ -90,10 +90,10 @@ test("all seven preview pages retain semantic navigation and source-qualified em
   const home = renderV5Preview();
   for (const source of ["work", "spotify", "gpt"])
     assert.ok(home.includes(`data-v5-signal="${source}"`));
-  assert.match(home, /portrait-anevum-transcosmic\.webp/);
-  assert.match(home, /portrait-anevum-transcosmic-mobile\.webp/);
+  assert.match(home, /cap-hero-desktop\.webp/);
+  assert.match(home, /cap-hero-mobile\.webp/);
   assert.match(home, /<picture><source media="\(max-width: 600px\)"/);
-  assert.match(home, /Cinematic portrait artwork of Devon Akins/);
+  assert.match(home, /Cinematic portrait of Devon Akins wearing a backward cap/);
   assert.doesNotMatch(home, /crossed-arms\.webp/);
   assert.match(
     home,
@@ -135,7 +135,7 @@ test("production Worker and compiled assets exclude V5 even when the preview fla
   }
   assert.ok(assets["/v2/crossed-arms.webp"], "Original V4 portrait must remain intact");
   assert.ok(
-    !Object.keys(assets).some((path) => /__v5_preview__|\/v5\/|portrait-anevum-transcosmic/.test(path)),
+    !Object.keys(assets).some((path) => /__v5_preview__|\/v5\/|cap-hero-(desktop|mobile)/.test(path)),
     "Development-only portrait must not enter compiled production output",
   );
   const response = await site.fetch(new Request("https://devonakins.com/"));

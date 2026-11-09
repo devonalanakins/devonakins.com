@@ -3,11 +3,14 @@ import assert from "node:assert/strict";
 import { publicV5ActivationMode } from "../src/v5/source-activation.mjs";
 import { renderV5Preview } from "../src/v5/shell.mjs";
 
-test("only explicitly released home and Signal Field may start the public reader", () => {
+test("only explicitly released home, Work index and Systems Map may read public activity", () => {
   assert.equal(publicV5ActivationMode("/", "released-v5"), "automatic");
+  assert.equal(publicV5ActivationMode("/work/", "released-v5"), "automatic");
   assert.equal(publicV5ActivationMode("/signal-field/", "released-v5"), "automatic");
   for (const [path, marker] of [
     ["/", undefined], ["/", ""], ["/", "preview"],
+    ["/work/", undefined], ["/work/", ""], ["/work/", "preview"],
+    ["/work/?show=work", "released-v5"],
     ["/signal-field/", undefined], ["/signal-field/", ""], ["/signal-field/", "preview"],
     ["/signal-field/?asOf=2026-11-07", "released-v5"],
     ["/__v5_preview__/field/", "preview"],

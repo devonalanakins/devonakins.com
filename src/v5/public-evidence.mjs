@@ -5,6 +5,7 @@ import { validActivityHistory } from "../activity-history.mjs";
 // repository history. Every supported project identity is explicit.
 const names = Object.freeze({
   DevonStation: "devonstation",
+  "DevonAkins.com": "devonakins-com",
   Mizvo: "mizvo",
   Anevum: "anevum",
   Rhen: "rhen-language",
@@ -13,6 +14,7 @@ const names = Object.freeze({
 });
 const historySlugs = Object.freeze({
   devonstation: "devonstation",
+  "devonakins-com": "devonakins-com",
   mizvo: "mizvo",
   anevum: "anevum",
   rhen: "rhen-language",

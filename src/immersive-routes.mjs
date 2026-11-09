@@ -80,10 +80,10 @@ function projectCard(project, index) {
 
 function contentFor(path, projects, gptSnapshot) {
   if (path === '/studio/') return {
-    view:'home',title:'Live Studio — Devon Alan Akins',description:'Opt-in development presence, independent listening and public source activity.',
-    index:'LIVE STUDIO / PUBLIC WINDOW',heading:'A window into the work',
+    view:'home',title:'Activity — Devon Alan Akins',description:'Opt-in development presence, independent listening and public source activity.',
+    index:'ACTIVITY / PUBLIC SOURCES',heading:'A window into the work',
     intro:'A small, voluntary signal from ongoing creative work. Each source has its own meaning and timestamp.',
-    breadcrumb:'<a href="/">Home</a><span aria-hidden="true"> / </span><span aria-current="page">Live Studio</span>',
+    breadcrumb:'<a href="/">Home</a><span aria-hidden="true"> / </span><span aria-current="page">Activity</span>',
     body:'<div class="presence-studio"><article class="route-block"><h2>Current presence</h2><p class="presence-studio-state" data-live-presence>Not broadcasting</p><p class="presence-studio-source" data-live-source>No authorized current signal.</p><p class="route-fine-print">Remote sessions are owner-declared. Spotify playback and recent commits alone do not establish coding activity. No screen, editor contents or private projects are shared.</p></article><article class="route-block"><h2>Cloud work</h2><p class="presence-studio-state" data-cloud-presence>Not broadcasting</p><p class="presence-studio-source" data-cloud-source>No authorized task signal.</p><p class="route-fine-print">Participating cloud tasks report their own progress. A running task does not establish that Devon is present. Checkpoints describe task reports; test results retain their own verification.</p></article><article class="route-block in-motion"><h2>Participating tasks &amp; recent activity</h2><ol data-motion-feed><li><span>Awaiting verified activity</span></li></ol></article><article class="route-block"><h2>Follow the sources</h2><p>Listening shows only opted-in playback. The development timeline contains reduced public GitHub events. GPT figures retain their own historical or observation timestamps.</p><nav class="presence-studio-links" aria-label="Activity sources"><a href="/listening/">Listening ↗</a><a href="/gpt/">GPT &amp; public activity ↗</a><a href="/work/">Selected work ↗</a></nav></article></div>',
     actions:link('/','Return home')+link('/work/','Browse projects'),
   };

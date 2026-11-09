@@ -34,6 +34,8 @@ const HEARTBEAT_TTL_MS = 120_000;
 const PLAYBACK_TTL_MS = 120_000;
 const MAX_CLOCK_SKEW_MS = 10_000;
 const MANUAL_TTL_MS = 30 * 60_000;
+// Public notes are owner-published, dated messages, never editor evidence.
+const PROFILE_NOTE_TTL_MS = 7 * 24 * 60 * 60_000;
 const fixed = (
   visibility,
   state,
@@ -77,21 +79,11 @@ export function projectPublicPresence(input, now = Date.now()) {
     typeof manual === "object" &&
     !Array.isArray(manual) &&
     MANUAL_STATUSES.has(manual.state) &&
+    manual.state !== "custom" &&
     manual.approved === true
   ) {
     const asOf = freshTime(manual.asOf, now, MANUAL_TTL_MS);
-    if (asOf && manual.state !== "custom")
-      return fixed("public", manual.state, asOf, "owner-manual");
-    if (
-      asOf &&
-      manual.state === "custom" &&
-      manual.labelApproved === true &&
-      validManualLabel(manual.label)
-    )
-      return Object.freeze({
-        ...fixed("public", "custom", asOf, "owner-manual"),
-        label: manual.label,
-      });
+    if (asOf) return fixed("public", manual.state, asOf, "owner-manual");
   }
 
   const session = input.session;
@@ -151,4 +143,5 @@ export const PRESENCE_PROJECTOR_POLICY = Object.freeze({
   sessionTtlSeconds: HEARTBEAT_TTL_MS / 1000,
   playbackTtlSeconds: PLAYBACK_TTL_MS / 1000,
   manualTtlSeconds: MANUAL_TTL_MS / 1000,
+  profileNoteTtlSeconds: PROFILE_NOTE_TTL_MS / 1000,
 });

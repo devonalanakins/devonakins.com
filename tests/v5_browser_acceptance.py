@@ -188,7 +188,7 @@ def check_page(page, origin, path, axe):
             core = page.locator("[data-v5-atlas-core-label]")
             assert core.count() == 1, "3D nucleus should have one visual identity label"
             assert core.locator("strong").inner_text() == "DEVON AKINS"
-            assert "SIGNAL FIELD" in core.inner_text()
+            assert "PUBLIC PROJECTS" in core.inner_text()
             assert page.locator("[data-v5-atlas-node-id]").count() == 12, (
                 "Decorative core and skyline cannot create extra semantic structures")
             if atlas.get_attribute("data-v5-atlas-ready") == "true":
@@ -291,24 +291,13 @@ def check_page(page, origin, path, axe):
         assert portrait_aura.get_attribute("aria-hidden") == "true"
         assert portrait_aura.evaluate("""e => {
             const s = getComputedStyle(e);
-            const mask = s.maskImage || s.webkitMaskImage || "";
-            return s.pointerEvents === 'none' &&
-              s.mixBlendMode === 'screen' &&
-              mask.includes('radial-gradient') &&
-              s.backgroundImage.includes('portrait-anevum-transcosmic');
-        }"""), "Source smoke must be faded, first-party, non-interactive artwork"
-        if page.viewport_size and page.viewport_size["width"] >= 901:
-            assert portrait_aura.evaluate("""e => {
-                const p = document.querySelector('.v5-locked-portrait');
-                const a = e.getBoundingClientRect(), b = p.getBoundingClientRect();
-                return Math.abs(a.x - b.x) < 1 && Math.abs(a.y - b.y) < 1 &&
-                  Math.abs(a.width - b.width) < 1 && a.width >= 495;
-            }"""), "Cutout and authentic smoke must remain aligned at desktop widths"
+            return s.display === 'none' && s.pointerEvents === 'none';
+        }"""), "Old portrait aura must not duplicate the approved cap photograph"
         assert portrait_box.evaluate("e => Number(getComputedStyle(e).zIndex) >= 0"), (
             page.viewport_size, "approved portrait hidden behind page background")
         assert portrait_box.evaluate("e => e.getBoundingClientRect().width > 80")
-        # R10: the approved first-party image is a cutout, NOT a rectangular
-        # photographic hero background. Atmosphere is a separate nonsemantic layer.
+        # The approved cap crop is visibly feathered and never baked into the
+        # hero background. The independent volumetric atmosphere remains semantic-free.
         assert page.locator(".v5-hero-clouds").count() == 1
         assert page.locator(".v5-hero-cloud").count() == 3
         assert page.locator("filter#v5-cloud-curl").count() == 1
@@ -331,15 +320,18 @@ def check_page(page, origin, path, axe):
         assert page.locator(".v5-hero-smoke").count() == 3
         assert page.locator(".v5-hero-atmosphere").get_attribute("aria-hidden") == "true"
         assert page.locator(".v5-locked-hero").evaluate(
-            "e => !getComputedStyle(e).backgroundImage.includes('portrait-anevum-transcosmic.webp')"
-        ), "Hero must not contain a flat portrait background"
+            "e => !getComputedStyle(e).backgroundImage.includes('cap-hero-')"
+        ), "Hero must not bake the approved portrait into the full-width background"
         assert portrait_box.evaluate(
-            "e => getComputedStyle(e).clipPath.startsWith('polygon(')"
-            " && getComputedStyle(e).clipPath.length > 150"
-        ), "Visible portrait must have a true scalable silhouette"
+            """e => {
+                const s = getComputedStyle(e);
+                const mask = s.maskImage || s.webkitMaskImage || '';
+                return s.clipPath === 'none' && mask.includes(innerWidth <= 600 ? 'radial-gradient' : 'linear-gradient');
+            }"""
+        ), "Approved cap portrait must feather without an obsolete silhouette polygon"
         assert portrait_box.evaluate(
-            "e => getComputedStyle(e).backgroundImage.includes('portrait-anevum-transcosmic')"
-        ), "Visible cutout must use the original approved first-party portrait"
+            "e => getComputedStyle(e).backgroundImage.includes(innerWidth <= 600 ? 'cap-hero-mobile.webp' : 'cap-hero-desktop.webp')"
+        ), "Visible portrait must use the owner-approved first-party cap crop"
         # CSS opacity is not inherited: the <picture> is transparent while
         # its child img retains computed opacity 1. Assert the composited
         # parent, not the child, to avoid a false negative in WebKit/Chromium.
@@ -391,8 +383,44 @@ def check_page(page, origin, path, axe):
     if not path:
         assert page.locator(".v5-locked-portrait picture source").count() == 1
         portrait = page.locator(".v5-locked-portrait img")
-        assert portrait.evaluate("e => e.complete && e.naturalWidth === (innerWidth <= 600 ? 768 : 1122) && e.naturalHeight > 0"), (path, page.viewport_size, "approved responsive portrait failed to decode")
-        assert portrait.get_attribute("alt").startswith("Cinematic portrait artwork of Devon Akins")
+        assert portrait.evaluate("e => e.complete && e.naturalWidth === (innerWidth <= 600 ? 464 : 582) && e.naturalHeight === 533"), (path, page.viewport_size, "approved responsive portrait failed to decode")
+        assert portrait.get_attribute("alt") == "Cinematic portrait of Devon Akins wearing a backward cap"
+        if page.viewport_size["width"] <= 600:
+            assert page.locator(".v5-locked-portrait").evaluate("""e => {
+                const r = e.getBoundingClientRect();
+                const css = getComputedStyle(e);
+                const sizeH = Number.parseFloat(css.backgroundSize.split(' ').at(-1));
+                return r.height > 140 && r.height <= 205 &&
+                    r.width <= innerWidth * .56 &&
+                    r.left >= innerWidth * .30 &&
+                    sizeH >= 180 && sizeH <= 225 &&
+                    css.backgroundRepeat === 'no-repeat' &&
+                    css.maskImage.includes('radial-gradient');
+            }"""), "Mobile portrait must show approved full crop, softened edges and compact bounds"
+            # Accessibility isn't just an element's nominal 44px size: it
+            # must be unobscured by the old fixed-height identity container.
+            # Verify the three social links fit in the visible hero region.
+            assert page.locator(".v5-locked-socials a").evaluate_all("""items => {
+                const hero=document.querySelector('.v5-locked-hero').getBoundingClientRect();
+                return items.length === 3 && items.every(e => {
+                    const r=e.getBoundingClientRect();
+                    return r.width >= 44 && r.height >= 44 &&
+                        r.top >= hero.top && r.bottom <= hero.bottom &&
+                        r.left >= hero.left && r.right <= hero.right;
+                });
+            }"""), "Mobile social links must remain visible, accessible and unclipped"
+            assert page.locator(".v5-locked-manifesto").evaluate("""e => {
+                const r=e.getBoundingClientRect();
+                return getComputedStyle(e).display !== 'none' && r.height > 20;
+            }"""), "Purpose statement cannot disappear on narrow phones"
+        # On a narrow 568px phone, the first source card must be usable in
+        # the first viewport, not hidden behind decorative hero whitespace.
+        if page.viewport_size == {"width": 320, "height": 568}:
+            assert page.locator('[data-v5-home-source="github"]').evaluate("""e => {
+                const r = e.getBoundingClientRect();
+                return r.width >= 130 && r.height >= 44 &&
+                    r.top >= 0 && r.bottom <= innerHeight + 1;
+            }"""), "First verified-source cell must fit the 320x568 viewport"
         assert page.locator(".v5-locked-portrait picture").evaluate("e => e.getBoundingClientRect().height > 0")
 
         if page.viewport_size["height"] >= 568:
@@ -466,10 +494,10 @@ def main():
                                 assert page.locator(".v5-mobile-nav").is_hidden()
                                 assert page.locator("summary").evaluate("e => e === document.activeElement")
                                 page.locator("summary").click()
-                                page.locator(".v5-mobile-nav a").filter(has_text="Projects").click()
+                                page.locator(".v5-mobile-nav a").filter(has_text="Work").click()
                                 assert page.url.endswith("projects/")
                             else:
-                                page.locator(".v5-desktop-nav a").filter(has_text="Projects").click()
+                                page.locator(".v5-desktop-nav a").filter(has_text="Work").click()
                                 assert page.url.endswith("projects/")
                             page.goto(origin + PREVIEW, wait_until="networkidle")
                             if width <= 600:
@@ -565,9 +593,8 @@ def main():
                     ("2026-11-06", "8", 12, 4),
                 ):
                     page.locator("#v5-graph-date").fill(day)
-                    # Native GET submission remains asynchronous in WebKit when
-                    # JavaScript is disabled. Wait for the actual dated response
-                    # instead of inspecting the previous URL immediately.
+                    # Native GET in no-JS WebKit completes asynchronously:
+                    # assert the actual navigation, not the previous URL.
                     with page.expect_navigation(
                         url=f"**/__v5_preview__/field/?asOf={day}",
                         wait_until="domcontentloaded",

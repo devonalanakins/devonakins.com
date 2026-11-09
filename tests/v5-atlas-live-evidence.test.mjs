@@ -19,7 +19,8 @@ test("approved editor and participating remote evidence appear on fixed atlas ro
     ["project:mizvo","editor"], ["project:merit","remote"],
     ["project:squelch","remote"],
   ]);
-  assert.doesNotMatch(JSON.stringify(value),/private-client|knowledge-overview|project:vesper/);
+  assert.doesNotMatch(JSON.stringify(value),/private-client|knowledge-overview|project:vesper/,
+    "A public concept for private Vesper must never light as active work");
 });
 test("GitHub history, absent evidence and unknown source never light a root",()=>{
   const value=publicV5AtlasSignals({available:true,nodes:{

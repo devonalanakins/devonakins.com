@@ -36,6 +36,38 @@ test("full-site candidate publishes real sections and a dedicated atlas without 
     assert.match(html, /property="og:title"/);
   }
   const fullHome = renderV5PublicPage("home");
+  for (const [label, url] of [
+    ["GitHub profile", "https://github.com/devonalanakins"],
+    ["Instagram profile", "https://www.instagram.com/devonalanakins/"],
+  ]) {
+    assert.ok(fullHome.includes('href="' + url + '" aria-label="' + label + '"'),
+      "Published V5 hero must expose the verified " + label);
+  }
+  for (const label of ["Home","Work","Research","Writing","Knowledge","Systems","Activity"])
+    assert.ok(fullHome.includes(">" + label + "</a>"), "Global navigation must expose " + label);
+  for (const source of ["github","tasks","spotify","gpt","coding"])
+    assert.ok(fullHome.includes('data-v5-home-source="' + source + '"'),
+      "Home must preserve the verified " + source + " source");
+  assert.ok(fullHome.includes('data-v5-home-activity-list'));
+  assert.ok(fullHome.includes('data-v5-home-focus'));
+  const about = renderV5PublicPage("about");
+  for (const key of ["projects","writing","research","knowledge","about"]) {
+    const doc = renderV5PublicPage(key);
+    assert.ok(doc.includes('class="v5-page-' + key + '"'),
+      key + " must use shared cinematic editorial styling");
+  }
+  assert.ok(about.includes("Building ideas into something useful"));
+  assert.ok(about.includes('class="v5-about-feature"'));
+  assert.ok(about.includes('class="v5-about-portrait"'));
+  assert.ok(about.includes('src="/src/v5/assets/cap-hero-desktop.webp"'));
+  assert.ok(about.includes('srcset="/src/v5/assets/cap-hero-mobile.webp"'));
+  assert.ok(about.includes('alt="Portrait of Devon Alan Akins wearing a backward cap"'));
+  for (const path of ["/work/","/research/","/writing/"]) {
+    assert.ok(about.includes('href="' + path + '"'),
+      "About must provide a direct public, accessible path to " + path);
+  }
+  assert.ok(about.includes('href="/work/">Explore my work'));
+  assert.ok(!about.includes("Read my biography"), "About must not link to itself");
   // A complete V5 release must never strand homepage navigation on V4.
   for (const href of ["/knowledge/", "/writing/", "/signal-field/"]) {
     assert.ok(fullHome.includes('href="' + href + '"'), href);
@@ -64,6 +96,62 @@ test("full-site candidate publishes real sections and a dedicated atlas without 
   );
   assert.throws(() => renderV5PublicPage("unknown"));
 });
+test("public site uses human-first labels, never release or internal interface names", () => {
+  const published = [
+    ...Object.keys(V5_PUBLIC_ROUTES).map(key => [V5_PUBLIC_ROUTES[key], renderV5PublicPage(key)]),
+    ...publicNotes.map(note => {
+      const path = "/knowledge/" + note.slug + "/";
+      return [path, renderV5PublicPage("knowledge", {topic: note.slug, publicPath: path})];
+    }),
+    ...projects.map(project => ["/work/" + project.slug + "/", renderV5ProjectPage(project.slug)]),
+  ];
+  const forbidden = /\b(?:the living mind|living mind|live signal|live mind|signal field\s*[·:–-]\s*v\d+|v[345])\b/i;
+  for (const [path, html] of published) {
+    // Inspect visitor-visible text without accidentally treating internal
+    // class names, data attributes, JS paths or preview contract markers
+    // as public marketing copy.
+    const text = html
+      .replace(/<!--[\s\S]*?-->/g, " ")
+      .replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, " ")
+      .replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi, " ")
+      .replace(/<[^>]*>/g, " ");
+    assert.doesNotMatch(text, forbidden, path + " public text");
+    for (const match of html.matchAll(/\b(?:aria-label|title|content)="([^"]*)"/g)) {
+      assert.doesNotMatch(match[1], forbidden, path + " public metadata/accessibility");
+    }
+  }
+});
+
+test("Work directory filters follow reviewed public presentation categories, not legacy implementation labels", () => {
+  const work = renderV5PublicPage("projects");
+  for(const part of ["editor","tasks","github","status"])
+    assert.ok(work.includes('data-v5-work-live-' + part),
+      "Work index needs a source-qualified " + part + " state");
+  assert.ok(work.includes('data-v5-work-live aria-labelledby="v5-work-live-title"'));
+  assert.ok(work.includes('href="/studio/"'), "Work activity must link to existing public source");
+  assert.match(work, /A past commit does not prove that work is happening now/);
+  assert.doesNotMatch(work, /Editor active now|Live task running|Simulated signal/);
+  const previewWork = renderV5Preview("projects");
+  assert.match(previewWork, /data-v5-signal-mode="preview"/);
+  const projectDetail = renderV5ProjectPage("merit");
+  assert.doesNotMatch(projectDetail, /data-v5-work-live/,
+    "Detail pages remain public descriptions rather than unapproved live readers");
+  const categories = ["software", "research", "creative", "writing", "operations", "archive"];
+  for (const category of categories)
+    assert.ok(work.includes('<option value="' + category + '">'),
+      "Missing approved category: " + category);
+  const cards = [...work.matchAll(/data-project-category="([^"]+)" href="\/work\/([^"]+)\/"/g)];
+  assert.equal(cards.length, projects.length, "Every approved entry gets one category-filterable card");
+  assert.deepEqual(new Set(cards.map(match => match[1])), new Set(categories));
+  assert.ok(cards.some(([full, category, slug]) => category === "archive" && slug === "rhen"));
+  assert.ok(cards.some(([full, category, slug]) => category === "operations" && slug === "operations"));
+  assert.ok(cards.some(([full, category, slug]) => category === "writing" && slug === "writing"));
+  assert.ok(!work.includes('data-project-category="business"'),
+    "Legacy business category no longer merges services with software");
+  assert.match(renderV5ProjectPage("operations"), /Operations · Professional support/);
+  assert.match(renderV5ProjectPage("vesper"), /Research · Private-source research concept/);
+});
+
 test("curated public topics have source context and working related/backlink targets", () => {
   const slugs = new Set(publicNotes.map((n) => n.slug));
   for (const n of publicNotes) {

@@ -21,7 +21,7 @@ export function renderGptOwner(metrics) {
 <link rel="stylesheet" href="/v2/gpt-owner.css"></head><body>
 <a class="skip" href="#main">Skip to metrics</a>
 <header class="topbar"><a class="wordmark" href="/">DEVON ALAN AKINS <span>/ PRIVATE CONTROL ROOM</span></a>
-<a class="return" href="/owner/presence/">LIVE SIGNAL CONTROLS ↗</a></header>
+<a class="return" href="/owner/presence/">SHARING CONTROLS ↗</a></header>
 <main class="container" id="main">
   <div class="eyebrow">GPT OBSERVATORY / PRIVATE CAPTURE</div>
   <h1>Recorded usage.<br><em>No invented signal.</em></h1>
@@ -35,7 +35,7 @@ export function renderGptOwner(metrics) {
   </form>
   <section class="card gpt-privacy-card" aria-labelledby="gpt-privacy-heading">
     <h2 id="gpt-privacy-heading">You control what is public.</h2>
-    <p class="fine">New metrics stay private until you share each one below. Sharing a metric also permits its future recorded updates while Live Signal broadcasting is enabled. Stop all broadcasting hides every metric.</p>
+    <p class="fine">New metrics stay private until you share each one below. Sharing a metric also permits its future recorded updates while public sharing is enabled. Stop all broadcasting hides every metric.</p>
     <p class="fine">Readings are recent for 24 hours, then historical. The homepage always features seven-day tokens when shared. The November 4 archive stays separate.</p>
     <a class="return" href="/gpt/">VIEW PUBLIC GPT PROFILE ↗</a>
   </section>

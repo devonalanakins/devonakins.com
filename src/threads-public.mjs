@@ -27,6 +27,25 @@ export function threadsApproved(env) {
     typeof env?.THREADS_PUBLIC_USERNAME==="string" &&
     USERNAME.test(env.THREADS_PUBLIC_USERNAME);
 }
+/** Owner-only configuration status; a token's presence is not an API observation.
+ * Never return the credential, username, provider account ID or private posts. */
+export function ownerThreadsReadiness(env={}) {
+  return {
+    provider:"threads",
+    readOnly:true,
+    usernameConfigured:typeof env.THREADS_PUBLIC_USERNAME==="string" &&
+      USERNAME.test(env.THREADS_PUBLIC_USERNAME),
+    authorizationConfigured:typeof env.THREADS_USER_ACCESS_TOKEN==="string" &&
+      env.THREADS_USER_ACCESS_TOKEN.length>=20,
+    publicationApproved:env.THREADS_PUBLIC_RELEASE_APPROVED==="true",
+    feedEnabled:env.THREADS_PUBLIC_FEED_ENABLED==="true",
+    globallyEnabled:env.PRESENCE_ENABLED==="true" &&
+      env.PRESENCE_PUBLIC_RELEASE_APPROVED==="true",
+    configured:threadsApproved(env),
+    providerObserved:false,
+    observedAt:null,
+  };
+}
 function validLink(value,username) {
   if(typeof value!=="string" || value.length>300)return null;
   try{

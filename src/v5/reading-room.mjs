@@ -1,5 +1,5 @@
 import { publicNotes } from "./public-notes.mjs";
-import { projects } from "../content.mjs";
+import { approvedPublicProjects as projects } from "../publication-manifest.mjs";
 const esc = (s) =>
   String(s ?? "").replace(
     /[&<>"']/g,

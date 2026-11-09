@@ -17,14 +17,15 @@ assert.match(html, /data-v5-signal-mode="released-v5"/);
 assert.match(html, /data-v5-exact-reference="2026-11-07"/);
 assert.match(html, /name="robots" content="index,follow,max-image-preview:large"/);
 assert.doesNotMatch(html, /__v5_preview__|DESIGN PREVIEW|data-v5-preview-connect|noindex/i);
-assert.match(html, /The Signal Field/);
+assert.match(html, /Systems Map/);
 assert.match(html, /No fresh, verified work session/);
 assert.match(html, /No verified inter-project dependencies are published here/);
 assert.match(html, /<script type="module" crossorigin src="\/assets\//);
 const published = Object.keys(assets);
 assert.ok(published.some((p) => /^\/assets\/.*\.js$/.test(p)), "no built V5 client");
 assert.ok(published.some((p) => /^\/assets\/.*\.css$/.test(p)), "no built V5 styles");
-assert.ok(published.some((p) => /portrait-anevum-transcosmic.*webp/.test(p)), "approved first-party portrait missing");
+assert.ok(published.some((p) => /cap-hero-desktop\.webp/.test(p)), "approved desktop cap portrait missing");
+assert.ok(published.some((p) => /cap-hero-mobile\.webp/.test(p)), "approved mobile cap portrait missing");
 assert.ok(!published.some((p) => /__v5_preview__|\/owner\/|private-patient/.test(p)),
   "preview or private artifacts in public asset package");
 for (const path of [
