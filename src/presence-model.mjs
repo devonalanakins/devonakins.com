@@ -12,7 +12,6 @@ const ALLOWED_PROJECTS = Object.freeze({
   devonstation: "DevonStation",
   squelch: "Squelch",
   anevum: "Anevum",
-  brandicade: "Brandicade",
   knowledge: "Knowledge",
   "devonakins-com": "DevonAkins.com",
 });
