@@ -54,7 +54,7 @@ def run():
             "posts": [
                 {
                     "href": "https://www.threads.com/@fixtureDevon/post/CXtzA7JPq5V",
-                    "text": "<img onerror=alert(1)> Verified Threads fixture",
+                    "text": "<img onerror=alert(1)> Verified Threads fixture " + ("longunbrokenthreadstext" * 10),
                     "publishedAt": stamp(now - timedelta(minutes=16)),
                     "media": False,
                 },
