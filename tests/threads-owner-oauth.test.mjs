@@ -28,7 +28,7 @@ function fixture(migrated=true,providerOverride=null){
     THREADS_PUBLIC_RELEASE_APPROVED:"false",THREADS_PUBLIC_FEED_ENABLED:"false",
   };
   const requests=[];
-  const provider=providerOverride||async(url,options)=>{
+  const provider=providerOverride || (async (url,options)=>{
     requests.push([url,options]);
     if(url==="https://graph.threads.net/oauth/access_token")
       return Response.json({access_token:"s".repeat(96),user_id:"123456789012345"});
@@ -37,7 +37,7 @@ function fixture(migrated=true,providerOverride=null){
     if(new URL(url).pathname==="/v1.0/me")
       return Response.json({id:"123456789012345",username:"DevonFixture"});
     throw Error("Unexpected provider URL");
-  };
+  });
   const api=createThreadsOwnerOAuth({clock:()=>now,fetcher:provider});
   const post=(path,origin=root,ctx=owner)=>api(new Request(root+path,{method:"POST",
     headers:{Origin:origin}}),env,ctx);
