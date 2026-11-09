@@ -1,5 +1,6 @@
 import { publicV5ProjectEvidence } from "./public-evidence.mjs";
 import { publicHomepageSourceSummary } from "./homepage-source-summary.mjs";
+import { publicHomepageTimeline } from "./homepage-timeline.mjs";
 import { publicV5AtlasSignals } from "./atlas-live-evidence.mjs";
 import { publicV5Playback } from "./public-playback.mjs";
 import { publicV5GptCapture, formatPublicGptValue, publicGptCapturedAt } from "./public-gpt-capture.mjs";
@@ -389,17 +390,27 @@ if ((field || workLivePanel) && (publicPreviewButton || activationMode === "auto
     const activityEmpty = document.querySelector<HTMLElement>(
       "[data-v5-home-activity-empty]"
     );
-    if (activityEmpty) activityEmpty.hidden = homepage.events.length > 0;
-    if (activityList) activityList.replaceChildren(...homepage.events.map((event: {href: string; kind: string; title: string; at: string; age: string | null}) => {
+    const timeline = publicHomepageTimeline(homepage, projection.available ? snapshot : null, at);
+    const threadsActivity = document.querySelector<HTMLElement>("[data-v5-home-threads-status]");
+    if (threadsActivity) threadsActivity.textContent = timeline.threadsConnected
+      ? "Threads · Official posts connected" : "Threads · Connection pending";
+    if (activityEmpty) activityEmpty.hidden = timeline.entries.length > 0;
+    if (activityList) activityList.replaceChildren(...timeline.entries.map(event => {
       const item = document.createElement("li");
+      item.dataset.activitySource = event.source;
       const link = document.createElement("a");
       const body = document.createElement("span");
       const title = document.createElement("strong");
       const age = document.createElement("time");
       link.href = event.href;
-      title.textContent = event.kind + " · " + event.title;
+      if (event.source === "threads") {
+        link.target = "_blank";
+        link.rel = "noopener noreferrer";
+        link.setAttribute("aria-label", "Open original Threads post");
+      }
+      title.textContent = event.heading;
       age.dateTime = event.at;
-      age.textContent = event.age;
+      age.textContent = event.detail;
       body.append(title);
       link.append(body, age);
       item.append(link);
