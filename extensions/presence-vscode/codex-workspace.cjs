@@ -51,7 +51,11 @@ function inspectCodexAuthentication({
             run('cmd.exe', ['/d', '/s', '/c', 'codex login status'], false);
             return;
           }
-          resolve(error ? 'unavailable' : codexAuthenticationMode(stdout));
+          // Codex exits nonzero when signed out. Preserve the explicit,
+          // strictly parsed "Not logged in" result rather than labeling it
+          // as a missing CLI or unavailable authentication.
+          const mode = codexAuthenticationMode(stdout);
+          resolve(error ? (mode === 'not-logged-in' ? mode : 'unavailable') : mode);
         });
       } catch (error) {
         if (missingShim(error)) run('cmd.exe', ['/d', '/s', '/c', 'codex login status'], false);
@@ -87,17 +91,33 @@ function registerCodexWorkspace(api, context, { inspect = inspectCodexAuthentica
     if (disposed) return 'unavailable';
     setStatus(mode === 'chatgpt' ? 'ChatGPT sign-in' :
       mode === 'api-key' ? 'API key (blocked)' :
-      mode === 'not-logged-in' ? 'sign-in required' : 'not verified');
+      mode === 'not-logged-in' ? 'CLI sign-in required' :
+      mode === 'unavailable' ? 'CLI unavailable (IDE separate)' :
+      mode === 'agent-identity' ? 'agent identity (blocked)' : 'CLI status unknown');
     return mode;
   }
-  async function login() {
+  async function login(knownMode = null) {
     if (disposed) return;
     if (api.workspace.isTrusted !== true) {
       await api.window.showWarningMessage('Trust the workspace before launching Codex.');
       return;
     }
+    const mode = knownMode || await inspect();
+    if (disposed) return;
+    if (mode === 'unavailable' || mode === 'unknown' || mode === 'agent-identity') {
+      await api.window.showWarningMessage(
+        'This companion could not check the standalone Codex CLI. The official Codex VS Code extension is separate and may already be signed in. You can use its sidebar without this CLI launcher. To enable the launcher, install/check the official Codex CLI and restart VS Code.',
+      );
+      return;
+    }
+    if (mode === 'chatgpt') {
+      await api.window.showInformationMessage(
+        'The standalone Codex CLI already reports ChatGPT sign-in. Check the intended workspace in the official Codex client.',
+      );
+      return;
+    }
     const chosen = await api.window.showWarningMessage(
-      'This companion cannot verify ChatGPT sign-in. Open the official Codex CLI sign-in? No API key is required.',
+      'Open the official Codex CLI ChatGPT sign-in? No API key is required.',
       'Open ChatGPT sign-in',
     );
     if (disposed || chosen !== 'Open ChatGPT sign-in') return;
@@ -127,8 +147,12 @@ function registerCodexWorkspace(api, context, { inspect = inspectCodexAuthentica
           await api.window.showWarningMessage(
             'Codex is using API-key authentication, which has separate API billing. No session started. Sign in to Codex with ChatGPT first.',
           );
+        } else if (mode === 'not-logged-in') {
+          await login(mode);
         } else {
-          await login();
+          await api.window.showWarningMessage(
+            'The standalone Codex CLI status cannot be verified. This does not mean the official VS Code Codex extension is disconnected. Use its sidebar, or check "codex login status" in PowerShell before using the optional CLI launcher.',
+          );
         }
         return;
       }
@@ -175,7 +199,9 @@ function registerCodexWorkspace(api, context, { inspect = inspectCodexAuthentica
         'Codex CLI reports API-key authentication. The ChatGPT-plan launcher will not start a session.',
       );
       else if (!disposed) await api.window.showWarningMessage(
-        'ChatGPT authentication could not be verified. Install/update Codex CLI and sign in with ChatGPT.',
+        mode === 'not-logged-in'
+          ? 'Standalone Codex CLI is signed out. Use Devon Presence: Open Codex ChatGPT Sign-in, or keep using the official VS Code Codex sidebar with its own sign-in.'
+          : 'Standalone Codex CLI could not be verified. The official VS Code Codex extension is separate and may already be signed in. Run "codex login status" in PowerShell to check the CLI, or continue using the official Codex sidebar.',
       );
     }],
     ['codexStart', start],
