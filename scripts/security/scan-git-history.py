@@ -21,9 +21,14 @@ RULES = {
 }
 PATTERNS = {name: re.compile(pattern) for name, pattern in RULES.items()}
 
-# Existing history contains this exact, publicly documented inert test value.
-# Match the full literal only; never exempt a file, object, key name or rule.
-SYNTHETIC_FIXTURE = b'access_token: "placeholder_access_12345"'
+# Historical synthetic test literals only. Exempt exact full matches, never
+# a file, Git object, key name or entire rule. Other long assignments still fail.
+SYNTHETIC_FIXTURES = frozenset((
+    b'access_token: "placeholder_access_12345"',
+    # The regex intentionally matches the inner API_KEY substring of OPENAI_API_KEY.
+    b"API_KEY:'should-never-be-forwarded'",
+    b"API_KEY:'should-never-be-forwardeX'",
+))
 
 
 def main():
@@ -55,7 +60,7 @@ def main():
             for name, pattern in PATTERNS.items():
                 matches = pattern.finditer(body)
                 if name == 'sensitive-assignment':
-                    matched = any(m.group(0) != SYNTHETIC_FIXTURE for m in matches)
+                    matched = any(m.group(0) not in SYNTHETIC_FIXTURES for m in matches)
                 else:
                     matched = any(True for _ in matches)
                 if matched:
