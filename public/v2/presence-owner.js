@@ -10,6 +10,56 @@ let cloudGeneration = 0;
 function notice(text) {
   el("presence-notice").textContent = text;
 }
+/** Read-only owner display; no API call, credential reveal or publication toggle. */
+function renderSourceReadiness(sources) {
+  const root=el("owner-source-readiness");
+  if (!root) return;
+  if (!sources || sources.version!==1) {
+    root.replaceChildren(document.createTextNode("Provider configuration is unavailable."));
+    return;
+  }
+  const t=sources.threads||{},sp=sources.spotify||{},
+    gh=sources.github||{},ed=sources.editor||{},
+    tasks=sources.tasks||{},gpt=sources.gpt||{};
+  const rows=[
+    ["Threads",t.configured
+      ? "Configured for public read; provider observation not yet verified."
+      : !t.authorizationConfigured
+        ? "Meta authorization not configured. Read-only feed stays disconnected."
+        : "Credentials configured; account, global sharing and publication gates still require approval."],
+    ["Spotify",sp.connection==="authorization-stored"
+      ? "Authorization stored; current playback not verified. Use Spotify connection to test sharing."
+      : sp.connection==="reauthorization-required"
+        ? "Reauthorization required before playback sharing."
+        : sp.appConfigured
+          ? "App configured; account playback connection not confirmed."
+          : "Spotify application not configured."],
+    ["GitHub",gh.appIntegrationEnabled && gh.authorizationConfigured
+      ? "Central repository integration configured; live event observation not checked."
+      : "Public event reader exists; central authenticated repository integration not verified."],
+    ["Editor",ed.serverEnabled
+      ? (ed.ownerSharingSelected
+          ? "Editor sharing selected; current edit observation not checked."
+          : "Editor receiver enabled; no approved public observation asserted.")
+      : "Editor receiver not enabled."],
+    ["Remote tasks",tasks.reportersSupported
+      ? "Participating task reporters supported; active tasks not checked."
+      : "Task reporting unavailable."],
+    ["GPT / Codex",gpt.captureToolAvailable
+      ? "Owner-recorded, dated captures supported; automatic account telemetry not available."
+      : "Capture storage not configured."],
+    ["Instagram / Facebook","Instagram profile link only; Facebook destination unverified. No authenticated social feed is asserted."],
+  ];
+  root.replaceChildren(...rows.map(([name,description])=>{
+    const item=document.createElement("li");
+    const title=document.createElement("strong");
+    const detail=document.createElement("span");
+    title.textContent=name;
+    detail.textContent=description;
+    item.append(title,detail);
+    return item;
+  }));
+}
 function lock(value) {
   document.querySelectorAll("button,input,select").forEach((node) => {
     // Concurrent workspace controls own their request lock and disclosure gate.
@@ -26,6 +76,7 @@ function lock(value) {
 function render(data) {
   if (state && data.revision < state.revision) return false;
   state = data;
+  renderSourceReadiness(data.sources);
   const project = el("presence-project");
   project.replaceChildren(new Option("No public project", ""));
   const catalog =
