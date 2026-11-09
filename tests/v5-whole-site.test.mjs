@@ -57,6 +57,15 @@ test("full-site candidate publishes real sections and a dedicated atlas without 
       key + " must use shared cinematic editorial styling");
   }
   assert.ok(about.includes("Building ideas into something useful"));
+  assert.ok(about.includes('class="v5-about-feature"'));
+  assert.ok(about.includes('class="v5-about-portrait"'));
+  assert.ok(about.includes('src="/src/v5/assets/cap-hero-desktop.webp"'));
+  assert.ok(about.includes('srcset="/src/v5/assets/cap-hero-mobile.webp"'));
+  assert.ok(about.includes('alt="Portrait of Devon Alan Akins wearing a backward cap"'));
+  for (const path of ["/work/","/research/","/writing/"]) {
+    assert.ok(about.includes('href="' + path + '"'),
+      "About must provide a direct public, accessible path to " + path);
+  }
   assert.ok(about.includes('href="/work/">Explore my work'));
   assert.ok(!about.includes("Read my biography"), "About must not link to itself");
   // A complete V5 release must never strand homepage navigation on V4.
