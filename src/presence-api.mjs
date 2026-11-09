@@ -14,6 +14,7 @@ import {
   ownerError,
 } from "./listening-owner-core.mjs";
 import { renderPresenceOwner } from "./presence-owner-page.mjs";
+import { ownerSourceReadiness } from "./owner-source-readiness.mjs";
 
 const manualStates = [
   "writing",
@@ -343,6 +344,7 @@ export function createPresenceOwnerApi({
       if (request.method === "GET")
         return ownerJson({
           ...status(row, env, at),
+          sources: await ownerSourceReadiness(env, row),
           preview: await publicPresence(env, readListening, clock),
         });
       let data, next;
@@ -379,8 +381,10 @@ export function createPresenceOwnerApi({
         .run();
       if (result.meta?.changes !== 1)
         return ownerError("State changed. Refresh before trying again.", 409);
+      const saved = await presenceRow(env);
       return ownerJson({
-        ...status(await presenceRow(env), env, at),
+        ...status(saved, env, at),
+        sources: await ownerSourceReadiness(env, saved),
         preview: await publicPresence(env, readListening, clock),
       });
     } catch {
