@@ -1510,3 +1510,27 @@ body.v5-page-projects .v5-project-card:hover {
  }
  .v5-project-detail-layout {grid-template-columns:1fr;}
 }
+
+/* About: use the approved first-party portrait, not an invented profile asset. */
+.v5-about-feature{display:grid;grid-template-columns:minmax(260px,.78fr) minmax(0,1.22fr);align-items:stretch;gap:clamp(16px,2.6vw,34px);margin:0 0 28px}
+.v5-about-portrait{position:relative;isolation:isolate;overflow:hidden;min-height:480px;margin:0;border:1px solid #466372;border-radius:16px;background:radial-gradient(ellipse at 26% 39%,#be703c5e,transparent 56%),linear-gradient(125deg,#0b1b25,#071019)}
+.v5-about-portrait::after{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(180deg,transparent 62%,#071019b8)}
+.v5-about-portrait picture,.v5-about-portrait img{display:block;width:100%;height:100%}
+.v5-about-portrait img{position:absolute;inset:0;object-fit:cover;object-position:center 29%;filter:saturate(1.04)}
+.v5-about-portrait figcaption{position:absolute;z-index:1;bottom:21px;left:24px;right:20px;color:#e9f5f5;font-size:12px;letter-spacing:.12em;text-transform:uppercase}
+.v5-about-story{display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:12px;min-width:0;padding:clamp(24px,3.5vw,54px)}
+.v5-about-story h2{font-family:Georgia,serif;font-size:clamp(30px,3.25vw,48px);font-weight:400;line-height:1.14;margin:0}
+.v5-about-story h3{font-family:Georgia,serif;font-weight:400;font-size:clamp(21px,2vw,28px);margin:10px 0 0}
+.v5-about-story p{line-height:1.7;max-width:68ch}
+.v5-about-story p.v5-eyebrow{color:#e6ab73}
+.v5-about-story .v5-actions{display:flex;flex-wrap:wrap;gap:12px;margin-top:20px}
+.v5-about-paths{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin:0 0 36px}
+.v5-about-path{display:flex;flex-direction:column;gap:11px;padding:clamp(20px,2.3vw,30px);text-decoration:none;min-height:180px;transition:border-color .2s ease,transform .2s ease}
+.v5-about-path span{color:#edb58b;font-size:11px;letter-spacing:.15em}
+.v5-about-path h2{font-family:Georgia,serif;font-size:clamp(23px,2.2vw,32px);font-weight:400;margin:0}
+.v5-about-path p{margin:0;color:var(--v5-muted);line-height:1.55}
+.v5-about-path:hover{border-color:#6ed4e0;transform:translateY(-3px)}
+.v5-about-path:focus-visible{outline:3px solid #8be6f2;outline-offset:3px}
+@media(max-width:900px){.v5-about-feature{grid-template-columns:minmax(220px,.78fr) minmax(0,1.22fr)}.v5-about-portrait{min-height:450px}}
+@media(max-width:700px){.v5-about-feature{grid-template-columns:minmax(0,1fr)}.v5-about-portrait{min-height:0;aspect-ratio:1.25}.v5-about-portrait img{object-position:center 25%}.v5-about-paths{grid-template-columns:minmax(0,1fr)}.v5-about-path{min-height:0}}
+@media(prefers-reduced-motion:reduce){.v5-about-path{transition:none}.v5-about-path:hover{transform:none}}
