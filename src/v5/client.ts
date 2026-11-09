@@ -118,7 +118,8 @@ const activationMode = publicV5ActivationMode(
   window.location.pathname,
   document.documentElement.dataset.v5SignalMode,
 );
-if (field && (publicPreviewButton || activationMode === "automatic")) {
+const workLivePanel = document.querySelector<HTMLElement>("[data-v5-work-live]");
+if ((field || workLivePanel) && (publicPreviewButton || activationMode === "automatic")) {
   if (activationMode === "manual-preview" && publicPreviewButton) {
     publicPreviewButton.hidden = false;
   }
@@ -295,6 +296,25 @@ if (field && (publicPreviewButton || activationMode === "automatic")) {
     put("[data-v5-home-github]", homepage.github);
     put("[data-v5-home-tasks]", homepage.tasks);
     put("[data-v5-home-coding]", homepage.coding);
+    if (workLivePanel) {
+      // One consent-filtered V4 projection, one reader. Historical GitHub
+      // events remain history, not proof of a running editor or agent.
+      const set = (part: string, value: string) => {
+        const target = workLivePanel.querySelector<HTMLElement>(
+          "[data-v5-work-live-" + part + "]",
+        );
+        if (target) target.textContent = value;
+      };
+      set("editor", homepage.coding);
+      set("tasks", homepage.tasks);
+      set("github", homepage.github);
+      set("status", homepage.available
+        ? "Read-only public source checked. Editor and task observations expire; GitHub history is not live work."
+        : "Public source unavailable, disabled or stale. No active work is asserted.");
+      workLivePanel.dataset.v5WorkLiveState = homepage.available
+        ? "available" : "unavailable";
+    }
+
     for (const [key, isCurrent] of [
       ["github", homepage.available && homepage.events.length > 0],
       ["tasks", Boolean(homepage.focus && homepage.focus.kind === "remote") ||
@@ -393,7 +413,7 @@ if (field && (publicPreviewButton || activationMode === "automatic")) {
       line.textContent = message;
     }
   };
-  field.addEventListener("click", (event) => {
+  field?.addEventListener("click", (event) => {
     if (event.target instanceof Element && event.target.closest("[data-v5-field-node]")) {
       // The existing node handler runs first, without fabricating evidence.
       renderPublicEvidence(latestV4, Date.now());
