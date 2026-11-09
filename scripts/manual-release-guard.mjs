@@ -1,6 +1,7 @@
 /** Pure, fail-closed validation for a manually approved website release. */
 import { execFileSync } from "node:child_process";
 import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 export function manualReleaseError({
@@ -34,8 +35,7 @@ export function manualReleaseError({
 }
 
 // Workflow-only CLI. Never contacts providers or prints tokens.
-if (process.argv[1] && fileURLToPath(import.meta.url) ===
-    fileURLToPath(new URL("file://" + process.argv[1], import.meta.url))) {
+if (process.argv[1] && fileURLToPath(import.meta.url) === resolve(process.argv[1])) {
   try {
     const root = fileURLToPath(new URL("../", import.meta.url));
     const checkoutSha = execFileSync("git", ["rev-parse", "HEAD"], {
