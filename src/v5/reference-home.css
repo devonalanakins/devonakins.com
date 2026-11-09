@@ -1899,3 +1899,34 @@
   position:absolute;width:1px;height:1px;padding:0;margin:-1px;
   overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;
 }
+
+/* Real Threads posts may contain long words or URLs. Keep approved mobile
+ * activity panels bounded without truncating the accessible source text. */
+.v5-locked-home [data-v5-home-activity-list] [data-activity-source="threads"] a {
+  min-width:0;
+  flex-wrap:wrap;
+  align-items:flex-start;
+  gap:4px 8px;
+}
+.v5-locked-home [data-v5-home-activity-list] [data-activity-source="threads"] span {
+  flex:1 1 100%;
+  min-width:0;
+  overflow-wrap:anywhere;
+}
+.v5-locked-home [data-v5-home-activity-list] [data-activity-source="threads"] strong {
+  display:-webkit-box;
+  -webkit-box-orient:vertical;
+  -webkit-line-clamp:2;
+  line-clamp:2;
+  max-width:100%;
+  overflow:hidden;
+  overflow-wrap:anywhere;
+  line-height:1.4;
+}
+.v5-locked-home [data-v5-home-activity-list] [data-activity-source="threads"] time {
+  flex:1 1 100%;
+  min-width:0;
+  text-align:left;
+  white-space:normal;
+  overflow-wrap:anywhere;
+}
