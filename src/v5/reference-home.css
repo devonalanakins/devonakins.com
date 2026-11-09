@@ -1848,3 +1848,34 @@
 @media (prefers-reduced-motion:reduce) {
   .v5-locked-home .v5-locked-hero-actions a {transition:none;}
 }
+
+/* Owner-written profile note: independent of real-time editor/task evidence. */
+.v5-locked-home .v5-profile-note[hidden]{display:none!important}
+.v5-locked-home .v5-profile-note{
+  display:flex;align-items:flex-start;gap:10px;width:min(360px,100%);
+  margin:11px 0 5px;padding:11px 13px;border:1px solid #587a79;
+  border-radius:18px 18px 18px 5px;background:rgba(7,28,34,.91);
+  box-shadow:0 7px 24px rgba(0,0,0,.19);text-shadow:none;
+}
+.v5-locked-home .v5-profile-note-symbol{
+  flex:none;display:grid;place-items:center;width:28px;height:28px;
+  border-radius:50%;background:#173942;color:#a5ebe8;
+}
+.v5-locked-home .v5-profile-note-symbol svg{width:17px;height:17px}
+.v5-locked-home .v5-profile-note-eyebrow{
+  font-size:10px;letter-spacing:.06em;color:#9fd5d3;
+}
+.v5-locked-home .v5-profile-note p{
+  margin:3px 0 5px;font-size:12px;line-height:1.5;
+  color:#f0f7f5;overflow-wrap:anywhere;
+}
+.v5-locked-home .v5-profile-note small{font-size:10px;color:#bdd0d0}
+.v5-locked-home .v5-locked-socials .v5-social-pending{
+  display:grid;place-items:center;width:44px;height:44px;
+  flex:none;border:1px dashed #46616c;border-radius:50%;
+  opacity:.48;cursor:not-allowed;pointer-events:auto;
+}
+.v5-locked-home .v5-locked-socials .v5-social-pending svg{width:20px;height:20px}
+@media(max-width:600px){
+  .v5-locked-home .v5-profile-note{width:100%;margin:9px 0 5px;}
+}
