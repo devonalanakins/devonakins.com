@@ -8,8 +8,8 @@ const {
 } = require('../extensions/presence-vscode/codex-workspace.cjs');
 
 function fixture({ mode = 'chatgpt', trusted = true, folders = 1, selection,
-  hasOfficialIde = true, ideCommandError = false } = {}) {
-  const calls = { terminals: [], commands: new Map(), messages: [], urls: [], ideCalls: [] };
+  hasOfficialIde = true, ideCommandError = false, profileConsent = false, profileResult } = {}) {
+  const calls = { terminals: [], commands: new Map(), messages: [], urls: [], ideCalls: [], profileReads: 0 };
   let statusText;
   const api = {
     StatusBarAlignment: { Right: 1 },
@@ -45,14 +45,26 @@ function fixture({ mode = 'chatgpt', trusted = true, folders = 1, selection,
         return term;
       },
       async showWarningMessage(value, choice) { calls.messages.push({kind:'warning', value}); return selection ?? choice; },
-      async showInformationMessage(value) { calls.messages.push({kind:'info', value}); },
+      async showInformationMessage(value, choice) {
+        calls.messages.push({kind:'info', value});
+        if (choice === 'Read local profile' && profileConsent) return choice;
+      },
       async showQuickPick(choices) {return choices.at(-1);},
     },
     env: { async openExternal(url) { calls.urls.push(url); return true; } },
     Uri: { parse(value) {return value;} },
   };
   const context = { subscriptions: [] };
-  const client = registerCodexWorkspace(api, context, { inspect: async () => mode });
+  const client = registerCodexWorkspace(api, context, {
+    inspect: async () => mode,
+    readProfile: async () => {
+      calls.profileReads++;
+      return profileResult ?? {
+        state: 'available',
+        reading: { lifetimeTokens: 3300000000, observedAt: '2026-11-09T13:25:00.000Z' },
+      };
+    },
+  });
   return { client, calls, context, api, get statusText() { return statusText; } };
 }
 
@@ -89,6 +101,41 @@ test('disposed extension cannot invoke official IDE command', async () => {
   f.client.dispose();
   assert.equal(await f.client.openIde(), false);
   assert.equal(f.calls.ideCalls.length, 0);
+});
+
+test('profile reading requires explicit owner consent and stays local', async () => {
+  const declined = fixture();
+  assert.equal(await declined.client.profileUsage(), false);
+  assert.equal(declined.calls.profileReads,0);
+  declined.client.dispose();
+
+  const f = fixture({profileConsent:true});
+  assert.equal(await f.client.profileUsage(),true);
+  assert.equal(f.calls.profileReads,1);
+  assert.equal(f.calls.terminals.length,0);
+  assert.equal(f.calls.urls.length,0);
+  assert.ok(f.calls.messages.some(m=>m.kind==='info' && /3,300,000,000/.test(m.value)));
+  assert.ok(f.calls.messages.some(m=>m.kind==='info' && /nothing was uploaded or published/.test(m.value)));
+  f.client.dispose();
+});
+
+test('profile read rejects non-ChatGPT authentication and missing metrics', async () => {
+  const blocked = fixture({profileConsent:true,profileResult:{state:'api-key-blocked'}});
+  assert.equal(await blocked.client.profileUsage(),false);
+  assert.ok(blocked.calls.messages.some(m=>/API key/.test(m.value)));
+  blocked.client.dispose();
+
+  const unavailable = fixture({profileConsent:true,profileResult:{state:'usage-unavailable'}});
+  assert.equal(await unavailable.client.profileUsage(),false);
+  assert.ok(unavailable.calls.messages.some(m=>/No supported ChatGPT profile reading/.test(m.value)));
+  unavailable.client.dispose();
+});
+
+test('untrusted workspace cannot read account profile', async () => {
+  const f = fixture({trusted:false,profileConsent:true});
+  assert.equal(await f.client.profileUsage(),false);
+  assert.equal(f.calls.profileReads,0);
+  f.client.dispose();
 });
 
 test('the Codex login status parser is strict and does not infer plan, seat or identity', () => {
@@ -266,7 +313,7 @@ test('usage is owner-initiated, never scraped or reported as a live counter', as
 
 test('dispose unregisters commands and stops subsequent launches', async () => {
   const f = fixture();
-  assert.equal(f.calls.commands.size, 5);
+  assert.equal(f.calls.commands.size, 6);
   f.client.dispose();
   await f.client.start();
   assert.equal(f.calls.terminals.length, 0);
