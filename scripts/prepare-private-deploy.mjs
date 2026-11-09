@@ -32,6 +32,7 @@ const plainNames = new Set([
   "LISTENING_ACCESS_AUDS",
   "SPOTIFY_CLIENT_ID",
   "THREADS_PUBLIC_USERNAME",
+  "THREADS_APP_ID",
   "PRESENCE_ENABLED",
   "PRESENCE_EDITOR_ENABLED",
   "LISTENING_COLLECTIONS_ENABLED",
@@ -51,6 +52,9 @@ export function privateDeploymentConfig(base, settings, database) {
          /[\u0000-\u001f\u007f]/.test(b.text)))
       throw Error("Invalid deployed plain-text binding");
   }
+  const appId=bindings.find((b)=>b.name==="THREADS_APP_ID");
+  if(appId && (appId.type!=="plain_text" || !/^[0-9]{10,32}$/.test(appId.text)))
+    throw Error("Invalid Threads App ID");
   const threadsHandle = bindings.find((b) => b.name === "THREADS_PUBLIC_USERNAME");
   if (threadsHandle && (threadsHandle.type !== "plain_text" ||
       !/^[A-Za-z0-9._]{1,30}$/.test(threadsHandle.text)))
@@ -74,7 +78,7 @@ export function privateDeploymentConfig(base, settings, database) {
         !(
           b.type === "d1" ||
           (b.type === "secret_text" &&
-            ["LISTENING_TOKEN_KEY", "THREADS_USER_ACCESS_TOKEN"].includes(b.name)) ||
+            ["LISTENING_TOKEN_KEY", "THREADS_USER_ACCESS_TOKEN", "THREADS_APP_SECRET"].includes(b.name)) ||
           (b.type === "plain_text" && plainNames.has(b.name))
         ),
     )
