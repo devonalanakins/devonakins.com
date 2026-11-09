@@ -35,7 +35,7 @@ class HistoryScanTest(unittest.TestCase):
                        GIT_AUTHOR_EMAIL='fixture@example.test', GIT_COMMITTER_NAME='Fixture',
                        GIT_COMMITTER_EMAIL='fixture@example.test')
             subprocess.run(['git', 'init', '-q'], cwd=temp, env=env, check=True)
-            known = 'access_token: "placeholder_access_12345"'
+            known = 'access_token: "placeholder_access_12345"' + '\\n' + "OPENAI_API_KEY:'should-never-be-forwarded'"
             Path(temp, 'example.txt').write_text(known)
             subprocess.run(['git', 'add', '.'], cwd=temp, env=env, check=True)
             subprocess.run(['git', 'commit', '-qm', 'known inert test example'], cwd=temp, env=env, check=True)
@@ -51,6 +51,30 @@ class HistoryScanTest(unittest.TestCase):
             self.assertEqual(flagged.returncode, 1, flagged.stdout + flagged.stderr)
             self.assertIn('sensitive-assignment', flagged.stdout)
             self.assertNotIn(unknown, flagged.stdout + flagged.stderr)
+
+    def test_only_exact_historical_inert_assignment_is_exempt(self):
+        with tempfile.TemporaryDirectory() as temp:
+            env = dict(os.environ, GIT_CONFIG_NOSYSTEM='1', GIT_AUTHOR_NAME='Fixture',
+                       GIT_AUTHOR_EMAIL='fixture@example.test', GIT_COMMITTER_NAME='Fixture',
+                       GIT_COMMITTER_EMAIL='fixture@example.test')
+            def git(*args):
+                subprocess.run(['git', *args], cwd=temp, env=env, check=True,
+                               stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            git('init', '-q')
+            exact = "OPENAI_API_KEY:'should-never-be-forwarded'"
+            Path(temp, 'key.js').write_text(exact)
+            git('add', '.'); git('commit', '-qm', 'historical inert fixture')
+            safe = subprocess.run([sys.executable, str(SCANNER)], cwd=temp, env=env,
+                                  capture_output=True, text=True)
+            self.assertEqual(safe.returncode, 0, safe.stdout + safe.stderr)
+            near = "OPENAI_API" + "_KEY:'" + "unapproved_example_" + ('B' * 35) + "'"
+            Path(temp, 'key.js').write_text(near)
+            git('add', '.'); git('commit', '-qm', 'non-exempt long key assignment')
+            flagged = subprocess.run([sys.executable, str(SCANNER)], cwd=temp, env=env,
+                                     capture_output=True, text=True)
+            self.assertEqual(flagged.returncode, 1, flagged.stdout + flagged.stderr)
+            self.assertIn('sensitive-assignment', flagged.stdout)
+            self.assertNotIn(near, flagged.stdout + flagged.stderr)
 
     def test_clean_history_and_binary_are_reported(self):
         with tempfile.TemporaryDirectory() as temp:
