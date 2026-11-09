@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {DatabaseSync} from 'node:sqlite';
 import {readFileSync} from 'node:fs';
-import {createPresenceOwnerApi, publicPresence, presenceRow, listeningDisclosure} from '../src/presence-api.mjs';
+import {createPresenceOwnerApi, publicPresence, publicProfileNote, presenceRow, listeningDisclosure} from '../src/presence-api.mjs';
 import {createHandler} from '../src/worker.mjs';
 
 const start=Date.parse('2026-11-06T17:00:00.000Z');
@@ -35,9 +35,41 @@ test('custom public statuses require explicit review, expire and obey privacy sh
   for(const extra of [{label:'Editing a chapter',labelApproved:false},{label:'Hidden\nline',labelApproved:true},{label:'a'.repeat(61),labelApproved:true}])
     assert.equal((await f.write('manual',{status:'custom',minutes:15,...extra})).status,400);
   assert.equal((await f.write('manual',{status:'custom',minutes:15,label:'Editing a new chapter',labelApproved:true})).status,200);
-  const view=await publicPresence(f.env,hidden,f.clock);assert.equal(view.state,'custom');assert.equal(view.label,'Editing a new chapter');
-  f.advance(16*60_000);assert.equal((await publicPresence(f.env,hidden,f.clock)).state,'offline');
+  const view=await publicPresence(f.env,hidden,f.clock);assert.equal(view.state,'offline');
+  const note=await publicProfileNote(f.env,f.clock);
+  assert.equal(note.visibility,'public');assert.equal(note.text,'Editing a new chapter');
+  f.advance(16*60_000);
+  assert.equal((await publicPresence(f.env,hidden,f.clock)).state,'offline');
+  assert.equal((await publicProfileNote(f.env,f.clock)).visibility,'hidden');
   await f.write('off');assert.equal((await publicPresence(f.env,hidden,f.clock)).visibility,'hidden');
+});
+test('24-hour public profile note persists independently of session and expires, obeying opt-in',async()=>{
+  const f=fixture();
+  assert.equal((await publicProfileNote(f.env,f.clock)).visibility,'hidden');
+  await f.write('settings',{enabled:true,privateWork:false,shareListening:false});f.advance();
+  assert.equal((await f.write('manual',{status:'custom',minutes:1440,label:'Building DevonAkins.com',labelApproved:true})).status,200);
+  assert.equal((await publicProfileNote(f.env,f.clock)).text,'Building DevonAkins.com');
+  assert.equal((await publicPresence(f.env,hidden,f.clock)).state,'offline','owner note is not live coding');
+  f.advance();
+  assert.equal((await f.write('start',{projectSlug:'merit',minutes:15})).status,200);
+  assert.equal((await publicPresence(f.env,hidden,f.clock)).state,'developing');
+  assert.equal((await publicProfileNote(f.env,f.clock)).text,'Building DevonAkins.com');
+  f.advance();
+  await f.write('settings',{enabled:true,privateWork:true,shareListening:false});
+  assert.equal((await publicProfileNote(f.env,f.clock)).visibility,'hidden','private mode wins');
+  f.advance();
+  await f.write('settings',{enabled:true,privateWork:false,shareListening:false});
+  f.advance(24*60*60_000);
+  assert.equal((await publicProfileNote(f.env,f.clock)).visibility,'hidden','expiry is truthful');
+});
+test('public note rejects excessive lifetime and immediately revokes on stop',async()=>{
+  const f=fixture();await f.write('settings',{enabled:true,privateWork:false,shareListening:false});f.advance();
+  assert.equal((await f.write('manual',{status:'custom',minutes:10081,label:'No',labelApproved:true})).status,400);
+  assert.equal((await f.write('manual',{status:'sleeping',minutes:1440})).status,400);
+  assert.equal((await f.write('manual',{status:'custom',minutes:10080,label:'Approved message',labelApproved:true})).status,200);
+  assert.equal((await publicProfileNote(f.env,f.clock)).visibility,'public');
+  await f.write('off');
+  assert.equal((await publicProfileNote(f.env,f.clock)).visibility,'hidden');
 });
 test('owner project choices constrain sessions and remove an active disallowed label',async()=>{
   const f=fixture();await activate(f);f.advance();
