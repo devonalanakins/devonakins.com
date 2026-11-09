@@ -391,7 +391,8 @@ def check_page(page, origin, path, axe):
                 const css = getComputedStyle(e);
                 const sizeH = Number.parseFloat(css.backgroundSize.split(' ').at(-1));
                 return r.height > 140 && r.height <= 205 &&
-                    r.width <= innerWidth * .75 &&
+                    r.width <= innerWidth * .56 &&
+                    r.left >= innerWidth * .30 &&
                     sizeH >= 180 && sizeH <= 225 &&
                     css.backgroundRepeat === 'no-repeat' &&
                     css.maskImage.includes('radial-gradient');
