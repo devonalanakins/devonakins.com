@@ -133,6 +133,26 @@ test("release safely preserves an authorized Threads token binding without copyi
   assert.throws(()=>privateDeploymentConfig(base,forged,database));
 });
 
+test("deployment preserves only an authorized read-only Threads app ID and opaque secret",()=>{
+  const configured=settings();
+  configured.bindings.push({type:"plain_text",name:"THREADS_APP_ID",text:"123456789012345"});
+  configured.bindings.push({type:"secret_text",name:"THREADS_APP_SECRET"});
+  const artifact=privateDeploymentConfig(base,configured,database);
+  const parsed=clean(artifact);
+  assert.equal(parsed.keep_vars,true);
+  assert.equal(parsed.vars.THREADS_APP_ID,"123456789012345");
+  assert.equal(parsed.vars.THREADS_PUBLIC_FEED_ENABLED,"false");
+  assert.equal(parsed.vars.THREADS_PUBLIC_RELEASE_APPROVED,"false");
+  assert.doesNotMatch(artifact,/THREADS_APP_SECRET/);
+  for(const wrong of [
+    {type:"plain_text",name:"THREADS_APP_ID",text:"not-an-app-id"},
+    {type:"plain_text",name:"THREADS_APP_SECRET",text:"plain-is-forbidden"},
+  ]) {
+    const input=settings();input.bindings.push(wrong);
+    assert.throws(()=>privateDeploymentConfig(base,input,database));
+  }
+});
+
 test("a competing checked-in binding is not silently overwritten", () => {
   assert.throws(() =>
     privateDeploymentConfig(
