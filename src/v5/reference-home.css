@@ -1777,15 +1777,17 @@
        portrait, not an edge-to-edge face across the whole first viewport. */
     left:24%;top:-6px;
     width:73%;height:205px;
-    background-size:auto 300px;
+    /* Fit the full approved mobile portrait vertically. The prior 300px
+       zoom discarded the neck/shoulders and exposed a rectangular crop. */
+    background-size:auto 210px;
     background-position:center top;
     background-repeat:no-repeat;
     background-image:url("/src/v5/assets/cap-hero-mobile.webp");
     opacity:.92;
     /* Fade the sides as well as the top/bottom: the cap photo must not look
        like a sharp rectangle over the atmospheric hero. */
-    -webkit-mask-image:radial-gradient(ellipse 68% 74% at 54% 43%,#000 30%,#000e 47%,transparent 100%);
-    mask-image:radial-gradient(ellipse 68% 74% at 54% 43%,#000 30%,#000e 47%,transparent 100%);
+    -webkit-mask-image:radial-gradient(ellipse 66% 82% at 52% 41%,#000 14%,#000c 36%,transparent 96%);
+    mask-image:radial-gradient(ellipse 66% 82% at 52% 41%,#000 14%,#000c 36%,transparent 96%);
   }
   .v5-locked-home .v5-locked-hero .v5-locked-identity {
     position:relative;
@@ -1835,7 +1837,7 @@
     left:27%;
     width:70%;
     height:185px;
-    background-size:auto 268px;
+    background-size:auto 190px;
   }
   .v5-locked-home .v5-locked-hero .v5-locked-identity {
     padding-top:137px;
