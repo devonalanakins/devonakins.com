@@ -114,7 +114,13 @@ inspector?.addEventListener("keydown", (event) => {
 // Owner-written profile notes are deliberately independent of live editing.
 // The endpoint is public only when both owner consent and release gates allow.
 const profileNote = document.querySelector<HTMLElement>("[data-v5-profile-note]");
-if (profileNote) {
+// A design preview must never fetch live owner notes on its own. Reuse the
+// existing server-issued release marker instead of introducing a new toggle.
+const profileNoteReleased = publicV5ActivationMode(
+  window.location.pathname,
+  document.documentElement.dataset.v5SignalMode,
+) === "automatic";
+if (profileNote && profileNoteReleased) {
   const noteText = profileNote.querySelector<HTMLElement>("[data-v5-profile-note-text]");
   const noteExpiry = profileNote.querySelector<HTMLElement>("[data-v5-profile-note-expiry]");
   const hideNote = () => {
