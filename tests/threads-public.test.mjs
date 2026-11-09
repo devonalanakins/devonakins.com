@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {
-  threadsApproved,publicThreadsPosts,createPublicThreadsReader,disconnectedThreads,
+  threadsApproved,publicThreadsPosts,createPublicThreadsReader,disconnectedThreads,probeThreadsAuthorization,
 } from "../src/threads-public.mjs";
 
 const now=Date.parse("2026-11-07T20:00:00.000Z");
@@ -132,4 +132,81 @@ test("invalid API payload, HTTP error, network exception and changed credentials
   await reader(env);
   await reader({...env,THREADS_USER_ACCESS_TOKEN:"y".repeat(40)});
   assert.equal(calls,2);
+});
+
+test("private Threads probe verifies server-side token without public opt-in or post retrieval",async()=>{
+  let calls=0,req;
+  const privateEnv={...env,THREADS_PUBLIC_RELEASE_APPROVED:"false",
+    THREADS_PUBLIC_FEED_ENABLED:"false"};
+  const result=await probeThreadsAuthorization(privateEnv,{
+    clock:()=>now,
+    fetchImpl:async(url,init)=>{
+      calls++;req={url,init};
+      return Response.json({id:"278695012345",username:"fixtureDevon",
+        access_token:"NEVER_EXPOSE_THIS",private_profile:"NEVER_EXPOSE_THIS"});
+    },
+  });
+  assert.deepEqual(result,{version:1,connection:"verified",
+    checkedAt:new Date(now).toISOString()});
+  assert.equal(calls,1);
+  assert.equal(new URL(req.url).origin,"https://graph.threads.net");
+  assert.equal(new URL(req.url).pathname,"/v1.0/me");
+  assert.equal(new URL(req.url).searchParams.get("fields"),"id,username");
+  assert.equal(new URL(req.url).searchParams.has("access_token"),false);
+  assert.equal(req.init.headers.Authorization,"Bearer "+privateEnv.THREADS_USER_ACCESS_TOKEN);
+  assert.equal(req.init.method,"GET");
+  assert.equal(req.init.redirect,"error");
+  assert.doesNotMatch(JSON.stringify(result),/fixtureDevon|NEVER_EXPOSE_THIS|2786950|access_token/);
+});
+test("private Threads probe fails closed without credentials or with wrong owner identity",async()=>{
+  const never=async()=>{throw Error("must not contact provider")};
+  for(const missing of [
+    {THREADS_PUBLIC_USERNAME:null},
+    {THREADS_USER_ACCESS_TOKEN:null},
+  ])assert.deepEqual(await probeThreadsAuthorization({...env,...missing},
+    {fetchImpl:never}),{version:1,connection:"not-configured",checkedAt:null});
+  const mismatch=await probeThreadsAuthorization(env,{
+    fetchImpl:async()=>Response.json({id:"278695012345",username:"differentPerson"}),
+    clock:()=>now,
+  });
+  assert.equal(mismatch.connection,"account-mismatch");
+  assert.equal(mismatch.checkedAt,new Date(now).toISOString());
+});
+test("private Threads probe never discloses provider error body or accepts malformed provider proof",async()=>{
+  const cases=[
+    [async()=>new Response('token=NEVER_EXPOSE',{status:401}),"denied"],
+    [async()=>new Response('token=NEVER_EXPOSE',{status:403}),"denied"],
+    [async()=>new Response('token=NEVER_EXPOSE',{status:502}),"unavailable"],
+    [async()=>new Response('not json'),"unavailable"],
+    [async()=>new Response('a'.repeat(2049)),"unavailable"],
+    [async()=>Response.json({id:"BAD_ID",username:"fixtureDevon"}),"unavailable"],
+    [async()=>Response.json({id:"278695012345",username:"fixtureDevon"},
+      {headers:{"Content-Length":"99999"}}),"unavailable"],
+    [async()=>{throw Error("SECRET_PROVIDER_FAILURE")},"unavailable"],
+  ];
+  for(const [fetchImpl,expected] of cases){
+    const result=await probeThreadsAuthorization(env,{fetchImpl,clock:()=>now});
+    assert.equal(result.connection,expected);
+    assert.equal(result.version,1);
+    assert.doesNotMatch(JSON.stringify(result),/NEVER_EXPOSE|SECRET_PROVIDER_FAILURE/);
+  }
+});
+test("Threads probe cannot affirm a credential changed during the provider request",async()=>{
+  const mutable={...env};let complete;
+  const entered=new Promise(resolve=>{
+    complete=resolve;
+  });
+  let release;
+  const delay=new Promise(resolve=>{release=resolve;});
+  const pending=probeThreadsAuthorization(mutable,{
+    clock:()=>now,fetchImpl:async()=>{
+      complete();await delay;
+      return Response.json({id:"278695012345",username:"fixtureDevon"});
+    },
+  });
+  await entered;
+  mutable.THREADS_USER_ACCESS_TOKEN="z".repeat(40);
+  release();
+  const result=await pending;
+  assert.equal(result.connection,"unavailable");
 });
