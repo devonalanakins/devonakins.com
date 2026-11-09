@@ -292,8 +292,8 @@ export function renderReferenceHomepage() {
         '<div class="v5-locked-socials">' +
           protectedLink("GitHub profile", "https://github.com/devonalanakins", icon("github")) +
           protectedLink("Instagram profile", "https://www.instagram.com/devonalanakins/", icon("instagram")) +
-          '<span class="v5-social-pending" title="Facebook profile URL pending verification" aria-label="Facebook profile link pending verification">' + icon("facebook") + '</span>' +
-          '<span class="v5-social-pending" title="Threads profile URL pending verification" aria-label="Threads profile link pending verification">' + icon("threads") + '</span>' +
+          '<span class="v5-social-pending" title="Facebook profile URL pending verification">' + icon("facebook") + '<span class="v5-social-pending-label">Facebook link pending</span></span>' +
+          '<span class="v5-social-pending" title="Threads profile URL pending verification">' + icon("threads") + '<span class="v5-social-pending-label">Threads link pending</span></span>' +
           protectedLink("Contact", "/contact/", icon("user")) +
         '</div>' +
         '<a class="v5-locked-session-link" href="/studio/"><span class="v5-locked-indicator" aria-hidden="true"></span>Work source status</a>' +
@@ -351,8 +351,9 @@ export function renderReferenceHomepage() {
     '<div class="v5-home-activity-grid">' +
       '<section class="v5-home-activity-card" aria-labelledby="v5-home-activity-title">' +
         '<header><h2 id="v5-home-activity-title">Recent activity</h2><a href="/studio/">Full activity →</a></header>' +
-        '<p data-v5-home-activity-empty>No recent approved public events available.</p>' +
-        '<ol data-v5-home-activity-list aria-label="Verified GitHub project activity"></ol>' +
+        '<p class="v5-home-threads-state" data-v5-home-threads-status>Threads · Connection pending</p>' +
+        '<p data-v5-home-activity-empty>No recent approved public GitHub or Threads events available.</p>' +
+        '<ol data-v5-home-activity-list aria-label="Verified public GitHub and Threads activity"></ol>' +
       '</section>' +
       '<section class="v5-home-activity-card v5-home-focus-card" aria-labelledby="v5-home-focus-title">' +
         '<header><h2 id="v5-home-focus-title">Current focus</h2><a href="/work/">Explore work →</a></header>' +
