@@ -184,6 +184,8 @@ def main():
                 page.goto(origin+'/work/',wait_until='networkidle')
                 search=page.locator('[data-v5-project-search]')
                 category=page.locator('[data-v5-project-category]')
+                empty=page.locator('[data-v5-project-empty]')
+                assert empty.is_hidden(), "Empty-result message must stay hidden with project cards"
                 search.fill('Mizvo')
                 assert page.locator('[data-v5-project-card]:visible').count()==1
                 search.fill('')
@@ -197,7 +199,9 @@ def main():
                     assert expected in cards.first.inner_text(),(kind,expected)
                 category.select_option('')
                 search.fill('NO_MATCH_XYZ')
-                assert page.locator('[data-v5-project-empty]').is_visible()
+                assert empty.is_visible(), "No-results message must become visible after filtering"
+                search.fill('')
+                assert empty.is_hidden(), "Clearing the filter must hide the no-results message"
                 page.goto(origin+'/knowledge/',wait_until='networkidle')
                 with page.expect_navigation(url="**/knowledge/sources-and-meaning/", wait_until="domcontentloaded"):
                     page.locator('a[href="/knowledge/sources-and-meaning/"]').first.click()
