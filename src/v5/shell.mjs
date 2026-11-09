@@ -37,7 +37,6 @@ const catalog = [
   "merit",
   "anevum",
   "squelch",
-  "brandicade",
   "vesper",
 ].map((slug) => projects.find((project) => project.slug === slug));
 const identity = (project) =>
@@ -46,7 +45,7 @@ const identity = (project) =>
   ] || project.slug;
 const projectLink = (project) => `/work/${project.slug}/`;
 const lockup = (project) =>
-  !["mizvo", "merit", "rhen-language", "squelch", "vesper", "anevum", "brandicade", "devonstation", "ideaflow"].includes(project.slug) ? `<span class="v5-wordmark-text">${esc(project.title)}</span>` :
+  !["mizvo", "merit", "rhen-language", "squelch", "vesper", "anevum", "devonstation", "ideaflow"].includes(project.slug) ? `<span class="v5-wordmark-text">${esc(project.title)}</span>` :
   `<img class="v5-wordmark" src="/v2/identity/${identity(project)}.svg" alt="${esc(project.title)}" width="180" height="36">`;
 
 function fieldComposition() {
