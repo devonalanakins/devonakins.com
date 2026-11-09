@@ -1775,8 +1775,10 @@
   .v5-locked-home .v5-locked-hero .v5-locked-portrait {
     /* Keep the approved cap photograph, but frame it as an atmospheric
        portrait, not an edge-to-edge face across the whole first viewport. */
-    left:24%;top:-6px;
-    width:73%;height:205px;
+    /* Mask and portrait now share nearly the same width; otherwise the
+       photo's interior rectangle remains visibly unfeathered. */
+    left:36%;top:-6px;
+    width:52%;height:205px;
     /* Fit the full approved mobile portrait vertically. The prior 300px
        zoom discarded the neck/shoulders and exposed a rectangular crop. */
     background-size:auto 210px;
@@ -1786,8 +1788,8 @@
     opacity:.92;
     /* Fade the sides as well as the top/bottom: the cap photo must not look
        like a sharp rectangle over the atmospheric hero. */
-    -webkit-mask-image:radial-gradient(ellipse 66% 82% at 52% 41%,#000 14%,#000c 36%,transparent 96%);
-    mask-image:radial-gradient(ellipse 66% 82% at 52% 41%,#000 14%,#000c 36%,transparent 96%);
+    -webkit-mask-image:radial-gradient(ellipse 55% 90% at 53% 43%,#000 18%,#0009 35%,transparent 89%);
+    mask-image:radial-gradient(ellipse 55% 90% at 53% 43%,#000 18%,#0009 35%,transparent 89%);
   }
   .v5-locked-home .v5-locked-hero .v5-locked-identity {
     position:relative;
@@ -1834,8 +1836,8 @@
 }
 @media (max-width:340px) {
   .v5-locked-home .v5-locked-hero .v5-locked-portrait {
-    left:27%;
-    width:70%;
+    left:36%;
+    width:52%;
     height:185px;
     background-size:auto 190px;
   }
