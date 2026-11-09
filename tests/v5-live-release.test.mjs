@@ -74,14 +74,17 @@ test("manual V5 release path stays opt-in, exact-commit gated and preserves V4 d
     "V5 cutover must verify V4 first and then the selected V5 build");
   assert.match(workflow,/if \[ "\$V5_PUBLIC_SITE_CANDIDATE" = '1' \]; then/,
     "V5 rebuild must remain behind explicit variant selection");
-  assert.equal(v5ReleaseRoutes.length,22,"new repositories stay outside first V5 release");
+  assert.equal(v5ReleaseRoutes.length,21,
+    "Only still-approved public projects belong in the first V5 release");
+  assert.ok(!v5ReleaseRoutes.includes("/work/brandicade/"),
+    "Withdrawn private project must never regain a public V5 release route");
 });
 test("V5 read-only production verifier attests exact SHA, public routes and historical replay",async()=>{
   const f=fixture();
   const result=await verifyV5Production({origin:"https://devonakins.com",release,expectedCommit:sha,
     fetchImpl:f.fetchImpl,attempts:1,pause:async()=>{}});
   assert.equal(result.commit,sha);
-  assert.equal(result.v5Routes,22);
+  assert.equal(result.v5Routes,21);
   assert.ok(f.requests.some(x=>x.url.endsWith("/signal-field/?asOf=2026-11-03")));
   assert.ok(f.requests.some(x=>x.url.endsWith("/signal-field/?asOf=2026-11-06")));
   assert.ok(f.requests.every(x=>x.options.redirect==="manual"&&x.options.cache==="no-store"));
