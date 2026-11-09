@@ -408,7 +408,7 @@ test("catalog requires paired bearer, includes approved static projects and priv
   f.install(repo("new-research", 203));
   f.install(repo("private-client", 204, true));
   let data = await (await f.catalog(request(), f.env)).json();
-  assert.equal(data.repositories.length, 10);
+  assert.equal(data.repositories.length, 9);
   assert.equal(
     data.repositories.find((r) => r.name === "anevum-web").projectSlug,
     "anevum",
@@ -729,7 +729,7 @@ test("known-private built-in repository is omitted from the paired-editor catalo
     )
   ).json();
   assert.ok(!data.repositories.some((r) => r.name === "merit"));
-  assert.equal(data.repositories.length, 9);
+  assert.equal(data.repositories.length, 8);
 });
 
 test("an older concurrent running callback cannot revive an already completed workflow", async () => {
