@@ -1,7 +1,7 @@
 # Living Mind V5 — Threads Feed Source & Authorization Gate
 
-Status: **R13 implementation prepared, not connected or publicly deployed**.
-Owner: DevonAkins.com / screenshot-locked V5 PR #66.
+Status: **V5 website LIVE (November 9, 2026); official Threads account NOT CONNECTED.** The private provider verification control is a separate source candidate until merged, tested and released.
+Owner: DevonAkins.com / canonical repository and protected release workflow. No new repository or social publisher.
 
 ## Implemented source contract
 
@@ -20,13 +20,27 @@ Before any Meta request, **all** of these server-side settings must be present a
 
 The source checks username consistency, Threads-only HTTPS permalinks, media types, timestamps, limits, and duplicates. Text is rendered through DOM `textContent`, not as provider HTML. A failure, expired source, private mode, Stop All/revocation or missing account authorization leaves the panel in **CONNECTION PENDING** with no posts. Provider errors never block Spotify, work, GitHub, or GPT panels.
 
+## Private owner verification (source candidate)
+
+Once the owner's Meta Threads app has issued a valid **`threads_basic` read-only user token** and the exact owner handle is confirmed, configure these only through the authorized Cloudflare Worker secret/variable controls:
+
+- `THREADS_USER_ACCESS_TOKEN`: **secret** (never in source, GitHub Actions logs, page fields or chat)
+- `THREADS_PUBLIC_USERNAME`: private Worker variable with exact account handle
+- `THREADS_PUBLIC_RELEASE_APPROVED=false` and `THREADS_PUBLIC_FEED_ENABLED=false` during connection verification
+
+The Cloudflare Access-protected **/owner/presence/** page now has a proposed “Test Threads connection privately” button. An explicit same-origin POST triggers one read-only call to Meta's authenticated `GET /v1.0/me?fields=id,username`, compares its returned username to the configured account, and returns only a fixed connection state and timestamp. It does not retrieve or publish posts, grant permissions, store new credentials, enable broadcasting or expose Meta's profile payload. Failed/mismatched/expired credentials remain disconnected.
+
+The protected deployment preflight is extended in this source candidate to retain the already deployed Threads **secret binding opaquely**, validate the handle, and preserve explicitly configured independent public release flags. If the flags are missing they default to `false`. It still rejects any other unknown secret/variable and checks the same dedicated D1 database and encryption key. **Never bypass these checks to turn on Threads.**
+
+The owner must still independently authorize the exact Meta app/account and decide whether publicly displaying their Threads posts is approved. No standalone OAuth callback, token generation, token refresh or automatic account link is being represented as finished.
+
 ## Still required before any real sync
 
 1. Create or verify the owner's Meta app with the **Threads API use case**, request `threads_basic` and complete applicable Meta app authorization/review requirements. Do not request content publishing or insight permissions for this read-only feed.
-2. Build and review the Cloudflare Access–protected mobile-capable owner OAuth connection, secure token storage and **renewal before expiration**. R13 does **not** perform OAuth or refresh user access tokens. No credentials are committed to GitHub, logs, screenshots or test fixtures.
+2. Complete the owner-approved Meta OAuth/token exchange and maintain **renewal before expiration** using an authorized secure flow. The private connection verifier is not an OAuth client and does not refresh tokens. A long-lived token still needs periodic renewal; none is uploaded or automatically connected by this change. No credentials are committed to GitHub, logs, screenshots or test fixtures.
 3. Confirm the authorized Threads username, account identity, provider policy for public site display, data retention, and user-approved publication scope before enabling the Threads release flag.
 4. Run the verified browser/provider contract against the real account with explicit authorization, review a dated post on the intended host, test Stop All and token expiry, then complete the protected V5 release checklist. The in-memory cache is best-effort across Worker isolates; production retry/rate-limit and refresh behavior must be independently verified.
-5. No production settings or site deployment should be changed by merging this source contract alone; PR #66 remains under review.
+5. Keep public publication disabled until explicit account, data-scope, and production release approval. The V5 site is live, but the Threads feed must remain disconnected until a separately verified real authorization.
 
 ## Acceptance evidence
 
