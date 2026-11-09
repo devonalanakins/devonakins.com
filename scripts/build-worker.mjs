@@ -65,7 +65,7 @@ for (const module of [
   "spotify-presence", "listening-crypto", "listening-owner-page",
   "listening-owner-core", "listening-oauth-start", "listening-oauth-callback",
   "listening-owner-api", "listening-playback-probe", "listening-d1-presence",
-  "presence-model", "presence-api", "presence-owner-page", "gpt-observation-bridge",
+  "presence-model", "presence-api", "presence-owner-page", "owner-source-readiness", "gpt-observation-bridge",
   "gpt-snapshots", "gpt-owner-page",
   "github-integration", "github-integration-auth", "github-integration-page",
   "presence-preferences", "presence-editor-api",
