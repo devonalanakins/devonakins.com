@@ -82,19 +82,8 @@ export function projectPublicPresence(input, now = Date.now()) {
     manual.state !== "custom" &&
     manual.approved === true
   ) {
-    const asOf = freshTime(manual.asOf, now, manual.state === "custom" ? PROFILE_NOTE_TTL_MS : MANUAL_TTL_MS);
-    if (asOf && manual.state !== "custom")
-      return fixed("public", manual.state, asOf, "owner-manual");
-    if (
-      asOf &&
-      manual.state === "custom" &&
-      manual.labelApproved === true &&
-      validManualLabel(manual.label)
-    )
-      return Object.freeze({
-        ...fixed("public", "custom", asOf, "owner-manual"),
-        label: manual.label,
-      });
+    const asOf = freshTime(manual.asOf, now, MANUAL_TTL_MS);
+    if (asOf) return fixed("public", manual.state, asOf, "owner-manual");
   }
 
   const session = input.session;
