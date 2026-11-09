@@ -67,7 +67,7 @@ class HistoryScanTest(unittest.TestCase):
             safe = subprocess.run([sys.executable, str(SCANNER)], cwd=temp, env=env,
                                   capture_output=True, text=True)
             self.assertEqual(safe.returncode, 0, safe.stdout + safe.stderr)
-            near = "OPENAI_API" + "_KEY:'should-never-be-forwardeX'"
+            near = "OPENAI_API" + "_KEY:'" + "unapproved_example_" + ('B' * 35) + "'"
             Path(temp, 'key.js').write_text(near)
             git('add', '.'); git('commit', '-qm', 'non-exempt long key assignment')
             flagged = subprocess.run([sys.executable, str(SCANNER)], cwd=temp, env=env,
