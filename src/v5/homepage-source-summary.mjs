@@ -3,7 +3,7 @@
 // promoted to a live work session and silence never implies a connection.
 const approvedTitles = Object.freeze({
   devonstation: "DevonStation", mizvo: "Mizvo",
-  "devonakins-com": "DevonAkins.com", brandicade: "Brandicade",
+  "devonakins-com": "DevonAkins.com",
   anevum: "Anevum", "rhen-language": "Rhen", merit: "Merit",
 squelch: "Squelch",
 });
@@ -12,7 +12,6 @@ squelch: "Squelch",
 const approvedGithubURLs = Object.freeze({
   devonstation: "https://github.com/devonalanakins/devon-station",
   "devonakins-com": "https://github.com/devonalanakins/devonakins.com",
-  brandicade: "https://github.com/devonalanakins/brandicade",
   mizvo: "https://github.com/devonalanakins/mizvo",
   anevum: "https://github.com/devonalanakins/anevum-web",
   "rhen-language": "https://github.com/devonalanakins/rhen",

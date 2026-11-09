@@ -16,7 +16,6 @@ const projects = [
   "DevonStation",
   "Squelch",
   "Anevum",
-  "Brandicade",
   "Knowledge",
   "DevonAkins.com",
 ];
