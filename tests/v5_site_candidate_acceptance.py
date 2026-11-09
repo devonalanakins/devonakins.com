@@ -106,7 +106,7 @@ def check_atlas_live_evidence(browser, origin, local_tls):
             document.querySelector('[data-v5-work-live-tasks]')
               ?.textContent.includes('Codex task · Merit')""",timeout=10000)
         assert 'No recent approved events' in page.locator('[data-v5-work-live-github]').inner_text()
-        assert 'does not prove' in page.locator('[data-v5-work-live-status]').inner_text()
+        assert 'GitHub history is not live work' in page.locator('[data-v5-work-live-status]').inner_text()
         assert page.locator('[data-v5-work-live]').get_attribute('data-v5-work-live-state')=='available'
         page.evaluate("window.dispatchEvent(new PageTransitionEvent('pagehide',{persisted:true}))")
         assert 'Source unavailable' in page.locator('[data-v5-work-live-editor]').inner_text()
