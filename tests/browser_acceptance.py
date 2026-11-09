@@ -823,6 +823,22 @@ def check_presence_control(browser, engine, origin, output, axe_source):
                 body=json.dumps({"version":1,"connection":"verified",
                     "checkedAt":"2026-11-09T12:00:00.000Z"}))
         page.route("**/api/presence/owner?channel=threads",threads_respond)
+        threads_auth={"version":1,"appConfigured":True,"storageReady":True,
+            "connected":False,"expiresAt":None,"verifiedAt":None}
+        oauth_changes=[]
+        def auth_respond(route):
+            if route.request.method == "POST":
+                oauth_changes.append(route.request.url)
+                if route.request.url.endswith("/disconnect"):
+                    threads_auth["connected"]=False
+                    state["sources"]["threads"]["authorizationConfigured"]=False
+                    state["sources"]["threads"]["usernameConfigured"]=False
+                    route.fulfill(status=200,content_type="application/json",
+                        body=json.dumps({"version":1,"connected":False}))
+                    return
+                raise AssertionError("Meta authorization must only launch on explicit owner click")
+            route.fulfill(status=200,content_type="application/json",body=json.dumps(threads_auth))
+        page.route("**/api/threads/auth/**",auth_respond)
         cloud = {"revision":0,"enabled":False,"publishingAllowed":False,"paired":False,
             "privatePreview":{"state":"no-signal","source":None,"project":None,"asOf":None,"expiresAt":None,"checkpoint":None}}
         cloud_writes = []
@@ -867,6 +883,17 @@ def check_presence_control(browser, engine, origin, output, axe_source):
                 "Private probe must make one same-origin POST to its distinct endpoint"
             )
             assert writes == [], "Threads verification must not mutate session sharing"
+            page.wait_for_function("!document.querySelector('#threads-connect').disabled")
+            assert page.locator("#threads-disconnect").is_disabled()
+            assert not oauth_changes, "Private OAuth must not contact Meta on page load"
+            threads_auth.update({"connected":True,"expiresAt":"2099-01-01T00:00:00.000Z",
+                "verifiedAt":"2026-11-09T20:00:00.000Z"})
+            page.evaluate("loadThreadsAuthorization()")
+            page.wait_for_function("!document.querySelector('#threads-disconnect').disabled")
+            page.locator("#threads-disconnect").click()
+            page.wait_for_function("document.querySelector('#threads-connection-status').textContent.includes('No authorized Threads account connected')")
+            assert oauth_changes == [origin+"/api/threads/auth/disconnect"]
+            assert writes == [], "Disconnect must not alter owner presence sharing"
             # Exercise both real scripts together. Their similarly named handlers
             # must not send workspace credentials/actions to the legacy owner API.
             page.select_option("#task-project","merit")
