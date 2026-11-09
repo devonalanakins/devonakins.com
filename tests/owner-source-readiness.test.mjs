@@ -1,5 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import {readFileSync} from "node:fs";
 import {ownerSourceReadiness} from "../src/owner-source-readiness.mjs";
 import {ownerThreadsReadiness} from "../src/threads-public.mjs";
 import {renderPresenceOwner} from "../src/presence-owner-page.mjs";
@@ -65,4 +66,70 @@ test("owner view links to existing protected controls and includes no provider c
   assert.match(html,/Threads requires a separately approved Meta account authorization/);
   assert.ok(html.includes('href="/owner/listening/"'));
   assert.doesNotMatch(html,/THREADS_USER_ACCESS_TOKEN/);
+});
+
+test("owner summary reports only authorized, nonsecret pairing metadata", async()=>{
+  const at=Date.parse("2026-11-09T04:00:00.000Z");
+  const input={...env, LISTENING_DB:{prepare(sql){
+    if(sql==="SELECT * FROM listening_account WHERE id=1")
+      return {first:async()=>null};
+    if(sql==="SELECT generation,token_hash,token_until,last_at FROM presence_editor WHERE id=1")
+      return {first:async()=>({generation:7,token_hash:"fixtureHashNeverDisclose",
+        token_until:at+60_000,last_at:at-20_000})};
+    if(sql.startsWith("SELECT COUNT(*) AS total,"))
+      return {bind(time,generation){
+        assert.equal(time,at);
+        assert.equal(generation,7);
+        return {first:async()=>({total:2,sharing:1})};
+      }};
+    throw Error("Unexpected read query: "+sql);
+  }}};
+  const ready=await ownerSourceReadiness(input,
+    {...visibility,editor_generation:7},at);
+  assert.equal(ready.editor.paired,true);
+  assert.equal(ready.editor.lastObservedAt,new Date(at-20_000).toISOString());
+  assert.equal(ready.tasks.connectedSourceCount,2);
+  assert.equal(ready.tasks.publicSourceCount,1);
+  const text=JSON.stringify(ready);
+  assert.doesNotMatch(text,/fixtureHashNeverDisclose|private-client|access_token/);
+  assert.equal(ready.editor.observed,"not-checked",
+    "A stored editor token does not prove a live edit");
+  assert.equal(ready.tasks.observed,"not-checked",
+    "One registered runner does not prove an active task");
+});
+
+test("expired or mismatched pairing and missing D1 cannot impersonate activity",async()=>{
+  const at=Date.parse("2026-11-09T04:00:00.000Z");
+  const withDb={...env,LISTENING_DB:{prepare(sql){
+    if(sql==="SELECT * FROM listening_account WHERE id=1")
+      return {first:async()=>null};
+    if(sql==="SELECT generation,token_hash,token_until,last_at FROM presence_editor WHERE id=1")
+      return {first:async()=>({generation:2,token_hash:"oldHash",
+        token_until:at-1,last_at:at-30_000})};
+    if(sql.startsWith("SELECT COUNT(*) AS total,"))
+      return {bind:()=>({first:async()=>({total:0,sharing:null})})};
+    throw Error("Unknown query");
+  }}};
+  const state=await ownerSourceReadiness(withDb,
+    {...visibility,editor_generation:3},at);
+  assert.equal(state.editor.paired,false);
+  assert.equal(state.editor.lastObservedAt,null);
+  assert.equal(state.tasks.connectedSourceCount,0);
+  assert.equal(state.tasks.publicSourceCount,0);
+  const empty=await ownerSourceReadiness({...env,LISTENING_DB:null},null,at);
+  assert.equal(empty.editor.paired,null);
+  assert.equal(empty.tasks.connectedSourceCount,null);
+});
+
+test("owner integration actions use current protected routes and accessible links",()=>{
+  const js=readFileSync(new URL("../public/v2/presence-owner.js",import.meta.url),"utf8");
+  const css=readFileSync(new URL("../public/v2/presence.css",import.meta.url),"utf8");
+  for(const route of ['/owner/listening/','/owner/github/','/owner/gpt/',
+    '#editor-title','#reporters-title'])
+    assert.ok(js.includes(route),"Missing existing source destination "+route);
+  assert.match(js,/link\.textContent=action\[1\]/);
+  assert.match(js,/link\.rel="noopener noreferrer"/);
+  assert.match(css,/source-readiness-action:focus-visible/);
+  assert.match(css,/min-height:44px/);
+  assert.doesNotMatch(js,/THREADS_USER_ACCESS_TOKEN|SPOTIFY_CLIENT_SECRET|innerHTML=/);
 });
