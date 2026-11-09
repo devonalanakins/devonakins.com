@@ -96,6 +96,34 @@ def check_atlas_live_evidence(browser, origin, local_tls):
             document.querySelector('[data-v5-atlas-node-id="project:merit"]')
               ?.dataset.v5AtlasLiveKind === 'remote'""",timeout=10000)
         assert page.locator('[data-v5-atlas-live-list] li').count()==2
+        # The published Work directory reuses this same consent-filtered V4
+        # reader. Preview and individual project-detail routes remain static.
+        mode['value']='active'
+        assert page.goto(origin+'/work/',wait_until='networkidle').status==200
+        page.wait_for_function("""() =>
+            document.querySelector('[data-v5-work-live-editor]')
+              ?.textContent.includes('Editor observed · Mizvo') &&
+            document.querySelector('[data-v5-work-live-tasks]')
+              ?.textContent.includes('Codex task · Merit')""",timeout=10000)
+        assert 'No recent approved events' in page.locator('[data-v5-work-live-github]').inner_text()
+        assert 'does not prove' in page.locator('[data-v5-work-live-status]').inner_text()
+        assert page.locator('[data-v5-work-live]').get_attribute('data-v5-work-live-state')=='available'
+        page.evaluate("window.dispatchEvent(new PageTransitionEvent('pagehide',{persisted:true}))")
+        assert 'Source unavailable' in page.locator('[data-v5-work-live-editor]').inner_text()
+        assert 'No active work is asserted' in page.locator('[data-v5-work-live-status]').inner_text()
+        mode['value']='private'
+        page.evaluate("window.dispatchEvent(new PageTransitionEvent('pageshow',{persisted:true}))")
+        page.wait_for_function("""() =>
+            document.querySelector('[data-v5-work-live-editor]')
+              ?.textContent.includes('No current coding observation') &&
+            document.querySelector('[data-v5-work-live-tasks]')
+              ?.textContent.includes('No current shared tasks')""",timeout=10000)
+        mode['value']='unavailable'
+        page.evaluate("window.dispatchEvent(new PageTransitionEvent('pageshow',{persisted:true}))")
+        page.wait_for_function("""() =>
+            document.querySelector('[data-v5-work-live]')
+              ?.dataset.v5WorkLiveState === 'unavailable'""",timeout=10000)
+        assert 'No active work is asserted' in page.locator('[data-v5-work-live-status]').inner_text()
         assert not errors,errors
         assert not blocked,blocked
     finally:context.close()
