@@ -1222,7 +1222,7 @@ a[aria-current="page"] {
 .v5-directory-controls label {display:grid;gap:8px;flex:1;min-width:180px}
 .v5-directory-controls input,.v5-directory-controls select {font:inherit;color:var(--v5-ink);background:var(--v5-panel);border:1px solid var(--v5-border);border-radius:8px;padding:12px;min-height:44px;max-width:100%;width:100%}
 .v5-directory-controls p {color:var(--v5-muted);padding-bottom:12px}
-.v5-directory-controls[hidden],.v5-project-card[hidden] {display:none}
+.v5-directory-controls[hidden],.v5-project-card[hidden], [data-v5-project-empty][hidden] {display:none!important}
 .v5-directory-controls :focus-visible,.v5-camera-controls button:focus-visible {outline:2px solid var(--v5-cyan);outline-offset:3px}
 @media(max-width:700px){.v5-reading-layout{grid-template-columns:minmax(0,1fr);gap:16px}.v5-directory-controls{align-items:stretch}.v5-directory-controls p{flex-basis:100%;padding:0}}
 .v5-camera-controls {position:absolute;bottom:64px;left:12px;right:12px;z-index:5;display:flex;flex-wrap:wrap;gap:5px;pointer-events:auto}
