@@ -7,7 +7,6 @@ export const PUBLIC_REPOSITORIES = Object.freeze({
   "devon-station": "devonstation",
   squelch: "squelch",
   "anevum-web": "anevum",
-  brandicade: "brandicade",
   vesper: "vesper",
   knowledge: "knowledge",
 });

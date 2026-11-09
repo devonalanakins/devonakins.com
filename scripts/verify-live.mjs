@@ -236,7 +236,7 @@ for (const [path, title] of portfolio) {
 }
 // Every first-party identity served by the release must decode and use the
 // correct Worker asset MIME, not only render in the offline preview.
-for (const name of ["merit", "rhen", "vesper", "squelch", "brandicade", "anevum", "ideaflow-mark", "devonstation-mark", "mizvo"]) {
+for (const name of ["merit", "rhen", "vesper", "squelch", "anevum", "ideaflow-mark", "devonstation-mark", "mizvo"]) {
   const path = "/v2/identity/" + name + ".svg";
   const response = await request(path, { cache: "no-store" });
   assert.equal(response.status, 200, path + " identity asset");

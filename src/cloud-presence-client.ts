@@ -36,7 +36,6 @@ const projects = [
   "DevonStation",
   "Squelch",
   "Anevum",
-  "Brandicade",
   "Vesper",
   "Knowledge",
   "DevonAkins.com",
