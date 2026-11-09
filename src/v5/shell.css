@@ -1534,3 +1534,18 @@ body.v5-page-projects .v5-project-card:hover {
 @media(max-width:900px){.v5-about-feature{grid-template-columns:minmax(220px,.78fr) minmax(0,1.22fr)}.v5-about-portrait{min-height:450px}}
 @media(max-width:700px){.v5-about-feature{grid-template-columns:minmax(0,1fr)}.v5-about-portrait{min-height:0;aspect-ratio:1.25}.v5-about-portrait img{object-position:center 25%}.v5-about-paths{grid-template-columns:minmax(0,1fr)}.v5-about-path{min-height:0}}
 @media(prefers-reduced-motion:reduce){.v5-about-path{transition:none}.v5-about-path:hover{transform:none}}
+
+/* Source-qualified activity, separate from durable portfolio descriptions. */
+.v5-work-live{position:relative;isolation:isolate;overflow:hidden;margin:0 0 clamp(22px,3vw,36px);padding:clamp(20px,2.5vw,32px);border:1px solid #376374;background:radial-gradient(ellipse 45% 120% at 100% 0%,#26677e30,transparent 76%),linear-gradient(130deg,#0b1721,#0b2028 65%,#091820)}
+.v5-work-live::before{content:"";position:absolute;inset:0 auto 0 0;width:3px;pointer-events:none;background:linear-gradient(180deg,#e6aa7d,#7beae9)}
+.v5-work-live-heading{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px 22px;margin-bottom:24px}
+.v5-work-live-heading .v5-eyebrow{color:#e6ab80;margin:0 0 4px}
+.v5-work-live-heading h2{font-family:Georgia,serif;font-size:clamp(24px,2.3vw,33px);font-weight:400;line-height:1.2;margin:0}
+.v5-work-live-heading .v5-text-link{margin:0}
+.v5-work-live-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:0;padding:0}
+.v5-work-live-grid>div{min-width:0;padding:16px 18px;background:#071621a8;border:1px solid #2c4a54;border-radius:10px}
+.v5-work-live-grid dt{font-size:10px;letter-spacing:.15em;color:#d1a888}
+.v5-work-live-grid dd{margin:12px 0 0;font-size:clamp(13px,1.25vw,16px);line-height:1.5;overflow-wrap:anywhere;color:#e1f1f3}
+.v5-work-live-disclosure{margin:18px 0 0!important;font-size:12px!important;line-height:1.6;color:var(--v5-muted);max-width:86ch}
+.v5-work-live[data-v5-work-live-state="unavailable"] .v5-work-live-grid dd{color:var(--v5-muted)}
+@media(max-width:700px){.v5-work-live-grid{grid-template-columns:minmax(0,1fr)}.v5-work-live-heading{align-items:flex-start}.v5-work-live-grid>div{padding:14px 16px}}
