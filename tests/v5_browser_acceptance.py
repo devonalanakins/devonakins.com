@@ -565,7 +565,15 @@ def main():
                     ("2026-11-06", "8", 12, 4),
                 ):
                     page.locator("#v5-graph-date").fill(day)
-                    page.locator(".v5-graph-date-form button").click()
+                    # Native GET submission remains asynchronous in WebKit when
+                    # JavaScript is disabled. Wait for the actual dated response
+                    # instead of inspecting the previous URL immediately.
+                    with page.expect_navigation(
+                        url=f"**/__v5_preview__/field/?asOf={day}",
+                        wait_until="domcontentloaded",
+                        timeout=15000,
+                    ):
+                        page.locator(".v5-graph-date-form button").click()
                     assert f"asOf={day}" in page.url
                     assert page.locator("#v5-graph-date").input_value() == day
                     assert page.locator(".v5-graph-history").get_attribute("data-v5-graph-revision") == revision
