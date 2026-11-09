@@ -152,18 +152,43 @@ test('an API-key session is blocked without a login or CLI launch', async () => 
   f.client.dispose();
 });
 
-test('unknown or missing authentication never launches a coding session', async () => {
-  for (const mode of ['unavailable','unknown','not-logged-in','agent-identity']) {
-    const f = fixture({mode,selection:undefined});
+test('signed-out CLI offers explicit login but never launches a coding session', async () => {
+  const f = fixture({mode:'not-logged-in'});
+  await f.client.start();
+  assert.equal(f.calls.terminals.length, 1);
+  assert.deepEqual(f.calls.terminals[0].sent, [{value:'codex login',execute:true}]);
+  f.client.dispose();
+  const declined = fixture({mode:'not-logged-in',selection:'No'});
+  await declined.client.start();
+  assert.equal(declined.calls.terminals.length, 0);
+  declined.client.dispose();
+});
+
+test('unavailable or unknown CLI distinguishes official IDE sign-in and cannot launch', async () => {
+  for (const mode of ['unavailable','unknown','agent-identity']) {
+    const f = fixture({mode});
     await f.client.start();
-    assert.equal(f.calls.terminals.length, 1, 'only explicit login terminal may open');
-    assert.deepEqual(f.calls.terminals[0].sent, [{value:'codex login',execute:true}]);
+    assert.equal(f.calls.terminals.length, 0);
+    assert.ok(f.calls.messages.some(m => /official VS Code Codex extension/.test(m.value)));
+    assert.ok(!/ChatGPT sign-in$/.test(f.statusText));
+    await f.client.login();
+    assert.equal(f.calls.terminals.length, 0);
     f.client.dispose();
-    const declined = fixture({mode,selection:'No'});
-    await declined.client.start();
-    assert.equal(declined.calls.terminals.length, 0);
-    declined.client.dispose();
   }
+});
+
+test('signed-out CLI nonzero status preserves the explicit sign-in-required state', async () => {
+  const mode = await inspectCodexAuthentication({
+    runner(file,args,options,callback) { callback(new Error('exit code 1'), 'Not logged in\\n'); }
+  });
+  assert.equal(mode,'not-logged-in');
+});
+
+test('explicit account check does not imply that an installed IDE is disconnected', async () => {
+  const f = fixture({mode:'unavailable'});
+  await f.calls.commands.get('devonPresence.codexAccount')();
+  assert.ok(f.calls.messages.some(m => /official VS Code Codex extension is separate/.test(m.value)));
+  f.client.dispose();
 });
 
 test('untrusted and empty workspaces fail before inspecting authentication or opening terminals', async () => {
