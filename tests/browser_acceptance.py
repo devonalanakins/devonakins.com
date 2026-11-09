@@ -782,7 +782,9 @@ def check_presence_control(browser, engine, origin, output, axe_source):
         state = {"revision":0,"publishingAllowed":True,"enabled":False,"privateWork":False,
             "shareListening":False,"paused":False,"sessionExpiresAt":None,"projectSlug":None,
             "manualState":None,"projects":["merit","mizvo"],"projectCatalog":{"merit":"Merit","mizvo":"Mizvo"},
-            "preview":{"state":"not-broadcasting","project":None,"source":"none"}}
+            "preview":{"state":"not-broadcasting","project":None,"source":"none"},
+            "sources":{"version":1,"threads":{"authorizationConfigured":True,
+                "usernameConfigured":True,"configured":False}}}
         writes = []
         delayed = {}
         def respond(route):
@@ -810,6 +812,17 @@ def check_presence_control(browser, engine, origin, output, axe_source):
                     return
             route.fulfill(status=200,content_type="application/json",body=json.dumps(state))
         page.route("**/api/presence/owner",respond)
+        threads_requests = []
+        def threads_respond(route):
+            threads_requests.append({
+                "method":route.request.method,
+                "origin":route.request.header_value("origin"),
+            })
+            route.fulfill(status=200,content_type="application/json",
+                headers={"Cache-Control":"private, no-store"},
+                body=json.dumps({"version":1,"connection":"verified",
+                    "checkedAt":"2026-11-09T12:00:00.000Z"}))
+        page.route("**/api/presence/owner?channel=threads",threads_respond)
         cloud = {"revision":0,"enabled":False,"publishingAllowed":False,"paired":False,
             "privatePreview":{"state":"no-signal","source":None,"project":None,"asOf":None,"expiresAt":None,"checkpoint":None}}
         cloud_writes = []
@@ -845,6 +858,15 @@ def check_presence_control(browser, engine, origin, output, axe_source):
             page.locator("#session-start").wait_for(state="visible")
             page.wait_for_function("!document.querySelector('#session-start').disabled")
             page.wait_for_function("document.querySelector('#task-project').options.length === 2")
+            page.wait_for_function("!document.querySelector('#threads-check').disabled")
+            page.locator("#threads-check").click()
+            page.wait_for_function(
+                "document.querySelector('#threads-check-result').textContent.includes('Official Threads account verified')"
+            )
+            assert threads_requests == [{"method":"POST","origin":origin}], (
+                "Private probe must make one same-origin POST to its distinct endpoint"
+            )
+            assert writes == [], "Threads verification must not mutate session sharing"
             # Exercise both real scripts together. Their similarly named handlers
             # must not send workspace credentials/actions to the legacy owner API.
             page.select_option("#task-project","merit")
