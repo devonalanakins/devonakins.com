@@ -34,7 +34,7 @@ export async function verifyV5Production({
   assert.match(expectedCommit || "", /^[a-f0-9]{40}$/, "Exact expected release commit required");
   assert.equal(release?.commit, expectedCommit, "Built Worker artifact must match release SHA");
   assert.match(release?.version || "", /^\d+\.\d+\.\d+$/, "Built Worker version required");
-  assert.equal(v5ReleaseRoutes.length, 22, "Do not silently add new repositories to the V5 cutover");
+  assert.equal(v5ReleaseRoutes.length, 21, "Do not silently add new repositories to the V5 cutover");
   const endpoint = origin.replace(/\/+$/, "");
   assert.match(endpoint, /^https:\/\/[a-z0-9.-]+$/i, "HTTPS origin required");
   const get = (path, init = {}) => fetchImpl(endpoint + path, {
