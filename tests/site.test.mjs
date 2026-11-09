@@ -328,7 +328,7 @@ test("production verifier requires the exact built version and public snapshot",
   const { projects } = await import("../src/content.mjs");
   assert.ok(verifier.includes('projects.map(({ slug, title }) => ["/work/" + slug + "/", title])'),
     "verification must dynamically include every public portfolio project");
-  for (const slug of ["merit", "rhen-language", "squelch", "brandicade", "rhen", "vesper", "mizvo"]) {
+  for (const slug of ["merit", "rhen-language", "squelch", "rhen", "vesper", "mizvo"]) {
     assert.ok(projects.some((project) => project.slug === slug),
       slug + " must exist in generated portfolio and dynamic production verifier");
   }
@@ -412,7 +412,8 @@ test("current engineering showcase distinguishes Merit, Rhen language and RHEN m
   assert.ok(home.includes('href="/work/merit/"'));
   assert.ok(home.includes('href="/work/rhen-language/"'));
   const archive = await (await get("/work/")).text();
-  for (const slug of ["merit", "rhen-language", "vesper", "squelch", "brandicade", "rhen"]) {
+  assert.ok(!archive.includes("brandicade"), "Unapproved personal project must not appear in Work");
+  for (const slug of ["merit", "rhen-language", "vesper", "squelch", "rhen"]) {
     assert.ok(archive.includes('href="/work/' + slug + '/"'), slug);
     const response = await get("/work/" + slug + "/");
     assert.equal(response.status, 200, slug);

@@ -365,7 +365,7 @@ def check(browser, engine, html, css, script, axe_source, output, origin):
                         "/work/operations/", "/work/writing/", "/work/anevum/",
                         "/work/ideaflow/", "/work/devonstation/",
                         "/work/merit/", "/work/mizvo/", "/work/rhen-language/",
-                        "/work/vesper/", "/work/squelch/", "/work/brandicade/", "/work/rhen/",
+                        "/work/vesper/", "/work/squelch/", "/work/rhen/",
                     ])
                 for route in deep_routes:
                     if route == "/gpt/":

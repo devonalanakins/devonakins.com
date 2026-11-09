@@ -101,7 +101,7 @@ test("private Knowledge and unknown project identities are not inferred",()=>{
 });
 
 
-test("existing V4 approvals for DevonAkins.com and Brandicade survive V5 without exposing Knowledge", () => {
+test("V5 overrides stale V4 approvals for private projects without hiding legitimate activity", () => {
   const v = response({
     work: publicWork({ project: "DevonAkins.com" }),
     remote: { visibility: "public", tasks: [remoteTask({ project: "Brandicade" })] },
@@ -119,9 +119,10 @@ test("existing V4 approvals for DevonAkins.com and Brandicade survive V5 without
   assert.deepEqual(r.nodes["devonakins-com"].active, {
     kind: "editor", source: "Editor observed", at: iso(-20000)
   });
-  assert.equal(r.nodes.brandicade.active.source, "Codex task");
+  assert.equal(Object.hasOwn(r.nodes,"brandicade"), false);
   assert.deepEqual(r.recent.map(e => e.slug),
-    ["devonakins-com", "brandicade"]);
+    ["devonakins-com"]);
+  assert.doesNotMatch(JSON.stringify(r), /brandicade/i);
   assert.equal(Object.hasOwn(r.nodes, "knowledge"), false,
     "Private Knowledge must not enter homepage history or activity");
 });

@@ -11,14 +11,15 @@ import { publicAtlasProfiles } from "../src/v5/atlas-public-profiles.mjs";
 import { projectV5Atlas } from "../src/v5/atlas-layout.mjs";
 import { replayPublicGraphHistory } from "../src/v5/public-graph-history.mjs";
 
-test("current twelve reviewed editorial identities remain public without accidental auto-discovery", () => {
-  assert.equal(approvedPublicProjects.length, 12);
+test("current eleven reviewed editorial identities remain public without accidental auto-discovery", () => {
+  assert.equal(approvedPublicProjects.length, 11);
   assert.deepEqual(approvedPublicProjects.map(p => p.slug),
     editorialProjects.map(p => p.slug));
   assert.ok(approvedPublicProjects.every(p => Object.isFrozen(p) &&
     p.publication.publishApproved === true));
-  assert.equal(Object.keys(PUBLICATION_POLICY).length, 12);
+  assert.equal(Object.keys(PUBLICATION_POLICY).length, 11);
   assert.equal(publicProjectBySlug("vesper")?.publication.stage, "research");
+  assert.equal(publicProjectBySlug("brandicade"), null);
   assert.equal(publicProjectBySlug("nonpublic-experiment"), null);
   assert.equal(projectPublicPortfolio(null).length, 0);
   assert.ok(Object.isFrozen(approvedPublicProjects));
@@ -31,7 +32,7 @@ test("new public repositories, unreviewed concepts and duplicated project ids ne
     unknown, editorialProjects[0], editorialProjects[0],
     null, {...editorialProjects[0],slug:"INVALID_SLUG"}, ...editorialProjects.slice(1),
   ]);
-  assert.equal(projected.length,12);
+  assert.equal(projected.length,11);
   assert.ok(!JSON.stringify(projected).includes("Private Client"));
   assert.deepEqual(projected.map(p=>p.slug), editorialProjects.map(p=>p.slug));
 });

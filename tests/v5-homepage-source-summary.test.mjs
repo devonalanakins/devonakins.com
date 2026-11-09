@@ -93,7 +93,7 @@ test("foreign or unapproved link properties never enter the displayed feed",()=>
 });
 
 
-test("the homepage preserves approved public website and Brandicade evidence without suggesting deployment", () => {
+test("a private project is excluded even when a stale V4 reader asserts activity", () => {
   const value = {
     version:4, asOf:iso(-1000),
     recent:[
@@ -112,14 +112,13 @@ test("the homepage preserves approved public website and Brandicade evidence wit
   const state = publicHomepageSourceSummary(publicV5ProjectEvidence(value,now),now);
   assert.equal(state.available,true);
   assert.match(state.github,/Commit · DevonAkins\.com/);
-  assert.match(state.tasks,/Codex task · Brandicade/);
+  assert.equal(state.tasks,"No current shared tasks");
   assert.match(state.coding,/Editor observed · DevonAkins\.com/);
   assert.equal(state.focus?.title,"DevonAkins.com");
   assert.deepEqual(state.events.map(e=>e.href),[
     "https://github.com/devonalanakins/devonakins.com",
-    "https://github.com/devonalanakins/brandicade",
   ]);
-  assert.doesNotMatch(JSON.stringify(state),/knowledge|private-client/i);
+  assert.doesNotMatch(JSON.stringify(state),/knowledge|private-client|brandicade/i);
   assert.doesNotMatch(JSON.stringify(state),/deployed|production live/i);
 });
 
@@ -138,9 +137,8 @@ test("homepage output independently pins each approved public slug to its exact 
       url:"https://github.com/devonalanakins/knowledge"},
   ]},now);
   assert.deepEqual(state.events.map(event=>event.href),[
-    "https://github.com/devonalanakins/brandicade",
     "https://github.com/devonalanakins/devonakins.com",
   ]);
-  assert.equal(state.events.length,2);
-  assert.doesNotMatch(JSON.stringify(state.events),/private-client|knowledge|devonalanakins\/mizvo/);
+  assert.equal(state.events.length,1);
+  assert.doesNotMatch(JSON.stringify(state.events),/private-client|knowledge|brandicade|devonalanakins\/mizvo/);
 });

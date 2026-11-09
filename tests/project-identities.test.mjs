@@ -48,7 +48,6 @@ test("public archive and detail routes use correct, independent visual identitie
     ["rhen-language", "Rhen", "rhen.svg"],
     ["vesper", "Vesper", "vesper.svg"],
     ["squelch", "Squelch", "squelch.svg"],
-    ["brandicade", "Brandicade", "brandicade.svg"],
     ["anevum", "Anevum", "anevum.svg"],
   ];
   for (const [slug, name, file] of wordmarks) {
@@ -72,7 +71,7 @@ test("public archive and detail routes use correct, independent visual identitie
   assert.match(routesCss, /\.route-project\[data-identity\]/);
   assert.match(routesCss, /prefers-reduced-motion: reduce/);
   assert.match(routesCss, /prefers-contrast: more/);
-  for (const name of ["anevum","brandicade"]) {
+  for (const name of ["anevum"]) {
     const svg = await readFile("dist/v2/identity/" + name + ".svg", "utf8");
     assert.match(svg, /<svg xmlns="http:\/\/www\.w3\.org\/2000\/svg"/);
     assert.match(svg, /<title>/);
