@@ -25,6 +25,7 @@ const icon = (name) => {
     github: '<path d="M9 19c-4 1-4-2-6-2m12 4v-3a3 3 0 0 0-1-2c4-.4 7-2 7-7a5 5 0 0 0-1-4c.1-1-.2-2-1-3-2 0-3 1-4 1a13 13 0 0 0-6 0C8 2 7 2 5 2c-.8 1-1.1 2-1 3a5 5 0 0 0-1 4c0 5 3 7 7 7a3 3 0 0 0-1 2v3"/>',
     instagram: '<rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.4" cy="6.6" r=".9" fill="currentColor" stroke="none"/>',
     facebook: '<path d="M14.2 21V12h3l.5-3.5h-3.5V6.7c0-1.1.4-1.7 1.8-1.7H18V2.2A29 29 0 0 0 15.4 2C12.6 2 11 3.6 11 6.6v1.9H8V12h3v9"/>',
+    threads: '<path d="M16.8 7.3c-1.4-2.1-4.6-2.5-6.7-1.5-2.3 1.1-3.6 3.7-3.6 6.6 0 4.2 2.3 6.9 6 7.1 3.4.2 6.1-2.2 6.1-5.5 0-3.3-3.1-5.7-6.4-4.6-1.6.5-2.2 2.2-1.4 3.4 1.1 1.6 4.3.9 5.9-.9.7-.8 1.1-1.9 1.1-3.1 0-2.8-1.5-5.4-5.1-6.2"/>',
     search: '<circle cx="10" cy="10" r="7"/><path d="m15 15 7 7"/>',
     music: '<path d="M9 18V5l12-2v13M9 9l12-2"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>',
     user: '<circle cx="12" cy="8" r="4"/><path d="M4 22a8 8 0 0 1 16 0"/>',
@@ -291,9 +292,15 @@ export function renderReferenceHomepage() {
         '<div class="v5-locked-socials">' +
           protectedLink("GitHub profile", "https://github.com/devonalanakins", icon("github")) +
           protectedLink("Instagram profile", "https://www.instagram.com/devonalanakins/", icon("instagram")) +
-          protectedLink("Social links and contact", "/contact/", icon("user")) +
+          '<span class="v5-social-pending" title="Facebook profile URL pending verification" aria-label="Facebook profile link pending verification">' + icon("facebook") + '</span>' +
+          '<span class="v5-social-pending" title="Threads profile URL pending verification" aria-label="Threads profile link pending verification">' + icon("threads") + '</span>' +
+          protectedLink("Contact", "/contact/", icon("user")) +
         '</div>' +
         '<a class="v5-locked-session-link" href="/studio/"><span class="v5-locked-indicator" aria-hidden="true"></span>Work source status</a>' +
+        '<div class="v5-profile-note" data-v5-profile-note hidden aria-live="polite">' +
+          '<span class="v5-profile-note-symbol" aria-hidden="true">' + icon("nodes") + '</span>' +
+          '<div><span class="v5-profile-note-eyebrow">A note from Devon</span><p data-v5-profile-note-text></p><small data-v5-profile-note-expiry></small></div>' +
+        '</div>' +
         '<p class="v5-locked-identity-small">Verified signals only · no session asserted</p>' +
       '</div>' +
       '<section class="v5-locked-signal" aria-labelledby="v5-lock-signal-title">' +
