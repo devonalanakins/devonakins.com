@@ -88,10 +88,8 @@ test("only fresh authorized task evidence is active; terminal tasks, private and
     ]},
     recent:[],
   }),at);
-  assert.deepEqual(Object.keys(r.nodes),["vesper"]);
-  assert.deepEqual(r.nodes.vesper.active,{
-    kind:"remote",source:"Workflow task",at:iso(-2000),
-  });
+  assert.deepEqual(Object.keys(r.nodes),[],
+    "Now-private Vesper must not become an active public task");
 });
 test("private Knowledge and unknown project identities are not inferred",()=>{
  const r=publicV5ProjectEvidence(response({
