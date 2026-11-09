@@ -110,6 +110,55 @@ inspector?.addEventListener("keydown", (event) => {
   }
 });
 
+// Owner-written profile notes are deliberately independent of live editing.
+// The endpoint is public only when both owner consent and release gates allow.
+const profileNote = document.querySelector<HTMLElement>("[data-v5-profile-note]");
+if (profileNote) {
+  const noteText = profileNote.querySelector<HTMLElement>("[data-v5-profile-note-text]");
+  const noteExpiry = profileNote.querySelector<HTMLElement>("[data-v5-profile-note-expiry]");
+  const hideNote = () => {
+    profileNote.hidden = true;
+    if (noteText) noteText.textContent = "";
+    if (noteExpiry) noteExpiry.textContent = "";
+  };
+  const refreshNote = async () => {
+    if (document.hidden) { hideNote(); return; }
+    try {
+      const response = await fetch("/api/presence/note", {
+        cache: "no-store", credentials: "omit",
+        headers: { Accept: "application/json" },
+        signal: AbortSignal.timeout(8000),
+      });
+      if (!response.ok) throw new Error("Unavailable");
+      const note: unknown = await response.json();
+      if (!note || typeof note !== "object" || Array.isArray(note)) throw new Error("Invalid");
+      const value = note as Record<string, unknown>;
+      const posted = typeof value.postedAt === "string" ? Date.parse(value.postedAt) : NaN;
+      const expires = typeof value.expiresAt === "string" ? Date.parse(value.expiresAt) : NaN;
+      const now = Date.now();
+      if (value.version !== 1 || value.visibility !== "public" ||
+        typeof value.text !== "string" || value.text !== value.text.trim() ||
+        value.text.length < 1 || value.text.length > 60 ||
+        /[\\p{Cc}\\p{Cf}]/u.test(value.text) ||
+        !Number.isFinite(posted) || !Number.isFinite(expires) ||
+        posted > now + 10_000 || expires <= now ||
+        expires - posted > 7 * 24 * 60 * 60_000 ||
+        Object.keys(value).sort().join("|") !== "expiresAt|postedAt|text|version|visibility")
+        throw new Error("Invalid");
+      if (noteText) noteText.textContent = value.text;
+      if (noteExpiry) noteExpiry.textContent = "Expires " + new Date(expires).toLocaleString();
+      profileNote.hidden = false;
+    } catch { hideNote(); }
+  };
+  void refreshNote();
+  const timer = window.setInterval(() => { void refreshNote(); }, 60_000);
+  window.addEventListener("pagehide", () => { window.clearInterval(timer); hideNote(); }, { once: true });
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden) hideNote();
+    else void refreshNote();
+  });
+}
+
 // Preview-only source check. The existing V4 polling client supplies the
 // consent-filtered read model. No additional poller, publisher or owner API.
 const publicPreviewButton = document.querySelector<HTMLButtonElement>("[data-v5-preview-connect]");
