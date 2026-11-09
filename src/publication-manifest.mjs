@@ -32,8 +32,6 @@ export const PUBLICATION_POLICY = Object.freeze({
     "https://github.com/devonalanakins/rhen", true),
   squelch: entry("Software", "Audio engineering experiment", "experimental",
     "https://github.com/devonalanakins/squelch", true),
-  brandicade: entry("Creative", "Game project", "draft",
-    "https://github.com/devonalanakins/brandicade", true),
   vesper: entry("Research", "Private-source research concept", "research"),
   rhen: entry("Archive", "Preserved research source", "archived",
     "https://github.com/devonalanakins/vesper-legacy"),
