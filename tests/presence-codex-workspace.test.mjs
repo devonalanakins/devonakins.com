@@ -7,21 +7,32 @@ const {
   inspectCodexAuthentication, registerCodexWorkspace,
 } = require('../extensions/presence-vscode/codex-workspace.cjs');
 
-function fixture({ mode = 'chatgpt', trusted = true, folders = 1, selection } = {}) {
-  const calls = { terminals: [], commands: new Map(), messages: [], urls: [] };
+function fixture({ mode = 'chatgpt', trusted = true, folders = 1, selection,
+  hasOfficialIde = true, ideCommandError = false } = {}) {
+  const calls = { terminals: [], commands: new Map(), messages: [], urls: [], ideCalls: [] };
   let statusText;
   const api = {
     StatusBarAlignment: { Right: 1 },
+    extensions: { getExtension(id) {
+      assert.equal(id, 'OpenAI.chatgpt');
+      return hasOfficialIde ? { id } : undefined;
+    } },
     workspace: {
       isTrusted: trusted,
       workspaceFolders: Array.from({ length: folders }, (_, i) => ({
         name: 'folder-' + i, uri: { fsPath: '/checkout-' + i },
       })),
     },
-    commands: { registerCommand(name, fn) {
-      calls.commands.set(name, fn);
-      return { dispose() { calls.commands.delete(name); } };
-    } },
+    commands: {
+      async executeCommand(name) {
+        calls.ideCalls.push(name);
+        if (ideCommandError) throw Error('simulated extension command unavailable');
+      },
+      registerCommand(name, fn) {
+        calls.commands.set(name, fn);
+        return { dispose() { calls.commands.delete(name); } };
+      },
+    },
     window: {
       createStatusBarItem() { return {
         set text(value) { statusText = value; }, get text() { return statusText; },
@@ -44,6 +55,41 @@ function fixture({ mode = 'chatgpt', trusted = true, folders = 1, selection } = 
   const client = registerCodexWorkspace(api, context, { inspect: async () => mode });
   return { client, calls, context, api, get statusText() { return statusText; } };
 }
+
+test('official Codex sidebar opens without a CLI binary or authentication probe', async () => {
+  const f = fixture({ mode: 'unavailable' });
+  assert.match(f.statusText, /Codex: open IDE/);
+  assert.equal(await f.client.openIde(), true);
+  assert.deepEqual(f.calls.ideCalls, ['chatgpt.openSidebar']);
+  assert.equal(f.calls.terminals.length, 0);
+  assert.equal(f.calls.messages.length, 0, 'do not claim failed IDE sign-in');
+  f.client.dispose();
+});
+
+test('missing official Codex extension returns an accurate installation warning', async () => {
+  const f = fixture({ hasOfficialIde: false });
+  assert.equal(await f.client.openIde(), false);
+  assert.equal(f.calls.ideCalls.length, 0);
+  assert.equal(f.calls.terminals.length, 0);
+  assert.ok(f.calls.messages.some(x => x.kind === 'warning' && /not installed or enabled/.test(x.value)));
+  f.client.dispose();
+});
+
+test('official Codex command failure is handled and does not fall back to API credentials', async () => {
+  const f = fixture({ ideCommandError: true });
+  assert.equal(await f.client.openIde(), false);
+  assert.deepEqual(f.calls.ideCalls, ['chatgpt.openSidebar']);
+  assert.equal(f.calls.terminals.length, 0);
+  assert.ok(f.calls.messages.some(x => /reload the OpenAI Codex extension/.test(x.value)));
+  f.client.dispose();
+});
+
+test('disposed extension cannot invoke official IDE command', async () => {
+  const f = fixture();
+  f.client.dispose();
+  assert.equal(await f.client.openIde(), false);
+  assert.equal(f.calls.ideCalls.length, 0);
+});
 
 test('the Codex login status parser is strict and does not infer plan, seat or identity', () => {
   assert.equal(codexAuthenticationMode('Logged in using ChatGPT\n'), 'chatgpt');
@@ -220,7 +266,7 @@ test('usage is owner-initiated, never scraped or reported as a live counter', as
 
 test('dispose unregisters commands and stops subsequent launches', async () => {
   const f = fixture();
-  assert.equal(f.calls.commands.size, 4);
+  assert.equal(f.calls.commands.size, 5);
   f.client.dispose();
   await f.client.start();
   assert.equal(f.calls.terminals.length, 0);
