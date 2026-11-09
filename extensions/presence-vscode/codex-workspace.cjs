@@ -74,9 +74,9 @@ function registerCodexWorkspace(api, context, { inspect = inspectCodexAuthentica
   let disposed = false;
   let starting = false;
   const status = api.window.createStatusBarItem(api.StatusBarAlignment.Right, 0);
-  status.command = 'devonPresence.codexAccount';
-  status.text = '$(shield) Codex: check account';
-  status.tooltip = 'Verify Codex CLI uses ChatGPT sign-in; this is not a usage counter.';
+  status.command = 'devonPresence.codexIde';
+  status.text = '$(code) Codex: open IDE';
+  status.tooltip = 'Open the official Codex VS Code sidebar. IDE sign-in and usage are verified only by OpenAI.';
   status.show();
 
   const setStatus = (value) => {
@@ -182,6 +182,26 @@ function registerCodexWorkspace(api, context, { inspect = inspectCodexAuthentica
       starting = false;
     }
   }
+  async function openIde() {
+    if (disposed) return false;
+    // OpenAI's published command ID, not a private extension API.
+    // Only existence and navigation are checked. We cannot inspect IDE auth.
+    if (!api.extensions?.getExtension('OpenAI.chatgpt')) {
+      await api.window.showWarningMessage(
+        'The official OpenAI Codex VS Code extension is not installed or enabled. Install it from the VS Code Marketplace to use ChatGPT sign-in without a separate CLI.',
+      );
+      return false;
+    }
+    try {
+      await api.commands.executeCommand('chatgpt.openSidebar');
+      return !disposed;
+    } catch {
+      if (!disposed) await api.window.showWarningMessage(
+        'Could not open the official Codex sidebar. Enable or reload the OpenAI Codex extension and retry.',
+      );
+      return false;
+    }
+  }
   async function usage() {
     if (disposed) return;
     await api.env.openExternal(api.Uri.parse('https://chatgpt.com/'));
@@ -190,6 +210,7 @@ function registerCodexWorkspace(api, context, { inspect = inspectCodexAuthentica
     );
   }
   const registrations = [
+    ['codexIde', openIde],
     ['codexAccount', async () => {
       const mode = await account();
       if (!disposed && mode === 'chatgpt') await api.window.showInformationMessage(
@@ -214,7 +235,7 @@ function registerCodexWorkspace(api, context, { inspect = inspectCodexAuthentica
     status.dispose();
   };
   context.subscriptions.push({ dispose });
-  return { account, start, login, usage, dispose };
+  return { account, start, login, usage, openIde, dispose };
 }
 
 module.exports = {
