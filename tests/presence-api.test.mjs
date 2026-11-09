@@ -147,3 +147,28 @@ test('actual Worker routes reject anonymous owner writes, never cache presence, 
   const head=await handler.fetch(new Request('https://devonakins.com/api/listening/now',{method:'HEAD'}),f.env);
   assert.equal(await head.text(),'');
 });
+
+test('owner status discloses configuration only, and never to unauthenticated visitors',async()=>{
+  const f=fixture();
+  const material='x'.repeat(40);
+  Object.assign(f.env,{
+    THREADS_PUBLIC_USERNAME:'fixtureOwner',
+    THREADS_USER_ACCESS_TOKEN:material,
+    THREADS_PUBLIC_RELEASE_APPROVED:'true',
+    THREADS_PUBLIC_FEED_ENABLED:'true',
+  });
+  const response=await f.api(f.request(),f.env,owner);
+  assert.equal(response.status,200);
+  const body=await response.json();
+  assert.equal(body.sources.threads.configured,true);
+  assert.equal(body.sources.threads.providerObserved,false);
+  assert.equal(body.sources.spotify.connection,'unverified',
+    'Presence fixture has no listening account table; do not guess connection');
+  assert.equal(body.sources.github.observed,'not-checked');
+  assert.equal(body.sources.gpt.automaticAccountTelemetry,false);
+  assert.equal(JSON.stringify(body).includes(material),false);
+  assert.equal(JSON.stringify(body).includes('fixtureOwner'),false);
+  const unauthenticated=await f.api(f.request(),f.env,{});
+  assert.equal(unauthenticated.status,403);
+  assert.ok(!JSON.stringify(await unauthenticated.json()).includes('sources'));
+});
