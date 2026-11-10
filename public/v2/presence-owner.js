@@ -238,6 +238,11 @@ async function mutate(action, extra = {}) {
       throw new Error(data.error || "Change was not saved.");
     }
     const current = render(data);
+    if (current && action === "projects") {
+      // The independent runner panel rechecks the server-approved choices;
+      // no credentials or project selections are supplied by this event.
+      document.dispatchEvent(new Event("presence-projects-saved"));
+    }
     if (current && action === "off") {
       confirmedStopOperation = Math.max(confirmedStopOperation, operation);
       cloudGeneration++;
