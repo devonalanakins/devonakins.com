@@ -198,7 +198,9 @@ test("signed current claims fail closed with distinct temporary error when indep
         status:403,headers:{"x-ratelimit-remaining":"0"}
       });
       if (method === "network") throw Error("PRIVATE provider failure");
-      return Response.json({status:"in_progress",token:"PRIVATE"});
+      return new Response("invalid-json",{
+        status:200,headers:{"Content-Type":"application/json"}
+      });
     };
     await assert.rejects(
       verifyGithubActionsIdentity(issued,{fetcher,clock:()=>time}),
