@@ -10,6 +10,14 @@ const ISSUER = "https://token.actions.githubusercontent.com";
 export const GITHUB_ACTIVITY_AUDIENCE = "https://devonakins.com/github-actions-activity-v1";
 const KEYS_URL = ISSUER + "/.well-known/jwks";
 const RUN_URL = "https://api.github.com/repos/devonalanakins/devonakins.com/actions/runs/";
+/** Fixed non-sensitive transport failure after claims parsing but before
+ * signature verification. Never accept a JWT when keys are unavailable. */
+export class GithubKeyProviderUnavailable extends Error {
+  constructor() {
+    super("Trusted signing key provider temporarily unavailable");
+    this.name = "GithubKeyProviderUnavailable";
+  }
+}
 /** Only emitted *after* a verified GitHub signature when the independent
  * live-workflow lookup cannot be completed. Never return token or provider
  * payloads as part of errors. */
@@ -113,10 +121,17 @@ export async function verifyGithubActionsIdentity(token, {
   const signature = decode64(parts[2]);
   if (!signature || signature.length < 256 || signature.length > 512) return null;
   try {
-    const jwks = await boundedJson(await fetcher(KEYS_URL, {
-      method: "GET", redirect: "error", cache: "no-store",
-      signal: AbortSignal.timeout(5000),
-    }), 32768);
+    let jwks;
+    try {
+      jwks = await boundedJson(await fetcher(KEYS_URL, {
+        method: "GET", redirect: "error", cache: "no-store",
+        signal: AbortSignal.timeout(5000),
+      }), 32768);
+    } catch {
+      // Cannot authenticate without the issuer's public keys. Fail closed,
+      // but do not label a provider transport failure as an invalid signature.
+      throw new GithubKeyProviderUnavailable();
+    }
     if (!Array.isArray(jwks.keys) || jwks.keys.length > 32) return null;
     const matched = jwks.keys.filter(key => key?.kid === header.kid && key?.kty === "RSA" &&
       (key.alg === undefined || key.alg === "RS256") &&
@@ -158,7 +173,8 @@ export async function verifyGithubActionsIdentity(token, {
         asDigits(run.repository?.id) !== REPO_ID) return null;
     return Object.freeze({ projectSlug: "devonakins-com" });
   } catch (error) {
-    if (error instanceof GithubRunProviderUnavailable) throw error;
-    return null; // Any invalid signature, claim, or key fails closed.
+    if (error instanceof GithubRunProviderUnavailable ||
+        error instanceof GithubKeyProviderUnavailable) throw error;
+    return null; // Invalid signature, claims, or key material fail closed.
   }
 }
