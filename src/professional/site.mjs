@@ -119,15 +119,12 @@ function contact(){
 }
 export const PROFESSIONAL_PAGES = Object.freeze(Object.keys(pages));
 export const PROFESSIONAL_ROUTES = route;
-export function renderProfessionalPage(key="home") {
-  if (!Object.hasOwn(pages,key)) throw new Error("Unknown professional page");
-  const [label, description] = pages[key];
+function renderShell(key,label,description,publicPath,content) {
   const current = key === "home" ? "home" : key;
   const nav = ["home","experience","work","activity","writing","about"].map(k =>
     '<a'+(k===current?' aria-current="page"':'')+' href="'+route[k]+'">'+
     (k==="activity"?"Activity":k==="experience"?"Experience":k==="work"?"Work":k==="writing"?"Writing":k==="about"?"About":"Home")+'</a>').join("");
-  const content = {home,experience,work,activity,writing,about,contact}[key]();
-  const canonical = "https://devonakins.com" + route[key];
+  const canonical = "https://devonakins.com" + publicPath;
   return '<!doctype html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">'+
     '<meta name="theme-color" content="#090e13"><meta name="description" content="'+esc(description)+'">'+
     '<link rel="canonical" href="'+canonical+'">'+
@@ -147,4 +144,38 @@ export function renderProfessionalPage(key="home") {
     '<main id="main" class="p-shell">'+content+'</main>'+
     '<footer class="p-footer"><div class="p-shell"><p class="p-footer-line">Build something <em>that works.</em></p><p>OPERATIONS · SOFTWARE · SYSTEMS · EXECUTION</p><div class="p-footer-links"><a href="/experience/">Experience</a><a href="/activity/">Public activity</a><a href="/writing/">Writing</a><a href="/contact/">Contact</a></div><small>© Devon Alan Akins · Public information only · Sources and status are independently qualified</small></div></footer>'+
     '</body></html>';
+}
+
+export function renderProfessionalPage(key="home") {
+  if (!Object.hasOwn(pages,key)) throw new Error("Unknown professional page");
+  const [label,description] = pages[key];
+  return renderShell(key,label,description,route[key],
+    {home,experience,work,activity,writing,about,contact}[key]());
+}
+
+/** All existing published project URLs stay functional within the new design.
+ * Publication manifest, not GitHub discovery, authorizes each project page.
+ */
+export function renderProfessionalProjectPage(slug) {
+  const project = approvedPublicProjects.find(entry=>entry.slug===slug);
+  if (!project) throw new Error("Unknown or unpublished project");
+  const path = "/work/" + encodeURIComponent(project.slug) + "/";
+  const lead = esc(project.summary);
+  const link = project.url && project.publication?.sourceLinkApproved === true ?
+    button(project.url,project.urlLabel || "Inspect public source",false,true) : "";
+  const content = intro("SELECTED WORK / " + project.category.toUpperCase(),
+    esc(project.title),project.summary,
+    button("/work/","All selected work",true)+link) +
+    '<section class="p-section p-detail-layout"><div><p class="p-eyebrow">PROJECT OVERVIEW</p><h2>Purpose & context.</h2><p class="p-large">'+esc(project.description)+'</p><p>'+esc(project.detail)+'</p></div>'+
+    '<aside class="p-aside-panel"><p class="p-eyebrow">PUBLIC RECORD</p><h3>Project status</h3>'+
+    '<dl class="p-project-facts"><div><dt>Stage</dt><dd>'+esc(project.status)+'</dd></div>'+
+    '<div><dt>Role</dt><dd>'+esc(project.role)+'</dd></div>'+
+    '<div><dt>Category</dt><dd>'+esc(project.publication.category)+'</dd></div></dl>'+
+    '<p class="p-fine">Status is editorial and dated only if the underlying project source provides a verification date. It does not imply a production deployment.</p></aside></section>'+
+    '<section class="p-section p-quiet-grid"><div>'+heading("WORK COMPLETED","What exists.")+
+    '<p>'+esc(project.detail)+'</p></div><div>'+heading("BOUNDARIES","What is not claimed.")+
+    '<p>'+esc(project.boundary)+'</p></div></section>'+
+    '<section class="p-section p-inline-cta"><div><p class="p-eyebrow">CURRENT NEXT STEP</p><h2>Moving deliberately forward.</h2><p>'+esc(project.next)+'</p></div>'+
+    button("/activity/","See public GitHub activity",true)+'</section>';
+  return renderShell("work",project.title+" — Selected work",lead,path,content);
 }
