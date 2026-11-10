@@ -48,17 +48,12 @@ async function refresh() {
       option.textContent = owner.projectCatalog?.[slug] || slug;
       select.append(option);
     }
-    if (!select.options.length && owner.projectCatalog) {
-      for (const [slug, label] of Object.entries(owner.projectCatalog)) {
-        const option = document.createElement("option");
-        option.value = slug;
-        option.textContent = String(label);
-        select.append(option);
-      }
-    }
+    // Do not offer a workspace connection for deliberately empty or invalid
+    // public choices. The owner must approve a project before source pairing.
     if ([...select.options].some((o) => o.value === previous))
       select.value = previous;
-    byId("task-connect").disabled = !select.options.length;
+    byId("task-connect").disabled = !select.options.length ||
+      owner.projectChoicesNeedReview === true;
     const list = byId("task-sources");
     list.replaceChildren();
     for (const s of data.sources || []) {
@@ -107,12 +102,13 @@ async function refresh() {
       row.append(title, revoke);
       tasks.append(row);
     }
-    byId("task-notice").textContent =
-      (data.sources || []).length +
-      " connected workspaces. " +
-      (data.publishingAllowed
-        ? "Project sharing is controlled independently."
-        : "Public release gate is off. Private preview only.");
+    byId("task-notice").textContent = owner.projectChoicesNeedReview === true
+      ? "Review and save approved public project choices above before connecting a workspace."
+      : (data.sources || []).length +
+        " connected workspaces. " +
+        (data.publishingAllowed
+          ? "Project sharing is controlled independently."
+          : "Public release gate is off. Private preview only.");
   } catch (e) {
     byId("task-notice").textContent = e.message;
   } finally {
@@ -169,6 +165,7 @@ document.addEventListener("visibilitychange", () => {
   clearToken();
   if (!document.hidden) void refresh();
 });
+document.addEventListener("presence-projects-saved", () => { void refresh(); });
 window.addEventListener("pagehide", clearToken);
 void refresh();
 
