@@ -418,3 +418,11 @@ h1 em,h2 em,.p-footer-line em{font-style:italic;color:#e9c29a}
  .p-home-closer>p{letter-spacing:.14em;line-height:1.7}
  .p-footer{min-height:240px;margin-top:30px}
 }
+
+/* The owner-selected screenshot headshot is a real bundled first-party asset.
+ * Preserve its warm, clean lighting rather than reapplying the old transcosmic
+ * portrait treatment. The source image already has feathered edges. */
+.p-home-portrait img{top:0;right:0;width:100%;height:100%;max-width:100%;object-fit:contain;object-position:center bottom;filter:none;mask-image:none}
+.p-page-portrait img{top:0;right:0;width:100%;height:100%;max-width:100%;object-fit:contain;object-position:center bottom;opacity:1;filter:none;mask-image:none}
+@media(max-width:760px){.p-home-portrait img,.p-page-portrait img{top:0;right:0;width:100%;height:100%;object-fit:contain}}
+@media(max-width:530px){.p-home-portrait img,.p-page-portrait img{top:0;height:100%;max-height:100%}}
