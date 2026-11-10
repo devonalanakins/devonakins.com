@@ -220,3 +220,13 @@ h1 em,h2 em,.p-footer-line em{font-weight:400;color:#e5ba8e}
  .p-footer .p-shell>p:nth-child(2){letter-spacing:.15em;line-height:1.8}
 }
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{scroll-behavior:auto!important;transition-duration:.01ms!important;animation-duration:.01ms!important}}
+
+.p-detail-layout{display:grid;grid-template-columns:1.4fr .65fr;gap:35px;align-items:start}
+.p-detail-layout>div:first-child h2{font:400 clamp(2.1rem,3.3vw,3.2rem)/1.2 "Playfair Display",Georgia,serif}
+.p-detail-layout>div:first-child>p:not(.p-eyebrow){color:#bbc6c8;line-height:1.75}
+.p-detail-layout>div:first-child .p-large{color:#e2ddd5;line-height:1.65}
+.p-project-facts{margin:20px 0}
+.p-project-facts div{padding:15px 0;border-top:1px solid #e1d5c229}
+.p-project-facts dt{color:#9ba9ad;font-size:.72rem;letter-spacing:.1em;text-transform:uppercase}
+.p-project-facts dd{margin:7px 0 0;color:#e8ddcf;font-size:.92rem}
+@media(max-width:760px){.p-detail-layout{grid-template-columns:1fr}}
