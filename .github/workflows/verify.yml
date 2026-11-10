@@ -10,11 +10,6 @@ concurrency:
   cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 jobs:
   verify:
-    # GitHub issues short-lived identity tokens; server requires main push,
-    # fixed repo IDs, exact workflow and a still-running signed workflow.
-    permissions:
-      contents: read
-      id-token: write
     runs-on: ubuntu-24.04 # Pinned: Playwright 1.57 browser builds do not support Ubuntu 26.04
     steps:
       - uses: actions/checkout@v4
@@ -40,15 +35,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ github.token }}
         run: node scripts/verify-public-portfolio-links.mjs
-      # Phone-first source: short-lived GitHub-signed job identity, never a
-      # stored source token. Non-main and PR runs receive no reporter invocation.
-      - name: Test and report signed CI activity (trusted main push)
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        env:
-          DEVON_ACTIVITY_GITHUB_OIDC: "true"
-        run: node scripts/activity-run.mjs -- npm test
-      - name: Test without reporter credentials (PRs and other branches)
-        if: github.event_name != 'push' || github.ref != 'refs/heads/main'
+      # Main, PR and feature refs all run tests without reporter privileges.
+      - name: Run tests without credentialed reporters
         run: npm test
       - name: Package optional editor companion (PR only)
         if: github.event_name == 'pull_request'
@@ -125,6 +113,28 @@ jobs:
           path: dist/
           if-no-files-found: error
           retention-days: 7
+
+  activity_report:
+    # Only the trusted main push can receive GitHub's short-lived identity.
+    # Untrusted PR code never gets the id-token permission.
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - name: Test and report signed CI activity (trusted main push)
+        env:
+          DEVON_ACTIVITY_GITHUB_OIDC: "true"
+        run: node scripts/activity-run.mjs -- npm test
 
   v5_candidate:
     if: github.head_ref == 'release/living-mind-v5' || github.ref == 'refs/heads/release/living-mind-v5' || github.head_ref == 'design/public-website-experience' || github.ref == 'refs/heads/design/public-website-experience'
