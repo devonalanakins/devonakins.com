@@ -32,13 +32,16 @@ function fixture(migrated=true,providerOverride=null){
     requests.push([url,options]);
     if(url==="https://graph.threads.net/oauth/access_token")
       return Response.json({access_token:"s".repeat(96),user_id:"123456789012345"});
+    if(new URL(url).pathname==="/refresh_access_token")
+      return Response.json({access_token:"r".repeat(96),token_type:"bearer",expires_in:5184000});
     if(new URL(url).pathname==="/access_token")
       return Response.json({access_token:"l".repeat(96),token_type:"bearer",expires_in:5184000});
     if(new URL(url).pathname==="/v1.0/me")
       return Response.json({id:"123456789012345",username:"DevonFixture"});
     throw Error("Unexpected provider URL");
   });
-  const api=createThreadsOwnerOAuth({clock:()=>now,fetcher:provider});
+  let clockTime=now;
+  const api=createThreadsOwnerOAuth({clock:()=>clockTime,fetcher:provider});
   const post=(path,origin=root,ctx=owner)=>api(new Request(root+path,{method:"POST",
     headers:{Origin:origin}}),env,ctx);
   const get=(path,cookie="",ctx=owner)=>api(new Request(root+path,
@@ -54,7 +57,8 @@ function fixture(migrated=true,providerOverride=null){
   const callback=(entry,code="fixture_authorization_code")=>
     get("/api/threads/auth/callback?state="+entry.target.searchParams.get("state")+
       "&code="+code,entry.cookie);
-  return {sql,db,env,api,post,get,auth,callback,requests,provider};
+  return {sql,db,env,api,post,get,auth,callback,requests,provider,
+    advance(ms){clockTime+=ms;},clock:()=>clockTime};
 }
 
 test("owner-only OAuth start uses read-only scope and one-time state without leaking credentials",async()=>{
