@@ -60,7 +60,7 @@ try:
                     assert page.url.endswith("/experience/")
                 assert "Experience" in page.locator("h1").inner_text()
                 assert page.get_by_text("Associate of Arts degree").count()>0
-                for path in ("/work/","/writing/","/about/","/contact/"):
+                for path in ("/work/","/writing/","/about/","/contact/","/listening/","/gpt/"):
                     r=page.goto(BASE+path,wait_until="domcontentloaded")
                     assert r.status==200,(engine,device,path)
                     assert page.locator("main h1").count()==1,(engine,device,path)
@@ -106,6 +106,93 @@ try:
                 assert page.get_by_role("button",name="Pull requests").count()==1
                 page.get_by_role("button",name="Pull requests").click()
                 assert page.get_by_role("button",name="Pull requests").get_attribute("aria-pressed")=="true"
+                # All source fixtures are local, explicitly synthetic,
+                # and never committed to public site pages or live source APIs.
+                from datetime import datetime, timezone
+                import json
+                instant=datetime.now(timezone.utc).isoformat(timespec="milliseconds").replace("+00:00","Z")
+                source_mode={"enabled":True}
+                song={
+                  "version":1,"mode":"playing","detailsVisible":True,"updatedAt":instant,
+                  "track":{"title":"Synthetic test track","artist":"Fixture artist",
+                           "album":"Synthetic QA","image":None,
+                           "url":"https://open.spotify.com/track/"+("A"*22)},
+                  "playback":{"progressMs":45000,"durationMs":220000}}
+                public_playlist={
+                  "version":1,"status":"available","checkedAt":instant,
+                  "playlists":[{"id":"B"*22,"title":"Synthetic public playlist",
+                    "url":"https://open.spotify.com/playlist/"+("B"*22),"image":None}]}
+                gpt_reading={"metric":"profile_7d_tokens","value":1234567,"unit":"tokens",
+                  "scope":"owner-profile","source":"owner-profile-capture",
+                  "asOf":instant,"sourceUpdatedAt":None,"freshness":"recent"}
+                gpt_snapshot={"state":"snapshot","metric":"profile_7d_tokens",
+                  "count":1234567,"unit":"tokens","scope":"owner-profile",
+                  "source":"owner-profile-capture","asOf":instant,
+                  "sourceUpdatedAt":None,"freshness":"recent","observations":[gpt_reading]}
+                aggregate={"version":4,"asOf":instant,
+                  "work":{"visibility":"public","state":"developing",
+                    "source":"editor-heartbeat","asOf":instant},
+                  "gpt":gpt_snapshot,
+                  "threads":{"version":1,"state":"connected","checkedAt":instant,
+                    "posts":[{"href":"https://www.threads.com/@devonalanakins/post/CXtzA7JPq5V",
+                      "text":"Synthetic verified source test","publishedAt":instant,"media":False}]}}
+                def spotify_request(route):
+                    current=song if source_mode["enabled"] else {
+                      "version":1,"mode":"hidden","detailsVisible":False}
+                    route.fulfill(status=200,content_type="application/json",body=json.dumps(current))
+                def aggregate_request(route):
+                    current=aggregate if source_mode["enabled"] else {
+                      "version":4,"asOf":instant,"work":{"visibility":"hidden",
+                        "state":"not-broadcasting","source":"none"},
+                      "gpt":{"state":"disconnected","observations":[]},
+                      "threads":{"version":1,"state":"disconnected","checkedAt":None,"posts":[]}}
+                    route.fulfill(status=200,content_type="application/json",body=json.dumps(current))
+                def playlists_request(route):
+                    current=public_playlist if source_mode["enabled"] else {
+                      "version":1,"status":"hidden","checkedAt":None,"playlists":[]}
+                    route.fulfill(status=200,content_type="application/json",body=json.dumps(current))
+                page.route("**/api/listening/now",spotify_request)
+                page.route("**/api/activity/v4",aggregate_request)
+                page.route("**/api/listening/collections",playlists_request)
+                def mark_synthetic():
+                    page.evaluate('''() => {
+                      const label=document.createElement("div");
+                      label.id="synthetic-qa-notice";
+                      label.textContent="SYNTHETIC QA FIXTURE — NOT REAL SPOTIFY, GPT OR THREADS ACTIVITY";
+                      Object.assign(label.style,{position:"fixed",zIndex:"9999",top:"0",left:"0",
+                        right:"0",padding:"10px",background:"#f6d09f",color:"#111",
+                        fontWeight:"bold",fontSize:"13px",textAlign:"center"});
+                      document.body.append(label);
+                    }''')
+                page.goto(BASE+"/listening/",wait_until="domcontentloaded")
+                page.wait_for_function("() => document.querySelector('[data-spotify-state]')?.textContent === 'PLAYING NOW'")
+                assert page.locator("[data-spotify-title]").inner_text()=="Synthetic test track"
+                assert page.locator("[data-spotify-progress]").is_visible()
+                assert page.locator("[data-spotify-link]").get_attribute("href").startswith("https://open.spotify.com/track/")
+                page.get_by_text("Synthetic public playlist").wait_for(timeout=10000)
+                mark_synthetic()
+                page.screenshot(path=str(OUT/f"{engine}-{device}-listening-synthetic.png"),full_page=True)
+                page.goto(BASE+"/gpt/",wait_until="domcontentloaded")
+                page.wait_for_function("() => document.querySelector('[data-gpt-value]')?.textContent === '1.23M'")
+                assert "Captured" in page.locator("[data-gpt-time]").inner_text()
+                mark_synthetic()
+                page.screenshot(path=str(OUT/f"{engine}-{device}-gpt-synthetic.png"),full_page=True)
+                page.goto(BASE+"/activity/",wait_until="domcontentloaded")
+                page.wait_for_function("() => document.querySelector('[data-work-state]')?.textContent === 'EDITOR OBSERVED'")
+                assert page.locator("[data-spotify-title]").inner_text()=="Synthetic test track"
+                assert page.locator("[data-threads-state]").inner_text()=="CONNECTED"
+                source_mode["enabled"]=False
+                page.reload(wait_until="domcontentloaded")
+                page.wait_for_function("() => document.querySelector('[data-spotify-state]')?.textContent === 'PRIVATE'")
+                assert page.locator("[data-spotify-title]").inner_text()=="Playback not shared"
+                assert page.locator("[data-spotify-cover]").is_hidden()
+                assert page.locator("[data-gpt-value]").inner_text()=="—"
+                assert page.locator("[data-threads-state]").inner_text()=="NOT CONNECTED"
+                assert page.locator("[data-work-state]").inner_text()=="NO ACTIVE SIGNAL"
+                assert page.evaluate("document.documentElement.scrollWidth <= window.innerWidth + 2"), (engine,device,"signals privacy overflow")
+                page.unroute("**/api/listening/now")
+                page.unroute("**/api/activity/v4")
+                page.unroute("**/api/listening/collections")
                 page.unroute("**/api/github/public-feed")
                 page.goto(BASE+"/",wait_until="domcontentloaded")
                 page.screenshot(path=str(OUT/f"{engine}-{device}-home.png"),full_page=True)
