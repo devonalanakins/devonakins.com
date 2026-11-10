@@ -5,6 +5,8 @@ import {
   validGithubActivityClaims,
   verifyGithubActionsIdentity,
   GithubRunProviderUnavailable,
+  GithubKeysProviderUnavailable,
+  GithubCryptoUnavailable,
   GITHUB_ACTIVITY_AUDIENCE,
 } from "../src/github-actions-oidc.mjs";
 
@@ -220,4 +222,41 @@ test("signed current claims fail closed with distinct temporary error when indep
     }
   }),null);
   assert.equal(calls,1,"tampered token never reaches independent run lookup");
+});
+
+test("GitHub signing-key transport failure is separately classified, never trusted",async()=>{
+ const f=await fixture();
+ const issued=await f.issue();
+ for(const unavailable of [
+   async()=>new Response("limited",{status:403}),
+   async()=>{throw Error("PRIVATE transport error");},
+   async()=>new Response("not valid JSON",{status:200,headers:{"Content-Type":"application/json"}}),
+ ]) {
+   let calls=0;
+   await assert.rejects(verifyGithubActionsIdentity(issued,{
+     clock:()=>time,
+     fetcher:async()=>{calls++;return unavailable();}
+   }), e=>e instanceof GithubKeysProviderUnavailable &&
+     !JSON.stringify(e).includes("PRIVATE"));
+   assert.equal(calls,1,"untrusted and failed JWKS must never reach live run lookup");
+ }
+});
+test("unavailable cryptographic import or verification is not an accepted GitHub task",async()=>{
+ const f=await fixture(),issued=await f.issue();
+ for(const subtle of [
+   {importKey:async()=>{throw Error("PRIVATE crypto issue");}},
+   {importKey:async()=>({}),verify:async()=>{throw Error("PRIVATE verify issue");}},
+ ]) {
+   const p=provider(f.jwk);
+   await assert.rejects(verifyGithubActionsIdentity(issued,{
+     clock:()=>time,fetcher:p.fetcher,subtle
+   }),e=>e instanceof GithubCryptoUnavailable &&
+     !JSON.stringify(e).includes("PRIVATE"));
+   assert.equal(p.requested.length,1,"failed crypto never proceeds to run metadata");
+ }
+ const fBad=await fixture(),p=provider(fBad.jwk);
+ assert.equal(await verifyGithubActionsIdentity(issued,{
+   clock:()=>time,fetcher:p.fetcher
+ }),null,"real incorrect signature remains rejected, not provider unavailable");
+ assert.equal(p.requested.length,1);
 });
