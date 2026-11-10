@@ -74,15 +74,57 @@ const valid = (input: unknown): input is Snapshot => {
       Date.parse(e.at) > Date.now()-90*86400000;
   });
 };
-const mark = (type: Activity["kind"]) => {
+// Original concept palette, implemented with deterministic first-party SVGs.
+// Event labels remain provider-projected text; no commit body or PR title is used.
+type EventVariant = "push" | "merged" | "opened" | "review" | "release" | "issue" | "other";
+const eventVariant = (event:Activity):EventVariant =>
+  event.kind==="pull_request"
+    ? event.label==="Merged a pull request"?"merged"
+      :event.label==="Opened a pull request"?"opened":"review"
+    :event.kind;
+const EVENT_ICONS:Record<EventVariant,string> = {
+  push:"M6 3v12a4 4 0 0 0 4 4h4 M6 3a2 2 0 1 0 0 4a2 2 0 0 0 0-4 M6 13a2 2 0 1 0 0 4a2 2 0 0 0 0-4 M18 15a2 2 0 1 0 0 4a2 2 0 0 0 0-4",
+  merged:"M6 6v12 M6 6a2 2 0 1 0 0-4a2 2 0 0 0 0 4 M6 18a2 2 0 1 0 0 4a2 2 0 0 0 0-4 M18 6a2 2 0 1 0 0-4a2 2 0 0 0 0 4 M18 6v5a7 7 0 0 1-7 7H8",
+  opened:"M6 6v12 M6 6a2 2 0 1 0 0-4a2 2 0 0 0 0 4 M6 18a2 2 0 1 0 0 4a2 2 0 0 0 0-4 M18 6a2 2 0 1 0 0-4a2 2 0 0 0 0 4 M18 6v6a6 6 0 0 1-6 6H9",
+  review:"M6 6v12 M6 6a2 2 0 1 0 0-4a2 2 0 0 0 0 4 M6 18a2 2 0 1 0 0 4a2 2 0 0 0 0-4 M18 6a2 2 0 1 0 0-4a2 2 0 0 0 0 4 M18 6v6a6 6 0 0 1-6 6H9",
+  release:"M20.6 13.4l-7.2 7.2a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8Z M7.5 7.5h.01",
+  issue:"M12 3a9 9 0 1 0 0 18a9 9 0 0 0 0-18 M12 7v6 M12 17h.01",
+  other:"M12 3l9 5-9 5-9-5 9-5 M3 13l9 5 9-5 M3 18l9 5 9-5",
+};
+const EVENT_CHIPS:Record<EventVariant,string> = {
+  push:"PUSH",merged:"MERGED",opened:"PULL REQUEST",review:"REVIEW",
+  release:"RELEASE",issue:"ISSUE",other:"ACTIVITY",
+};
+const SVG_NS="http://www.w3.org/2000/svg";
+const eventIcon=(variant:EventVariant)=>{
+  const svg=document.createElementNS(SVG_NS,"svg");
+  svg.setAttribute("viewBox","0 0 24 24");
+  svg.setAttribute("fill","none");
+  svg.setAttribute("stroke","currentColor");
+  svg.setAttribute("stroke-width","1.65");
+  svg.setAttribute("stroke-linecap","round");
+  svg.setAttribute("stroke-linejoin","round");
+  svg.setAttribute("aria-hidden","true");
+  const path=document.createElementNS(SVG_NS,"path");
+  path.setAttribute("d",EVENT_ICONS[variant]);
+  svg.append(path);
+  return svg;
+};
+const mark=(event:Activity)=>{
+  const variant=eventVariant(event);
   const span=document.createElement("span");
   span.className="p-event-symbol";
-  span.dataset.kind=type;
-  const glyph=document.createElement("span");
-  glyph.textContent=type === "push" ? "↗" : type === "pull_request" ? "⑂" :
-    type === "release" ? "◇" : type === "issue" ? "○" : "·";
-  glyph.setAttribute("aria-hidden","true");
-  span.append(glyph);
+  span.dataset.kind=event.kind;
+  span.dataset.variant=variant;
+  span.append(eventIcon(variant));
+  return span;
+};
+const chip=(event:Activity)=>{
+  const variant=eventVariant(event);
+  const span=document.createElement("span");
+  span.className="p-event-chip";
+  span.dataset.variant=variant;
+  span.textContent=EVENT_CHIPS[variant];
   return span;
 };
 function paint(){
@@ -109,10 +151,13 @@ function paint(){
       link.rel="noopener noreferrer";
       heading.textContent=event.label;
       detail.textContent=event.repo;
+      const meta=document.createElement("span");
+      meta.className="p-event-meta";
+      meta.append(detail,chip(event));
       when.dateTime=event.at;
       when.textContent=age(event.at,now);
-      content.append(heading,detail);
-      link.append(mark(event.kind),content,when);
+      content.append(heading,meta);
+      link.append(mark(event),content,when);
       li.append(link);
       fragment.append(li);
     }
@@ -151,7 +196,8 @@ function paint(){
       when.dateTime=event.at;
       when.textContent=age(event.at,now);
       link.append(label,when);
-      li.append(link);
+      li.dataset.variant=eventVariant(event);
+      li.append(mark(event),link);
       fragment.append(li);
     }
     if(fragment.childNodes.length===0){
