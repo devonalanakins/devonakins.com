@@ -525,3 +525,24 @@ h1 em,h2 em,.p-footer-line em{font-style:italic;color:#e9c29a}
  .p-activity-aside .p-aside-panel{padding:21px}
  .p-activity-detail h2{font-size:2rem}
 }
+
+/* Final image-compositing and footer fidelity: blend the screenshot-derived
+ * portrait into the native atmosphere without a hard rectangular crop. */
+.p-home-portrait img,.p-page-portrait img{
+ -webkit-mask-image:radial-gradient(ellipse 65% 72% at 51% 49%,#000 56%,transparent 100%);
+ mask-image:radial-gradient(ellipse 65% 72% at 51% 49%,#000 56%,transparent 100%);
+}
+.p-page-home .p-home-closer{padding:75px 20px 68px;position:relative;isolation:isolate;background:radial-gradient(ellipse at 50% 82%,#ae80653a,transparent 65%);}
+.p-page-home .p-footer{margin-top:0;min-height:125px;padding:16px 0 27px}
+.p-page-home .p-footer-line,.p-page-home .p-footer .p-shell>p:nth-child(2){display:none}
+.p-page-home .p-footer-links{padding:14px 0 23px}
+.p-page-writing .p-card{min-height:325px;padding-top:155px;background:#101b24;overflow:hidden}
+.p-page-writing .p-card:before{content:"";position:absolute;inset:0 0 auto;height:125px;z-index:0;background:linear-gradient(to top,#101b24b5,transparent),url("/professional/concept-art.webp");background-size:cover,200% 300%;background-position:center,0% 50%;border-bottom:1px solid #ffffff24}
+.p-page-writing .p-card:nth-child(2):before{background-position:center,100% 0%}
+.p-page-writing .p-card:nth-child(3):before{background-position:center,100% 50%}
+.p-page-writing .p-card:nth-child(4):before{background-position:center,0% 100%}
+.p-page-writing .p-card:nth-child(5):before{background-position:center,0% 50%}
+.p-page-writing .p-card:nth-child(6):before{background-position:center,100% 50%}
+.p-page-writing .p-card-icon{position:absolute;top:89px;left:24px;z-index:1;padding:6px;background:#152431cf;border:1px solid #bc956b55;border-radius:7px;width:40px;height:40px}
+.p-page-writing .p-card:after{opacity:.22}
+@media(max-width:760px){.p-home-portrait img,.p-page-portrait img{-webkit-mask-image:radial-gradient(ellipse 68% 76% at 51% 48%,#000 61%,transparent 100%);mask-image:radial-gradient(ellipse 68% 76% at 51% 48%,#000 61%,transparent 100%)}}
