@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {EventEmitter} from 'node:events';
-import {runParticipatingTask,activityRequest,activityFailureReason,ActivityRequestFailure,githubOidcTaskStart} from '../scripts/activity-run.mjs';
+import {runParticipatingTask,activityRequest,activityFailureReason,ActivityRequestFailure,githubOidcTaskStart,localGithubOidcScopeMatches} from '../scripts/activity-run.mjs';
 test('participating wrapper emits only real execution checkpoints and final status, never raw command/output or inherited credential',async()=>{
  const child=new EventEmitter();child.stdout=new EventEmitter();child.stderr=new EventEmitter();let at=Date.now();const sent=[];const token='T'.repeat(43);const sink={write(){}};
  const run=runParticipatingTask(['npm','test'],{sourceToken:'S'.repeat(43),clock:()=>at,stdout:sink,stderr:sink,fetcher:async(url,init)=>{const body=JSON.parse(init.body);sent.push({url,body});return Response.json(url.endsWith('/start')?{token,expiresAt:new Date(at+86400000).toISOString()}:{accepted:true});},spawnProcess:(file,args,opts)=>{assert.equal(file,'npm');assert.deepEqual(args,['test']);assert.equal(opts.shell,false);assert.equal(opts.env.DEVON_ACTIVITY_SOURCE_TOKEN,undefined);queueMicrotask(()=>{at+=31000;child.stdout.emit('data','PRIVATE command output');setImmediate(()=>child.emit('exit',0,null));});return child;}});
@@ -173,4 +173,57 @@ test("failed OIDC reporting does not mask true test failure or show untrusted pa
  assert.equal(started,1);
  assert.match(diag,/receiver denied \(HTTP 403\)/);
  assert.doesNotMatch(diag,/sensitive-provider-payload|short-lived-internal-runner-value/);
+});
+
+test("runner local scope diagnostic reads only allowed claims, never treats them as signature proof",async()=>{
+ const t=Date.now(),second=Math.floor(t/1000);
+ const payload={
+   iss:"https://token.actions.githubusercontent.com",
+   aud:"https://devonakins.com/github-actions-activity-v1",
+   sub:"repo:devonalanakins/devonakins.com:ref:refs/heads/main",
+   jti:"synthetic-test-claim-diagnostics",
+   repository:"devonalanakins/devonakins.com",
+   repository_id:"1439132762",
+   repository_owner_id:"324676006",
+   repository_visibility:"public",
+   ref:"refs/heads/main",ref_type:"branch",
+   event_name:"push",
+   workflow_ref:"devonalanakins/devonakins.com/.github/workflows/verify.yml@refs/heads/main",
+   runner_environment:"github-hosted",
+   sha:"a".repeat(40),run_id:"42873016637",
+   iat:second-20,nbf:second-20,exp:second+300
+ };
+ const token=(p)=>[
+   Buffer.from(JSON.stringify({alg:"RS256",kid:"synthetic"})).toString("base64url"),
+   Buffer.from(JSON.stringify(p)).toString("base64url"),
+   "S".repeat(344),
+ ].join(".");
+ const valid=token(payload);
+ assert.equal(localGithubOidcScopeMatches(valid,t),true);
+ for(const bad of [
+   token({...payload,repository_visibility:"private"}),
+   token({...payload,workflow_ref:"devonalanakins/devonakins.com/.github/workflows/other.yml@refs/heads/main"}),
+   token({...payload,iat:second-700}),
+   token({...payload,run_id:"1"}),
+   "a.b.c",
+ ]) assert.equal(localGithubOidcScopeMatches(bad,t),false);
+ let callback=null,leaked=false;
+ const response=await githubOidcTaskStart({
+   environment:signedEnvironment(),
+   onClaimCheck:matched=>{callback=matched;},
+   fetcher:async(url,opts)=>{
+     if(url.startsWith("https://pipelines.actions.githubusercontent.com/"))
+       return Response.json({value:valid});
+     if(url.endsWith("/github-oidc-start")){
+       assert.equal(opts.headers.Authorization,"Bearer "+valid);
+       leaked=JSON.stringify(opts.body).includes(valid);
+       return Response.json({token:"T".repeat(43),
+         expiresAt:new Date(t+60_000).toISOString()});
+     }
+     throw Error("Unexpected destination");
+   }
+ });
+ assert.equal(callback,true);
+ assert.equal(leaked,false);
+ assert.equal(response.token,"T".repeat(43));
 });

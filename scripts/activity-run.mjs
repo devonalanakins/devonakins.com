@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /** Wrap real work once; no timer heartbeats and no command/output content leaves this process. */
 import { PUBLIC_REPOSITORIES } from "../src/activity-history.mjs";
-import { GITHUB_ACTIVITY_AUDIENCE } from "../src/github-actions-oidc.mjs";
+import { GITHUB_ACTIVITY_AUDIENCE, validGithubActivityClaims } from "../src/github-actions-oidc.mjs";
 import { spawn, execFileSync } from "node:child_process";
 import { pathToFileURL } from "node:url";
 const ORIGIN = "https://devonakins.com";
@@ -79,10 +79,29 @@ export async function activityRequest(path, body, token, fetcher = fetch) {
  * GitHub-minted short-lived identity; only trusted main-branch jobs opt in.
  * Credentials and JWTs are never logged or inherited by the child command.
  */
+/** Diagnostic *shape check only* for the first-party GitHub CI client.
+ * Signature and live-run status remain verified by the Cloudflare Worker.
+ * Never log JWT text, header, payload or identity fields. */
+export function localGithubOidcScopeMatches(jwt, at = Date.now()) {
+  if (typeof jwt !== "string" || jwt.length < 250 || jwt.length > 8500)
+    return false;
+  const parts = jwt.split(".");
+  if (parts.length !== 3 || parts.some(p => !/^[A-Za-z0-9_-]+$/.test(p)))
+    return false;
+  try {
+    const raw = Buffer.from(parts[1], "base64url");
+    if (raw.length > 9000) return false;
+    return validGithubActivityClaims(JSON.parse(
+      new TextDecoder("utf-8",{fatal:true}).decode(raw),
+    ), at);
+  } catch { return false; }
+}
+
 export async function githubOidcTaskStart({
   environment = process.env,
   projectSlug = "devonakins-com",
   fetcher = fetch,
+  onClaimCheck = null,
 } = {}) {
   if (environment.GITHUB_ACTIONS !== "true" ||
       environment.GITHUB_EVENT_NAME !== "push" ||
@@ -112,6 +131,10 @@ export async function githubOidcTaskStart({
   const jwt = data?.value;
   if (typeof jwt !== "string" || jwt.length < 250 || jwt.length > 8500 ||
       jwt.split(".").length !== 3) throw Error("Invalid identity response");
+  // Debug the runner's public claim contract without weakening server-side
+  // cryptographic and live-run checks or disclosing a token in CI logs.
+  if (typeof onClaimCheck === "function")
+    onClaimCheck(localGithubOidcScopeMatches(jwt));
   const response = await fetcher(ORIGIN + "/api/activity/tasks/github-oidc-start", {
     method: "POST", redirect: "error", credentials: "omit",
     headers: {
@@ -211,6 +234,11 @@ export async function runParticipatingTask(
             environment: oidcEnvironment,
             projectSlug: observedProject.projectSlug,
             fetcher,
+            onClaimCheck: (matched) => {
+              stderr.write("Local OIDC claim scope: " +
+                (matched ? "match" : "mismatch") +
+                " (not proof of signature or accepted activity).\n");
+            },
           })
         : await activityRequest(
             "/api/activity/tasks/start",
