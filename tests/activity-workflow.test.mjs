@@ -4,7 +4,7 @@ import { readFile } from "node:fs/promises";
 
 const workflow = await readFile(new URL("../.github/workflows/verify.yml", import.meta.url), "utf8");
 
-test("CI activity token is confined to trusted main pushes, never pull requests", () => {
+test("signed GitHub job identity reports only from trusted main pushes, never pull requests", () => {
   assert.match(workflow, /^on:\n  push:\n  pull_request:/m);
   assert.doesNotMatch(workflow, /pull_request_target|workflow_run:/);
   assert.match(workflow, /persist-credentials: false/);
@@ -17,10 +17,9 @@ test("CI activity token is confined to trusted main pushes, never pull requests"
     /if: github\.event_name == 'push' && github\.ref == 'refs\/heads\/main'/,
     "only the trusted main push can receive the secret",
   );
-  assert.match(
-    reporting,
-    /DEVON_ACTIVITY_SOURCE_TOKEN: \$\{\{ secrets\.DEVON_ACTIVITY_SOURCE_TOKEN \}\}/,
-  );
+  assert.match(reporting, /DEVON_ACTIVITY_GITHUB_OIDC: "true"/);
+  assert.match(workflow, /id-token: write/);
+  assert.doesNotMatch(reporting, /secrets\.|DEVON_ACTIVITY_SOURCE_TOKEN/);
   assert.match(reporting, /run: node scripts\/activity-run\.mjs -- npm test/);
 
   const fallback = workflow.match(
@@ -30,9 +29,7 @@ test("CI activity token is confined to trusted main pushes, never pull requests"
   assert.match(fallback, /if: github\.event_name != 'push' \|\| github\.ref != 'refs\/heads\/main'/);
   assert.match(fallback, /run: npm test/);
   assert.doesNotMatch(fallback, /secrets\.|DEVON_ACTIVITY_SOURCE_TOKEN|activity-run\.mjs/);
-  assert.equal(
-    (workflow.match(/secrets\.DEVON_ACTIVITY_SOURCE_TOKEN/g) || []).length,
-    1,
-    "reporter secret must be referenced by only one guarded workflow step",
-  );
+  assert.doesNotMatch(workflow, /secrets\.DEVON_ACTIVITY_SOURCE_TOKEN/,
+    "a reusable CI reporter token must not be needed");
+  assert.match(workflow, /permissions:\n      contents: read\n      id-token: write/);
 });
