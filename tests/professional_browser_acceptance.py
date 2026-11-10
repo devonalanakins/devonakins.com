@@ -91,6 +91,21 @@ try:
                 assert page.locator('[data-github-count="pull_request"]').inner_text()=="1"
                 assert page.locator('[data-github-count="release"]').inner_text()=="1"
                 assert page.locator("[data-github-highlights] li").count()==3
+                # Concept design regression: genuine SVG iconography, category
+                # colors and source badges must stay distinct and keyboard-safe.
+                assert page.locator('.p-event-symbol[data-variant="push"] svg path').count()>=1
+                assert page.locator('.p-event-symbol[data-variant="merged"] svg path').count()>=1
+                assert page.locator('.p-event-symbol[data-variant="release"] svg path').count()>=1
+                assert page.locator('.p-event-chip[data-variant="push"]').count()>=1
+                assert page.locator('.p-event-chip[data-variant="merged"]').count()>=1
+                assert page.locator('.p-event-chip[data-variant="release"]').count()>=1
+                colors=page.evaluate('''() => ["push","merged","release"].map(kind =>
+                  getComputedStyle(document.querySelector(
+                    '.p-activity-main .p-event-symbol[data-variant="'+kind+'"]')).color)''')
+                assert len(set(colors))==3,(engine,device,"activity colors",colors)
+                assert page.locator(".p-source-spotify .p-brand-spotify path").count()==1
+                assert page.locator(".p-source-github .p-brand-github path").count()==1
+                assert page.locator("[data-spotify-source-state]").count()==1
                 assert page.evaluate("document.documentElement.scrollWidth <= window.innerWidth + 2"), (engine,device,"activity overflow")
                 page.evaluate('''() => {
                   const label=document.createElement("div");
