@@ -224,3 +224,14 @@ test("owner source UI distinguishes credentials, stale events and genuine observ
   assert.match(js,/No repositories in the approved App inventory/);
   assert.doesNotMatch(js,/innerHTML\s*=/);
 });
+
+test("mobile owner status reports signed CI switch without claiming a live event",async()=>{
+  const offline=await ownerSourceReadiness({},null);
+  assert.equal(offline.github.signedCiReceiverEnabled,false);
+  const enabled=await ownerSourceReadiness({GITHUB_OIDC_ACTIVITY_ENABLED:"true"},null);
+  assert.equal(enabled.github.signedCiReceiverEnabled,true);
+  assert.equal(enabled.github.observed,"not-checked");
+  const js=readFileSync(new URL("../public/v2/presence-owner.js",import.meta.url),"utf8");
+  assert.match(js,/Signed main-branch CI receiver enabled/);
+  assert.match(js,/a real accepted workflow event is still required/);
+});
