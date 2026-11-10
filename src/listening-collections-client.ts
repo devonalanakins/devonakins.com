@@ -7,6 +7,8 @@ export function startCollections() {
   );
   if (!list || !note || !state) return;
   let busy = false;
+  let refreshQueued = false;
+  let viewRevision = 0;
   const clear = (message = "No public playlists are being shared.") => {
     list.replaceChildren();
     list.hidden = true;
@@ -14,8 +16,14 @@ export function startCollections() {
     state.textContent = "NOT SHARING";
   };
   async function refresh() {
-    if (busy || document.hidden || !list || !note || !state) return;
+    if (document.hidden || !list || !note || !state) return;
+    // Visibility changes must not be lost while an earlier fetch is in flight.
+    if (busy) {
+      refreshQueued = true;
+      return;
+    }
     busy = true;
+    const requestRevision = viewRevision;
     try {
       const response = await fetch("/api/listening/collections", {
         cache: "no-store",
@@ -29,7 +37,8 @@ export function startCollections() {
       )
         throw Error("Unavailable");
       const value = await response.json();
-      if (document.hidden) {
+      if (document.hidden || requestRevision !== viewRevision) {
+        // Never republish an obsolete snapshot after a visibility transition.
         clear();
         return;
       }
@@ -96,9 +105,14 @@ export function startCollections() {
         new Date(checked).toLocaleString() +
         ". No playback on this website.";
     } catch {
-      clear("Playlists could not be verified.");
+      if (requestRevision === viewRevision)
+        clear("Playlists could not be verified.");
     } finally {
       busy = false;
+      if (refreshQueued) {
+        refreshQueued = false;
+        if (!document.hidden) void refresh();
+      }
     }
   }
   void refresh();
@@ -106,6 +120,7 @@ export function startCollections() {
     void refresh();
   }, 60000);
   document.addEventListener("visibilitychange", () => {
+    viewRevision++;
     clear();
     if (!document.hidden) void refresh();
   });
