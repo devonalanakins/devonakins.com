@@ -1,13 +1,11 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
-import ts from "typescript";
+import { stripTypeScriptTypes } from "node:module";
 
 // Exercise the actual first-party TypeScript client without adding a DOM vendor.
 const source = await readFile(new URL("../src/listening-collections-client.ts", import.meta.url), "utf8");
-const compiled = ts.transpileModule(source, {
-  compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext },
-}).outputText;
+const compiled = stripTypeScriptTypes(source, { mode: "strip" });
 const { startCollections } = await import(
   "data:text/javascript;base64," + Buffer.from(compiled).toString("base64")
 );
