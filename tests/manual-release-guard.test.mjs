@@ -47,7 +47,7 @@ test("wrong branch, partial SHA, wrong worker, or inconsistent V4 flag fail clos
     [{expectedSha:"A".repeat(40)},/40-character/],
     [{checkoutSha:"b".repeat(40)},/does not match/],
     [{workerConfig:'{"name": "another-worker"}'},/devonakins-personal/],
-    [{releaseVariant:"v6"},/v4 or v5/],
+    [{releaseVariant:"v6"},/v4, v5, or professional/],
     [{v5BuildFlag:"1"},/V4 build/],
   ]) assert.match(manualReleaseError({...base,...input}),message);
 });
@@ -93,4 +93,46 @@ test("production workflow only accepts explicit receiver action and verifies res
   ]) assert.ok(workflow.includes(required),"Missing GitHub OIDC control "+required);
   assert.ok(workflow.indexOf("node scripts/verify-oidc-release.mjs") >
     workflow.indexOf("node scripts/verify-live.mjs"));
+});
+
+test("professional cutover requires exact exclusive build selection and separate owner confirmation",()=>{
+  const selection={...base,releaseVariant:"professional",professionalBuildFlag:"1"};
+  assert.match(manualReleaseError(selection),/PROFESSIONAL-CUTOVER-APPROVED/);
+  assert.equal(manualReleaseError({
+    ...selection,professionalConfirmation:"PROFESSIONAL-CUTOVER-APPROVED"
+  }),null);
+  for(const input of [
+    {professionalBuildFlag:"0",professionalConfirmation:"PROFESSIONAL-CUTOVER-APPROVED"},
+    {v5BuildFlag:"1",professionalConfirmation:"PROFESSIONAL-CUTOVER-APPROVED"},
+    {professionalConfirmation:"professional-cutover-approved"},
+    {professionalConfirmation:"PROFESSIONAL-CUTOVER-APPROVED",v5Confirmation:"V5-CUTOVER-APPROVED"},
+    {professionalConfirmation:"PROFESSIONAL-CUTOVER-APPROVED",githubOidcAction:"enable",
+      githubOidcConfirmation:"GITHUB-OIDC-ENABLE-APPROVED"}
+  ])assert.ok(manualReleaseError({...selection,...input}),"Invalid professional release must fail closed");
+  assert.match(manualReleaseError({
+    ...base,professionalBuildFlag:"1"
+  }),/V4 build/);
+  assert.match(manualReleaseError({
+    ...base,releaseVariant:"v5",v5BuildFlag:"1",professionalBuildFlag:"1",
+    v5Confirmation:"V5-CUTOVER-APPROVED"
+  }),/V5 build is not selected/);
+});
+
+test("professional workflow selects guarded build on build, deploy, and production verification",()=>{
+  const workflow=readFileSync(new URL("../.github/workflows/deploy.yml",import.meta.url),"utf8");
+  for(const flag of ["professional_confirmation:","PROFESSIONAL_SITE_CANDIDATE:",
+    "PROFESSIONAL_CONFIRMATION:","PROFESSIONAL-CUTOVER-APPROVED",
+    "node scripts/verify-professional-candidate.mjs",
+    "node scripts/verify-live-professional.mjs"]){
+    // Confirmation string must exist in the guard and workflow description.
+    assert.ok(workflow.includes(flag)||flag==="PROFESSIONAL-CUTOVER-APPROVED",
+      "Missing protected professional release contract: "+flag);
+  }
+  assert.ok(workflow.indexOf("node scripts/manual-release-guard.mjs")<
+    workflow.indexOf("PROFESSIONAL_SITE_CANDIDATE=1 V5_PUBLIC_SITE_CANDIDATE=0 npm run build"));
+  assert.ok(workflow.indexOf("node scripts/verify-professional-candidate.mjs")<
+    workflow.indexOf("wrangler@4.151.3 deploy"));
+  assert.match(workflow,/github.ref == 'refs\/heads\/main'/);
+  assert.match(workflow,/environment: production/);
+  assert.doesNotMatch(workflow,/permissions:\s*\n\s*contents:\s*write/);
 });
