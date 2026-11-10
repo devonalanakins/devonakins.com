@@ -40,7 +40,12 @@ const plainNames = new Set([
   ...privateGates,
   ...ownerReleaseGates,
 ]);
-export function privateDeploymentConfig(base, settings, database) {
+export function privateDeploymentConfig(base, settings, database, {
+  githubOidcAction = "preserve",
+  githubOidcConsentVerified = false,
+} = {}) {
+  if (!["preserve", "enable", "disable"].includes(githubOidcAction))
+    throw Error("Unsupported GitHub OIDC release action");
   const bindings = settings?.bindings;
   if (!Array.isArray(bindings) || !bindings.length)
     throw Error("Deployed private runtime settings unavailable");
@@ -132,6 +137,15 @@ export function privateDeploymentConfig(base, settings, database) {
   // Missing public gates are closed. Existing approved gates remain unchanged.
   for (const name of ownerReleaseGates)
     if (!(name in vars)) vars[name] = "false";
+  if (githubOidcAction === "enable") {
+    if (githubOidcConsentVerified !== true ||
+        vars.PRESENCE_ENABLED !== "true" ||
+        vars.PRESENCE_PUBLIC_RELEASE_APPROVED !== "true")
+      throw Error("GitHub OIDC source publication prerequisites not approved");
+    vars.GITHUB_OIDC_ACTIVITY_ENABLED = "true";
+  } else if (githubOidcAction === "disable") {
+    vars.GITHUB_OIDC_ACTIVITY_ENABLED = "false";
+  }
   const extra = {
     d1_databases: [
       {
@@ -146,6 +160,64 @@ export function privateDeploymentConfig(base, settings, database) {
   };
   return prefix + "\n" + JSON.stringify(extra, null, 2).slice(1, -1) + "\n}\n";
 }
+// Read-only production acceptance. A public-approved source and project are
+// required before enabling the receiver. This never reads token hashes or
+// returns the raw private owner record into CI logs.
+export async function verifyGithubOidcOwnerConsent({
+  account, token, databaseId, fetcher = fetch, now = Date.now(),
+} = {}) {
+  if (!Number.isSafeInteger(now) || now <= 0)
+    throw new PrivatePreflightFailure("OIDC_CONSENT_VALIDATE", "INVALID_TIME");
+  const sql = [
+    "SELECT",
+    "(SELECT COUNT(*) FROM activity_sources WHERE source='github-actions'",
+    "AND project_slug='devonakins-com' AND revoked=0) AS configured,",
+    "(SELECT COUNT(*) FROM activity_sources s JOIN presence_state p ON p.id=1",
+    "WHERE s.source='github-actions' AND s.project_slug='devonakins-com'",
+    "AND s.revoked=0 AND s.public_enabled=1 AND s.token_until>?",
+    "AND s.generation=p.editor_generation AND p.public_enabled=1",
+    "AND p.private_work=0 AND p.paused=0",
+    "AND CASE WHEN p.public_projects_json IS NULL THEN 1",
+    "WHEN json_valid(p.public_projects_json)=0 THEN 0",
+    "ELSE EXISTS(SELECT 1 FROM json_each(p.public_projects_json)",
+    "WHERE value='devonakins-com') END) AS eligible",
+  ].join(" ");
+  let response;
+  try {
+    response = await fetcher(
+      "https://api.cloudflare.com/client/v4/accounts/" + account +
+      "/d1/database/" + databaseId + "/query", {
+        method: "POST",
+        headers: {
+          Authorization: "Bearer " + token,
+          Accept: "application/json",
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ sql, params: [String(now)] }),
+        redirect: "error",
+        signal: AbortSignal.timeout(10000),
+      });
+  } catch {
+    throw new PrivatePreflightFailure("OIDC_CONSENT_READ", "NETWORK_OR_TIMEOUT");
+  }
+  if (!response.ok)
+    throw new PrivatePreflightFailure("OIDC_CONSENT_READ", "HTTP_" + response.status);
+  let data;
+  try {
+    data = await response.json();
+  } catch {
+    throw new PrivatePreflightFailure("OIDC_CONSENT_READ", "INVALID_JSON");
+  }
+  const result = data?.result?.[0];
+  if (data?.success !== true || result?.success === false ||
+      !Array.isArray(result?.results) || result.results.length !== 1)
+    throw new PrivatePreflightFailure("OIDC_CONSENT_READ", "API_REJECTED");
+  const { configured, eligible } = result.results[0] || {};
+  if (configured !== 1 || eligible !== 1)
+    throw new PrivatePreflightFailure("OIDC_CONSENT_VALIDATE", "SOURCE_NOT_APPROVED");
+  return true;
+}
+
 export async function preparePrivateDeployment({
   env = process.env,
   fetcher = fetch,
@@ -155,6 +227,20 @@ export async function preparePrivateDeployment({
 } = {}) {
   const account = env.CLOUDFLARE_ACCOUNT_ID;
   const token = env.CLOUDFLARE_API_TOKEN;
+  const githubOidcAction = env.GITHUB_OIDC_ACTION || "preserve";
+  if (!["preserve", "enable", "disable"].includes(githubOidcAction))
+    throw new PrivatePreflightFailure("OIDC_ACTION_VALIDATE", "INVALID_ACTION");
+  if (githubOidcAction !== "preserve" &&
+      (env.GITHUB_ACTIONS !== "true" ||
+       env.GITHUB_REF !== "refs/heads/main" ||
+       env.RELEASE_VARIANT !== "v4" ||
+       !/^[a-f0-9]{40}$/.test(env.EXPECTED_SHA || "") ||
+       env.EXPECTED_SHA !== env.GITHUB_SHA))
+    throw new PrivatePreflightFailure("OIDC_ACTION_VALIDATE", "UNTRUSTED_RELEASE");
+  if (githubOidcAction === "enable"
+      ? env.GITHUB_OIDC_CONFIRMATION !== "GITHUB-OIDC-ENABLE-APPROVED"
+      : Boolean(env.GITHUB_OIDC_CONFIRMATION))
+    throw new PrivatePreflightFailure("OIDC_ACTION_VALIDATE", "CONFIRMATION_MISMATCH");
   if (!/^[a-f0-9]{32}$/.test(account || "") || !token)
     throw Error("Dedicated Cloudflare CI credentials required");
   async function get(path, stage) {
@@ -207,9 +293,18 @@ export async function preparePrivateDeployment({
     throw new PrivatePreflightFailure("ACTIVE_BINDINGS_VALIDATE", "DEDICATED_D1_MISSING");
   const database = await get("/d1/database/" + binding.id, "D1_METADATA_READ");
   const base = await read("wrangler.jsonc", "utf8");
+  // A dedicated read-only SQL query verifies owner source consent. No
+  // activity is inserted and no public sharing state is altered here.
+  const githubOidcConsentVerified = githubOidcAction === "enable"
+    ? await verifyGithubOidcOwnerConsent({
+        account, token, databaseId: binding.id, fetcher,
+      })
+    : false;
   let config;
   try {
-    config = privateDeploymentConfig(base, settings, database);
+    config = privateDeploymentConfig(base, settings, database, {
+      githubOidcAction, githubOidcConsentVerified,
+    });
   } catch {
     throw new PrivatePreflightFailure("PRIVATE_CONFIG_VALIDATE", "BINDING_OR_DB_MISMATCH");
   }
