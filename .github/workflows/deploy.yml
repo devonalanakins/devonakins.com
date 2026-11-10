@@ -8,15 +8,20 @@ on:
         required: true
         type: string
       release_variant:
-        description: Default to V4; V5 requires full release acceptance
+        description: Default V4; V5 or professional requires distinct full release approval
         required: true
         type: choice
         options:
           - v4
           - v5
+          - professional
         default: v4
       v5_confirmation:
         description: V5 only - enter V5-CUTOVER-APPROVED after final release acceptance
+        required: false
+        type: string
+      professional_confirmation:
+        description: Professional only - enter PROFESSIONAL-CUTOVER-APPROVED after review
         required: false
         type: string
       github_oidc_action:
@@ -47,6 +52,7 @@ jobs:
     # must not silently turn back into V4 during deployment.
     env:
       V5_PUBLIC_SITE_CANDIDATE: ${{ inputs.release_variant == 'v5' && '1' || '0' }}
+      PROFESSIONAL_SITE_CANDIDATE: ${{ inputs.release_variant == 'professional' && '1' || '0' }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -60,6 +66,7 @@ jobs:
           EXPECTED_SHA: ${{ inputs.expected_sha }}
           RELEASE_VARIANT: ${{ inputs.release_variant }}
           V5_CONFIRMATION: ${{ inputs.v5_confirmation }}
+          PROFESSIONAL_CONFIRMATION: ${{ inputs.professional_confirmation }}
           GITHUB_OIDC_ACTION: ${{ inputs.github_oidc_action }}
           GITHUB_OIDC_CONFIRMATION: ${{ inputs.github_oidc_confirmation }}
         # The reviewed guard requires V5-CUTOVER-APPROVED for a V5 cutover.
@@ -76,11 +83,18 @@ jobs:
           V5_PUBLIC_SITE_CANDIDATE=0 npm test
           node --check scripts/verify-live.mjs
           node --check scripts/verify-live-v5.mjs
+          node --check scripts/verify-live-professional.mjs
           if [ "$V5_PUBLIC_SITE_CANDIDATE" = '1' ]; then
             # Rebuild the artifact actually selected for production. Wrangler's
             # configured build inherits the job-level flag and repeats V5.
             V5_PUBLIC_SITE_CANDIDATE=1 npm run build
             node scripts/verify-v5-site-candidate.mjs
+          fi
+          if [ "$PROFESSIONAL_SITE_CANDIDATE" = '1' ]; then
+            # The actual protected release must rebuild the reviewed professional
+            # variant and retain its route/asset/privacy contract.
+            PROFESSIONAL_SITE_CANDIDATE=1 V5_PUBLIC_SITE_CANDIDATE=0 npm run build
+            node scripts/verify-professional-candidate.mjs
           fi
       - name: Verify approved GitHub repository links remain public
         env:
@@ -111,7 +125,9 @@ jobs:
         env:
           EXPECTED_COMMIT: ${{ github.sha }}
         run: |
-          if [ "$V5_PUBLIC_SITE_CANDIDATE" = '1' ]; then
+          if [ "$PROFESSIONAL_SITE_CANDIDATE" = '1' ]; then
+            node scripts/verify-live-professional.mjs
+          elif [ "$V5_PUBLIC_SITE_CANDIDATE" = '1' ]; then
             node scripts/verify-live-v5.mjs
           else
             node scripts/verify-live.mjs
