@@ -3,7 +3,11 @@ import assert from "node:assert/strict";
 import { DatabaseSync } from "node:sqlite";
 import { readFileSync } from "node:fs";
 import { createActivityTasksApi, activityTasks } from "../src/activity-tasks.mjs";
-import { GithubRunProviderUnavailable } from "../src/github-actions-oidc.mjs";
+import {
+  GithubRunProviderUnavailable,
+  GithubKeysProviderUnavailable,
+  GithubCryptoUnavailable,
+} from "../src/github-actions-oidc.mjs";
 const at=Date.parse("2026-11-10T15:00:00.000Z");
 const owner={access:{aud:"fixture",getIdentity:async()=>({email:"owner@example.test"})}};
 const pretendJwt="SIGNED_GITHUB_OIDC_FIXTURE_NOT_REAL";
@@ -19,6 +23,8 @@ function make({verified=true,enabled=true}={}){
  const api=createActivityTasksApi({clock:()=>at,verifyGithubIdentity:async(token,{clock})=>{
    validations++;assert.equal(token,pretendJwt);assert.equal(clock(),at);
    if(verified==="provider-unavailable") throw new GithubRunProviderUnavailable();
+   if(verified==="keys-unavailable") throw new GithubKeysProviderUnavailable();
+   if(verified==="crypto-unavailable") throw new GithubCryptoUnavailable();
    return verified?{projectSlug:"devonakins-com"}:null;
  }});
  const env={PRESENCE_ENABLED:"true",PRESENCE_PUBLIC_RELEASE_APPROVED:"true",
@@ -92,9 +98,30 @@ test("signed but unconfirmed run has distinct 503 without source creation or cre
  const response=await f.start();
  assert.equal(response.status,503);
  assert.equal(response.headers.get("retry-after"),"60");
+ assert.equal(response.headers.get("x-activity-verification-stage"),"run");
  const content=await response.text();
  assert.match(content,/Live workflow verification unavailable/);
  assert.doesNotMatch(content,/SIGNED_GITHUB_OIDC_FIXTURE|PRIVATE|secret|token/);
  assert.equal((await activityTasks(f.env,at)).tasks.length,0);
  assert.equal(f.sqlite.prepare("SELECT COUNT(*) AS count FROM activity_tasks").get().count,0);
+});
+
+test("only bounded signing-key and crypto stages are revealed; requests never create task rows",async()=>{
+ for(const [failure,stage] of [
+   ["keys-unavailable","keys"],["crypto-unavailable","crypto"]
+ ]) {
+   const f=make({verified:failure});
+   await f.connect();f.publish();
+   const response=await f.start();
+   assert.equal(response.status,503);
+   assert.equal(response.headers.get("retry-after"),"60");
+   assert.equal(response.headers.get("x-activity-verification-stage"),stage);
+   const body=await response.text();
+   assert.doesNotMatch(body,/PRIVATE|JWT|SIGNED_GITHUB_OIDC_FIXTURE_NOT_REAL/);
+   assert.equal(f.sqlite.prepare("SELECT COUNT(*) AS count FROM activity_tasks").get().count,0);
+ }
+ const f=make({verified:false});await f.connect();f.publish();
+ const rejected=await f.start();
+ assert.equal(rejected.status,401);
+ assert.equal(rejected.headers.get("x-activity-verification-stage"),null);
 });
