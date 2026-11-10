@@ -661,3 +661,139 @@ h1 em,h2 em,.p-footer-line em{font-style:italic;color:#e9c29a}
  .p-playlist-grid{grid-template-columns:1fr}
  .p-home-destinations{margin-top:40px}
 }
+
+
+/* APPROVED CONCEPT FIDELITY — activity reference, 2026-11-10.
+ * Midnight blue/black, restrained sunset-gold, individually coded event
+ * colors, true GitHub/Spotify vector marks, fine borders and ivory type.
+ * Applies to all professional pages, with no fabricated signal styling. */
+:root {
+ --concept-midnight:#0b131b;
+ --concept-panel:#17232d;
+ --concept-ivory:#f4eee5;
+ --concept-gold:#e8b987;
+ --concept-gold-highlight:#f2d3a9;
+ --concept-border:#b8c8d438;
+ --concept-green:#82d49c;
+ --concept-purple:#c4a2ec;
+ --concept-blue:#85c2f3;
+ --concept-amber:#eac182;
+}
+.p-body{background:#0b131b;color:var(--concept-ivory)}
+.p-header{border-bottom:1px solid #ffffff16;background:#0b1219e8}
+.p-desktop-nav a[aria-current="page"]{color:var(--concept-ivory)}
+.p-desktop-nav a[aria-current="page"]:after{background:var(--concept-gold)}
+.p-eyebrow{color:var(--concept-gold)}
+.p-eyebrow:before{background:var(--concept-gold)}
+.p-section-heading h2,.p-home-closer h2{color:var(--concept-ivory)}
+.p-page-hero h1 em,.p-home-hero h1 em,h2 em{color:var(--concept-gold)}
+.p-button-primary{background:linear-gradient(110deg,#f3d1a6,#c7976d);border-color:#f0c99b;color:#131a21}
+.p-button-primary:hover{background:linear-gradient(110deg,#ffe2b9,#d5a273);border-color:#ffdfb1}
+.p-button:focus-visible,.p-text-link:focus-visible,
+.p-event-meta a:focus-visible{outline:3px solid var(--concept-gold-highlight);outline-offset:3px}
+.p-card,.p-work-card,.p-aside-panel,.p-feed,.p-feed-panel,.p-destination-panel,.p-signal-card,.p-featured-study{
+ border-color:var(--concept-border);
+ box-shadow:inset 0 1px 0 #ffffff0b,0 13px 28px #0002;
+}
+.p-activity-main .p-feed{background:linear-gradient(165deg,#1b2a35eb,#101c26f0)}
+.p-activity-main .p-feed li:before{background:#dde3e2;border:2px solid #14212b}
+.p-activity-main .p-feed li{padding-top:17px;padding-bottom:17px}
+.p-event-symbol{
+ width:38px;height:38px;border-radius:9px;display:grid;place-items:center;
+ border:1px solid #579e756b;background:#15372cbd;color:var(--concept-green);
+ box-shadow:inset 0 0 12px #79e2a00a;
+}
+.p-event-symbol>svg{width:21px;height:21px;stroke-width:1.75;flex:none}
+.p-event-symbol[data-variant="merged"],.p-event-symbol[data-variant="review"]{
+ color:var(--concept-purple);background:#352546dc;border-color:#8b72bb85;
+}
+.p-event-symbol[data-variant="opened"]{
+ color:var(--concept-blue);background:#162f46e5;border-color:#578dbd82;
+}
+.p-event-symbol[data-variant="release"]{
+ color:var(--concept-amber);background:#34291bdc;border-color:#bb915c83;
+}
+.p-event-symbol[data-variant="issue"]{
+ color:var(--concept-blue);background:#1d3544da;border-color:#709fc681;
+}
+.p-event-symbol[data-variant="other"]{
+ color:#d4c6b4;background:#252b33;border-color:#8c969c71;
+}
+.p-event-meta{display:flex;align-items:center;flex-wrap:wrap;gap:7px 12px;margin-top:7px;min-width:0}
+.p-feed li .p-event-meta small{display:inline;color:#b9c7cf;overflow-wrap:anywhere;font-size:.74rem}
+.p-event-chip{
+ display:inline-block;border:1px solid #4f946983;background:#17392ab3;
+ border-radius:14px;padding:3px 9px;font-size:.64rem;font-weight:700;
+ letter-spacing:.055em;line-height:1.35;color:var(--concept-green);
+ white-space:nowrap;
+}
+.p-event-chip[data-variant="merged"],.p-event-chip[data-variant="review"]{
+ color:#dbc3fa;border-color:#9672b985;background:#342843ba;
+}
+.p-event-chip[data-variant="opened"]{
+ color:#b4daf9;border-color:#578fbf87;background:#1a3049bc;
+}
+.p-event-chip[data-variant="release"]{
+ color:#f3d49e;border-color:#b9946483;background:#382c1dc4;
+}
+.p-event-chip[data-variant="issue"]{
+ color:#b4daf9;border-color:#588eae80;background:#1b3245c5;
+}
+.p-event-chip[data-variant="other"]{
+ color:#d7dadb;border-color:#7a858d80;background:#253039bb;
+}
+.p-feed li a:hover .p-event-chip,.p-recent-updates li a:hover span{filter:brightness(1.1)}
+.p-feed li time,.p-recent-updates li time{color:#c6b9a9;font-variant-numeric:tabular-nums}
+.p-feed-status[data-status="available"]:before{background:var(--concept-green)}
+.p-recent-updates li{display:grid;grid-template-columns:27px minmax(0,1fr);gap:10px;align-items:center}
+.p-recent-updates .p-event-symbol{width:24px;height:25px;border-radius:5px}
+.p-recent-updates .p-event-symbol svg{width:15px;height:15px}
+.p-recent-updates li a{min-width:0}
+.p-recent-updates li span{font-size:.77rem}
+.p-activity-aside .p-aside-panel{background:linear-gradient(155deg,#17232dec,#0e1922ec)}
+.p-source-row .p-brand-icon{width:24px;height:24px}
+.p-source-spotify .p-brand-spotify,.p-spotify-heading .p-brand-spotify,.p-ribbon-spotify .p-brand-spotify{color:#1ed760}
+.p-source-github .p-brand-github,.p-ribbon-cell .p-brand-github,.p-feed-panel .p-brand-github{color:#f1eee9}
+.p-source-spotify [data-spotify-source-state][data-spotify-mode="playing"]{color:#8fe0af}
+.p-source-spotify [data-spotify-source-state][data-spotify-mode="private"]{color:#aab7be}
+.p-source-row{border-top-color:#c6d4d62b}
+.p-spotify-heading{display:inline-flex;align-items:center;gap:9px}
+.p-spotify-heading .p-brand-icon{height:18px;width:18px;flex:none}
+.p-spotify-card[data-spotify-mode="playing"]{
+ border-color:#71bc8e62;
+ box-shadow:inset 0 1px 0 #a9d8bc1a,0 16px 36px #0003;
+}
+.p-spotify-card[data-spotify-mode="playing"] [data-spotify-state]{color:#b3eed1}
+.p-spotify-eyebrow{color:#9bdabb}
+.p-spotify-card .p-spotify-art{border-color:#bfc3ae50}
+.p-ribbon-spotify .p-brand-spotify{height:23px;width:23px}
+.p-ribbon-last:hover strong,.p-text-link{color:var(--concept-gold)}
+.p-header-listen{border-color:#d5af805e;color:var(--concept-gold)}
+.p-signal-row>svg{color:var(--concept-gold)}
+.p-signal-row b{
+ background:#255b413b;border-color:#70b69283;color:#a8dfba;
+ font-variant-numeric:tabular-nums;
+}
+.p-activity-aside .p-fine{color:#aebdc6!important}
+.p-footer{
+ background:radial-gradient(ellipse at 54% 76%,#aa785c5f,transparent 65%),linear-gradient(180deg,#0f1b26,#0b1018);
+}
+.p-footer:before{
+ left:0;right:0;bottom:0;width:100%;height:100%;clip-path:none;
+ background-image:linear-gradient(180deg,#0d1621e0 0%,#0d162168 30%,#101b24aa 95%),url("/professional/concept-art.webp");
+ background-size:cover,200% 300%;background-position:center,0% 100%;
+ filter:saturate(.78) brightness(.86);opacity:.85;
+ -webkit-mask-image:linear-gradient(to bottom,transparent,#000 42%);
+ mask-image:linear-gradient(to bottom,transparent,#000 42%);
+}
+.p-footer:after{
+ background:linear-gradient(165deg,#1b2b33ed,#050a11ee);
+ opacity:.92;
+}
+@media(max-width:760px){
+ .p-event-chip{font-size:.61rem;padding:3px 8px}
+ .p-activity-main .p-feed li a{grid-template-columns:35px minmax(0,1fr)}
+ .p-activity-main .p-feed li time{grid-column:2}
+ .p-event-meta{gap:6px}
+ .p-ribbon-spotify .p-brand-spotify{height:19px;width:19px}
+}
