@@ -69,10 +69,10 @@ function renderListening(value:unknown){
     }
     const progress=card.querySelector<HTMLProgressElement>("[data-spotify-progress]");
     if(progress){
-      const validProgress=track&&p.progress;
+      const validProgress=track ? p.progress : null;
       progress.hidden=!validProgress;
-      progress.value=validProgress?p.progress.value:0;
-      progress.max=validProgress?p.progress.max:1;
+      progress.value=validProgress?.value ?? 0;
+      progress.max=validProgress?.max ?? 1;
     }
   }
 }
