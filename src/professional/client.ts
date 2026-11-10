@@ -125,6 +125,42 @@ function paint(){
       : state==="empty" ? "No qualifying recent public GitHub events"+stamp
       : "Public GitHub feed temporarily unavailable. GitHub may be limiting requests; retrying automatically.";
   }
+
+  const observed=snapshot?.status==="available" ? snapshot.events : [];
+  for(const counter of document.querySelectorAll<HTMLElement>("[data-github-count]")){
+    const requested=counter.dataset.githubCount;
+    counter.textContent=snapshot?.status==="available" || snapshot?.status==="empty"
+      ? String(observed.filter(event=>event.kind===requested).length) : "—";
+    counter.setAttribute("aria-label",
+      counter.textContent==="—" ? "Data unavailable" : counter.textContent+" recorded "+requested+" events");
+  }
+  const highlights=document.querySelector<HTMLOListElement>("[data-github-highlights]");
+  if(highlights){
+    const fragment=document.createDocumentFragment();
+    for(const event of observed.slice(0,4)){
+      const li=document.createElement("li");
+      const link=document.createElement("a");
+      const label=document.createElement("span");
+      const when=document.createElement("time");
+      link.href=event.url;
+      link.target="_blank";
+      link.rel="noopener noreferrer";
+      label.textContent=event.label+" · "+event.repo;
+      when.dateTime=event.at;
+      when.textContent=age(event.at,now);
+      link.append(label,when);
+      li.append(link);
+      fragment.append(li);
+    }
+    if(fragment.childNodes.length===0){
+      const li=document.createElement("li");
+      li.textContent=snapshot?.status==="empty"
+        ? "No recent qualifying public events."
+        : "No verified public events to display.";
+      fragment.append(li);
+    }
+    highlights.replaceChildren(fragment);
+  }
   if(source){
     source.textContent=snapshot?.status==="available"
       ? "Public GitHub source responding · checked "+new Date(snapshot.checkedAt).toLocaleString()
