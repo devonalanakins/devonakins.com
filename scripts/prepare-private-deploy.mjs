@@ -2,6 +2,7 @@
 import { readFile, writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { PUBLIC_PRESENCE_PROJECTS } from "../src/presence-model.mjs";
 
 export class PrivatePreflightFailure extends Error {
   constructor(stage, reason) {
@@ -168,6 +169,12 @@ export async function verifyGithubOidcOwnerConsent({
 } = {}) {
   if (!Number.isSafeInteger(now) || now <= 0)
     throw new PrivatePreflightFailure("OIDC_CONSENT_VALIDATE", "INVALID_TIME");
+  // Match src/presence-preferences.mjs::approvedProjects, not merely JSON
+  // membership. A JSON scalar, duplicate entries, an unknown project or an
+  // oversized array would be rejected by the Worker and must not authorize
+  // enabling its receiver in the protected deployment.
+  const slugs = Object.keys(PUBLIC_PRESENCE_PROJECTS);
+  const placeholders = slugs.map(() => "?").join(",");
   const sql = [
     "SELECT",
     "(SELECT COUNT(*) FROM activity_sources WHERE source='github-actions'",
@@ -179,6 +186,12 @@ export async function verifyGithubOidcOwnerConsent({
     "AND p.private_work=0 AND p.paused=0",
     "AND CASE WHEN p.public_projects_json IS NULL THEN 1",
     "WHEN json_valid(p.public_projects_json)=0 THEN 0",
+    "WHEN json_type(p.public_projects_json)<>'array' THEN 0",
+    "WHEN json_array_length(p.public_projects_json)>? THEN 0",
+    "WHEN EXISTS(SELECT 1 FROM json_each(p.public_projects_json)",
+    "WHERE type<>'text' OR value NOT IN (" + placeholders + ")) THEN 0",
+    "WHEN (SELECT COUNT(DISTINCT value) FROM json_each(p.public_projects_json))",
+    "<>json_array_length(p.public_projects_json) THEN 0",
     "ELSE EXISTS(SELECT 1 FROM json_each(p.public_projects_json)",
     "WHERE value='devonakins-com') END) AS eligible",
   ].join(" ");
@@ -193,7 +206,7 @@ export async function verifyGithubOidcOwnerConsent({
           Accept: "application/json",
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ sql, params: [String(now)] }),
+        body: JSON.stringify({ sql, params: [String(now), String(slugs.length), ...slugs] }),
         redirect: "error",
         signal: AbortSignal.timeout(10000),
       });
