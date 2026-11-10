@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {readFile} from "node:fs/promises";
-import {renderProfessionalPage,PROFESSIONAL_PAGES,PROFESSIONAL_ROUTES} from "../src/professional/site.mjs";
+import {renderProfessionalPage,renderProfessionalProjectPage,PROFESSIONAL_PAGES,PROFESSIONAL_ROUTES} from "../src/professional/site.mjs";
 import {createHandler} from "../src/worker.mjs";
 import assets from "../.release/assets.mjs";
 
@@ -70,4 +70,16 @@ test("professional CSS obeys first-party CSP and supplies mobile/reduced motion 
   assert.match(style,/@media\(prefers-reduced-motion:reduce\)/);
   assert.match(client,/textContent=event\.label/);
   assert.match(client,/credentials:"omit"/);
+});
+
+test("existing approved project details use the new shell without exposing unpublished work",()=>{
+  for(const name of ["merit","mizvo","rhen-language","operations","anevum"]){
+    const html=renderProfessionalProjectPage(name);
+    assert.match(html,/<main id="main"/);
+    assert.match(html,/p-page-work/);
+    assert.match(html,/Project status/);
+    assert.match(html,/What is not claimed/);
+    assert.match(html,/href="\/activity\/"/);
+  }
+  assert.throws(()=>renderProfessionalProjectPage("brandicade"),/Unknown or unpublished project/);
 });
