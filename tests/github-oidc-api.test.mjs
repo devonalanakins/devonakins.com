@@ -106,6 +106,7 @@ test("signed-claim issuer JWKS outage is a fail-closed 502, never a task",async(
  const response=await f.start();
  assert.equal(response.status,502);
  assert.equal(response.headers.get("retry-after"),"60");
+ assert.equal(response.headers.get("x-oidc-jwks-failure"),"fetch-error");
  const content=await response.text();
  assert.match(content,/Identity verification keys unavailable/);
  assert.doesNotMatch(content,/SIGNED_GITHUB_OIDC_FIXTURE|PRIVATE|secret|token/);

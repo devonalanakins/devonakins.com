@@ -6,6 +6,7 @@ import {
   validGithubActivityClaims,
   verifyGithubActionsIdentity,
   GithubRunProviderUnavailable,
+  GITHUB_JWKS_FAILURE_CLASSES,
 } from "../src/github-actions-oidc.mjs";
 import { spawn, execFileSync } from "node:child_process";
 import { pathToFileURL } from "node:url";
@@ -14,10 +15,14 @@ const secret = (v) => typeof v === "string" && /^[A-Za-z0-9_-]{43}$/.test(v);
 // Fixed status categories only. Never print a response body, bearer, URL,
 // provider account, command output or arbitrary exception text into CI logs.
 export class ActivityRequestFailure extends Error {
-  constructor(status) {
+  constructor(status, jwksCategory = null) {
     super("Reporter HTTP response rejected");
     this.name = "ActivityRequestFailure";
     this.status = status;
+    // Only a reviewed fixed category from a 502 response may be printed.
+    this.jwksCategory = status === 502 &&
+      GITHUB_JWKS_FAILURE_CLASSES.includes(jwksCategory)
+      ? jwksCategory : null;
   }
 }
 export function activityFailureReason(error) {
@@ -32,7 +37,9 @@ export function activityFailureReason(error) {
   };
   return (categories[error.status] || "receiver error") +
     " (HTTP " + (Number.isSafeInteger(error.status) && error.status >= 400 &&
-      error.status <= 599 ? error.status : "error") + ")";
+      error.status <= 599 ? error.status : "error") + ")" +
+    (error.jwksCategory ? " [public issuer key lookup: " +
+      error.jwksCategory + "]" : "");
 }
 export function projectFromRemote(remote) {
   if (typeof remote !== "string") return null;
@@ -166,7 +173,11 @@ export async function githubOidcTaskStart({
     body: JSON.stringify({ version: 1, projectSlug }),
     signal: AbortSignal.timeout(8000),
   });
-  if (!response.ok) throw new ActivityRequestFailure(response.status);
+  if (!response.ok) throw new ActivityRequestFailure(
+    response.status,
+    response.status === 502
+      ? response.headers.get("X-OIDC-JWKS-Failure") : null,
+  );
   if (!/application\/json/i.test(response.headers.get("content-type") || ""))
     throw Error("Invalid reporter response");
   return response.json();

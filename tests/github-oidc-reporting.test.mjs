@@ -6,6 +6,7 @@ import {
   verifyGithubActionsIdentity,
   GithubRunProviderUnavailable,
   GithubKeyProviderUnavailable,
+  GITHUB_JWKS_FAILURE_CLASSES,
   GITHUB_ACTIVITY_AUDIENCE,
 } from "../src/github-actions-oidc.mjs";
 
@@ -285,4 +286,49 @@ test("public issuer JWKS request uses explicit WAF-compatible API headers and ne
   assert.equal(await verifyGithubActionsIdentity(forged,{
     fetcher,clock:()=>time,
   }),null);
+});
+
+test("issuer transport failure categories stay bounded and reject activity before run lookup", async () => {
+  const f=await fixture(), token=await f.issue();
+  const cases=[
+    [403,"upstream-forbidden"],
+    [429,"upstream-rate-limited"],
+    [401,"upstream-client-error"],
+    [503,"upstream-server-error"],
+    [300,"upstream-invalid-status"],
+  ];
+  for (const [status,expected] of cases) {
+    let called=0;
+    const fetcher=async(url)=>{
+      called++;
+      assert.equal(url,"https://token.actions.githubusercontent.com/.well-known/jwks");
+      return new Response(null,{status});
+    };
+    await assert.rejects(
+      verifyGithubActionsIdentity(token,{clock:()=>time,fetcher}),
+      e=>e instanceof GithubKeyProviderUnavailable && e.category===expected &&
+        GITHUB_JWKS_FAILURE_CLASSES.includes(e.category),
+    );
+    assert.equal(called,1,"no unverified run is queried");
+  }
+  for(const [response,expected] of [
+    [new Response("plain text",{headers:{"Content-Type":"text/plain"}}),"unexpected-content-type"],
+    [new Response("not JSON",{headers:{"Content-Type":"application/json"}}),"unreadable-response"],
+  ]) {
+    let called=0;
+    await assert.rejects(verifyGithubActionsIdentity(token,{
+      clock:()=>time,
+      fetcher:async()=>{called++;return response;},
+    }),e=>e instanceof GithubKeyProviderUnavailable && e.category===expected);
+    assert.equal(called,1);
+  }
+  for(const [exception,expected] of [
+    [new DOMException("PRIVATE upstream reason","TimeoutError"),"timeout"],
+    [new TypeError("PRIVATE upstream reason"),"fetch-error"],
+  ]) {
+    await assert.rejects(verifyGithubActionsIdentity(token,{
+      clock:()=>time,fetcher:async()=>{throw exception;},
+    }),e=>e instanceof GithubKeyProviderUnavailable && e.category===expected &&
+      !String(e).includes("PRIVATE"));
+  }
 });

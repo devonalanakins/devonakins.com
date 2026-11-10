@@ -12,10 +12,24 @@ const KEYS_URL = ISSUER + "/.well-known/jwks";
 const RUN_URL = "https://api.github.com/repos/devonalanakins/devonakins.com/actions/runs/";
 /** Fixed non-sensitive transport failure after claims parsing but before
  * signature verification. Never accept a JWT when keys are unavailable. */
+export const GITHUB_JWKS_FAILURE_CLASSES = Object.freeze([
+  "upstream-forbidden",
+  "upstream-rate-limited",
+  "upstream-client-error",
+  "upstream-server-error",
+  "upstream-invalid-status",
+  "unexpected-content-type",
+  "unreadable-response",
+  "timeout",
+  "fetch-error",
+]);
 export class GithubKeyProviderUnavailable extends Error {
-  constructor() {
+  constructor(category = "fetch-error") {
     super("Trusted signing key provider temporarily unavailable");
     this.name = "GithubKeyProviderUnavailable";
+    // Fixed non-sensitive diagnostics only, never provider body or request data.
+    this.category = GITHUB_JWKS_FAILURE_CLASSES.includes(category)
+      ? category : "fetch-error";
   }
 }
 /** Only emitted *after* a verified GitHub signature when the independent
@@ -121,23 +135,41 @@ export async function verifyGithubActionsIdentity(token, {
   const signature = decode64(parts[2]);
   if (!signature || signature.length < 256 || signature.length > 512) return null;
   try {
-    let jwks;
+    // Never treat failure of public issuer-key retrieval as a bad JWT or
+    // bypass RSA verification. A bounded category supports private CI diagnosis.
+    let keyResponse;
     try {
-      jwks = await boundedJson(await fetcher(KEYS_URL, {
+      keyResponse = await fetcher(KEYS_URL, {
         method: "GET", redirect: "error", cache: "no-store",
-        // Workers fetch supplies no default User-Agent. Some issuer/WAF
-        // policies reject anonymous JWKS reads without explicit API headers.
-        // Request only the fixed public issuer endpoint; never send the JWT.
         headers: {
           Accept: "application/json",
           "User-Agent": "devonakins-signed-activity",
         },
         signal: AbortSignal.timeout(5000),
-      }), 32768);
+      });
+    } catch (error) {
+      throw new GithubKeyProviderUnavailable(
+        error?.name === "TimeoutError" || error?.name === "AbortError"
+          ? "timeout" : "fetch-error",
+      );
+    }
+    if (!keyResponse?.ok) {
+      const status = keyResponse?.status;
+      throw new GithubKeyProviderUnavailable(
+        status === 403 ? "upstream-forbidden" :
+        status === 429 ? "upstream-rate-limited" :
+        status >= 400 && status < 500 ? "upstream-client-error" :
+        status >= 500 && status < 600 ? "upstream-server-error" :
+        "upstream-invalid-status",
+      );
+    }
+    if (!/application\/json/i.test(keyResponse.headers?.get("content-type") || ""))
+      throw new GithubKeyProviderUnavailable("unexpected-content-type");
+    let jwks;
+    try {
+      jwks = await boundedJson(keyResponse, 32768);
     } catch {
-      // Cannot authenticate without the issuer's public keys. Fail closed,
-      // but do not label a provider transport failure as an invalid signature.
-      throw new GithubKeyProviderUnavailable();
+      throw new GithubKeyProviderUnavailable("unreadable-response");
     }
     if (!Array.isArray(jwks.keys) || jwks.keys.length > 32) return null;
     const matched = jwks.keys.filter(key => key?.kid === header.kid && key?.kty === "RSA" &&
