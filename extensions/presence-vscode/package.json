@@ -1,9 +1,9 @@
 {
   "name": "devonakins-presence",
   "displayName": "DevonAkins Presence",
-  "version": "0.4.2",
+  "version": "0.4.3",
   "publisher": "devonalanakins",
-  "description": "Privacy-first editor presence and official Codex IDE/ChatGPT-plan launcher.",
+  "description": "Privacy-first verified editor activity, Codex file observations and ChatGPT IDE integration.",
   "license": "MIT",
   "engines": {
     "vscode": "^1.100.0"
