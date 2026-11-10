@@ -309,7 +309,9 @@ export function createActivityTasksApi({
             "SELECT * FROM activity_sources WHERE token_hash=?"
           ).bind(hash).first();
         }
-        if (!allowed(s, o, at)) return ownerError("Source unavailable", 401);
+        if (!allowed(s, o, at) ||
+            (oidcStart && (s.public_enabled !== 1 || !publicAllowed(env, o))))
+          return ownerError("Source unavailable", 401);
         if (
           data.projectSlug !== undefined &&
           data.projectSlug !== s.project_slug
