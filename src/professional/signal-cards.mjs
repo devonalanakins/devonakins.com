@@ -1,3 +1,4 @@
+import {brandIcon} from "./brand-icons.mjs";
 /**
  * Public-facing professional-site source cards. Deliberate empty states only:
  * live data comes from existing owner-consented Spotify, GPT, work and Threads.
@@ -5,7 +6,7 @@
  */
 export function spotifyCard(variant="compact") {
   return '<section class="p-signal-card p-spotify-card '+(variant==="feature"?"p-spotify-feature":"")+'" data-public-spotify aria-labelledby="p-spotify-title-'+variant+'">' +
-    '<div class="p-signal-head"><span class="p-signal-over">SPOTIFY · IN THE ZONE</span><span class="p-signal-state" data-spotify-state>Checking source</span></div>'+
+    '<div class="p-signal-head"><span class="p-signal-over p-spotify-heading">'+brandIcon("spotify")+'<span>SPOTIFY · IN THE ZONE</span></span><span class="p-signal-state" data-spotify-state>Checking source</span></div>'+
     '<div class="p-spotify-body"><div class="p-spotify-art"><div class="p-vinyl" aria-hidden="true"><span></span></div>'+
     '<img data-spotify-cover alt="" referrerpolicy="no-referrer" decoding="async" loading="lazy" hidden></div>'+
     '<div class="p-spotify-meta"><span class="p-spotify-eyebrow">MY CODING SOUNDTRACK</span>'+
