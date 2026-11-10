@@ -96,6 +96,9 @@ jobs:
       - name: Verify private repository controls with synthetic inventory (PR only)
         if: github.event_name == 'pull_request'
         run: python3 tests/github_owner_acceptance.py
+      - name: Verify private owner project-policy repair on mobile (PR only)
+        if: github.event_name == 'pull_request'
+        run: python3 tests/presence_project_policy_acceptance.py
       - name: Attach browser QA report or failing screenshots (PR only)
         if: always() && github.event_name == 'pull_request'
         uses: actions/upload-artifact@v4

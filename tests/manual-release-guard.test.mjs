@@ -65,3 +65,32 @@ test("protected GitHub deployment runs the tested release guard before building 
   ]) assert.ok(workflow.includes(required),"Missing release safeguard: "+required);
   assert.doesNotMatch(workflow,/permissions:\s*\n\s*contents:\s*write/);
 });
+
+test("GitHub OIDC receiver requires exact approval and a protected V4 release", () => {
+  assert.equal(manualReleaseError({...base,githubOidcAction:"preserve"}),null);
+  assert.match(manualReleaseError({...base,githubOidcAction:"enable"}),/GITHUB-OIDC-ENABLE-APPROVED/);
+  assert.equal(manualReleaseError({...base,githubOidcAction:"enable",
+    githubOidcConfirmation:"GITHUB-OIDC-ENABLE-APPROVED"}),null);
+  assert.equal(manualReleaseError({...base,githubOidcAction:"disable"}),null);
+  for (const input of [
+    {githubOidcAction:"unexpected"},
+    {githubOidcAction:"enable",githubOidcConfirmation:"enable"},
+    {githubOidcAction:"disable",githubOidcConfirmation:"GITHUB-OIDC-ENABLE-APPROVED"},
+    {githubOidcAction:"preserve",githubOidcConfirmation:"GITHUB-OIDC-ENABLE-APPROVED"},
+  ]) assert.ok(manualReleaseError({...base,...input}));
+  for(const action of ["enable","disable"]) assert.match(manualReleaseError({
+    ...base,releaseVariant:"v5",v5BuildFlag:"1",
+    v5Confirmation:"V5-CUTOVER-APPROVED",githubOidcAction:action,
+    githubOidcConfirmation:action==="enable"?"GITHUB-OIDC-ENABLE-APPROVED":""
+  }),/V4 release only/);
+});
+test("production workflow only accepts explicit receiver action and verifies result", () => {
+  const workflow=readFileSync(new URL("../.github/workflows/deploy.yml",import.meta.url),"utf8");
+  for(const required of ["github_oidc_action:", "github_oidc_confirmation:",
+    "GITHUB_OIDC_ACTION:", "GITHUB_OIDC_CONFIRMATION:",
+    "Verify live signed receiver gate and reject unsigned requests",
+    "scripts/verify-oidc-release.mjs",
+  ]) assert.ok(workflow.includes(required),"Missing GitHub OIDC control "+required);
+  assert.ok(workflow.indexOf("node scripts/verify-oidc-release.mjs") >
+    workflow.indexOf("node scripts/verify-live.mjs"));
+});

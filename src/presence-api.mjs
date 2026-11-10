@@ -1,4 +1,4 @@
-import { approvedProjects } from "./presence-preferences.mjs";
+import { approvedProjects, projectPreferencesNeedReview } from "./presence-preferences.mjs";
 /** One expiring record. Authenticated writes and a separately gated public view. */
 import {
   projectPublicPresence,
@@ -342,6 +342,7 @@ function status(row, env, at) {
     serverTime: iso(at),
     preview: projectPublicPresence(presenceInput(row, env, at), at),
     projects: approvedProjects(row),
+    projectChoicesNeedReview: projectPreferencesNeedReview(row),
     projectCatalog: PUBLIC_PRESENCE_PROJECTS,
   };
 }

@@ -1,10 +1,13 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
+import { DatabaseSync } from "node:sqlite";
+import { PUBLIC_PRESENCE_PROJECTS } from "../src/presence-model.mjs";
 import {
   privateDeploymentConfig,
   preparePrivateDeployment,
   PrivatePreflightFailure,
+  verifyGithubOidcOwnerConsent,
 } from "../scripts/prepare-private-deploy.mjs";
 
 const base = readFileSync(
@@ -25,6 +28,7 @@ const ownerGates = [
   "GPT_SNAPSHOT_PUBLIC_RELEASE_APPROVED",
   "THREADS_PUBLIC_RELEASE_APPROVED",
   "THREADS_PUBLIC_FEED_ENABLED",
+  "GITHUB_OIDC_ACTIVITY_ENABLED",
 ];
 const legacyGates = ["GPT_USAGE_READ_ENABLED", "GPT_USAGE_WRITE_ENABLED"];
 const gates = [...ownerGates, ...legacyGates];
@@ -371,4 +375,195 @@ test("provider failures create no deployment file and expose no provider respons
       !e.message.includes("synthetic-ci-credential"),
   );
   assert.equal(writes, 0);
+});
+
+test("GitHub OIDC release preserves a previously approved gate without a new category opt-in", () => {
+  const enabled = settings();
+  enabled.bindings.find(b => b.name === "GITHUB_OIDC_ACTIVITY_ENABLED").text = "true";
+  assert.equal(clean(privateDeploymentConfig(base, enabled, database))
+    .vars.GITHUB_OIDC_ACTIVITY_ENABLED, "true");
+  assert.equal(clean(privateDeploymentConfig(base, enabled, database, {
+    githubOidcAction: "disable",
+  })).vars.GITHUB_OIDC_ACTIVITY_ENABLED, "false");
+  assert.throws(() => privateDeploymentConfig(base, settings(), database, {
+    githubOidcAction: "enable",
+  }), /prerequisites/);
+  assert.throws(() => privateDeploymentConfig(base, settings(), database, {
+    githubOidcAction: "unexpected", githubOidcConsentVerified: true,
+  }), /Unsupported/);
+  const approved = settings();
+  approved.bindings.find(b => b.name === "PRESENCE_PUBLIC_RELEASE_APPROVED").text = "true";
+  assert.equal(clean(privateDeploymentConfig(base, approved, database, {
+    githubOidcAction: "enable", githubOidcConsentVerified: true,
+  })).vars.GITHUB_OIDC_ACTIVITY_ENABLED, "true");
+  assert.doesNotMatch(privateDeploymentConfig(base, approved, database, {
+    githubOidcAction: "enable", githubOidcConsentVerified: true,
+  }), /LISTENING_TOKEN_KEY/);
+});
+
+test("GitHub OIDC consent check is read-only, source-specific, dated and fail-closed", async () => {
+  const captured = [];
+  const valid = async (url, options) => {
+    captured.push({url,options});
+    return Response.json({success:true,result:[{success:true,
+      results:[{configured:1,eligible:1}]}]});
+  };
+  assert.equal(await verifyGithubOidcOwnerConsent({
+    account:"a".repeat(32),token:"synthetic-ci",databaseId:id,
+    now:1_700_000_000_000,fetcher:valid,
+  }),true);
+  assert.equal(captured.length,1);
+  assert.equal(captured[0].options.method,"POST");
+  assert.equal(captured[0].options.redirect,"error");
+  const body=JSON.parse(captured[0].options.body);
+  assert.deepEqual(body.params,["1700000000000",
+    String(Object.keys(PUBLIC_PRESENCE_PROJECTS).length),
+    ...Object.keys(PUBLIC_PRESENCE_PROJECTS)]);
+  assert.match(body.sql,/s.source='github-actions'/);
+  assert.match(body.sql,/s.project_slug='devonakins-com'/);
+  assert.match(body.sql,/s.token_until>\?/);
+  assert.doesNotMatch(body.sql,/SELECT \*/);
+  for(const rows of [
+    [{configured:2,eligible:1}],[{configured:1,eligible:0}],
+    [],[{configured:0,eligible:0}],
+  ]) {
+    await assert.rejects(verifyGithubOidcOwnerConsent({
+      account:"a".repeat(32),token:"synthetic-ci",databaseId:id,
+      fetcher:async()=>Response.json({success:true,result:[{success:true,results:rows}]}),
+    }),e=>e instanceof PrivatePreflightFailure && e.stage.startsWith("OIDC_CONSENT"));
+  }
+  await assert.rejects(verifyGithubOidcOwnerConsent({
+    account:"a".repeat(32),token:"synthetic-ci",databaseId:id,
+    fetcher:async()=>new Response("sensitive provider text",{status:403}),
+  }),e=>e instanceof PrivatePreflightFailure &&
+    e.reason==="HTTP_403" && !JSON.stringify(e).includes("sensitive provider text"));
+});
+
+test("activation preflight needs exact protected-main confirmation plus approved D1 source", async () => {
+  const env = {
+    CLOUDFLARE_ACCOUNT_ID: "a".repeat(32),
+    CLOUDFLARE_API_TOKEN: "synthetic-ci",
+    GITHUB_ACTIONS: "true",
+    GITHUB_REF: "refs/heads/main",
+    GITHUB_SHA: "a".repeat(40),
+    EXPECTED_SHA: "a".repeat(40),
+    RELEASE_VARIANT: "v4",
+    GITHUB_OIDC_ACTION: "enable",
+    GITHUB_OIDC_CONFIRMATION: "GITHUB-OIDC-ENABLE-APPROVED",
+  };
+  const approval = settings();
+  approval.bindings.find(b=>b.name==="PRESENCE_PUBLIC_RELEASE_APPROVED").text="true";
+  const queries=[];
+  const fetcher = async (url,opts) => {
+    if(url.endsWith("/query")) {
+      queries.push(opts);
+      return Response.json({success:true,result:[{success:true,
+        results:[{configured:1,eligible:1}]}]});
+    }
+    return Response.json({success:true,
+      result:url.endsWith("/versions/"+activeVersion)
+        ? {resources:approval}
+        : provider(url)});
+  };
+  let written;
+  await preparePrivateDeployment({env,fetcher,read:async()=>base,
+    write:async (...args)=>{written=args;}});
+  assert.equal(queries.length,1);
+  assert.equal(written[0],"wrangler.deploy.jsonc");
+  assert.equal(written[2].mode,0o600);
+  assert.equal(clean(written[1]).vars.GITHUB_OIDC_ACTIVITY_ENABLED,"true");
+  for(const input of [
+    {GITHUB_OIDC_CONFIRMATION:"yes"},
+    {GITHUB_REF:"refs/heads/other"},
+    {RELEASE_VARIANT:"v5"},
+    {EXPECTED_SHA:"b".repeat(40)},
+    {GITHUB_ACTIONS:"false"},
+    {GITHUB_OIDC_ACTION:"anything"},
+  ]) {
+    let writes=0;
+    await assert.rejects(preparePrivateDeployment({
+      env:{...env,...input},fetcher,read:async()=>base,
+      write:async()=>{writes++;},
+    }));
+    assert.equal(writes,0);
+  }
+  let writes=0;
+  await assert.rejects(preparePrivateDeployment({
+    env,read:async()=>base,write:async()=>{writes++;},
+    fetcher:async(url,opts)=>url.endsWith("/query")
+      ? Response.json({success:true,result:[{success:true,
+          results:[{configured:1,eligible:0}]}]})
+      : fetcher(url,opts),
+  }),e=>e instanceof PrivatePreflightFailure && e.reason==="SOURCE_NOT_APPROVED");
+  assert.equal(writes,0);
+});
+
+
+test("real SQLite/D1 migration schema matches the exact owner publication policy", async () => {
+  const sqlite = new DatabaseSync(":memory:");
+  try {
+    for (const name of ["0002_presence.sql","0003_presence_preferences.sql",
+      "0004_editor_pairing.sql","0006_cloud_presence.sql","0007_activity_tasks.sql"]) {
+      sqlite.exec(readFileSync(new URL("../migrations/"+name, import.meta.url), "utf8"));
+    }
+    const now = 1_800_000_000_000;
+    sqlite.exec("UPDATE presence_state SET public_enabled=1,editor_generation=3 WHERE id=1");
+    sqlite.prepare("INSERT INTO activity_sources(id,source,project_slug,generation,public_enabled,token_hash,token_until,created_at) VALUES(?,?,?,?,?,?,?,?)")
+      .run("source1","github-actions","devonakins-com",3,1,"opaque-hash",now+86_400_000,now);
+    const fetcher=async (url,request) => {
+      assert.ok(url.endsWith("/query"));
+      const {sql,params}=JSON.parse(request.body);
+      const queryParams=params.map((value,index)=>index<2?Number(value):value);
+      const results=sqlite.prepare(sql).all(...queryParams);
+      return Response.json({success:true,result:[{success:true,results}]});
+    };
+    const verify=()=>verifyGithubOidcOwnerConsent({
+      account:"a".repeat(32),token:"synthetic-ci",databaseId:id,
+      now,fetcher,
+    });
+    const permits=async (value, expected) => {
+      sqlite.prepare("UPDATE presence_state SET public_projects_json=? WHERE id=1").run(value);
+      if(expected) assert.equal(await verify(),true);
+      else await assert.rejects(verify(),e=>e instanceof PrivatePreflightFailure &&
+        e.reason==="SOURCE_NOT_APPROVED");
+    };
+    // A null allowlist means the normal default known-public-project list.
+    await permits(null,true);
+    await permits(JSON.stringify(["devonakins-com","merit"]),true);
+    for(const value of [
+      JSON.stringify(["merit"]),
+      JSON.stringify(["devonakins-com","devonakins-com"]),
+      JSON.stringify(["devonakins-com","unapproved-private"]),
+      JSON.stringify(["devonakins-com",null]),
+      JSON.stringify(["devonakins-com",1]),
+      JSON.stringify({"one":"devonakins-com"}),
+      JSON.stringify("devonakins-com"),
+      "{malformed",
+      JSON.stringify(["devonakins-com",...Object.keys(PUBLIC_PRESENCE_PROJECTS)]),
+    ]) await permits(value,false);
+    await permits(JSON.stringify(["devonakins-com"]),true);
+    for (const mutation of [
+      ["presence_state","public_enabled",0],
+      ["presence_state","private_work",1],
+      ["presence_state","paused",1],
+      ["presence_state","editor_generation",4],
+      ["activity_sources","public_enabled",0],
+      ["activity_sources","revoked",1],
+      ["activity_sources","token_until",now-1],
+    ]) {
+      const [table,column,bad]=mutation;
+      const original=sqlite.prepare("SELECT "+column+" AS value FROM "+table+" LIMIT 1").get().value;
+      sqlite.prepare("UPDATE "+table+" SET "+column+"=?").run(bad);
+      await assert.rejects(verify(), e=>e instanceof PrivatePreflightFailure &&
+        e.reason==="SOURCE_NOT_APPROVED",table+"."+column);
+      sqlite.prepare("UPDATE "+table+" SET "+column+"=?").run(original);
+      assert.equal(await verify(),true,"Recovered "+table+"."+column);
+    }
+    sqlite.prepare("INSERT INTO activity_sources(id,source,project_slug,generation,public_enabled,token_hash,token_until,created_at) VALUES(?,?,?,?,?,?,?,?)")
+      .run("source2","github-actions","devonakins-com",3,1,"second-opaque-hash",now+86_400_000,now);
+    await assert.rejects(verify(),e=>e instanceof PrivatePreflightFailure &&
+      e.reason==="SOURCE_NOT_APPROVED","ambiguous approved sources");
+  } finally {
+    sqlite.close();
+  }
 });

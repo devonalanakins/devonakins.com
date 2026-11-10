@@ -1,0 +1,115 @@
+#!/usr/bin/env python3
+"""Owner-only project policy repair: Chromium/WebKit, mobile, no real credentials."""
+import subprocess
+from pathlib import Path
+from playwright.sync_api import sync_playwright
+
+ROOT = Path(__file__).resolve().parent.parent
+HTML = subprocess.check_output(
+    ["node", "--input-type=module", "-e",
+     "import {renderPresenceOwner} from './src/presence-owner-page.mjs';"
+     "process.stdout.write(renderPresenceOwner());"],
+    cwd=ROOT, text=True,
+)
+CATALOG = {"devonakins-com": "DevonAkins.com", "merit": "Merit"}
+with sync_playwright() as p:
+    for engine in (p.chromium, p.webkit):
+        browser = engine.launch()
+        for width in (320, 390, 1440):
+            context = browser.new_context(
+                viewport={"width": width, "height": 844},
+                reduced_motion="reduce",
+            )
+            page = context.new_page()
+            state = {"revision": 7, "projects": [], "needsReview": True, "posts": []}
+
+            def owner_status():
+                return {
+                    "revision": state["revision"],
+                    "publishingAllowed": True, "enabled": True,
+                    "shareListening": False, "privateWork": False,
+                    "editorEnabled": False, "paused": False, "projectSlug": None,
+                    "manualState": None, "manualExpiresAt": None,
+                    "sessionExpiresAt": None, "sources": None,
+                    "preview": {"state": "offline", "source": "none", "project": None},
+                    "projects": state["projects"],
+                    "projectChoicesNeedReview": state["needsReview"],
+                    "projectCatalog": CATALOG,
+                }
+
+            def route(req):
+                path = req.request.url.split("example.test", 1)[-1]
+                if path == "/owner/presence/":
+                    return req.fulfill(body=HTML, content_type="text/html")
+                if path.startswith("/v2/"):
+                    file = ROOT / "public" / path.lstrip("/")
+                    return req.fulfill(
+                        body=file.read_text(),
+                        content_type="text/css" if file.suffix == ".css"
+                        else "text/javascript")
+                if path == "/api/presence/owner":
+                    if req.request.method == "POST":
+                        body = req.request.post_data_json
+                        state["posts"].append(body)
+                        if body.get("action") != "projects" or body.get("revision") != state["revision"]:
+                            return req.fulfill(status=409, json={"error": "Revision changed"})
+                        if any(v not in CATALOG for v in body.get("projects", [])):
+                            return req.fulfill(status=400, json={"error": "Invalid project"})
+                        state["revision"] += 1
+                        state["projects"] = body["projects"]
+                        state["needsReview"] = False
+                    return req.fulfill(json=owner_status())
+                if path == "/api/presence/owner?channel=tasks":
+                    return req.fulfill(json={
+                        "publishingAllowed": True, "sources": [],
+                        "preview": {"version": 1, "visibility": "hidden", "tasks": []},
+                    })
+                if path == "/api/presence/owner?channel=cloud":
+                    return req.fulfill(json={
+                        "revision": 0, "publishingAllowed": False,
+                        "enabled": False, "paired": False,
+                        "privatePreview": {"state": "no-signal", "source": None,
+                                           "project": None, "asOf": None,
+                                           "expiresAt": None},
+                    })
+                if path == "/api/threads/auth/status":
+                    return req.fulfill(json={
+                        "version": 1, "appConfigured": False,
+                        "storageReady": False, "connected": False,
+                    })
+                return req.abort()
+
+            page.route("**/*", route)
+            page.goto("https://example.test/owner/presence/")
+            page.wait_for_function(
+                "document.querySelector('#presence-notice').textContent.includes('Controls ready')")
+            alert = page.locator("#project-policy-warning")
+            assert alert.is_visible(), (engine.name, width, "missing warning")
+            assert page.locator("input[data-public-project]").count() == len(CATALOG)
+            assert not page.locator("input[data-public-project]:checked").count()
+            page.wait_for_function(
+                "document.querySelector('#task-notice').textContent.includes('Review and save')")
+            assert page.locator("#task-connect").is_disabled(), (
+                engine.name, width, "unapproved runner pairing visible")
+            assert page.locator("#task-project option").count() == 0
+            assert page.evaluate("document.documentElement.scrollWidth <= innerWidth"), (
+                engine.name, width, "horizontal overflow")
+            page.locator('input[data-public-project][value="devonakins-com"]').check()
+            page.locator("#projects-save").click()
+            page.wait_for_function(
+                "document.querySelector('#project-policy-warning').hidden === true")
+            assert state["posts"] == [{
+                "action": "projects", "revision": 7, "projects": ["devonakins-com"]
+            }], (engine.name, width, state["posts"])
+            assert page.locator('input[data-public-project][value="devonakins-com"]').is_checked()
+            assert not page.locator('input[data-public-project][value="merit"]').is_checked()
+            assert page.locator("#project-policy-warning").is_hidden()
+            page.wait_for_function(
+                "document.querySelector('#task-connect').disabled === false")
+            assert page.locator("#task-project option").count() == 1
+            assert page.locator("#task-project").input_value() == "devonakins-com"
+            assert page.evaluate("document.documentElement.scrollWidth <= innerWidth"), (
+                engine.name, width, "post-save horizontal overflow")
+            context.close()
+        browser.close()
+print("Owner project policy: warning, explicit approved save, privacy and responsive Chromium/WebKit at 320/390/1440 passed.")

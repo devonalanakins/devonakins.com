@@ -10,6 +10,8 @@ export function manualReleaseError({
   releaseVariant,
   v5BuildFlag,
   v5Confirmation,
+  githubOidcAction = "preserve",
+  githubOidcConfirmation = "",
   workerConfig,
 } = {}) {
   if (typeof expectedSha !== "string" || !/^[a-f0-9]{40}$/.test(expectedSha))
@@ -19,6 +21,17 @@ export function manualReleaseError({
   if (typeof workerConfig !== "string" ||
       !workerConfig.includes('"name": "devonakins-personal"'))
     return "The Worker configuration no longer targets devonakins-personal.";
+  // This setting controls a public source and must never be implicitly enabled
+  // by a routine deployment, V5 cutover, or an unrecognized dispatch input.
+  if (!["preserve", "enable", "disable"].includes(githubOidcAction))
+    return "GitHub OIDC action must be preserve, enable, or disable.";
+  if (githubOidcAction === "enable" &&
+      githubOidcConfirmation !== "GITHUB-OIDC-ENABLE-APPROVED")
+    return "GitHub OIDC activation requires exact GITHUB-OIDC-ENABLE-APPROVED confirmation.";
+  if (githubOidcAction !== "enable" && githubOidcConfirmation)
+    return "GitHub OIDC confirmation must be empty except when enabling.";
+  if (releaseVariant !== "v4" && githubOidcAction !== "preserve")
+    return "GitHub OIDC activation and emergency disable are allowed on the protected V4 release only.";
   if (releaseVariant === "v4") {
     if (v5BuildFlag !== "0")
       return "The V4 release must use the V4 build. Do not enable V5 for the privacy hotfix.";
@@ -48,6 +61,8 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === resolve(process.argv[1
       releaseVariant: process.env.RELEASE_VARIANT,
       v5BuildFlag: process.env.V5_PUBLIC_SITE_CANDIDATE,
       v5Confirmation: process.env.V5_CONFIRMATION,
+      githubOidcAction: process.env.GITHUB_OIDC_ACTION || "preserve",
+      githubOidcConfirmation: process.env.GITHUB_OIDC_CONFIRMATION || "",
       workerConfig,
     });
     if (error) {

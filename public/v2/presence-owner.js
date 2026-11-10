@@ -157,6 +157,8 @@ function render(data) {
   for (const slug of data.projects)
     project.add(new Option(catalog[slug] || slug, slug));
   const choices = el("presence-project-choices");
+  const policyWarning = el("project-policy-warning");
+  if (policyWarning) policyWarning.hidden = data.projectChoicesNeedReview !== true;
   choices.replaceChildren();
   for (const [slug, label] of Object.entries(catalog)) {
     const item = document.createElement("label");
@@ -236,6 +238,11 @@ async function mutate(action, extra = {}) {
       throw new Error(data.error || "Change was not saved.");
     }
     const current = render(data);
+    if (current && action === "projects") {
+      // The independent runner panel rechecks the server-approved choices;
+      // no credentials or project selections are supplied by this event.
+      document.dispatchEvent(new Event("presence-projects-saved"));
+    }
     if (current && action === "off") {
       confirmedStopOperation = Math.max(confirmedStopOperation, operation);
       cloudGeneration++;
