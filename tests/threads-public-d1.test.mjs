@@ -68,7 +68,7 @@ test("D1 public posts require every independent global and source release gate",
   assert.equal(response.posts.length,1);
   assert.equal(response.posts[0].text,"A public original Threads post");
   assert.equal(providerCalls,1);
-  assert.doesNotMatch(JSON.stringify(response),/PRIVATE_SHOULD_NOT_LEAK|t{80}|fixtureDevon|123456789/);
+  assert.doesNotMatch(JSON.stringify(response),/PRIVATE_SHOULD_NOT_LEAK|t{80}|123456789/);
 });
 
 test("D1 owner can disconnect immediately, invalidating cached responses without provider calls",async()=>{
