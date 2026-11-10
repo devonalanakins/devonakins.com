@@ -834,3 +834,20 @@ h1 em,h2 em,.p-footer-line em{font-style:italic;color:#e9c29a}
  * decorative placeholder. The GitHub panel sizes to real content rather
  * than stretching to the taller signal stack beside it. */
 .p-home-bottom{align-items:start}
+
+
+/* Keep the featured operations case study readable on narrow screens.
+ * Later cinematic desktop rules must not override the mobile stack. */
+@media(max-width:760px){
+ .p-featured-study{grid-template-columns:minmax(0,1fr);gap:0;padding:12px;align-items:stretch}
+ .p-featured-study .p-study-art{width:100%;height:190px;min-height:190px}
+ .p-featured-study>div:last-child{padding:20px 12px 18px;min-width:0}
+ .p-featured-study .p-study-points{grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+ .p-featured-study .p-study-points div+div{border-top:0;border-left:1px solid #ffffff20;padding:0 0 0 12px}
+}
+@media(max-width:530px){
+ .p-featured-study .p-study-art{height:160px;min-height:160px}
+ .p-featured-study .p-study-points{grid-template-columns:minmax(0,1fr)}
+ .p-featured-study .p-study-points div+div{border-left:0;border-top:1px solid #ffffff24;padding:14px 0 0}
+ .p-featured-study h3{font-size:clamp(1.85rem,7.7vw,2.4rem)}
+}
