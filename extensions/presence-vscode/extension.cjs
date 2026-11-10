@@ -10,13 +10,13 @@ function reportableExternalFile(uri) {
       typeof uri.fsPath !== "string" || !uri.fsPath.length ||
       uri.fsPath.length > 4096) return false;
   const file = uri.fsPath.replace(/\\/g, "/").toLowerCase();
-  if (/(^|\\/)(?:\\.git|node_modules|dist|build|coverage|target|out|vendor|__pycache__|\\.venv|venv|\\.wrangler|\\.next|\\.cache|\\.turbo)(?:\\/|$)/.test(file))
+  if (/(^|\/)(?:\.git|node_modules|dist|build|coverage|target|out|vendor|__pycache__|\.venv|venv|\.wrangler|\.next|\.cache|\.turbo)(?:\/|$)/.test(file))
     return false;
   const basename = file.slice(file.lastIndexOf("/") + 1);
   if (basename.startsWith(".env") || basename.includes("secret") ||
       basename.includes("credential") || basename.endsWith(".min.js") ||
       basename.endsWith(".map")) return false;
-  return /\\.(?:ts|tsx|js|jsx|mjs|cjs|py|rs|go|css|scss|html|md|json|yaml|yml|toml|vue|svelte)$/.test(basename);
+  return /\.(?:ts|tsx|js|jsx|mjs|cjs|py|rs|go|css|scss|html|md|json|yaml|yml|toml|vue|svelte)$/.test(basename);
 }
 let cleanup;
 function createCompanion(
