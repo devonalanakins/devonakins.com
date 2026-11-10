@@ -47,7 +47,19 @@ try:
                 assert page.locator("main").count()==1
                 assert page.locator(".p-home-portrait img").is_visible()
                 assert page.locator(".p-home-bottom [data-public-github-feed]").count()==1
-                # If the GitHub provider has no events, its panel must not stretch\n                # to the height of unrelated Spotify/Work/GPT signal cards.\n                assert page.evaluate("""() => {\n                  const panel=document.querySelector(".p-feed-panel");\n                  const stack=document.querySelector(".p-home-signal-stack");\n                  if (!panel || !stack) return false;\n                  if (matchMedia("(max-width:760px)").matches) return true;\n                  // Populated timelines may genuinely be taller than the signal stack.\n                  if (panel.querySelector("[data-feed-list] li")) return true;\n                  return panel.getBoundingClientRect().height < stack.getBoundingClientRect().height;\n                }"""), (engine,device,"empty GitHub panel should fit content")\n                assert page.evaluate("document.documentElement.scrollWidth <= window.innerWidth + 2"), (engine,device,"horizontal overflow")
+                # An empty/unavailable GitHub feed must not stretch to the
+                # height of unrelated Spotify, GPT and work-signal cards.
+                assert page.evaluate("""() => {
+                  const panel=document.querySelector(".p-feed-panel");
+                  const stack=document.querySelector(".p-home-signal-stack");
+                  if (!panel || !stack) return false;
+                  if (matchMedia("(max-width:760px)").matches) return true;
+                  // Populated timelines can legitimately be taller.
+                  if (panel.querySelector("[data-feed-list] li")) return true;
+                  return panel.getBoundingClientRect().height <
+                    stack.getBoundingClientRect().height;
+                }"""), (engine,device,"empty GitHub panel should fit content")
+                assert page.evaluate("document.documentElement.scrollWidth <= window.innerWidth + 2"), (engine,device,"horizontal overflow")
                 if device=="mobile":
                     menu=page.get_by_role("button",name="Open menu")
                     assert menu.is_visible()
@@ -65,6 +77,19 @@ try:
                     assert r.status==200,(engine,device,path)
                     assert page.locator("main h1").count()==1,(engine,device,path)
                     assert page.evaluate("document.documentElement.scrollWidth <= window.innerWidth + 2"), (engine,device,path,"overflow")
+                    if path=="/work/" and device=="mobile":
+                        # The wide cinematic case study must collapse into
+                        # one legible column rather than narrow side-by-side art/text.
+                        assert page.evaluate("""() => {
+                          const study=document.querySelector(".p-featured-study");
+                          if(!study || study.children.length<2) return false;
+                          const art=study.children[0].getBoundingClientRect();
+                          const copy=study.children[1].getBoundingClientRect();
+                          return art.width>=250 && copy.width>=250 &&
+                            copy.top>=art.bottom-1 &&
+                            copy.left>=art.left-1 && copy.right<=art.right+1 &&
+                            art.height<=230;
+                        }"""), (engine,device,"work case study mobile stack")
                     if path in ("/work/","/writing/"):
                         page.screenshot(path=str(OUT/f"{engine}-{device}-{path.strip('/')}.png"),full_page=True)
                 # This browser-local fixture tests layout and UI behavior only.
