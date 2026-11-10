@@ -70,6 +70,10 @@ test("professional CSS obeys first-party CSP and supplies mobile/reduced motion 
   assert.match(style,/@media\(prefers-reduced-motion:reduce\)/);
   assert.match(client,/textContent=event\.label/);
   assert.match(client,/credentials:"omit"/);
+  assert.match(style,/concept-art\.webp/);
+  assert.match(style,/headshot/);
+  assert.match(client,/data-github-highlights/);
+  assert.match(client,/data-github-count/);
 });
 
 test("existing approved project details use the new shell without exposing unpublished work",()=>{
@@ -82,4 +86,21 @@ test("existing approved project details use the new shell without exposing unpub
     assert.match(html,/href="\/activity\/"/);
   }
   assert.throws(()=>renderProfessionalProjectPage("brandicade"),/Unknown or unpublished project/);
+});
+
+test("approved cinematic concept assets remain local, non-executable and separate from project data",async()=>{
+  const home=renderProfessionalPage("home");
+  const activity=renderProfessionalPage("activity");
+  assert.match(home,/\/professional\/headshot-concept\.webp/);
+  assert.match(activity,/data-github-count="push"/);
+  assert.match(activity,/data-github-highlights/);
+  assert.doesNotMatch(activity,/Pushed 4 commits|Release v0\.4\.0|Active today|100% team adoption/);
+  for(const path of ["/professional/headshot-concept.webp","/professional/concept-art.webp"]){
+    const response=await site.fetch(new Request("https://devonakins.com"+path));
+    assert.equal(response.status,200,path);
+    assert.equal(response.headers.get("Content-Type"),"image/webp");
+    const bytes=new Uint8Array(await response.arrayBuffer());
+    assert.equal(new TextDecoder().decode(bytes.slice(0,4)),"RIFF");
+    assert.equal(new TextDecoder().decode(bytes.slice(8,12)),"WEBP");
+  }
 });
