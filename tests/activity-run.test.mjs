@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {EventEmitter} from 'node:events';
+import {GithubRunProviderUnavailable} from '../src/github-actions-oidc.mjs';
 import {runParticipatingTask,activityRequest,activityFailureReason,ActivityRequestFailure,githubOidcTaskStart,localGithubOidcScopeMatches} from '../scripts/activity-run.mjs';
 test('participating wrapper emits only real execution checkpoints and final status, never raw command/output or inherited credential',async()=>{
  const child=new EventEmitter();child.stdout=new EventEmitter();child.stderr=new EventEmitter();let at=Date.now();const sent=[];const token='T'.repeat(43);const sink={write(){}};
@@ -226,4 +227,45 @@ test("runner local scope diagnostic reads only allowed claims, never treats them
  assert.equal(callback,true);
  assert.equal(leaked,false);
  assert.equal(response.token,"T".repeat(43));
+});
+
+test("local cryptographic diagnosis is opt-in, bounded, never logs JWT and never authorizes backend publication",async()=>{
+ const jwt=pretendJwt();
+ for(const [check,expected] of [
+   [async()=>({projectSlug:"devonakins-com"}),"verified"],
+   [async()=>null,"rejected"],
+   [async()=>{throw new GithubRunProviderUnavailable();},"run-provider-unavailable"],
+   [async()=>{throw Error("PRIVATE ORIGINAL TOKEN");},"verification-error"],
+ ]) {
+   const results=[];
+   const response=await githubOidcTaskStart({
+     environment:signedEnvironment(),
+     onLocalVerifierCheck:status=>{results.push(status);},
+     verifyLocalIdentity:async(token,options)=>{
+       assert.equal(token,jwt);
+       assert.equal(typeof options.fetcher,"function");
+       return check();
+     },
+     fetcher:async(url,opts)=>{
+       if(url.startsWith("https://pipelines.actions.githubusercontent.com/"))
+         return Response.json({value:jwt});
+       if(url.endsWith("/github-oidc-start")){
+         // This POST remains mandatory even when a local diagnostic succeeds.
+         assert.equal(opts.headers.Authorization,"Bearer "+jwt);
+         assert.doesNotMatch(JSON.stringify(opts.body),/PRIVATE|SIGNED/);
+         return Response.json({token:"T".repeat(43),
+           expiresAt:new Date(Date.now()+60000).toISOString()});
+       }
+       throw Error("Unexpected provider request");
+     }
+   });
+   assert.equal(response.token,"T".repeat(43));
+   assert.deepEqual(results,[expected]);
+   assert.doesNotMatch(results.join(" "),/PRIVATE|TOKEN|\.([A-Za-z0-9_-]{30})/);
+ }
+ const workflow=(await import("node:fs")).readFileSync(
+   new URL("../.github/workflows/verify.yml",import.meta.url),"utf8"
+ );
+ assert.match(workflow,/DEVON_ACTIVITY_DIAGNOSE_IDENTITY: "true"/);
+ assert.match(workflow,/if: github\.event_name == 'push' && github\.ref == 'refs\/heads\/main'/);
 });
