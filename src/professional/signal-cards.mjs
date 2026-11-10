@@ -19,7 +19,7 @@ export function workSignalCard() {
   return '<section class="p-signal-card p-work-signal-card" data-public-work aria-labelledby="p-work-signals-title">'+
     '<div class="p-signal-head"><span class="p-signal-over">WORK · OBSERVED STATUS</span><span class="p-signal-state" data-work-state>Source pending</span></div>'+
     '<h3 id="p-work-signals-title" data-work-title>No verified active session</h3>'+
-    '<p data-work-detail>Spotify is Devon's owner-defined coding mode; editor activity and GitHub history remain separate sources.</p>'+
+    '<p data-work-detail>Spotify is Devon’s owner-defined coding mode; editor activity and GitHub history remain separate sources.</p>'+
     '<a class="p-text-link" href="/activity/">Inspect activity <span aria-hidden="true">↗</span></a></section>';
 }
 export function gptSignalCard() {
