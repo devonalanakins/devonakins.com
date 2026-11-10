@@ -19,6 +19,20 @@ export class GithubRunProviderUnavailable extends Error {
     this.name = "GithubRunProviderUnavailable";
   }
 }
+/** Fixed-stage provider errors. Invalid JWTs still return null; these never
+ * grant trust or return provider data, and are intentionally not public claims. */
+export class GithubKeysProviderUnavailable extends Error {
+  constructor() {
+    super("Trusted signing-key provider temporarily unavailable");
+    this.name = "GithubKeysProviderUnavailable";
+  }
+}
+export class GithubCryptoUnavailable extends Error {
+  constructor() {
+    super("Signature verifier temporarily unavailable");
+    this.name = "GithubCryptoUnavailable";
+  }
+}
 
 const REPO_ID = "1439132762"; // immutable GitHub repository id, verified 2026-11-10
 const OWNER_ID = "324676006"; // immutable GitHub account id, verified 2026-11-10
@@ -99,7 +113,7 @@ async function boundedJson(response, maxBytes) {
 }
 
 export async function verifyGithubActionsIdentity(token, {
-  clock = Date.now, fetcher = fetch,
+  clock = Date.now, fetcher = fetch, subtle = crypto.subtle,
 } = {}) {
   if (typeof token !== "string" || token.length < 250 || token.length > 8500 ||
       !/^[A-Za-z0-9_.-]+$/.test(token)) return null;
@@ -113,10 +127,17 @@ export async function verifyGithubActionsIdentity(token, {
   const signature = decode64(parts[2]);
   if (!signature || signature.length < 256 || signature.length > 512) return null;
   try {
-    const jwks = await boundedJson(await fetcher(KEYS_URL, {
-      method: "GET", redirect: "error", cache: "no-store",
-      signal: AbortSignal.timeout(5000),
-    }), 32768);
+    let jwks;
+    try {
+      jwks = await boundedJson(await fetcher(KEYS_URL, {
+        method: "GET", redirect: "error", cache: "no-store",
+        signal: AbortSignal.timeout(5000),
+      }), 32768);
+    } catch {
+      // A syntactically plausible JWT is still *not* trusted if GitHub's
+      // signing-key endpoint cannot be fetched or validated.
+      throw new GithubKeysProviderUnavailable();
+    }
     if (!Array.isArray(jwks.keys) || jwks.keys.length > 32) return null;
     const matched = jwks.keys.filter(key => key?.kid === header.kid && key?.kty === "RSA" &&
       (key.alg === undefined || key.alg === "RS256") &&
@@ -124,13 +145,20 @@ export async function verifyGithubActionsIdentity(token, {
       key.e === "AQAB" && typeof key.n === "string" &&
       /^[A-Za-z0-9_-]{256,1024}$/.test(key.n));
     if (matched.length !== 1) return null;
-    const key = await crypto.subtle.importKey("jwk", {
-      kty: "RSA", n: matched[0].n, e: matched[0].e,
-    }, { name: "RSASSA-PKCS1-v1_5", hash: "SHA-256" }, false, ["verify"]);
-    const verified = await crypto.subtle.verify(
-      "RSASSA-PKCS1-v1_5", key, signature,
-      new TextEncoder().encode(parts[0] + "." + parts[1]),
-    );
+    let verified;
+    try {
+      const key = await subtle.importKey("jwk", {
+        kty: "RSA", n: matched[0].n, e: matched[0].e,
+      }, { name: "RSASSA-PKCS1-v1_5", hash: "SHA-256" }, false, ["verify"]);
+      verified = await subtle.verify(
+        "RSASSA-PKCS1-v1_5", key, signature,
+        new TextEncoder().encode(parts[0] + "." + parts[1]),
+      );
+    } catch {
+      // Cryptographic verification is mandatory and may fail because the
+      // runtime cannot import or use the real GitHub public key.
+      throw new GithubCryptoUnavailable();
+    }
     if (!verified || !validGithubActivityClaims(payload, clock())) return null;
     // Do not mistake a rate-limited GitHub API for an invalid signed JWT.
     // This lookup is still mandatory: no unverifiable run becomes a task.
@@ -158,7 +186,9 @@ export async function verifyGithubActionsIdentity(token, {
         asDigits(run.repository?.id) !== REPO_ID) return null;
     return Object.freeze({ projectSlug: "devonakins-com" });
   } catch (error) {
-    if (error instanceof GithubRunProviderUnavailable) throw error;
+    if (error instanceof GithubRunProviderUnavailable ||
+        error instanceof GithubKeysProviderUnavailable ||
+        error instanceof GithubCryptoUnavailable) throw error;
     return null; // Any invalid signature, claim, or key fails closed.
   }
 }
