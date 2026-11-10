@@ -19,12 +19,17 @@ const post=at=>({data:[{
 function fixture(){
   const sql=new DatabaseSync(":memory:");
   sql.exec(readFileSync(new URL("../migrations/0011_threads_private_oauth.sql",import.meta.url),"utf8"));
-  const db={prepare(q){
-    const stmt=sql.prepare(q);let args=[];
-    return {bind(...v){args=v;return this;},
-      async first(){return stmt.get(...args)||null;},
-      async run(){return {meta:{changes:Number(stmt.run(...args).changes)}}};
-  }};
+  const db={
+    prepare(q){
+      const stmt=sql.prepare(q);
+      let args=[];
+      return {
+        bind(...v){args=v;return this;},
+        async first(){return stmt.get(...args)||null;},
+        async run(){return {meta:{changes:Number(stmt.run(...args).changes)}};},
+      };
+    },
+  };
   const env={
     PRESENCE_ENABLED:"true",PRESENCE_PUBLIC_RELEASE_APPROVED:"true",
     THREADS_PUBLIC_RELEASE_APPROVED:"true",THREADS_PUBLIC_FEED_ENABLED:"true",
