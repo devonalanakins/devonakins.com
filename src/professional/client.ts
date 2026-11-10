@@ -76,6 +76,7 @@ const valid = (input: unknown): input is Snapshot => {
 const mark = (type: Activity["kind"]) => {
   const span=document.createElement("span");
   span.className="p-event-symbol";
+  span.dataset.kind=type;
   const glyph=document.createElement("span");
   glyph.textContent=type === "push" ? "↗" : type === "pull_request" ? "⑂" :
     type === "release" ? "◇" : type === "issue" ? "○" : "·";
