@@ -51,7 +51,8 @@ export function projectProfessionalGithub(raw, now = new Date()) {
         event.actor?.login !== USER ||
         !Object.hasOwn(KINDS, event.type) ||
         typeof event.repo?.name !== "string" ||
-        !REPO.test(event.repo.name)) return [];
+        !REPO.test(event.repo.name) ||
+        !event.repo.name.startsWith(USER + "/")) return [];
     const at = safeTime(event.created_at, nowMs);
     if (!at) return [];
     const [kind, generic] = KINDS[event.type];
@@ -112,6 +113,7 @@ export function validProfessionalGithub(value, now = new Date()) {
         !["push", "pull_request", "release", "issue", "other"].includes(event.kind) ||
         typeof event.label !== "string" || !/^[A-Za-z ]{3,40}$/.test(event.label) ||
         typeof event.repo !== "string" || !REPO.test(event.repo) ||
+        !event.repo.startsWith(USER + "/") ||
         event.url !== "https://github.com/" + event.repo ||
         !safeTime(event.at, now.getTime()) ||
         Date.parse(event.at) > previous) return false;
