@@ -106,6 +106,7 @@ try:
                 assert page.get_by_role("button",name="Pull requests").count()==1
                 page.get_by_role("button",name="Pull requests").click()
                 assert page.get_by_role("button",name="Pull requests").get_attribute("aria-pressed")=="true"
+                page.unroute("**/api/github/public-feed")
                 page.goto(BASE+"/",wait_until="domcontentloaded")
                 page.screenshot(path=str(OUT/f"{engine}-{device}-home.png"),full_page=True)
                 assert not errors,(engine,device,errors)
