@@ -5,6 +5,7 @@ import {
   privateDeploymentConfig,
   preparePrivateDeployment,
   PrivatePreflightFailure,
+  verifyGithubOidcOwnerConsent,
 } from "../scripts/prepare-private-deploy.mjs";
 
 const base = readFileSync(
@@ -25,6 +26,7 @@ const ownerGates = [
   "GPT_SNAPSHOT_PUBLIC_RELEASE_APPROVED",
   "THREADS_PUBLIC_RELEASE_APPROVED",
   "THREADS_PUBLIC_FEED_ENABLED",
+  "GITHUB_OIDC_ACTIVITY_ENABLED",
 ];
 const legacyGates = ["GPT_USAGE_READ_ENABLED", "GPT_USAGE_WRITE_ENABLED"];
 const gates = [...ownerGates, ...legacyGates];
@@ -371,4 +373,123 @@ test("provider failures create no deployment file and expose no provider respons
       !e.message.includes("synthetic-ci-credential"),
   );
   assert.equal(writes, 0);
+});
+
+test("GitHub OIDC release preserves a previously approved gate without a new category opt-in", () => {
+  const enabled = settings();
+  enabled.bindings.find(b => b.name === "GITHUB_OIDC_ACTIVITY_ENABLED").text = "true";
+  assert.equal(clean(privateDeploymentConfig(base, enabled, database))
+    .vars.GITHUB_OIDC_ACTIVITY_ENABLED, "true");
+  assert.equal(clean(privateDeploymentConfig(base, enabled, database, {
+    githubOidcAction: "disable",
+  })).vars.GITHUB_OIDC_ACTIVITY_ENABLED, "false");
+  assert.throws(() => privateDeploymentConfig(base, settings(), database, {
+    githubOidcAction: "enable",
+  }), /prerequisites/);
+  assert.throws(() => privateDeploymentConfig(base, settings(), database, {
+    githubOidcAction: "unexpected", githubOidcConsentVerified: true,
+  }), /Unsupported/);
+  const approved = settings();
+  approved.bindings.find(b => b.name === "PRESENCE_PUBLIC_RELEASE_APPROVED").text = "true";
+  assert.equal(clean(privateDeploymentConfig(base, approved, database, {
+    githubOidcAction: "enable", githubOidcConsentVerified: true,
+  })).vars.GITHUB_OIDC_ACTIVITY_ENABLED, "true");
+  assert.doesNotMatch(privateDeploymentConfig(base, approved, database, {
+    githubOidcAction: "enable", githubOidcConsentVerified: true,
+  }), /LISTENING_TOKEN_KEY/);
+});
+
+test("GitHub OIDC consent check is read-only, source-specific, dated and fail-closed", async () => {
+  const captured = [];
+  const valid = async (url, options) => {
+    captured.push({url,options});
+    return Response.json({success:true,result:[{success:true,
+      results:[{configured:1,eligible:1}]}]});
+  };
+  assert.equal(await verifyGithubOidcOwnerConsent({
+    account:"a".repeat(32),token:"synthetic-ci",databaseId:id,
+    now:1_700_000_000_000,fetcher:valid,
+  }),true);
+  assert.equal(captured.length,1);
+  assert.equal(captured[0].options.method,"POST");
+  assert.equal(captured[0].options.redirect,"error");
+  const body=JSON.parse(captured[0].options.body);
+  assert.deepEqual(body.params,["1700000000000"]);
+  assert.match(body.sql,/s.source='github-actions'/);
+  assert.match(body.sql,/s.project_slug='devonakins-com'/);
+  assert.match(body.sql,/s.token_until>\?/);
+  assert.doesNotMatch(body.sql,/SELECT \*/);
+  for(const rows of [
+    [{configured:2,eligible:1}],[{configured:1,eligible:0}],
+    [],[{configured:0,eligible:0}],
+  ]) {
+    await assert.rejects(verifyGithubOidcOwnerConsent({
+      account:"a".repeat(32),token:"synthetic-ci",databaseId:id,
+      fetcher:async()=>Response.json({success:true,result:[{success:true,results:rows}]}),
+    }),e=>e instanceof PrivatePreflightFailure && e.stage.startsWith("OIDC_CONSENT"));
+  }
+  await assert.rejects(verifyGithubOidcOwnerConsent({
+    account:"a".repeat(32),token:"synthetic-ci",databaseId:id,
+    fetcher:async()=>new Response("sensitive provider text",{status:403}),
+  }),e=>e instanceof PrivatePreflightFailure &&
+    e.reason==="HTTP_403" && !JSON.stringify(e).includes("sensitive provider text"));
+});
+
+test("activation preflight needs exact protected-main confirmation plus approved D1 source", async () => {
+  const env = {
+    CLOUDFLARE_ACCOUNT_ID: "a".repeat(32),
+    CLOUDFLARE_API_TOKEN: "synthetic-ci",
+    GITHUB_ACTIONS: "true",
+    GITHUB_REF: "refs/heads/main",
+    GITHUB_SHA: "a".repeat(40),
+    EXPECTED_SHA: "a".repeat(40),
+    RELEASE_VARIANT: "v4",
+    GITHUB_OIDC_ACTION: "enable",
+    GITHUB_OIDC_CONFIRMATION: "GITHUB-OIDC-ENABLE-APPROVED",
+  };
+  const approval = settings();
+  approval.bindings.find(b=>b.name==="PRESENCE_PUBLIC_RELEASE_APPROVED").text="true";
+  const queries=[];
+  const fetcher = async (url,opts) => {
+    if(url.endsWith("/query")) {
+      queries.push(opts);
+      return Response.json({success:true,result:[{success:true,
+        results:[{configured:1,eligible:1}]}]});
+    }
+    return Response.json({success:true,
+      result:url.endsWith("/versions/"+activeVersion)
+        ? {resources:approval}
+        : provider(url)});
+  };
+  let written;
+  await preparePrivateDeployment({env,fetcher,read:async()=>base,
+    write:async (...args)=>{written=args;}});
+  assert.equal(queries.length,1);
+  assert.equal(written[0],"wrangler.deploy.jsonc");
+  assert.equal(written[2].mode,0o600);
+  assert.equal(clean(written[1]).vars.GITHUB_OIDC_ACTIVITY_ENABLED,"true");
+  for(const input of [
+    {GITHUB_OIDC_CONFIRMATION:"yes"},
+    {GITHUB_REF:"refs/heads/other"},
+    {RELEASE_VARIANT:"v5"},
+    {EXPECTED_SHA:"b".repeat(40)},
+    {GITHUB_ACTIONS:"false"},
+    {GITHUB_OIDC_ACTION:"anything"},
+  ]) {
+    let writes=0;
+    await assert.rejects(preparePrivateDeployment({
+      env:{...env,...input},fetcher,read:async()=>base,
+      write:async()=>{writes++;},
+    }));
+    assert.equal(writes,0);
+  }
+  let writes=0;
+  await assert.rejects(preparePrivateDeployment({
+    env,read:async()=>base,write:async()=>{writes++;},
+    fetcher:async(url,opts)=>url.endsWith("/query")
+      ? Response.json({success:true,result:[{success:true,
+          results:[{configured:1,eligible:0}]}]})
+      : fetcher(url,opts),
+  }),e=>e instanceof PrivatePreflightFailure && e.reason==="SOURCE_NOT_APPROVED");
+  assert.equal(writes,0);
 });
