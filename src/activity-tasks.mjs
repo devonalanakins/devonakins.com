@@ -8,7 +8,12 @@ import {
 } from "./listening-owner-core.mjs";
 import { approvedProjects } from "./presence-preferences.mjs";
 import { PUBLIC_PRESENCE_PROJECTS } from "./presence-model.mjs";
-import { verifyGithubActionsIdentity, GithubRunProviderUnavailable } from "./github-actions-oidc.mjs";
+import {
+  verifyGithubActionsIdentity,
+  GithubRunProviderUnavailable,
+  GithubKeysProviderUnavailable,
+  GithubCryptoUnavailable,
+} from "./github-actions-oidc.mjs";
 import {
   CLOUD_STATES,
   CLOUD_CHECKPOINTS,
@@ -297,12 +302,16 @@ export function createActivityTasksApi({
               clock: () => at,
             });
           } catch (error) {
-            if (error instanceof GithubRunProviderUnavailable) {
-              // A correctly signed claim is not permission to bypass the
-              // independent GitHub run-status check. Fail closed but report
-              // a bounded temporary verification outage, not a bad JWT.
+            const stage = error instanceof GithubRunProviderUnavailable
+              ? "run" : error instanceof GithubKeysProviderUnavailable
+                ? "keys" : error instanceof GithubCryptoUnavailable
+                  ? "crypto" : null;
+            if (stage) {
+              // Never admit a task when any mandatory upstream crypto or
+              // live-run proof is unavailable. Only fixed stage labels leave
+              // this boundary; no JWT, claims, provider or exception payloads.
               return ownerJson({error:"Live workflow verification unavailable"},
-                503, {"Retry-After":"60"});
+                503, {"Retry-After":"60", "X-Activity-Verification-Stage":stage});
             }
             throw error;
           }
