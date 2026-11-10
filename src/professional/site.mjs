@@ -1,4 +1,5 @@
 import {approvedPublicProjects} from "../publication-manifest.mjs";
+import {spotifyCard,workSignalCard,gptSignalCard,threadsSignalCard,signalDeck,listeningCollections} from "./signal-cards.mjs";
 
 const esc = value => String(value ?? "").replace(/[&<>"']/g,
   c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
@@ -10,10 +11,13 @@ const pages = Object.freeze({
   writing: ["Writing & perspective", "Books, research and systems thinking"],
   about: ["About", "Background and approach"],
   contact: ["Contact", "Professional contact"],
+  listening: ["Listening", "Owner-approved Spotify playback and selected public playlists"],
+  gpt: ["GPT usage", "Owner-captured public GPT metrics, with their original dates and units"],
 });
 const route = Object.freeze({
   home:"/",experience:"/experience/",work:"/work/",activity:"/activity/",
   writing:"/writing/",about:"/about/",contact:"/contact/",
+  listening:"/listening/",gpt:"/gpt/",
 });
 const symbol = {
   arrow: '<path d="M4 12h15m-6-6 6 6-6 6"/>',
@@ -31,6 +35,7 @@ const symbol = {
   network:'<rect x="9" y="2" width="6" height="5" rx="1"/><rect x="2" y="17" width="6" height="5" rx="1"/><rect x="16" y="17" width="6" height="5" rx="1"/><path d="M12 7v5H5v5m7-5h7v5"/>',
   download:'<path d="M12 3v13m-5-5 5 5 5-5M4 19v2h16v-2"/>',
   user:'<circle cx="12" cy="8" r="4"/><path d="M4 21c0-7 16-7 16 0"/>',
+  music:'<path d="M9 18V5l12-2v13M9 9l12-2"/><ellipse cx="5" cy="18" rx="4" ry="3"/><ellipse cx="17" cy="16" rx="4" ry="3"/>',
 };
 const icon = (name) => '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">' + (symbol[name] || symbol.arrow) + '</svg>';
 const button=(href,label,primary=false,external=false)=>'<a class="p-button'+(primary?' p-button-primary':'')+'" href="'+esc(href)+'"'+(external?' target="_blank" rel="noopener noreferrer"':'')+'>'+esc(label)+' '+icon(external?'external':'arrow')+'</a>';
@@ -43,12 +48,13 @@ const feed = (id,limit) => '<div class="p-feed" data-public-github-feed data-lim
 
 function home(){
   return '<section class="p-home-hero"><div class="p-home-copy"><p class="p-eyebrow">DEVON ALAN AKINS <span class="p-hero-rule"></span></p><p class="p-role">BUSINESS OPERATIONS · TECHNOLOGY · SOFTWARE</p><h1>I build the systems <em>behind better work.</em></h1><p class="p-lede">I connect business operations and practical engineering—designing, building and improving the systems that make difficult work easier to execute.</p><div class="p-actions">'+button("/experience/","Experience & résumé",true)+button("/work/","Selected work")+button("/activity/","Public activity")+'</div></div><div class="p-home-portrait"><div class="p-portrait-halo"></div><img src="/professional/headshot-concept.webp" alt="Portrait of Devon Alan Akins" width="320" height="251" fetchpriority="high" decoding="async"></div></section>'+
-  '<div class="p-live-ribbon"><div class="p-ribbon-cell p-ribbon-lead"><span class="p-pulse" aria-hidden="true"></span><span><strong>RECENT ACTIVITY</strong><small>Source-qualified public updates</small></span></div><div class="p-ribbon-cell">'+icon("github")+'<span><strong>GitHub</strong><small>Automatic public feed</small></span></div><div class="p-ribbon-cell">'+icon("layers")+'<span><strong>Work signals</strong><small>Dated GitHub actions</small></span></div><a class="p-ribbon-cell p-ribbon-last" href="/activity/">'+icon("activity")+'<span><strong>Source-qualified</strong><small>View actual events</small></span></a></div>'+
+  '<div class="p-live-ribbon"><div class="p-ribbon-cell p-ribbon-lead"><span class="p-pulse" aria-hidden="true"></span><span><strong>RECENT ACTIVITY</strong><small>Source-qualified public updates</small></span></div><div class="p-ribbon-cell">'+icon("github")+'<span><strong>GitHub</strong><small>Automatic public feed</small></span></div><a class="p-ribbon-cell p-ribbon-spotify" href="/listening/">'+icon("music")+'<span><strong>Spotify</strong><small data-spotify-ribbon>Listening source pending</small></span></a><a class="p-ribbon-cell p-ribbon-last" href="/activity/">'+icon("activity")+'<span><strong>Source-qualified</strong><small>View actual events</small></span></a></div>'+
   '<section class="p-section">'+heading("PROFESSIONAL FOCUS","Operations. Technology. Execution.","A practical intersection of process, people and software.")+
   '<div class="p-card-grid p-three">'+card("network","OPERATIONS","Business systems","Supporting day-to-day operations and improving processes, organization, reliability and follow-through.","/experience/","My experience")+card("code","ENGINEERING","Software & automation","Developing independent tools that reduce repetitive work and make complex tasks more manageable.","/work/","Selected systems")+card("research","RESEARCH","Applied inquiry","Testing ideas across mathematics, engineering and organizational systems, with evidence ahead of claims.","/writing/","Writing & research")+'</div></section>'+
   '<section class="p-section">'+heading("SELECTED WORK","Built with purpose.","A focused selection, not every repository or unfinished experiment.")+
   '<div class="p-feature-grid">'+workCard("Business operations","Professional operations","Active, nonclinical operational and technology work with family businesses. Outcomes will be documented only when verified and approved.","/work/","ops")+workCard("DevonAkins.com","Independent software","A public engineering portfolio backed by GitHub, Cloudflare and first-party source integrations.","/work/","build")+workCard("Merit","Open-source engineering","An experimental toolkit for independent software review and evidence-based engineering integrity.","/work/merit/","research")+'</div></section>'+
-  '<section class="p-section p-home-bottom"><div class="p-feed-panel"><div class="p-feed-panel-header"><div class="p-feed-panel-title">'+icon("github")+'<div><h2>Live GitHub Activity</h2><p>Recent public events across my repositories.</p></div></div>'+button("/activity/","View full activity")+'</div>'+feed("home-github",5)+'</div><div class="p-destination-panel"><a href="/writing/" class="p-destination-row"><span>'+icon("book")+'</span><span><strong>Writing</strong><small>Books, ideas and thoughtful technical perspectives.</small></span>'+icon("arrow")+'</a><a href="/writing/" class="p-destination-row"><span>'+icon("research")+'</span><span><strong>Research</strong><small>Applied mathematics, systems and independent inquiry.</small></span>'+icon("arrow")+'</a><a href="/contact/" class="p-destination-row"><span>'+icon("mail")+'</span><span><strong>Contact</strong><small>Professional inquiries and thoughtful collaboration.</small></span>'+icon("arrow")+'</a></div></section>'+
+  '<section class="p-section p-home-bottom"><div class="p-feed-panel"><div class="p-feed-panel-header"><div class="p-feed-panel-title">'+icon("github")+'<div><h2>Live GitHub Activity</h2><p>Recent public events across my repositories.</p></div></div>'+button("/activity/","View full activity")+'</div>'+feed("home-github",5)+'</div><div class="p-home-signal-stack">'+spotifyCard("compact")+'<div class="p-home-mini-signals">'+workSignalCard()+gptSignalCard()+threadsSignalCard()+'</div></div></section>'+
+  '<section class="p-section p-quiet-grid p-home-destinations"><div>'+heading("WRITING & PERSPECTIVE","Ideas worth finishing.")+'<p>Books, systems thinking and technical notes are part of the same practice: investigate carefully, build responsibly and finish useful work.</p>'+button("/writing/","Explore writing")+'</div><div>'+heading("SOCIAL & CONTACT","Beyond the code.")+'<p>Follow public updates or get in touch about professional operations, technology and original work.</p>'+button("https://www.instagram.com/devonalanakins/","Instagram",false,true)+button("/contact/","Contact",true)+'</div></section>'+
   '<section class="p-section p-home-closer"><h2>Let’s build something that <em>works.</em></h2><p>OPERATIONS · TECHNOLOGY · SOFTWARE · EXECUTION</p>'+button("/contact/","Get in touch",true)+'</section>';
 }
 
@@ -95,7 +101,30 @@ function activity(){
   '<section class="p-section" id="github-feed"><div class="p-activity-layout"><div class="p-activity-main"><div class="p-section-heading"><div><p class="p-eyebrow">GITHUB ACTIVITY</p><h2>GitHub Public Feed.</h2></div><p>A source-qualified history of public pushes, pull requests, releases and other recorded events.</p></div><div class="p-filter-row" role="group" aria-label="Filter public GitHub events"><button data-github-filter="all" aria-pressed="true">All</button><button data-github-filter="push" aria-pressed="false">Pushes</button><button data-github-filter="pull_request" aria-pressed="false">Pull requests</button><button data-github-filter="release" aria-pressed="false">Releases</button><button data-github-filter="other" aria-pressed="false">Other</button></div>'+feed("activity-github",32)+'</div><aside class="p-activity-aside"><article class="p-aside-panel p-work-signals"><p class="p-eyebrow">WORK SIGNALS</p><h3>Observed public work.</h3><p class="p-fine">Counts are from the currently returned sample, not lifetime totals or active sessions.</p><div class="p-signal-row">'+icon("activity")+'<span><strong>Push events</strong><small>Public updates recorded</small></span><b data-github-count="push">—</b></div><div class="p-signal-row">'+icon("layers")+'<span><strong>Pull request events</strong><small>Open, merge or review actions</small></span><b data-github-count="pull_request">—</b></div><div class="p-signal-row">'+icon("check")+'<span><strong>Release events</strong><small>Published repository releases</small></span><b data-github-count="release">—</b></div></article>'+
   '<article class="p-aside-panel"><p class="p-eyebrow">SOURCE STATUS</p><h3>Public sources.</h3><div class="p-source-row">'+icon("github")+'<span><strong>GitHub</strong><small data-github-source-state role="status">Checking public source availability…</small></span></div><div class="p-source-row">'+icon("book")+'<span><strong>Writing</strong><small>Editorial content; not an automatic feed</small></span></div><div class="p-source-row">'+icon("activity")+'<span><strong>Other signals</strong><small>Spotify, Threads and GPT are separate opt-in sources</small></span></div></article>'+
   '<article class="p-aside-panel"><p class="p-eyebrow">RECENT VERIFIED UPDATES</p><h3>From the same source.</h3><ol class="p-recent-updates" data-github-highlights><li>Awaiting verified public events…</li></ol></article></aside></div></section>'+
+  '<section class="p-section p-observatory-section">'+heading("THE COMPLETE SIGNAL","Beyond GitHub.","Listening, work status, GPT captures, and approved public social activity use independent, clearly labeled sources.")+signalDeck("activity")+'</section>'+
   '<section class="p-section p-activity-detail"><div class="p-aside-panel"><p class="p-eyebrow">DATA PROVENANCE</p><h2>Recorded is not live.</h2><p>Public events have GitHub timestamps and may arrive with delay or incomplete history. A new push proves a recent public event, not an ongoing session. Private repositories, raw commit messages and client records stay out of this feed.</p></div><div class="p-aside-panel"><p class="p-eyebrow">CURATED PORTFOLIO</p><h2>Separate from discovery.</h2><p>Featured case studies are selected for professional relevance. The public activity stream needs no per-repository selection: public projects automatically appear when GitHub reports eligible events.</p>'+button("/work/","See selected work")+'</div></section>';
+}
+
+function listening(){
+  return intro("IN THE ZONE / LISTENING","Music behind <em>the work.</em>","A private-by-default, source-qualified window into the music I choose to share. No audio streams or fabricated listening history.",
+    button("/activity/","Live activity",true)+button("/experience/","Professional profile"))+
+  '<section class="p-section p-listening-hero">'+spotifyCard("feature")+
+  '<aside class="p-listening-notes"><p class="p-eyebrow">A PERSONAL SIGNAL</p><h2>Soundtrack to the process.</h2><p>Music is part of how I think, write and build. When I explicitly enable public playback, this page reflects the currently playing track from Spotify. Paused, private, disconnected or stale sources never become a simulated “now playing.”</p>'+
+  '<div class="p-listening-terms"><div><strong>Track & artwork</strong><small>Only when public track-detail sharing is enabled.</small></div><div><strong>Playback progress</strong><small>A visual estimate from a recent provider timestamp, never audio streaming.</small></div><div><strong>Explicit controls</strong><small>Owner-only controls for privacy remain behind the existing protected interface.</small></div></div></aside></section>'+
+  '<section class="p-section">'+listeningCollections()+'</section>'+
+  '<section class="p-section p-inline-cta"><div><p class="p-eyebrow">WORK & MUSIC</p><h2>Two different signals.</h2><p>Spotify says what I chose to share about playback. GitHub and independently authenticated work signals document the actual engineering.</p></div>'+button("/activity/","View activity",true)+'</section>';
+}
+function gpt(){
+  return intro("GPT / OBSERVATIONS","AI in <em>practice.</em>","A dated, owner-approved view of my GPT usage observations, not a manufactured live counter or a claim of access to private ChatGPT account statistics.",
+    button("/activity/","All public signals",true)+button("/experience/","Professional profile"))+
+  '<section class="p-section p-gpt-editorial"><div>'+heading("CAPTURED USAGE","Numbers with provenance.")+
+  '<p class="p-large">I use AI-assisted systems as part of software engineering, research and operations. Public figures on this page are the specific metrics I have authorized and recorded, with source, units and capture date.</p>'+
+  '<p>Tokens, messages and Work/Codex credits are different measurements; they are not interchangeable. A historical capture is not a real-time account balance.</p></div>'+
+  gptSignalCard()+'</section>'+
+  '<section class="p-section p-quiet-grid"><div>'+heading("METHOD","Evidence before display.")+
+  '<p>Only consent-filtered records from the existing public telemetry source are displayed. Missing or expired records remain unavailable instead of being estimated.</p></div>'+
+  '<div>'+heading("ENGINEERING","The underlying work.")+
+  '<p>Real commits, reviewed changes and published releases are independently available through the public GitHub activity feed.</p>'+button("/activity/","Explore GitHub activity",true)+'</div></section>';
 }
 function writing(){
   return intro("WRITING / 04","Writing & <em>perspective.</em>","Books, research and notes on the connection between systems, software, operations and human decisions.",
@@ -141,12 +170,13 @@ function renderShell(key,label,description,publicPath,content) {
     '<a class="p-skip" href="#main">Skip to content</a><div class="p-atmosphere" aria-hidden="true"></div>'+
     '<header class="p-header"><div class="p-shell p-nav"><a class="p-wordmark" href="/">DevonAkins<span>.com</span></a>'+
     '<nav class="p-desktop-nav" aria-label="Primary">'+nav+'</nav>'+
+    '<a class="p-header-listen" href="/listening/" aria-label="Spotify listening">'+icon("music")+' <span>Listening</span></a>'+
     '<a class="p-header-contact" href="/contact/">'+icon("mail")+' Contact</a>'+
     '<button class="p-mobile-toggle" type="button" aria-expanded="false" aria-controls="p-mobile-nav" aria-label="Open menu">'+
     '<span></span><span></span><span></span></button></div>'+
-    '<nav id="p-mobile-nav" class="p-mobile-nav" aria-label="Mobile navigation" hidden>'+nav+'<a href="/contact/">Contact</a></nav></header>'+
+    '<nav id="p-mobile-nav" class="p-mobile-nav" aria-label="Mobile navigation" hidden>'+nav+'<a href="/listening/">Listening</a><a href="/gpt/">GPT usage</a><a href="/contact/">Contact</a></nav></header>'+
     '<main id="main" class="p-shell">'+content+'</main>'+
-    '<footer class="p-footer"><div class="p-shell"><p class="p-footer-line">Build something <em>that works.</em></p><p>OPERATIONS · SOFTWARE · SYSTEMS · EXECUTION</p><div class="p-footer-links"><a href="/experience/">Experience</a><a href="/activity/">Public activity</a><a href="/writing/">Writing</a><a href="/contact/">Contact</a></div><small>© Devon Alan Akins · Public information only · Sources and status are independently qualified</small></div></footer>'+
+    '<footer class="p-footer"><div class="p-shell"><p class="p-footer-line">Build something <em>that works.</em></p><p>OPERATIONS · SOFTWARE · SYSTEMS · EXECUTION</p><div class="p-footer-links"><a href="/experience/">Experience</a><a href="/activity/">Public activity</a><a href="/writing/">Writing</a><a href="/listening/">Listening</a><a href="/gpt/">GPT observations</a><a href="/contact/">Contact</a></div><small>© Devon Alan Akins · Public information only · Sources and status are independently qualified</small></div></footer>'+
     '</body></html>';
 }
 
@@ -154,7 +184,7 @@ export function renderProfessionalPage(key="home") {
   if (!Object.hasOwn(pages,key)) throw new Error("Unknown professional page");
   const [label,description] = pages[key];
   return renderShell(key,label,description,route[key],
-    {home,experience,work,activity,writing,about,contact}[key]());
+    {home,experience,work,activity,writing,about,contact,listening,gpt}[key]());
 }
 
 /** All existing published project URLs stay functional within the new design.
