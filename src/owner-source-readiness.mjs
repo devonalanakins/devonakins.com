@@ -54,7 +54,7 @@ export async function ownerSourceReadiness(env={},presence=null,at=Date.now()){
   // observed edit or a provider-wide integration. Never return identifiers,
   // hashes, repo names, private events or user-supplied text.
   let editorPaired=null, editorLastObservedAt=null, connectedSourceCount=null;
-  let publicSourceCount=null;
+  let publicSourceCount=null, lastTaskAcceptedAt=null, approvedGithubRepositoryCount=null;
   if(typeof env.LISTENING_DB?.prepare==="function" &&
       Number.isFinite(at) && Number.isSafeInteger(presence?.editor_generation)){
     try{
@@ -81,6 +81,25 @@ export async function ownerSourceReadiness(env={},presence=null,at=Date.now()){
         publicSourceCount=row.sharing??0;
       }
     }catch{ connectedSourceCount=null; publicSourceCount=null; }
+    try{
+      const row=await env.LISTENING_DB.prepare(
+        "SELECT MAX(t.received_at) AS last_seen FROM activity_tasks t "+
+        "JOIN activity_sources s ON s.id=t.source_id "+
+        "WHERE s.revoked=0 AND s.token_until>? AND s.generation=?"
+      ).bind(at,presence.editor_generation).first();
+      if(Number.isSafeInteger(row?.last_seen) && row.last_seen>0 &&
+          row.last_seen<=at+10_000)
+        lastTaskAcceptedAt=new Date(row.last_seen).toISOString();
+    }catch{ lastTaskAcceptedAt=null; }
+    try{
+      const row=await env.LISTENING_DB.prepare(
+        "SELECT COUNT(*) AS approved FROM github_repositories "+
+        "WHERE authorized=1 AND approved=1 AND private=0"
+      ).first();
+      if(Number.isSafeInteger(row?.approved) && row.approved>=0 &&
+          row.approved<=500)
+        approvedGithubRepositoryCount=row.approved;
+    }catch{ approvedGithubRepositoryCount=null; }
   }
   return {
     version:1,
@@ -93,6 +112,7 @@ export async function ownerSourceReadiness(env={},presence=null,at=Date.now()){
       authorizationConfigured:typeof env.GITHUB_INSTALLATION_ID==="string" &&
         /^[0-9]+$/.test(env.GITHUB_INSTALLATION_ID),
       observed:"not-checked",
+      approvedRepositoryCount:approvedGithubRepositoryCount,
     },
     editor:{
       serverEnabled:on(env,"PRESENCE_ENABLED")&&on(env,"PRESENCE_EDITOR_ENABLED"),
@@ -109,6 +129,7 @@ export async function ownerSourceReadiness(env={},presence=null,at=Date.now()){
       observed:"not-checked",
       connectedSourceCount,
       publicSourceCount,
+      lastAcceptedAt:lastTaskAcceptedAt,
     },
     gpt:{
       captureToolAvailable:typeof env.LISTENING_DB?.prepare==="function",
