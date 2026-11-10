@@ -3,11 +3,23 @@
  * repository discovery in this response. The public V5 page never imports it.
  */
 import { ownerThreadsReadiness } from "./threads-public.mjs";
+import {storedThreadsStatus} from "./threads-owner-oauth.mjs";
 import { ownerRow, ownerStatus } from "./listening-owner-core.mjs";
 
 const on=(env,key)=>env?.[key]==="true";
 export async function ownerSourceReadiness(env={},presence=null,at=Date.now()){
   const threads=ownerThreadsReadiness(env);
+  // D1 OAuth authorization is a private stored credential, not approval to
+  // display social posts or a claim of current public provider connectivity.
+  const privateThreads=await storedThreadsStatus(env,at);
+  threads.appConfigured=privateThreads.appConfigured;
+  threads.privateStorageReady=privateThreads.storageReady;
+  threads.privateConnected=privateThreads.connected;
+  threads.privateExpiresAt=privateThreads.expiresAt;
+  if(privateThreads.connected){
+    threads.authorizationConfigured=true;
+    threads.usernameConfigured=true;
+  }
   const spotify={
     appConfigured:false,
     connection:"unverified",

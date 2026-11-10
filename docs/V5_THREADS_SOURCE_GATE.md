@@ -1,6 +1,6 @@
 # Living Mind V5 — Threads Feed Source & Authorization Gate
 
-Status: **V5 website LIVE (November 9, 2026); official Threads account NOT CONNECTED.** The private provider verification control is a separate source candidate until merged, tested and released.
+Status: **V5 website LIVE (November 9, 2026); private Threads connection verifier deployed, official account NOT CONNECTED.** A read-only owner OAuth flow is in a separate, unmerged source candidate, and is not yet deployed.
 Owner: DevonAkins.com / canonical repository and protected release workflow. No new repository or social publisher.
 
 ## Implemented source contract
@@ -34,10 +34,25 @@ The protected deployment preflight is extended in this source candidate to retai
 
 The owner must still independently authorize the exact Meta app/account and decide whether publicly displaying their Threads posts is approved. No standalone OAuth callback, token generation, token refresh or automatic account link is being represented as finished.
 
+## Proposed owner OAuth connection (NOT LIVE)
+
+This source candidate extends the existing Cloudflare Access-protected owner Presence page with an explicit **Connect Threads privately** action. The owner must first create or verify their own Meta app with the **Threads API use case** and add the exact HTTPS redirect URI:
+`https://devonakins.com/api/threads/auth/callback`.
+
+The Threads-specific app ID (not the main Meta app ID) must be configured as a Worker plain variable `THREADS_APP_ID`; `THREADS_APP_SECRET` must be configured as a **Worker secret**. No key or token is entered in the browser, chat, GitHub, or application source. The existing protected deployment preflight is expanded to retain *only* these reviewed optional bindings while preserving all current database and publication gates.
+
+Before owner use, independently review and apply `migrations/0011_threads_private_oauth.sql` to the existing **private** `devonakins-listening-private` database after backup and approval. The ordinary Worker deployment does not execute D1 migrations. Missing migration, encryption key or app credentials leaves connection disabled.
+
+Upon the owner's explicit click, a five-minute, single-use random OAuth state and HTTP-only secure SameSite=Lax nonce cookie protect the read-only `threads_basic` authorization window. The Meta authorization code is exchanged solely on the Worker for a short-lived token, then a long-lived token through Meta's official endpoint. The authenticated provider profile must match the exchange's numeric user ID, and any preconfigured owner handle. Only the AES-GCM-encrypted long-lived token, validated handle and expiry are stored in the dedicated D1 account row. State is consumed atomically; new authorization or **Disconnect Threads** invalidates in-flight callbacks. No provider post data is stored or read as part of connection.
+
+The proposed private `GET /api/threads/auth/status` returns only configuration, storage readiness, connected state and expiration timestamps. An owner-only on-demand profile check can use the encrypted token without exporting it. Both existing public Threads flags remain **false** and cannot be enabled through these new routes.
+
+**Important:** This increment neither refreshes long-lived tokens nor enables the public posts reader to use the D1-stored token. Reauthorization is required when an access token expires; refresh/revocation and a D1-backed public reader require their own tested increment and owner-approved release controls. A private connection is not public-feed authorization.
+
 ## Still required before any real sync
 
 1. Create or verify the owner's Meta app with the **Threads API use case**, request `threads_basic` and complete applicable Meta app authorization/review requirements. Do not request content publishing or insight permissions for this read-only feed.
-2. Complete the owner-approved Meta OAuth/token exchange and maintain **renewal before expiration** using an authorized secure flow. The private connection verifier is not an OAuth client and does not refresh tokens. A long-lived token still needs periodic renewal; none is uploaded or automatically connected by this change. No credentials are committed to GitHub, logs, screenshots or test fixtures.
+2. Review, test, merge, migrate and separately deploy the proposed private read-only OAuth connection, and establish a **token renewal before expiration** procedure. Until Meta authorization is completed by the owner, no access token is available; long-lived token refresh is not yet implemented.
 3. Confirm the authorized Threads username, account identity, provider policy for public site display, data retention, and user-approved publication scope before enabling the Threads release flag.
 4. Run the verified browser/provider contract against the real account with explicit authorization, review a dated post on the intended host, test Stop All and token expiry, then complete the protected V5 release checklist. The in-memory cache is best-effort across Worker isolates; production retry/rate-limit and refresh behavior must be independently verified.
 5. Keep public publication disabled until explicit account, data-scope, and production release approval. The V5 site is live, but the Threads feed must remain disconnected until a separately verified real authorization.

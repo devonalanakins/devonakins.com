@@ -13,6 +13,7 @@ import {createActivityTasksApi} from './activity-tasks.mjs';
 import {createLiveSignal} from './live-signal.mjs';
 import {createPublicThreadsReader} from "./threads-public.mjs";
 import {createThreadsOwnerProbe} from "./threads-owner-probe.mjs";
+import {createThreadsOwnerOAuth} from "./threads-owner-oauth.mjs";
 import {createGptSnapshotOwnerApi} from './gpt-snapshots.mjs';
 import {createGithubIntegration,createGithubEditorCatalog} from './github-integration.mjs';
 import {projectActivityHistory,validActivityHistory} from './activity-history.mjs';
@@ -150,6 +151,10 @@ export function createHandler(assets, release, options = {}) {
       pendingGithub = null;
     }
   };
+  const threadsOwnerOAuth=createThreadsOwnerOAuth({
+    fetcher:options.threadsAuthFetch || fetch,
+    clock:()=>now().getTime(),
+  });
   const threadsOwnerProbe=createThreadsOwnerProbe({
     fetchImpl:options.threadsFetch || fetch,
     clock:()=>now().getTime(),
@@ -213,6 +218,8 @@ export function createHandler(assets, release, options = {}) {
       if(url.pathname.startsWith('/api/presence/cloud/') || (url.pathname === '/api/presence/owner' && url.search === '?channel=cloud'))
         return secured(await cloudApi(request,env,ctx));
       if(url.pathname==='/api/listening/admin/collections')return secured(await collectionsApi.owner(request,env,ctx));
+      if(url.pathname.startsWith('/api/threads/auth/'))
+        return secured(await threadsOwnerOAuth(request,env,ctx));
       if(url.pathname==='/api/presence/owner' && url.search==='?channel=threads')
         return secured(await threadsOwnerProbe(request,env,ctx));
       if (url.pathname === '/owner/presence' || url.pathname === '/owner/presence/' || url.pathname === '/api/presence/owner') {
