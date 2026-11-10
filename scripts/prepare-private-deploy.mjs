@@ -20,6 +20,7 @@ const ownerReleaseGates = [
   "GPT_SNAPSHOT_PUBLIC_RELEASE_APPROVED",
   "THREADS_PUBLIC_RELEASE_APPROVED",
   "THREADS_PUBLIC_FEED_ENABLED",
+  "GITHUB_OIDC_ACTIVITY_ENABLED",
 ];
 // Legacy API read/write gates are *not* the owner-reviewed snapshot feature.
 const privateGates = [
