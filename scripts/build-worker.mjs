@@ -69,7 +69,7 @@ for (const module of [
   "gpt-snapshots", "gpt-owner-page",
   "github-integration", "github-integration-auth", "github-integration-page",
   "presence-preferences", "presence-editor-api",
-  "cloud-presence-model", "cloud-presence-api", "activity-tasks", "live-signal", "activity-history",
+  "cloud-presence-model", "cloud-presence-api", "activity-tasks", "github-actions-oidc", "live-signal", "activity-history",
   "listening-collections", "threads-public", "threads-public-d1", "threads-owner-probe", "threads-owner-oauth",
 ]) {
   await writeFile(".release/" + module + ".mjs", await readFile("src/" + module + ".mjs"));
