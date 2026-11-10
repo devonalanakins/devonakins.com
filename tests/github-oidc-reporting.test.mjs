@@ -256,3 +256,32 @@ test("malformed, rate-limited and unavailable GitHub JWKS never authenticate or 
   }),null);
   assert.equal(called,false,"invalid public scope never asks GitHub for keys");
 });
+
+test("public issuer JWKS request uses explicit WAF-compatible API headers and never forwards identity",async()=>{
+  const f=await fixture();
+  const jwt=await f.issue();
+  const seen=[];
+  const fetcher=async(url,options)=>{
+    seen.push(url);
+    if(url==="https://token.actions.githubusercontent.com/.well-known/jwks"){
+      assert.equal(options?.method,"GET");
+      assert.equal(options?.redirect,"error");
+      assert.equal(options?.headers?.Accept,"application/json");
+      assert.equal(options?.headers?.["User-Agent"],"devonakins-signed-activity");
+      assert.equal(options?.headers?.Authorization,undefined);
+      assert.equal(JSON.stringify(options).includes(jwt),false);
+      return Response.json({keys:[f.jwk]});
+    }
+    assert.ok(url.endsWith("/actions/runs/42837407732"));
+    return Response.json(githubRun());
+  };
+  assert.deepEqual(await verifyGithubActionsIdentity(jwt,{
+    fetcher,clock:()=>time,
+  }),{projectSlug:"devonakins-com"});
+  assert.equal(seen.length,2);
+  // A successful issuer request never excuses bad RSA material.
+  const forged=jwt.slice(0,-1)+(jwt.endsWith("a")?"b":"a");
+  assert.equal(await verifyGithubActionsIdentity(forged,{
+    fetcher,clock:()=>time,
+  }),null);
+});
