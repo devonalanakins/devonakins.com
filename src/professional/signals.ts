@@ -13,6 +13,7 @@ const workCards=[...document.querySelectorAll<HTMLElement>("[data-public-work]")
 const gptCards=[...document.querySelectorAll<HTMLElement>("[data-public-gpt]")];
 const threadsCards=[...document.querySelectorAll<HTMLElement>("[data-public-threads]")];
 const ribbon=document.querySelector<HTMLElement>("[data-spotify-ribbon]");
+const sourceStatus=document.querySelector<HTMLElement>("[data-spotify-source-state]");
 const playlistPanel=document.querySelector<HTMLElement>("[data-public-playlists]");
 let lastListening:unknown=null;
 let publicSnapshot:unknown=null;
@@ -53,6 +54,12 @@ function renderListening(value:unknown){
   const artist=track?p.artist:inZone?"Spotify playing · track details not shared":privateState?"Spotify sharing is off":
     offAir?"Paused or stopped":"No verified track from Spotify";
   if(ribbon)ribbon.textContent=inZone?"In the Zone · Coding"+(track?" · "+title:""):privateState?"Spotify private":offAir?"Not playing":"Spotify unavailable";
+  if(sourceStatus){
+    sourceStatus.textContent=inZone?"In the Zone · Coding (owner-defined)":
+      privateState?"Playback not shared":
+      offAir?"No active public playback":"Public playback source unavailable";
+    sourceStatus.dataset.spotifyMode=inZone?"playing":privateState?"private":offAir?"off_air":"unavailable";
+  }
   for(const card of listeningCards){
     card.dataset.spotifyMode=inZone?"playing":p.state;
     update(card,"[data-spotify-state]",status);
