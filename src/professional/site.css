@@ -828,3 +828,9 @@ h1 em,h2 em,.p-footer-line em{font-style:italic;color:#e9c29a}
  .p-research-section{padding-top:34px}
  .p-research-links a{min-height:125px}
 }
+
+
+/* Public source outages should not turn an empty timeline into a tall,
+ * decorative placeholder. The GitHub panel sizes to real content rather
+ * than stretching to the taller signal stack beside it. */
+.p-home-bottom{align-items:start}
