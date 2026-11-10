@@ -19,7 +19,7 @@ const site=createHandler(assets,{version:"test",commit:"test"},{
 });
 test("professional site has complete independent pages and accessible main navigation",()=>{
   const keys=new Set(PROFESSIONAL_PAGES);
-  for(const key of ["home","experience","work","activity","writing","about","contact"]){
+  for(const key of ["home","experience","work","activity","writing","about","contact","listening","gpt"]){
     assert.ok(keys.has(key));
     const html=renderProfessionalPage(key);
     assert.match(html,/<main id="main"/);
@@ -103,4 +103,40 @@ test("approved cinematic concept assets remain local, non-executable and separat
     assert.equal(new TextDecoder().decode(bytes.slice(0,4)),"RIFF");
     assert.equal(new TextDecoder().decode(bytes.slice(8,12)),"WEBP");
   }
+});
+
+test("Spotify, GPT, work and Threads appear as explicit consent-gated source panels",()=>{
+  const home=renderProfessionalPage("home");
+  const activity=renderProfessionalPage("activity");
+  const listening=renderProfessionalPage("listening");
+  const gpt=renderProfessionalPage("gpt");
+  assert.match(home,/SPOTIFY · IN THE ZONE/);
+  assert.match(home,/data-public-spotify/);
+  assert.match(home,/data-public-gpt/);
+  assert.match(home,/data-public-threads/);
+  assert.match(home,/data-public-work/);
+  assert.match(home,/data-spotify-ribbon/);
+  assert.match(activity,/data-public-spotify/);
+  assert.match(activity,/data-public-gpt/);
+  assert.match(activity,/data-public-threads/);
+  assert.match(listening,/data-public-playlists/);
+  assert.match(listening,/data-spotify-cover/);
+  assert.match(gpt,/not a manufactured live counter/);
+  assert.match(gpt,/data-gpt-value/);
+  assert.doesNotMatch(home+activity+listening+gpt,
+    /Currently playing: [A-Za-z]+|+94%|−62%|Pushed 4 commits|listening now to/i);
+});
+test("Spotify public pages reuse existing consented API and load no third-party script or audio element",async()=>{
+  const markup=renderProfessionalPage("listening");
+  assert.doesNotMatch(markup,/<audio|<iframe|spotify\.com\/embed|spotify-web-playback/i);
+  const bundle=await readFile(new URL("../src/professional/signals.ts",import.meta.url),"utf8");
+  assert.match(bundle,/\/api\/listening\/now/);
+  assert.match(bundle,/\/api\/listening\/collections/);
+  assert.match(bundle,/\/api\/activity\/v4/);
+  assert.match(bundle,/publicV5Playback/);
+  assert.match(bundle,/publicV5GptCapture/);
+  assert.match(bundle,/publicV5Threads/);
+  assert.match(bundle,/referrerPolicy="no-referrer"/);
+  assert.match(bundle,/credentials:"omit"/);
+  assert.doesNotMatch(bundle,/localStorage|sessionStorage|access_token|refresh_token|new Audio/);
 });
