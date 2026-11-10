@@ -1,3 +1,4 @@
+import {initProfessionalSignals} from "./signals.ts";
 type Activity = {
   kind: "push" | "pull_request" | "release" | "issue" | "other";
   label: string;
@@ -211,3 +212,5 @@ if(panels.length){
   });
   window.addEventListener("pageshow",event=>{if(event.persisted){latest=null;paint();void refresh()}});
 }
+
+initProfessionalSignals();
