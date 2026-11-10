@@ -116,6 +116,7 @@ inspector?.addEventListener("keydown", (event) => {
 // evidence categories. A signed, released note survives a quiet editor.
 let lastHomepageSummary: ReturnType<typeof publicHomepageSourceSummary> | null = null;
 let sharedProfileNote: unknown = null;
+let focusExpiryTimer: number | undefined;
 const renderHomepageFocus = (at = Date.now()) => {
   const focus = publicHomepageFocus(lastHomepageSummary, sharedProfileNote, at);
   const heading = document.querySelector<HTMLElement>("[data-v5-home-focus]");
@@ -124,6 +125,18 @@ const renderHomepageFocus = (at = Date.now()) => {
   if (heading) heading.textContent = focus.title;
   if (detail) detail.textContent = focus.detail;
   if (card) card.dataset.v5FocusState = focus.kind;
+  if (focusExpiryTimer !== undefined) window.clearTimeout(focusExpiryTimer);
+  focusExpiryTimer = undefined;
+  // Even if polling stops, an active observation must expire on its own.
+  // This schedules only a local repaint; it never emits or requests activity.
+  if (focus.kind === "observed") {
+    const until = Date.parse(lastHomepageSummary?.focus?.at ?? "") + 120_000;
+    if (Number.isFinite(until) && until > at) {
+      focusExpiryTimer = window.setTimeout(
+        () => renderHomepageFocus(), Math.max(1, until - at + 25),
+      );
+    }
+  }
 };
 
 // The endpoint is public only when BOTH owner consent and release gates allow.
