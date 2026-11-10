@@ -10,6 +10,11 @@ concurrency:
   cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 jobs:
   verify:
+    # GitHub issues short-lived identity tokens; server requires main push,
+    # fixed repo IDs, exact workflow and a still-running signed workflow.
+    permissions:
+      contents: read
+      id-token: write
     runs-on: ubuntu-24.04 # Pinned: Playwright 1.57 browser builds do not support Ubuntu 26.04
     steps:
       - uses: actions/checkout@v4
@@ -35,12 +40,12 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ github.token }}
         run: node scripts/verify-public-portfolio-links.mjs
-      # Only tested default-branch work may receive the scoped reporter secret.
-      # PRs and other branches run the same tests without any reporter credential.
-      - name: Test and report private CI activity (trusted main push)
+      # Phone-first source: short-lived GitHub-signed job identity, never a
+      # stored source token. Non-main and PR runs receive no reporter invocation.
+      - name: Test and report signed CI activity (trusted main push)
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         env:
-          DEVON_ACTIVITY_SOURCE_TOKEN: ${{ secrets.DEVON_ACTIVITY_SOURCE_TOKEN }}
+          DEVON_ACTIVITY_GITHUB_OIDC: "true"
         run: node scripts/activity-run.mjs -- npm test
       - name: Test without reporter credentials (PRs and other branches)
         if: github.event_name != 'push' || github.ref != 'refs/heads/main'
