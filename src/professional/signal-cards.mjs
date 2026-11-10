@@ -8,18 +8,18 @@ export function spotifyCard(variant="compact") {
     '<div class="p-signal-head"><span class="p-signal-over">SPOTIFY · IN THE ZONE</span><span class="p-signal-state" data-spotify-state>Checking source</span></div>'+
     '<div class="p-spotify-body"><div class="p-spotify-art"><div class="p-vinyl" aria-hidden="true"><span></span></div>'+
     '<img data-spotify-cover alt="" referrerpolicy="no-referrer" decoding="async" loading="lazy" hidden></div>'+
-    '<div class="p-spotify-meta"><span class="p-spotify-eyebrow">MUSIC BEHIND MY WORK</span>'+
+    '<div class="p-spotify-meta"><span class="p-spotify-eyebrow">MY CODING SOUNDTRACK</span>'+
     '<h3 id="p-spotify-title-'+variant+'" data-spotify-title>Playback not shared</h3>'+
     '<p data-spotify-artist>Source-qualified playback, when enabled.</p>'+
     '<progress data-spotify-progress max="1" value="0" aria-label="Track playback progress" hidden></progress>'+
     '<a class="p-text-link" data-spotify-link href="/listening/">Explore listening <span aria-hidden="true">↗</span></a></div></div>'+
-    '<p class="p-signal-foot" data-spotify-note>Playback metadata is published only with owner permission. No audio streams here.</p></section>';
+    '<p class="p-signal-foot" data-spotify-note>Listening is Devon's owner-defined coding signal. No audio streams here.</p></section>';
 }
 export function workSignalCard() {
   return '<section class="p-signal-card p-work-signal-card" data-public-work aria-labelledby="p-work-signals-title">'+
     '<div class="p-signal-head"><span class="p-signal-over">WORK · OBSERVED STATUS</span><span class="p-signal-state" data-work-state>Source pending</span></div>'+
     '<h3 id="p-work-signals-title" data-work-title>No verified active session</h3>'+
-    '<p data-work-detail>Editor activity and owner-declared sessions are labeled separately. Public GitHub history is not a current work session.</p>'+
+    '<p data-work-detail>Spotify is Devon's owner-defined coding mode; editor activity and GitHub history remain separate sources.</p>'+
     '<a class="p-text-link" href="/activity/">Inspect activity <span aria-hidden="true">↗</span></a></section>';
 }
 export function gptSignalCard() {
