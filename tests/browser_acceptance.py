@@ -836,6 +836,13 @@ def check_presence_control(browser, engine, origin, output, axe_source):
                     route.fulfill(status=200,content_type="application/json",
                         body=json.dumps({"version":1,"connected":False}))
                     return
+                if route.request.url.endswith("/renew"):
+                    threads_auth["verifiedAt"]="2026-11-09T22:50:00.000Z"
+                    route.fulfill(status=200,content_type="application/json",
+                        body=json.dumps({"version":1,"connection":"renewed",
+                            "expiresAt":threads_auth["expiresAt"],
+                            "checkedAt":threads_auth["verifiedAt"]}))
+                    return
                 raise AssertionError("Meta authorization must only launch on explicit owner click")
             route.fulfill(status=200,content_type="application/json",body=json.dumps(threads_auth))
         page.route("**/api/threads/auth/**",auth_respond)
@@ -887,12 +894,19 @@ def check_presence_control(browser, engine, origin, output, axe_source):
             assert page.locator("#threads-disconnect").is_disabled()
             assert not oauth_changes, "Private OAuth must not contact Meta on page load"
             threads_auth.update({"connected":True,"expiresAt":"2099-01-01T00:00:00.000Z",
-                "verifiedAt":"2026-11-09T20:00:00.000Z"})
+                "verifiedAt":"2020-11-09T20:00:00.000Z"})
             page.evaluate("loadThreadsAuthorization()")
+            page.wait_for_function("!document.querySelector('#threads-renew').disabled")
+            page.locator("#threads-renew").click()
+            page.wait_for_function("document.querySelector('#threads-check-result').textContent.includes('authorization renewed')")
+            assert writes == [], "Renewal must not alter sharing controls"
             page.wait_for_function("!document.querySelector('#threads-disconnect').disabled")
             page.locator("#threads-disconnect").click()
             page.wait_for_function("document.querySelector('#threads-connection-status').textContent.includes('No authorized Threads account connected')")
-            assert oauth_changes == [origin+"/api/threads/auth/disconnect"]
+            assert oauth_changes == [
+                origin+"/api/threads/auth/renew",
+                origin+"/api/threads/auth/disconnect",
+            ]
             assert writes == [], "Disconnect must not alter owner presence sharing"
             # Exercise both real scripts together. Their similarly named handlers
             # must not send workspace credentials/actions to the legacy owner API.

@@ -69,6 +69,7 @@ test("owner view links to existing protected controls and includes no provider c
   assert.match(html,/id="threads-check"/);
   assert.match(html,/id="threads-connect"/);
   assert.match(html,/id="threads-disconnect"/);
+  assert.match(html,/id="threads-renew"/);
   assert.match(html,/id="threads-connection-status"/);
   assert.match(html,/id="threads-check-result" role="status"/);
   assert.doesNotMatch(html,/THREADS_USER_ACCESS_TOKEN/);
@@ -175,6 +176,7 @@ test("owner integration actions use current protected routes and accessible link
   assert.match(js,/\/api\/threads\/auth\//);
   assert.match(js,/changeThreadsAuthorization\("start"\)/);
   assert.match(js,/changeThreadsAuthorization\("disconnect"\)/);
+  assert.match(js,/changeThreadsAuthorization\("renew"\)/);
   assert.match(js,/Test Threads connection privately|Checking the authorized Threads account/);
   assert.doesNotMatch(js,/THREADS_USER_ACCESS_TOKEN|SPOTIFY_CLIENT_SECRET|innerHTML=/);
 });

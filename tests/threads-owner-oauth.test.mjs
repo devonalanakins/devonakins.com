@@ -32,13 +32,16 @@ function fixture(migrated=true,providerOverride=null){
     requests.push([url,options]);
     if(url==="https://graph.threads.net/oauth/access_token")
       return Response.json({access_token:"s".repeat(96),user_id:"123456789012345"});
+    if(new URL(url).pathname==="/refresh_access_token")
+      return Response.json({access_token:"r".repeat(96),token_type:"bearer",expires_in:5184000});
     if(new URL(url).pathname==="/access_token")
       return Response.json({access_token:"l".repeat(96),token_type:"bearer",expires_in:5184000});
     if(new URL(url).pathname==="/v1.0/me")
       return Response.json({id:"123456789012345",username:"DevonFixture"});
     throw Error("Unexpected provider URL");
   });
-  const api=createThreadsOwnerOAuth({clock:()=>now,fetcher:provider});
+  let clockTime=now;
+  const api=createThreadsOwnerOAuth({clock:()=>clockTime,fetcher:provider});
   const post=(path,origin=root,ctx=owner)=>api(new Request(root+path,{method:"POST",
     headers:{Origin:origin}}),env,ctx);
   const get=(path,cookie="",ctx=owner)=>api(new Request(root+path,
@@ -54,7 +57,8 @@ function fixture(migrated=true,providerOverride=null){
   const callback=(entry,code="fixture_authorization_code")=>
     get("/api/threads/auth/callback?state="+entry.target.searchParams.get("state")+
       "&code="+code,entry.cookie);
-  return {sql,db,env,api,post,get,auth,callback,requests,provider};
+  return {sql,db,env,api,post,get,auth,callback,requests,provider,
+    advance(ms){clockTime+=ms;},clock:()=>clockTime};
 }
 
 test("owner-only OAuth start uses read-only scope and one-time state without leaking credentials",async()=>{
@@ -210,4 +214,120 @@ test("private connection verification reads encrypted D1, rejects wrong audience
   assert.equal(calls.length,1);
   assert.equal(calls[0].init.headers.Authorization,"Bearer "+"l".repeat(96));
   assert.doesNotMatch(await (await check(endpoint,f.env,owner)).text(),/DO_NOT_RETURN|l{96}/);
+});
+
+test("owner renews a mature unexpired private Threads token without public sharing",async()=>{
+  const f=fixture();
+  await f.callback(await f.auth());
+  const route="/api/threads/auth/renew";
+  assert.equal((await f.post(route,root,{})).status,403);
+  assert.equal((await f.post(route,"https://cross-site.example")).status,403);
+  assert.equal((await f.get(route)).status,405);
+  assert.equal((await f.post(route)).status,429,"Meta requires an older long-lived token");
+  const initial=f.sql.prepare("SELECT revision,token_cipher FROM threads_connection").get();
+  f.advance(25*60*60_000);
+  const before=f.requests.length;
+  const response=await f.post(route);
+  assert.equal(response.status,200);
+  const payload=await response.json();
+  assert.equal(payload.connection,"renewed");
+  assert.equal(payload.version,1);
+  assert.equal(payload.checkedAt,new Date(f.clock()).toISOString());
+  assert.equal(payload.expiresAt,new Date(f.clock()+5184000*1000).toISOString());
+  assert.doesNotMatch(JSON.stringify(payload),/l{96}|r{96}|DevonFixture/);
+  const calls=f.requests.slice(before);
+  assert.equal(calls.length,2);
+  const endpoint=new URL(calls[0][0]);
+  assert.equal(endpoint.origin,"https://graph.threads.net");
+  assert.equal(endpoint.pathname,"/refresh_access_token");
+  assert.equal(endpoint.searchParams.get("grant_type"),"th_refresh_token");
+  assert.equal(endpoint.searchParams.get("access_token"),"l".repeat(96));
+  assert.equal(calls[0][1].redirect,"error");
+  assert.equal(new URL(calls[1][0]).pathname,"/v1.0/me");
+  assert.equal(calls[1][1].headers.Authorization,"Bearer "+"r".repeat(96));
+  const row=f.sql.prepare("SELECT revision,token_cipher,verified_at,token_expires_at FROM threads_connection").get();
+  assert.equal(row.revision,initial.revision+1);
+  assert.notEqual(row.token_cipher,initial.token_cipher);
+  assert.equal(row.verified_at,f.clock());
+  assert.equal((await storedThreadsCredential(f.env,f.clock())).token,"r".repeat(96));
+  assert.equal(f.env.THREADS_PUBLIC_FEED_ENABLED,"false");
+  assert.equal(f.env.THREADS_PUBLIC_RELEASE_APPROVED,"false");
+  assert.equal((await f.post(route)).status,429,"repeat refresh within 24 hours denied");
+  assert.equal(f.requests.length,before+2);
+});
+
+test("renewal rejects expired credentials, malformed provider results and wrong account",async()=>{
+  const expired=fixture();
+  await expired.callback(await expired.auth());
+  expired.advance(61*24*60*60_000);
+  const start=expired.requests.length;
+  assert.equal((await expired.post("/api/threads/auth/renew")).status,409);
+  assert.equal(expired.requests.length,start,"must not contact Meta for expired token");
+
+  for(const errorCase of ["wrong-account","malformed","provider-error"]){
+    let refreshing=false;
+    const f=fixture(true,async(url)=>{
+      const pathname=new URL(url).pathname;
+      if(pathname==="/oauth/access_token")
+        return Response.json({access_token:"s".repeat(96),user_id:"123456789012345"});
+      if(pathname==="/access_token")
+        return Response.json({access_token:"l".repeat(96),token_type:"bearer",expires_in:5184000});
+      if(pathname==="/refresh_access_token"){
+        refreshing=true;
+        if(errorCase==="malformed")return Response.json({access_token:"r".repeat(96),expires_in:5184000});
+        if(errorCase==="provider-error")return new Response("SENSITIVE_PROVIDER_TOKEN",{status:503});
+        return Response.json({access_token:"r".repeat(96),token_type:"bearer",expires_in:5184000});
+      }
+      if(pathname==="/v1.0/me")
+        return Response.json({id:"123456789012345",
+          username:refreshing?"DifferentOwner":"DevonFixture"});
+      throw Error("Unexpected provider request");
+    });
+    await f.callback(await f.auth());
+    const before=f.sql.prepare("SELECT revision,token_cipher,verified_at FROM threads_connection").get();
+    f.advance(25*60*60_000);
+    const renewed=await f.post("/api/threads/auth/renew");
+    assert.ok(renewed.status>=400);
+    assert.doesNotMatch(await renewed.text(),/SENSITIVE_PROVIDER_TOKEN|r{96}/);
+    assert.deepEqual(f.sql.prepare("SELECT revision,token_cipher,verified_at FROM threads_connection").get(),before,
+      "failed refresh cannot replace the credential");
+  }
+});
+
+test("disconnect and replacement grants cannot be undone by in-flight renewal",async()=>{
+  for(const action of ["disconnect","reconnect"]){
+    let enter,release;
+    const entered=new Promise(resolve=>{enter=resolve;});
+    const wait=new Promise(resolve=>{release=resolve;});
+    let blocked=false;
+    const f=fixture(true,async(url)=>{
+      const pathname=new URL(url).pathname;
+      if(pathname==="/oauth/access_token")
+        return Response.json({access_token:"s".repeat(96),user_id:"123456789012345"});
+      if(pathname==="/access_token")
+        return Response.json({access_token:"l".repeat(96),token_type:"bearer",expires_in:5184000});
+      if(pathname==="/refresh_access_token"){
+        if(!blocked){blocked=true;enter();await wait;}
+        return Response.json({access_token:"r".repeat(96),token_type:"bearer",expires_in:5184000});
+      }
+      if(pathname==="/v1.0/me")
+        return Response.json({id:"123456789012345",username:"DevonFixture"});
+      throw Error("Unexpected provider request");
+    });
+    await f.callback(await f.auth());
+    f.advance(25*60*60_000);
+    const pending=f.post("/api/threads/auth/renew");
+    await entered;
+    if(action==="disconnect"){
+      assert.equal((await f.post("/api/threads/auth/disconnect")).status,200);
+    }else{
+      const entry=await f.auth();
+      assert.equal((await f.callback(entry)).status,303);
+    }
+    const expected=f.sql.prepare("SELECT revision,token_cipher FROM threads_connection").get();
+    release();
+    const response=await pending;
+    assert.equal(response.status,409);
+    assert.deepEqual(f.sql.prepare("SELECT revision,token_cipher FROM threads_connection").get(),expected);
+  }
 });

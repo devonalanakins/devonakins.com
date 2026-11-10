@@ -13,6 +13,7 @@ const HANDLE=/^[A-Za-z0-9._]{1,30}$/;
 const NUMBER=/^[0-9]{4,32}$/;
 const STR=/^[A-Za-z0-9_-]{43}$/;
 const GRACE_MS=60_000;
+const REFRESH_MIN_AGE_MS=24*60*60_000;
 const clearCookie=COOKIE+"=; Path=/; Max-Age=0; Secure; HttpOnly; SameSite=Lax";
 const makeCookie=value=>COOKIE+"="+value+"; Path=/; Max-Age=300; Secure; HttpOnly; SameSite=Lax";
 const cookieValue=header=>(header||"").split(";").map(p=>p.trim())
@@ -37,7 +38,8 @@ export async function storedThreadsCredential(env={},at=Date.now()) {
     const token=await unseal(row.token_cipher,key,"threads-long-lived-access");
     if(typeof token!=="string"||token.length<20||token.length>4096)return null;
     return {token,username:row.username,revision:row.revision,
-      expiresAt:row.token_expires_at,cipher:row.token_cipher};
+      expiresAt:row.token_expires_at,cipher:row.token_cipher,
+      verifiedAt:row.verified_at};
   } catch {return null;}
 }
 export async function storedThreadsStatus(env={},at=Date.now()) {
@@ -173,6 +175,59 @@ async function finish(request,env,now,fetcher){
     ).bind(stateHash,attempt.nonce_hash).run();
   }
 }
+/** Explicit owner-only refresh of an unexpired, >=24-hour-old Threads token.
+ * The current revision, ciphertext and issue metadata are optimistic guards.
+ * A disconnect or newer OAuth grant wins over this delayed provider request.
+ */
+async function renew(env,now,fetcher){
+  const current=await storedThreadsCredential(env,now);
+  if(!current)return ownerError("Reconnect Threads to renew authorization",409);
+  if(!Number.isSafeInteger(current.verifiedAt) ||
+     current.verifiedAt<=0 || current.verifiedAt>now ||
+     now-current.verifiedAt<REFRESH_MIN_AGE_MS)
+    return ownerError("Threads authorization is not ready for renewal",429);
+  // Meta requires the current unexpired long-lived credential in a query.
+  // Fixed HTTPS host, no redirect or logging; never return it to owner JS.
+  const endpoint=new URL("https://graph.threads.net/refresh_access_token");
+  endpoint.search=new URLSearchParams({
+    grant_type:"th_refresh_token",access_token:current.token,
+  }).toString();
+  const result=await providerJson(await fetcher(endpoint.href,{
+    method:"GET",headers:{Accept:"application/json"},cache:"no-store",
+    redirect:"error",signal:AbortSignal.timeout(8000),
+  }));
+  if(typeof result.access_token!=="string" || result.access_token.length<20 ||
+     result.access_token.length>4096 ||
+     String(result.token_type||"").toLowerCase()!=="bearer" ||
+     !Number.isSafeInteger(Number(result.expires_in)) ||
+     Number(result.expires_in)<3600 ||
+     Number(result.expires_in)>90*86400)
+    return ownerError("Threads provider did not renew authorization",503);
+  const profile=await providerJson(await fetcher(
+    "https://graph.threads.net/v1.0/me?fields=id%2Cusername",{
+      method:"GET",
+      headers:{Authorization:"Bearer "+result.access_token,Accept:"application/json"},
+      cache:"no-store",redirect:"error",signal:AbortSignal.timeout(8000),
+    }));
+  if(!NUMBER.test(String(profile.id||"")) ||
+     typeof profile.username!=="string" ||
+     !HANDLE.test(profile.username) ||
+     profile.username.toLowerCase()!==current.username.toLowerCase())
+    return ownerError("Renewed Threads account did not match",409);
+  const key=await importEncryptionKey(env.LISTENING_TOKEN_KEY);
+  const cipher=await seal(result.access_token,key,"threads-long-lived-access");
+  const expires=now+Number(result.expires_in)*1000;
+  const saved=await env.LISTENING_DB.prepare(
+    "UPDATE threads_connection SET revision=revision+1,token_cipher=?,"+
+    "token_expires_at=?,verified_at=? WHERE id=1 AND revision=? "+
+    "AND token_cipher=? AND token_expires_at=? AND verified_at=?"
+  ).bind(cipher,expires,now,current.revision,
+    current.cipher,current.expiresAt,current.verifiedAt).run();
+  if(saved.meta?.changes!==1)
+    return ownerError("Threads connection changed during renewal",409);
+  return ownerJson({version:1,connection:"renewed",
+    expiresAt:new Date(expires).toISOString(),checkedAt:new Date(now).toISOString()});
+}
 async function disconnect(env){
   const db=env.LISTENING_DB;
   await db.prepare("DELETE FROM threads_oauth_attempt").run();
@@ -189,7 +244,8 @@ export function createThreadsOwnerOAuth({fetcher=fetch,clock=Date.now}={}){
       return ownerError("Owner authentication required",403);
     const path=new URL(request.url).pathname;
     if(!["/api/threads/auth/status","/api/threads/auth/start",
-         "/api/threads/auth/callback","/api/threads/auth/disconnect"].includes(path))
+         "/api/threads/auth/callback","/api/threads/auth/disconnect",
+         "/api/threads/auth/renew"].includes(path))
       return ownerError("Not found",404);
     if(path==="/api/threads/auth/status"&&request.method==="GET")
       return ownerJson(await storedThreadsStatus(env,clock()));
@@ -203,6 +259,7 @@ export function createThreadsOwnerOAuth({fetcher=fetch,clock=Date.now}={}){
       if(!validOwnerOrigin(request))return ownerError("Cross-site operation denied",403);
       if(path==="/api/threads/auth/start")return await begin(env,now);
       if(path==="/api/threads/auth/disconnect")return await disconnect(env);
+      if(path==="/api/threads/auth/renew")return await renew(env,now,fetcher);
       return ownerError("Method not allowed",405);
     } catch {
       return ownerError("Private Threads connection unavailable");
