@@ -157,6 +157,8 @@ function render(data) {
   for (const slug of data.projects)
     project.add(new Option(catalog[slug] || slug, slug));
   const choices = el("presence-project-choices");
+  const policyWarning = el("project-policy-warning");
+  if (policyWarning) policyWarning.hidden = data.projectChoicesNeedReview !== true;
   choices.replaceChildren();
   for (const [slug, label] of Object.entries(catalog)) {
     const item = document.createElement("label");
