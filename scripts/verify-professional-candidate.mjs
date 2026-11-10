@@ -3,6 +3,7 @@ import {readFile} from "node:fs/promises";
 import {createHandler} from "../src/worker.mjs";
 import assets from "../.release/assets.mjs";
 import {PROFESSIONAL_ROUTES} from "../src/professional/site.mjs";
+import {approvedPublicProjects} from "../src/publication-manifest.mjs";
 
 const site=createHandler(assets,{version:"candidate-check",commit:"candidate"});
 const get=async (path,options={})=>site.fetch(new Request("https://devonakins.com"+path,options));
@@ -21,6 +22,15 @@ for(const [key,path] of Object.entries(PROFESSIONAL_ROUTES)){
     assert.ok([200,308].includes(link.status),key+" missing "+match[1]+": "+link.status);
   }
   checked++;
+}
+for(const project of approvedPublicProjects){
+  const url="/work/"+project.slug+"/";
+  const response=await get(url);
+  assert.equal(response.status,200,url);
+  const body=await response.text();
+  assert.match(body,/p-page-work/);
+  assert.match(body,/What is not claimed/);
+  assert.ok(body.includes('href="'+url+'"'));
 }
 const root=await (await get("/")).text();
 assert.match(root,/I build the systems/);
