@@ -1,4 +1,4 @@
-import {initProfessionalSignals} from "./signals.ts";
+import {initProfessionalSignals} from "./signals";
 type Activity = {
   kind: "push" | "pull_request" | "release" | "issue" | "other";
   label: string;
