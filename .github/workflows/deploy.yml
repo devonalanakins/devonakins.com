@@ -79,8 +79,8 @@ jobs:
           # Existing V4 tests assert V4 markup and stay mandatory for BOTH
           # release variants. A V5 production run must not execute them against
           # generated V5 HTML or bypass them entirely.
-          V5_PUBLIC_SITE_CANDIDATE=0 npm run build
-          V5_PUBLIC_SITE_CANDIDATE=0 npm test
+          PROFESSIONAL_SITE_CANDIDATE=0 V5_PUBLIC_SITE_CANDIDATE=0 npm run build
+          PROFESSIONAL_SITE_CANDIDATE=0 V5_PUBLIC_SITE_CANDIDATE=0 npm test
           node --check scripts/verify-live.mjs
           node --check scripts/verify-live-v5.mjs
           node --check scripts/verify-live-professional.mjs
