@@ -170,8 +170,10 @@ if (profileNote && profileNoteReleased) {
         "Expires " + new Date(note.expiresAtMs).toLocaleString();
       profileNote.hidden = false;
       renderHomepageFocus();
+      // Expiry remains authoritative while a newer network request is pending.
+      // A pending refresh must never keep a withdrawn/expired note painted.
       noteExpiryTimer = window.setTimeout(() => {
-        if (requestEpoch === noteEpoch) hideNote();
+        if (!publicHomepageNote(sharedProfileNote, Date.now())) hideNote();
       }, Math.max(0, note.expiresAtMs - Date.now() + 25));
     } catch {
       if (requestEpoch === noteEpoch) hideNote();
