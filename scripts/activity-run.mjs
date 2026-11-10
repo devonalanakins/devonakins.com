@@ -5,6 +5,29 @@ import { spawn, execFileSync } from "node:child_process";
 import { pathToFileURL } from "node:url";
 const ORIGIN = "https://devonakins.com";
 const secret = (v) => typeof v === "string" && /^[A-Za-z0-9_-]{43}$/.test(v);
+// Fixed status categories only. Never print a response body, bearer, URL,
+// provider account, command output or arbitrary exception text into CI logs.
+export class ActivityRequestFailure extends Error {
+  constructor(status) {
+    super("Reporter HTTP response rejected");
+    this.name = "ActivityRequestFailure";
+    this.status = status;
+  }
+}
+export function activityFailureReason(error) {
+  if (!(error instanceof ActivityRequestFailure)) return "network or invalid response";
+  const categories = {
+    400: "invalid reporter payload",
+    401: "credential rejected or expired",
+    403: "receiver denied",
+    404: "receiver not available",
+    409: "source project or state conflict",
+    429: "source cooldown or task limit",
+  };
+  return (categories[error.status] || "receiver error") +
+    " (HTTP " + (Number.isSafeInteger(error.status) && error.status >= 400 &&
+      error.status <= 599 ? error.status : "error") + ")";
+}
 export function projectFromRemote(remote) {
   if (typeof remote !== "string") return null;
   const match =
@@ -46,11 +69,9 @@ export async function activityRequest(path, body, token, fetcher = fetch) {
     body: JSON.stringify(body),
     signal: AbortSignal.timeout(8000),
   });
-  if (
-    !response.ok ||
-    !response.headers.get("Content-Type")?.includes("application/json")
-  )
-    throw Error("Activity request rejected (HTTP " + response.status + ").");
+  if (!response.ok) throw new ActivityRequestFailure(response.status);
+  if (!response.headers.get("Content-Type")?.includes("application/json"))
+    throw Error("Invalid reporter response");
   return response.json();
 }
 export async function runParticipatingTask(
@@ -98,9 +119,10 @@ export async function runParticipatingTask(
         task.token,
         fetcher,
       );
-    pending = pending.then(next).catch(() => {
+    pending = pending.then(next).catch((error) => {
       stderr.write(
-        "Activity checkpoint unavailable; source will expire automatically.\n",
+        "Activity checkpoint unavailable (" + activityFailureReason(error) +
+        "); source will expire automatically.\n",
       );
     });
     return pending;
@@ -142,10 +164,11 @@ export async function runParticipatingTask(
       if (!secret(task.token) || !Number.isFinite(Date.parse(task.expiresAt)))
         throw Error();
       lastSent = clock();
-    } catch {
+    } catch (error) {
       task = null;
       stderr.write(
-        "Activity connection unavailable; continuing the requested command.\n",
+        "Activity connection unavailable (" + activityFailureReason(error) +
+        "); continuing the requested command.\n",
       );
     }
   }
