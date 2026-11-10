@@ -269,3 +269,29 @@ test("local cryptographic diagnosis is opt-in, bounded, never logs JWT and never
  assert.match(workflow,/DEVON_ACTIVITY_DIAGNOSE_IDENTITY: "true"/);
  assert.match(workflow,/if: github\.event_name == 'push' && github\.ref == 'refs\/heads\/main'/);
 });
+
+test("trusted reporter emits only allowlisted JWKS failure categories, never untrusted header text",async()=>{
+  assert.match(activityFailureReason(new ActivityRequestFailure(502,"upstream-forbidden")),/public issuer key lookup: upstream-forbidden/);
+  assert.match(activityFailureReason(new ActivityRequestFailure(502,"timeout")),/public issuer key lookup: timeout/);
+  assert.doesNotMatch(activityFailureReason(new ActivityRequestFailure(502,"PRIVATE RAW ERROR")),/PRIVATE/);
+  assert.doesNotMatch(activityFailureReason(new ActivityRequestFailure(401,"upstream-forbidden")),/issuer key lookup/);
+  const env=signedEnvironment();
+  const jwt="a".repeat(250)+"."+("b".repeat(250))+"."+("c".repeat(344));
+  const fetcher=async(url)=>{
+    if(url.startsWith("https://pipelines.actions.githubusercontent.com/"))
+      return Response.json({value:jwt});
+    if(url.endsWith("/github-oidc-start"))
+      return new Response(JSON.stringify({private:"NEVER LOG"}),{
+        status:502,
+        headers:{
+          "Content-Type":"application/json",
+          "X-OIDC-JWKS-Failure":"upstream-rate-limited",
+        },
+      });
+    throw Error("Unexpected fetch");
+  };
+  await assert.rejects(githubOidcTaskStart({environment:env,fetcher}),
+    e=>e instanceof ActivityRequestFailure && e.status===502 &&
+    e.jwksCategory==="upstream-rate-limited" &&
+    !String(e).includes("NEVER LOG"));
+});
