@@ -21,11 +21,21 @@ export function publicHomepageNote(value, now = Date.now()) {
 
 export function publicHomepageFocus(homepage, rawNote, now = Date.now()) {
   const active = homepage?.available === true ? homepage.focus : null;
-  if (active && (active.kind === "editor" || active.kind === "remote") &&
-      typeof active.title === "string" && typeof active.source === "string" &&
-      typeof active.age === "string") {
+  // A cached homepage summary is not permanent proof of activity. Recheck the
+  // timestamp whenever a note request or expiry repaints Current Focus.
+  const observedAt = typeof active?.at === "string" ? Date.parse(active.at) : NaN;
+  const elapsed = now - observedAt;
+  const knownSource = active?.kind === "editor"
+    ? active.source === "Editor observed"
+    : active?.kind === "remote" &&
+      ["Codex task", "Work task", "Workflow task"].includes(active.source);
+  if (Number.isFinite(now) && knownSource &&
+      typeof active.title === "string" && active.title.length > 0 &&
+      Number.isFinite(observedAt) && elapsed >= -10_000 && elapsed < 120_000) {
+    const age = elapsed < 60_000 ? "under a minute ago" :
+      Math.floor(elapsed / 60_000) + "m ago";
     return { kind: "observed", title: active.title,
-      detail: active.source + " \u00b7 observed " + active.age };
+      detail: active.source + " \u00b7 observed " + age };
   }
   const note = publicHomepageNote(rawNote, now);
   if (note) return { kind: "owner-note", title: note.text,
