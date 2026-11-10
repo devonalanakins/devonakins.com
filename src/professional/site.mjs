@@ -103,7 +103,7 @@ function writing(){
   card("research","TOPIC · IN DEVELOPMENT","Math, physics & cognition","Research questions and technical learning, with hypotheses distinguished from confirmed results.")+
   card("layers","TOPIC · IN DEVELOPMENT","Independent operating systems","How focused technical systems can support complex responsibilities without unnecessary complexity.")+
   card("book","FICTION · CREATIVE STUDIO","ANEVUM","Long-running fictional worldbuilding and creative work, developed alongside family priorities.","/work/anevum/","View public overview")+
-  '</div></section><section class="p-section p-inline-cta"><div><p class="p-eyebrow">ABOUT THE AUTHOR</p><h2>Curiosity, grounded in execution.</h2><p>I'm interested in the ideas behind systems, but even more in whether they help people build useful things.</p></div>'+button("/about/","About Devon",true)+'</section>';
+  '</div></section><section class="p-section p-inline-cta"><div><p class="p-eyebrow">ABOUT THE AUTHOR</p><h2>Curiosity, grounded in execution.</h2><p>I am interested in the ideas behind systems, but even more in whether they help people build useful things.</p></div>'+button("/about/","About Devon",true)+'</section>';
 }
 function about(){
   return intro("ABOUT / 05","A builder. An operator. <em>A writer.</em>","I am Devon Alan Akins—an independent developer, author and father whose work increasingly centers on improving real-world business operations.",
