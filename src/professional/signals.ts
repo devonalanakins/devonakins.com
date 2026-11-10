@@ -25,25 +25,42 @@ const update=(root:HTMLElement,selector:string,value:string)=>{
   const el=root.querySelector<HTMLElement>(selector);
   if(el)el.textContent=value;
 };
+/**
+ * Devon's declared rule is: when Spotify is publicly shown as playing, he is
+ * coding. This is his personal convention, NOT an editor-verified observation.
+ * Respect status-only sharing: no track metadata is required or exposed.
+ */
+function ownerCodingFromSpotify(value:unknown,at=Date.now()):boolean{
+  const detailed=publicV5Playback(value,at);
+  if(detailed.state==="playing")return true;
+  if(!value||typeof value!=="object"||Array.isArray(value))return false;
+  const p=value as UnknownJson;
+  if(p.version!==1||p.mode!=="playing"||p.detailsVisible!==false||
+     typeof p.updatedAt!=="string")return false;
+  const seen=Date.parse(p.updatedAt);
+  return Number.isFinite(seen)&&new Date(seen).toISOString()===p.updatedAt&&
+    seen<=at+10000&&at-seen<120000;
+}
 function renderListening(value:unknown){
   const now=Date.now();
   const p=publicV5Playback(value,now);
   const track=p.state==="playing";
-  const privateState=p.state==="private";
+  const inZone=ownerCodingFromSpotify(value,now);
+  const privateState=!inZone&&p.state==="private";
   const offAir=p.state==="off_air";
-  const status=track?"PLAYING NOW":privateState?"PRIVATE":offAir?"OFF AIR":"UNAVAILABLE";
-  const title=track?p.title:privateState?"Playback not shared":offAir?"No active playback":"Playback unavailable";
-  const artist=track?p.artist:privateState?"Spotify sharing is off":
+  const status=inZone?"IN THE ZONE":privateState?"PRIVATE":offAir?"OFF AIR":"UNAVAILABLE";
+  const title=track?p.title:inZone?"Coding with music":privateState?"Playback not shared":offAir?"No active playback":"Playback unavailable";
+  const artist=track?p.artist:inZone?"Spotify playing · track details not shared":privateState?"Spotify sharing is off":
     offAir?"Paused or stopped":"No verified track from Spotify";
-  if(ribbon)ribbon.textContent=track?"Now: "+title:privateState?"Spotify private":offAir?"Not playing":"Spotify unavailable";
+  if(ribbon)ribbon.textContent=inZone?"In the Zone · Coding"+(track?" · "+title:""):privateState?"Spotify private":offAir?"Not playing":"Spotify unavailable";
   for(const card of listeningCards){
-    card.dataset.spotifyMode=p.state;
+    card.dataset.spotifyMode=inZone?"playing":p.state;
     update(card,"[data-spotify-state]",status);
     update(card,"[data-spotify-title]",title);
     update(card,"[data-spotify-artist]",artist);
-    update(card,"[data-spotify-note]",track
-      ?"Playing status from the consent-filtered Spotify source; it does not imply a coding session."
-      :"Only owner-approved metadata can appear here. No audio is streamed.");
+    update(card,"[data-spotify-note]",inZone
+      ?"In the Zone is Devon's owner-defined coding signal from public Spotify playback; editor activity is a separate observation."
+      :"Only owner-approved Spotify playback is displayed. No audio streams here; silence does not mean Devon stopped coding.");
     const link=card.querySelector<HTMLAnchorElement>("[data-spotify-link]");
     if(link){
       link.href=track?p.href:"/listening/";
@@ -75,12 +92,16 @@ function renderListening(value:unknown){
       progress.max=validProgress?.max ?? 1;
     }
   }
+  // Spotify and V4 arrive independently. Reconcile the current work card as
+  // soon as either approved source changes; never retain a revoked signal.
+  renderWork(publicSnapshot);
 }
 function renderWork(snapshot:unknown){
   const at=Date.now();
   let label="No verified active session";
   let explanation="Public GitHub events are recorded work, not evidence that an editor or agent is currently active.";
   let state="NO ACTIVE SIGNAL";
+  const inZone=ownerCodingFromSpotify(lastListening,at);
   const p=typeof snapshot==="object"&&snapshot!==null&&!Array.isArray(snapshot)
     ? snapshot as UnknownJson : null;
   const timestamp=typeof p?.asOf==="string" ? Date.parse(p.asOf) : NaN;
@@ -93,9 +114,14 @@ function renderWork(snapshot:unknown){
       (w.state==="developing"||w.state==="in-the-zone")&&
       (w.source==="editor-heartbeat"||w.source==="owner-declared")){
     state=w.source==="editor-heartbeat"?"EDITOR OBSERVED":"OWNER DECLARED";
-    label=w.source==="editor-heartbeat"?"Development session observed":"Work session declared";
-    explanation="Recent authorized work signal; source checked "+new Date(time).toLocaleTimeString([],{
-      hour:"numeric",minute:"2-digit"})+". Music playback alone does not establish coding.";
+    label=inZone?"In the Zone — Coding":w.source==="editor-heartbeat"?"Development session observed":"Work session declared";
+    explanation="Recent authorized "+(w.source==="editor-heartbeat"?"editor":"owner-declared")+
+      " work signal, checked "+new Date(time).toLocaleTimeString([],{hour:"numeric",minute:"2-digit"})+
+      (inZone?". Spotify independently indicates Devon's owner-defined coding mode.":".");
+  }else if(inZone){
+    state="SPOTIFY SIGNAL";
+    label="In the Zone — Coding";
+    explanation="Devon's owner-defined rule: Spotify playing means he's coding. Source: recent public playback; editor activity has not been independently observed.";
   }
   for(const card of workCards){
     update(card,"[data-work-state]",state);
