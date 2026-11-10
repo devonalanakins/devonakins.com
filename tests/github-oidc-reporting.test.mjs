@@ -5,6 +5,7 @@ import {
   validGithubActivityClaims,
   verifyGithubActionsIdentity,
   GithubRunProviderUnavailable,
+  GithubKeyProviderUnavailable,
   GITHUB_ACTIVITY_AUDIENCE,
 } from "../src/github-actions-oidc.mjs";
 
@@ -159,12 +160,17 @@ test("wrong key, missing kid and provider outage are never considered active sou
   for (const p of [
     provider(different.jwk),
     provider(f.jwk, githubRun(), { keys: [] }),
-    provider(f.jwk, githubRun(), { providerFailure: true }),
   ]) {
     assert.equal(await verifyGithubActionsIdentity(token, {
       fetcher: p.fetcher, clock: () => time,
     }), null);
   }
+  const outage=provider(f.jwk,githubRun(),{providerFailure:true});
+  await assert.rejects(verifyGithubActionsIdentity(token,{
+    fetcher:outage.fetcher,clock:()=>time,
+  }),e=>e instanceof GithubKeyProviderUnavailable &&
+    !String(e).includes("PRIVATE"));
+  assert.equal(outage.requested.length,1,"No run lookup after issuer JWKS outage");
   const p = provider(f.jwk);
   for (const bad of ["", "bad", "x".repeat(9000), "a.b.c"]) {
     assert.equal(await verifyGithubActionsIdentity(bad, {
@@ -220,4 +226,33 @@ test("signed current claims fail closed with distinct temporary error when indep
     }
   }),null);
   assert.equal(calls,1,"tampered token never reaches independent run lookup");
+});
+
+test("malformed, rate-limited and unavailable GitHub JWKS never authenticate or reach workflow lookup",async()=>{
+  const f=await fixture();
+  const token=await f.issue();
+  for(const mode of ["http429","malformed-json","timeout"]) {
+    let calls=0;
+    const fetcher=async(url)=>{
+      calls++;
+      assert.equal(url,"https://token.actions.githubusercontent.com/.well-known/jwks");
+      if(mode==="http429") return new Response(null,{status:429});
+      if(mode==="malformed-json") return new Response("not-json",{
+        headers:{"Content-Type":"application/json"}
+      });
+      throw Error("PRIVATE error details");
+    };
+    await assert.rejects(verifyGithubActionsIdentity(token,{
+      fetcher,clock:()=>time,
+    }),e=>e instanceof GithubKeyProviderUnavailable &&
+      !String(e).includes("PRIVATE"),mode);
+    assert.equal(calls,1);
+  }
+  const invalid=await f.issue({...claims(),repository_visibility:"private"});
+  let called=false;
+  assert.equal(await verifyGithubActionsIdentity(invalid,{
+    fetcher:async()=>{called=true;throw Error("Should never be called");},
+    clock:()=>time,
+  }),null);
+  assert.equal(called,false,"invalid public scope never asks GitHub for keys");
 });
