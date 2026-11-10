@@ -165,7 +165,7 @@ try:
                       document.body.append(label);
                     }''')
                 page.goto(BASE+"/listening/",wait_until="domcontentloaded")
-                page.wait_for_function("() => document.querySelector('[data-spotify-state]')?.textContent === 'PLAYING NOW'")
+                page.wait_for_function("() => document.querySelector('[data-spotify-state]')?.textContent === 'IN THE ZONE'")
                 assert page.locator("[data-spotify-title]").inner_text()=="Synthetic test track"
                 assert page.locator("[data-spotify-progress]").is_visible()
                 assert page.locator("[data-spotify-link]").get_attribute("href").startswith("https://open.spotify.com/track/")
@@ -181,6 +181,23 @@ try:
                 page.wait_for_function("() => document.querySelector('[data-work-state]')?.textContent === 'EDITOR OBSERVED'")
                 assert page.locator("[data-spotify-title]").inner_text()=="Synthetic test track"
                 assert page.locator("[data-threads-state]").inner_text()=="CONNECTED"
+                assert page.locator("[data-work-title]").inner_text()=="In the Zone — Coding"
+                # Owner convention with no editor evidence: public Spotify
+                # still marks coding mode, but its source must be unambiguous.
+                aggregate["work"]={"visibility":"hidden","state":"not-broadcasting","source":"none"}
+                page.reload(wait_until="domcontentloaded")
+                page.wait_for_function("() => document.querySelector('[data-work-state]')?.textContent === 'SPOTIFY SIGNAL'")
+                assert page.locator("[data-work-title]").inner_text()=="In the Zone — Coding"
+                assert "owner-defined" in page.locator("[data-work-detail]").inner_text()
+                # Status-only sharing must not publish title or artwork.
+                song["detailsVisible"]=False
+                song.pop("track")
+                song.pop("playback")
+                page.reload(wait_until="domcontentloaded")
+                page.wait_for_function("() => document.querySelector('[data-spotify-title]')?.textContent === 'Coding with music'")
+                assert page.locator("[data-spotify-state]").inner_text()=="IN THE ZONE"
+                assert page.locator("[data-spotify-cover]").is_hidden()
+                assert page.locator("[data-work-state]").inner_text()=="SPOTIFY SIGNAL"
                 source_mode["enabled"]=False
                 page.reload(wait_until="domcontentloaded")
                 page.wait_for_function("() => document.querySelector('[data-spotify-state]')?.textContent === 'PRIVATE'")
