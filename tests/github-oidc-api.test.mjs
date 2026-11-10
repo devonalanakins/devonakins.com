@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { DatabaseSync } from "node:sqlite";
 import { readFileSync } from "node:fs";
 import { createActivityTasksApi, activityTasks } from "../src/activity-tasks.mjs";
+import { GithubRunProviderUnavailable } from "../src/github-actions-oidc.mjs";
 const at=Date.parse("2026-11-10T15:00:00.000Z");
 const owner={access:{aud:"fixture",getIdentity:async()=>({email:"owner@example.test"})}};
 const pretendJwt="SIGNED_GITHUB_OIDC_FIXTURE_NOT_REAL";
@@ -17,6 +18,7 @@ function make({verified=true,enabled=true}={}){
  let validations=0;
  const api=createActivityTasksApi({clock:()=>at,verifyGithubIdentity:async(token,{clock})=>{
    validations++;assert.equal(token,pretendJwt);assert.equal(clock(),at);
+   if(verified==="provider-unavailable") throw new GithubRunProviderUnavailable();
    return verified?{projectSlug:"devonakins-com"}:null;
  }});
  const env={PRESENCE_ENABLED:"true",PRESENCE_PUBLIC_RELEASE_APPROVED:"true",
@@ -82,4 +84,17 @@ test("signed request cannot borrow an approved source for a different project",a
    {version:1,projectSlug:"merit"}),f.env);
  assert.equal(response.status,409);
  assert.equal((await activityTasks(f.env,at)).tasks.length,0);
+});
+
+test("signed but unconfirmed run has distinct 503 without source creation or credential leakage",async()=>{
+ const f=make({verified:"provider-unavailable"});
+ await f.connect();f.publish();
+ const response=await f.start();
+ assert.equal(response.status,503);
+ assert.equal(response.headers.get("retry-after"),"60");
+ const content=await response.text();
+ assert.match(content,/Live workflow verification unavailable/);
+ assert.doesNotMatch(content,/SIGNED_GITHUB_OIDC_FIXTURE|PRIVATE|secret|token/);
+ assert.equal((await activityTasks(f.env,at)).tasks.length,0);
+ assert.equal(f.sqlite.prepare("SELECT COUNT(*) AS count FROM activity_tasks").get().count,0);
 });
