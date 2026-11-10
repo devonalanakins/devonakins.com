@@ -26,6 +26,9 @@ function companion({ transport, readSecret, storeSecret, deleteSecret, globals =
   remote = "https://github.com/devonalanakins/merit.git", catalog, gitActivation,
 } = {}) {
   let edit;
+  let fileChanged;
+  let fileCreated;
+  let watcherDisposed = false;
   let tick;
   let time = start;
   let scheme = "file";
@@ -70,6 +73,14 @@ function companion({ transport, readSecret, storeSecret, deleteSecret, globals =
       onDidChangeTextDocument(fn) {
         edit = fn;
         return { dispose() {} };
+      },
+      createFileSystemWatcher(pattern) {
+        assert.match(pattern, /\\*\\*\\/\\*\\.\\{/);
+        return {
+          onDidChange(fn) { fileChanged = fn; return {dispose(){}}; },
+          onDidCreate(fn) { fileCreated = fn; return {dispose(){}}; },
+          dispose() {watcherDisposed = true;},
+        };
       },
     },
   };
@@ -134,6 +145,16 @@ function companion({ transport, readSecret, storeSecret, deleteSecret, globals =
     trust(value) {api.workspace.isTrusted=value;},
     tick: () => tick(),
     catalogReads: () => catalogReads,
+    watcherDisposed: () => watcherDisposed,
+    externalChange(path, scheme = "file") {
+      fileChanged({ fsPath: path, scheme });
+    },
+    externalCreate(path, scheme = "file") {
+      fileCreated({ fsPath: path, scheme });
+    },
+    isReportable(path, scheme = "file") {
+      return sandbox.exports.reportableExternalFile({ fsPath: path, scheme });
+    },
     edit(changes = [{}]) {
       edit({contentChanges: changes,document:{uri:{scheme},getText(){throw Error("document text must not be read");}}});
     },
@@ -424,4 +445,77 @@ test("a disconnected heartbeat is throttled across new edits while pause remains
   assert.equal(f.signals.length,1);
   await f.client.actions.pause();assert.equal(f.signals.at(-1).active,false);
   f.client.dispose();
+});
+
+
+test("real external Codex file change produces an approved project observation", async () => {
+  const f = companion();
+  await f.pairAndResume();
+  assert.equal(f.isReportable("C:\\work\\merit\\src\\index.ts"), true);
+  f.externalChange("C:\\work\\merit\\src\\index.ts");
+  await settle();
+  assert.equal(f.signals.length, 1);
+  assert.equal(f.signals[0].active, true);
+  assert.equal(f.signals[0].projectSlug, "merit");
+  assert.equal(JSON.stringify(f.signals).includes("index.ts"),false,"Never upload paths");
+  f.client.dispose();
+  assert.equal(f.watcherDisposed(),true);
+});
+
+test("external files in generated, hidden or credential paths do not imply live work", async () => {
+  const f=companion();
+  await f.pairAndResume();
+  for(const file of [
+    "C:\\work\\merit\\node_modules\\pkg\\index.ts",
+    "C:\\work\\merit\\dist\\bundle.js",
+    "C:\\work\\merit\\.git\\hooks\\pre-commit.js",
+    "C:\\work\\merit\\coverage\\html\\index.html",
+    "C:\\work\\merit\\.env.production",
+    "C:\\work\\merit\\src\\credentials.json",
+    "C:\\work\\merit\\src\\package.min.js",
+    "C:\\work\\merit\\src\\bundle.js.map",
+    "C:\\work\\merit\\src\\raw.png",
+  ]) {
+    assert.equal(f.isReportable(file),false,file);
+    f.externalChange(file);
+  }
+  assert.equal(f.signals.length,0);
+  f.client.dispose();
+});
+
+test("external agent edits require trusted workspace, focus and approved Git origin", async () => {
+  const f=companion();await f.pairAndResume();
+  f.focus(false);f.externalChange("C:\\work\\merit\\src\\logic.ts");await settle();
+  f.focus(true);f.trust(false);f.externalChange("C:\\work\\merit\\src\\logic.ts");await settle();
+  assert.equal(f.signals.length,0);
+  f.trust(true);f.setRemote("https://github.com/devonalanakins/private-client.git");
+  f.externalChange("C:\\work\\private-client\\src\\logic.ts");await settle();
+  assert.equal(f.signals.length,0);
+  f.setRemote("https://github.com/devonalanakins/merit.git");
+  f.externalCreate("C:\\work\\merit\\src\\new-file.ts");await settle();
+  assert.equal(f.signals.length,1);
+  assert.equal(f.signals[0].projectSlug,"merit");
+  f.client.dispose();
+});
+
+test("switching from approved source to private file clears previous public activity", async () => {
+  const f=companion();await f.pairAndResume();
+  f.externalChange("C:\\work\\merit\\src\\logic.ts");await settle();
+  f.setRemote("https://github.com/devonalanakins/private-client.git");
+  f.advance(50);
+  f.externalChange("C:\\work\\private-client\\src\\logic.ts");await settle();
+  assert.deepEqual(f.signals.map(s=>s.active),[true,false]);
+  f.client.dispose();
+});
+
+test("file watcher observations stop after pausing or disposing companion",async()=>{
+  const f=companion();await f.pairAndResume();
+  await f.client.actions.pause();
+  f.externalChange("C:\\work\\merit\\src\\logic.ts");await settle();
+  assert.equal(f.signals.every(s=>!s.active),true);
+  f.client.dispose();
+  const n=f.signals.length;
+  f.externalCreate("C:\\work\\merit\\src\\new.ts");await settle();
+  assert.equal(f.signals.length,n);
+  assert.equal(f.watcherDisposed(),true);
 });
