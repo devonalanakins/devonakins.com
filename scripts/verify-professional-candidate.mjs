@@ -34,12 +34,21 @@ for(const project of approvedPublicProjects){
 }
 const root=await (await get("/")).text();
 assert.match(root,/I build the systems/);
-assert.match(root,/independent of the selected portfolio|Independent of the selected portfolio/);
+assert.match(root,/Automatic public feed/);
+assert.match(root,/\/professional\/headshot-concept\.webp/);
 const activity=await (await get("/activity/")).text();
-assert.match(activity,/No per-repository setup/);
+assert.match(activity,/no per-repository selection/i);
+assert.match(activity,/data-github-highlights/);
+assert.match(activity,/data-github-count/);
 assert.match(activity,/data-public-github-feed/);
 assert.doesNotMatch(activity,/Pushed 4 commits|Merged pull request #27|Released v0\.4\.0/);
 assert.equal((await get("/api/github/public-feed",{method:"HEAD"})).status,200);
+for(const visual of ["/professional/headshot-concept.webp","/professional/concept-art.webp"]){
+  const response=await get(visual);
+  assert.equal(response.status,200,visual);
+  assert.match(response.headers.get("Content-Type"),/image\/webp/);
+  assert.ok((await response.arrayBuffer()).byteLength>2000,visual+" too small or missing");
+}
 const css=Object.keys(assets).filter(p=>p.startsWith("/assets/")&&p.endsWith(".css"));
 assert.ok(css.length>0);
 const base=await readFile("index.html","utf8");
