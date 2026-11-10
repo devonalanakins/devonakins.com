@@ -468,3 +468,60 @@ h1 em,h2 em,.p-footer-line em{font-style:italic;color:#e9c29a}
  background-image:linear-gradient(180deg,#101923a0,#0d1823f0),url("/professional/concept-art.webp");
  background-position:center,0% 100%;
 }
+
+/* Real GitHub observatory: dense editorial timeline, no simulated telemetry. */
+.p-activity-ribbon{margin-top:24px}
+.p-activity-main .p-section-heading{align-items:flex-end}
+.p-activity-main .p-section-heading h2{font-size:clamp(2rem,2.8vw,3rem)}
+.p-activity-main .p-section-heading>p{font-size:.77rem;letter-spacing:0;text-transform:none;max-width:290px}
+.p-activity-layout{grid-template-columns:minmax(0,1.58fr) minmax(300px,1fr);gap:25px}
+.p-activity-aside{gap:22px}
+.p-activity-aside .p-aside-panel{padding:23px 25px}
+.p-activity-aside h3{margin:0 0 12px;font:400 1.65rem/1.2 Georgia,serif}
+.p-activity-aside .p-eyebrow{font-size:.66rem;margin-bottom:11px}
+.p-activity-main .p-feed{padding:15px 18px 19px}
+.p-activity-main .p-feed ol{border-left:1px solid #d1c1a657;margin-left:16px}
+.p-activity-main .p-feed li{position:relative;padding:17px 8px 17px 21px}
+.p-activity-main .p-feed li:before{content:"";position:absolute;width:8px;height:8px;left:-5px;top:30px;background:#d9b587;border:2px solid #17212b;border-radius:50%}
+.p-activity-main .p-feed li a{grid-template-columns:39px 1fr auto;gap:14px}
+.p-activity-main .p-feed li strong{font-size:.95rem}
+.p-activity-main .p-feed li small{color:#b5c0c7}
+.p-event-symbol{border-radius:8px;background:#162d2b;border-color:#6fbf9c58;color:#8ed8b1;font-size:1.05rem}
+.p-event-symbol[data-kind="pull_request"]{background:#2b213d;color:#c4a9f3;border-color:#8c6ec052}
+.p-event-symbol[data-kind="release"]{background:#342b22;color:#eac398;border-color:#b7895652}
+.p-event-symbol[data-kind="issue"]{background:#1b3041;color:#a6ceeb;border-color:#5b99bc52}
+.p-filter-row button{background:#121e28aa;border:1px solid #c2c9d43a;min-height:38px}
+.p-filter-row button[aria-pressed=true]{background:#c4956538;color:#f2d1aa}
+.p-work-signals .p-fine{margin:0 0 20px}
+.p-signal-row,.p-source-row{display:grid;grid-template-columns:25px minmax(0,1fr) auto;gap:12px;align-items:center;padding:13px 0;border-top:1px solid #dee4e726}
+.p-signal-row>svg,.p-source-row>svg{width:24px;height:24px;color:#e2b987}
+.p-signal-row strong,.p-source-row strong{font-size:.88rem;font-weight:650;display:block}
+.p-signal-row small,.p-source-row small{font-size:.74rem;color:#aebdc5;display:block;line-height:1.5;margin-top:3px}
+.p-signal-row b{font-size:.95rem;border:1px solid #7db8a151;border-radius:15px;background:#5a9c8450;color:#c8e8dc;min-width:38px;padding:3px 8px;text-align:center}
+.p-source-row{grid-template-columns:25px minmax(0,1fr)}
+.p-recent-updates{list-style:none;padding:0;margin:13px 0 0}
+.p-recent-updates li{font-size:.81rem;color:#adb9bf;padding:12px 2px;border-top:1px solid #ffffff26}
+.p-recent-updates li a{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:center}
+.p-recent-updates li span{color:#dfdedb;overflow-wrap:anywhere}
+.p-recent-updates li time{font-size:.7rem;color:#d3ae85;white-space:nowrap}
+.p-activity-detail{display:grid;grid-template-columns:1fr 1fr;gap:25px}
+.p-activity-detail .p-aside-panel{padding:30px}
+.p-activity-detail h2{font-size:2.3rem}
+.p-activity-detail p:not(.p-eyebrow){font-size:.87rem;color:#b9c5c9;line-height:1.75}
+.p-activity-detail .p-button{margin-top:10px}
+@media(max-width:1000px){.p-activity-layout{grid-template-columns:1.3fr 1fr}}
+@media(max-width:760px){
+ .p-activity-layout{grid-template-columns:1fr}
+ .p-activity-detail{grid-template-columns:1fr}
+ .p-activity-main .p-section-heading{display:block}
+ .p-activity-main .p-section-heading>p{max-width:unset;margin-top:10px}
+}
+@media(max-width:530px){
+ .p-activity-main .p-feed{padding:12px}
+ .p-activity-main .p-feed li a{grid-template-columns:33px 1fr}
+ .p-activity-main .p-feed li time{grid-column:2}
+ .p-activity-main .p-feed ol{margin-left:10px}
+ .p-activity-main .p-feed li{padding-left:15px}
+ .p-activity-aside .p-aside-panel{padding:21px}
+ .p-activity-detail h2{font-size:2rem}
+}
