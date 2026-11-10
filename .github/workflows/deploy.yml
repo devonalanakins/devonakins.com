@@ -19,6 +19,19 @@ on:
         description: V5 only - enter V5-CUTOVER-APPROVED after final release acceptance
         required: false
         type: string
+      github_oidc_action:
+        description: Signed GitHub Actions receiver - preserve is always the default
+        required: true
+        type: choice
+        options:
+          - preserve
+          - enable
+          - disable
+        default: preserve
+      github_oidc_confirmation:
+        description: Enable only - enter GITHUB-OIDC-ENABLE-APPROVED after privacy review
+        required: false
+        type: string
 permissions:
   contents: read
 concurrency:
@@ -47,6 +60,8 @@ jobs:
           EXPECTED_SHA: ${{ inputs.expected_sha }}
           RELEASE_VARIANT: ${{ inputs.release_variant }}
           V5_CONFIRMATION: ${{ inputs.v5_confirmation }}
+          GITHUB_OIDC_ACTION: ${{ inputs.github_oidc_action }}
+          GITHUB_OIDC_CONFIRMATION: ${{ inputs.github_oidc_confirmation }}
         # The reviewed guard requires V5-CUTOVER-APPROVED for a V5 cutover.
         # Choosing v5 with the current v4 hotfix commit must fail visibly.
         run: node scripts/manual-release-guard.mjs
@@ -82,6 +97,10 @@ jobs:
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          EXPECTED_SHA: ${{ inputs.expected_sha }}
+          RELEASE_VARIANT: ${{ inputs.release_variant }}
+          GITHUB_OIDC_ACTION: ${{ inputs.github_oidc_action }}
+          GITHUB_OIDC_CONFIRMATION: ${{ inputs.github_oidc_confirmation }}
         run: node scripts/prepare-private-deploy.mjs
       - name: Deploy only devonakins-personal Worker
         env:
@@ -97,3 +116,9 @@ jobs:
           else
             node scripts/verify-live.mjs
           fi
+      - name: Verify live signed receiver gate and reject unsigned requests
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          GITHUB_OIDC_ACTION: ${{ inputs.github_oidc_action }}
+        run: node scripts/verify-oidc-release.mjs
