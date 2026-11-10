@@ -280,7 +280,8 @@ test("public issuer JWKS request uses explicit WAF-compatible API headers and ne
   }),{projectSlug:"devonakins-com"});
   assert.equal(seen.length,2);
   // A successful issuer request never excuses bad RSA material.
-  const forged=jwt.slice(0,-1)+(jwt.endsWith("a")?"b":"a");
+  const [head,payload,sig]=jwt.split(".");
+  const forged=head+"."+payload+"."+(sig[0]==="x"?"y":"x")+sig.slice(1);
   assert.equal(await verifyGithubActionsIdentity(forged,{
     fetcher,clock:()=>time,
   }),null);
