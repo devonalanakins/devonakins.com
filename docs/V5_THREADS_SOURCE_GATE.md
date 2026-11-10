@@ -1,6 +1,6 @@
 # Living Mind V5 — Threads Feed Source & Authorization Gate
 
-Status: **V5 website LIVE (November 9, 2026); private Threads connection verifier deployed, official account NOT CONNECTED.** Owner-only OAuth source merged in PR #85 but is NOT deployed; the renewal extension is under separate review.
+Status: **V5 website LIVE (November 9, 2026); the private Threads verifier is deployed, official Meta account NOT CONNECTED.** Private OAuth and manual renewal sources are merged but NOT deployed; the D1-backed public reader is a separate source candidate. No Threads posts are authorized for public display.
 Owner: DevonAkins.com / canonical repository and protected release workflow. No new repository or social publisher.
 
 ## Implemented source contract
@@ -15,14 +15,13 @@ Before any Meta request, **all** of these server-side settings must be present a
 - An authorized public presence row (`presence_state.public_enabled=1`, `private_work=0`), with revision rechecked by the existing aggregate after the read
 - `THREADS_PUBLIC_RELEASE_APPROVED=true`
 - `THREADS_PUBLIC_FEED_ENABLED=true`
-- `THREADS_PUBLIC_USERNAME` set to the **verified owner username**
-- `THREADS_USER_ACCESS_TOKEN` set as a server-only Cloudflare secret from an approved Threads authorization flow
+- A current, owner-authorized long-lived Threads credential encrypted in the dedicated private D1, together with the verified owner username. A legacy Worker secret is deliberately **not** a fallback for the public reader, so local disconnect wins over previously provisioned credentials.
 
 The source checks username consistency, Threads-only HTTPS permalinks, media types, timestamps, limits, and duplicates. Text is rendered through DOM `textContent`, not as provider HTML. A failure, expired source, private mode, Stop All/revocation or missing account authorization leaves the panel in **CONNECTION PENDING** with no posts. Provider errors never block Spotify, work, GitHub, or GPT panels.
 
-## Private owner verification (source candidate)
+## Private owner verification (deployed, connection pending)
 
-Once the owner's Meta Threads app has issued a valid **`threads_basic` read-only user token** and the exact owner handle is confirmed, configure these only through the authorized Cloudflare Worker secret/variable controls:
+The original owner-only read-only verifier can test a preexisting Worker secret, but the reviewed OAuth path should instead be used to store an encrypted D1 token. Legacy compatibility bindings, if present, must not authorize public posts after a D1 disconnect:
 
 - `THREADS_USER_ACCESS_TOKEN`: **secret** (never in source, GitHub Actions logs, page fields or chat)
 - `THREADS_PUBLIC_USERNAME`: private Worker variable with exact account handle
@@ -32,7 +31,7 @@ The Cloudflare Access-protected **/owner/presence/** page now has a proposed “
 
 The protected deployment preflight is extended in this source candidate to retain the already deployed Threads **secret binding opaquely**, validate the handle, and preserve explicitly configured independent public release flags. If the flags are missing they default to `false`. It still rejects any other unknown secret/variable and checks the same dedicated D1 database and encryption key. **Never bypass these checks to turn on Threads.**
 
-The owner must still independently authorize the exact Meta app/account and decide whether publicly displaying their Threads posts is approved. No standalone OAuth callback, token generation, token refresh or automatic account link is being represented as finished.
+The owner must independently authorize the exact Meta app/account and decide whether publicly displaying their Threads posts is approved. The separate OAuth and renewal source is implemented but remains undeployed and without real-provider acceptance.
 
 ## Owner OAuth source merged, not deployed
 
@@ -49,7 +48,7 @@ The proposed private `GET /api/threads/auth/status` returns only configuration, 
 
 **New renewal candidate (separate from merged PR #85):** `POST /api/threads/auth/renew` is owner-authenticated, same-origin and deliberately initiated by a button. After Meta's minimum 24-hour age window, an unexpired long-lived token can be refreshed through its fixed official `GET /refresh_access_token?grant_type=th_refresh_token` endpoint. The server verifies the same account profile and atomically rotates only the AES-GCM-encrypted credential and expiry in private D1, conditional on the old revision/cipher/expiry. An intervening disconnect or reauthorization wins; provider errors never write or disclose token details. The private control shows when the next renewal is available.
 
-**Important:** This is **manual renewal**, not an automatic scheduler. The official token may still expire if the owner does not renew before expiration; the safe recovery is to reauthorize. `Remove private Threads connection` clears the locally stored token and pending state, but **does not revoke the Meta-side grant**; the owner must separately revoke access in Meta's account settings. The public posts reader is NOT yet using D1-stored credentials, and public sharing is not enabled by either OAuth or renewal. A D1-backed public reader remains a separately gated and owner-approved change.
+**Important:** This is **manual renewal**, not an automatic scheduler. The official token may still expire if the owner does not renew before expiration; the safe recovery is to reauthorize. `Remove private Threads connection` clears the locally stored token and pending state, but **does not revoke the Meta-side grant**; the owner must separately revoke access in Meta's account settings. The new public-reader source candidate uses only the D1-stored credential, requires all four publication gates, rechecks the D1 revision/ciphertext after every network or cached response, and returns a disconnected projection if the owner revoked or renewed credentials during the read. Public sharing is not enabled by either OAuth or renewal.
 
 ## Still required before any real sync
 
@@ -64,6 +63,7 @@ The proposed private `GET /api/threads/auth/status` returns only configuration, 
 - `tests/threads-public.test.mjs`: official request contract, no token exposure, content/identity validation, bounded cache, failure modes, source gate and in-flight revocation
 - `tests/threads-owner-oauth.test.mjs`: private OAuth, manual renewal, same-origin owner access, encryption, provider mismatches, token age/expiry, disconnect/reconnect races and public sharing disabled
 - `tests/activity-v4.test.mjs`: actual V4 aggregation, Stop All, no provider call without public consent, and cache reuse
+- `tests/threads-public-d1.test.mjs`: encrypted owner D1 credential, explicit publication gates, cache and in-flight disconnect/rotation/Stop All fences, no legacy secret fallback
 - `tests/v5-public-threads.test.mjs`: browser-side source expiry, link allowlist and invalid-data clearing
 - `tests/v5_source_contract.py`: synthetic browser proof that source-approved posts appear as inert text, link to the original Threads post and disappear after revocation
 

@@ -19,6 +19,8 @@ export async function ownerSourceReadiness(env={},presence=null,at=Date.now()){
   if(privateThreads.connected){
     threads.authorizationConfigured=true;
     threads.usernameConfigured=true;
+    threads.configured=threads.publicationApproved && threads.feedEnabled &&
+      threads.globallyEnabled;
   }
   const spotify={
     appConfigured:false,

@@ -11,7 +11,7 @@ import {presenceResponse} from './spotify-presence.mjs';
 
 import {createActivityTasksApi} from './activity-tasks.mjs';
 import {createLiveSignal} from './live-signal.mjs';
-import {createPublicThreadsReader} from "./threads-public.mjs";
+import {createD1PublicThreadsReader} from "./threads-public-d1.mjs";
 import {createThreadsOwnerProbe} from "./threads-owner-probe.mjs";
 import {createThreadsOwnerOAuth} from "./threads-owner-oauth.mjs";
 import {createGptSnapshotOwnerApi} from './gpt-snapshots.mjs';
@@ -159,7 +159,7 @@ export function createHandler(assets, release, options = {}) {
     fetchImpl:options.threadsFetch || fetch,
     clock:()=>now().getTime(),
   });
-  const readThreads=createPublicThreadsReader({
+  const readThreads=createD1PublicThreadsReader({
     fetchImpl:options.threadsFetch || fetch,
     clock:()=>now().getTime(),
   });
