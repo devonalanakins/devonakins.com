@@ -109,10 +109,10 @@ function listening(){
   return intro("IN THE ZONE / LISTENING","Music behind <em>the work.</em>","A private-by-default, source-qualified window into the music I choose to share. No audio streams or fabricated listening history.",
     button("/activity/","Live activity",true)+button("/experience/","Professional profile"))+
   '<section class="p-section p-listening-hero">'+spotifyCard("feature")+
-  '<aside class="p-listening-notes"><p class="p-eyebrow">A PERSONAL SIGNAL</p><h2>Soundtrack to the process.</h2><p>Music is part of how I think, write and build. When I explicitly enable public playback, this page reflects the currently playing track from Spotify. Paused, private, disconnected or stale sources never become a simulated “now playing.”</p>'+
+  '<aside class="p-listening-notes"><p class="p-eyebrow">A PERSONAL SIGNAL</p><h2>Soundtrack to the process.</h2><p>For me, listening on Spotify means I am coding. When I share playback publicly, the site calls that In the Zone—my owner-defined coding signal, distinct from a verified editor session. Paused, private or stale playback never becomes a simulated track.</p>'+
   '<div class="p-listening-terms"><div><strong>Track & artwork</strong><small>Only when public track-detail sharing is enabled.</small></div><div><strong>Playback progress</strong><small>A visual estimate from a recent provider timestamp, never audio streaming.</small></div><div><strong>Explicit controls</strong><small>Owner-only controls for privacy remain behind the existing protected interface.</small></div></div></aside></section>'+
   '<section class="p-section">'+listeningCollections()+'</section>'+
-  '<section class="p-section p-inline-cta"><div><p class="p-eyebrow">WORK & MUSIC</p><h2>Two different signals.</h2><p>Spotify says what I chose to share about playback. GitHub and independently authenticated work signals document the actual engineering.</p></div>'+button("/activity/","View activity",true)+'</section>';
+  '<section class="p-section p-inline-cta"><div><p class="p-eyebrow">WORK & MUSIC</p><h2>Two different signals.</h2><p>My consented Spotify playback signals my personal coding mode. GitHub activity and authenticated editor reports independently document work that actually occurred.</p></div>'+button("/activity/","View activity",true)+'</section>';
 }
 function gpt(){
   return intro("GPT / OBSERVATIONS","AI in <em>practice.</em>","A dated, owner-approved view of my GPT usage observations, not a manufactured live counter or a claim of access to private ChatGPT account statistics.",
