@@ -1,6 +1,6 @@
 # Approved public Live Signal gates - November 7, 2026
 
-**Owner authorization:** publish Spotify **metadata** (track title, artist, album artwork and Spotify link, not audio), verified approved-project development status, and the individually selected seven-day GPT usage snapshot. Spotify playback alone cannot imply coding. Never publish family/client/private repositories, prompts, paths, task descriptions, account IDs or credentials.
+**Owner authorization:** publish Spotify **metadata** (track title, artist, album artwork and Spotify link, not audio), verified approved-project development status, and the individually selected seven-day GPT usage snapshot. Spotify playback is Devon's owner-defined coding-mode convention for the professional website, so approved, fresh public listening may be presented as “In the Zone — Coding” when visibly attributed to Spotify. It is not an editor-observed coding session or independently verified task. Never publish family/client/private repositories, prompts, paths, task descriptions, account IDs or credentials.
 
 ## Release plan
 
