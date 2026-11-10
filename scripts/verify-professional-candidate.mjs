@@ -30,7 +30,7 @@ for(const project of approvedPublicProjects){
   const body=await response.text();
   assert.match(body,/p-page-work/);
   assert.match(body,/What is not claimed/);
-  assert.ok(body.includes('href="'+url+'"'));
+  assert.ok(body.includes('rel="canonical" href="https://devonakins.com'+url+'"'));
 }
 const root=await (await get("/")).text();
 assert.match(root,/I build the systems/);
