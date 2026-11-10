@@ -108,6 +108,7 @@ export async function ownerSourceReadiness(env={},presence=null,at=Date.now()){
     spotify,
     github:{
       publicEventsImplemented:true,
+      signedCiReceiverEnabled:on(env,"GITHUB_OIDC_ACTIVITY_ENABLED"),
       appIntegrationEnabled:on(env,"GITHUB_INTEGRATION_ENABLED"),
       authorizationConfigured:typeof env.GITHUB_INSTALLATION_ID==="string" &&
         /^[0-9]+$/.test(env.GITHUB_INSTALLATION_ID),
