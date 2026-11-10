@@ -75,7 +75,7 @@ function companion({ transport, readSecret, storeSecret, deleteSecret, globals =
         return { dispose() {} };
       },
       createFileSystemWatcher(pattern) {
-        assert.match(pattern, /\\*\\*\\/\\*\\.\\{/);
+        assert.ok(pattern.startsWith("**/*.{"), "Watcher must stay workspace-scoped");
         return {
           onDidChange(fn) { fileChanged = fn; return {dispose(){}}; },
           onDidCreate(fn) { fileCreated = fn; return {dispose(){}}; },
