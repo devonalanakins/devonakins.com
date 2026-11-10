@@ -1,7 +1,12 @@
 #!/usr/bin/env node
 /** Wrap real work once; no timer heartbeats and no command/output content leaves this process. */
 import { PUBLIC_REPOSITORIES } from "../src/activity-history.mjs";
-import { GITHUB_ACTIVITY_AUDIENCE, validGithubActivityClaims } from "../src/github-actions-oidc.mjs";
+import {
+  GITHUB_ACTIVITY_AUDIENCE,
+  validGithubActivityClaims,
+  verifyGithubActionsIdentity,
+  GithubRunProviderUnavailable,
+} from "../src/github-actions-oidc.mjs";
 import { spawn, execFileSync } from "node:child_process";
 import { pathToFileURL } from "node:url";
 const ORIGIN = "https://devonakins.com";
@@ -102,6 +107,8 @@ export async function githubOidcTaskStart({
   projectSlug = "devonakins-com",
   fetcher = fetch,
   onClaimCheck = null,
+  onLocalVerifierCheck = null,
+  verifyLocalIdentity = verifyGithubActionsIdentity,
 } = {}) {
   if (environment.GITHUB_ACTIONS !== "true" ||
       environment.GITHUB_EVENT_NAME !== "push" ||
@@ -135,6 +142,20 @@ export async function githubOidcTaskStart({
   // cryptographic and live-run checks or disclosing a token in CI logs.
   if (typeof onClaimCheck === "function")
     onClaimCheck(localGithubOidcScopeMatches(jwt));
+  // Optional trusted-runner diagnostic. This independently verifies GitHub's
+  // RSA signature AND current workflow using the runner's own network path,
+  // but does not authorize publication. The Worker remains authoritative.
+  if (typeof onLocalVerifierCheck === "function") {
+    let result = "rejected";
+    try {
+      const local = await verifyLocalIdentity(jwt,{fetcher});
+      result = local?.projectSlug === "devonakins-com" ? "verified" : "rejected";
+    } catch (error) {
+      result = error instanceof GithubRunProviderUnavailable
+        ? "run-provider-unavailable" : "verification-error";
+    }
+    onLocalVerifierCheck(result);
+  }
   const response = await fetcher(ORIGIN + "/api/activity/tasks/github-oidc-start", {
     method: "POST", redirect: "error", credentials: "omit",
     headers: {
@@ -239,6 +260,12 @@ export async function runParticipatingTask(
                 (matched ? "match" : "mismatch") +
                 " (not proof of signature or accepted activity).\n");
             },
+            ...(oidcEnvironment.DEVON_ACTIVITY_DIAGNOSE_IDENTITY === "true"
+              ? { onLocalVerifierCheck: (status) => {
+                  stderr.write("Local signed GitHub run proof: " +
+                    status + " (independent of production acceptance).\n");
+                }}
+              : {}),
           })
         : await activityRequest(
             "/api/activity/tasks/start",

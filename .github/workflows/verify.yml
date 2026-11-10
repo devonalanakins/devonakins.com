@@ -141,6 +141,8 @@ jobs:
       - name: Test and report signed CI activity (trusted main push)
         env:
           DEVON_ACTIVITY_GITHUB_OIDC: "true"
+          # Only trusted main jobs may mint identity. Logs fixed outcomes, no JWT.
+          DEVON_ACTIVITY_DIAGNOSE_IDENTITY: "true"
         run: node scripts/activity-run.mjs -- npm test
 
   v5_candidate:
