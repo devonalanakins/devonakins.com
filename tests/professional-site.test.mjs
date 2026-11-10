@@ -169,3 +169,43 @@ test("approved concept palette and brand iconography are implemented without sim
   assert.match(marks,/viewBox="0 0 24 24"/);
   assert.doesNotMatch(marks,/<script|https?:\/\//);
 });
+
+
+test("professional homepage prioritizes four public-safe work areas over experimental projects",()=>{
+  const home=renderProfessionalPage("home");
+  assert.match(home,/p-feature-grid p-four/);
+  const area=home.match(/<div class="p-feature-grid p-four">([\s\S]*?)<\/div><\/section>/)?.[1];
+  assert.ok(area,"Four-card selected work section should exist");
+  for(const name of ["Professional operations","DevonStation + Knowledge","Professional business technology","DevonAkins.com"]){
+    assert.ok(area.includes(name),"Missing curated card "+name);
+  }
+  assert.ok(area.indexOf("Professional operations")<area.indexOf("DevonStation + Knowledge"));
+  assert.doesNotMatch(area,/Merit|Mizvo|Rhen|Nona Neuropsychology/);
+  for(const destination of ["/work/operations/","/work/devonstation/","/work/#professional-technology","/work/#website-engineering"]){
+    assert.ok(area.includes('href="'+destination+'"'),"Expected case study destination: "+destination);
+  }
+});
+
+test("selected work preserves real destinations and nonclinical publication boundaries",()=>{
+  const work=renderProfessionalPage("work");
+  for(const anchor of ["professional-technology","website-engineering"]){
+    assert.ok(work.includes('id="'+anchor+'"'));
+  }
+  for(const href of ["/work/operations/","/work/devonstation/","/work/ideaflow/","/work/merit/","/work/mizvo/","/work/rhen-language/"]){
+    assert.ok(work.includes('href="'+href+'"'),"Missing work link: "+href);
+  }
+  assert.match(work,/Measured outcomes are not yet published or independently verified/);
+  assert.match(work,/nonclinical/i);
+  assert.doesNotMatch(work,/Nona Neuropsychology|Cristy Russo|CEO of Nona|report turnaround improved by/);
+  const operations=renderProfessionalProjectPage("operations");
+  assert.match(operations,/Clients, patients, partners, financial records/);
+});
+
+test("responsive curated gallery keeps keyboard focus and reduced-motion styles",async()=>{
+  const css=await readFile(new URL("../src/professional/site.css",import.meta.url),"utf8");
+  assert.ok(css.includes(".p-feature-grid.p-four{grid-template-columns:repeat(4,minmax(0,1fr))}"));
+  assert.ok(css.includes(".p-feature-grid.p-four{grid-template-columns:repeat(2,minmax(0,1fr))}"));
+  assert.ok(css.includes(".p-feature-grid.p-four,.p-research-links{grid-template-columns:1fr}"));
+  assert.match(css,/\.p-research-links a:focus-visible/);
+  assert.match(css,/@media\(prefers-reduced-motion:reduce\)/);
+});
