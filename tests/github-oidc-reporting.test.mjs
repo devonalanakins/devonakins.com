@@ -4,6 +4,7 @@ import { webcrypto } from "node:crypto";
 import {
   validGithubActivityClaims,
   verifyGithubActionsIdentity,
+  GithubRunProviderUnavailable,
   GITHUB_ACTIVITY_AUDIENCE,
 } from "../src/github-actions-oidc.mjs";
 
@@ -181,4 +182,40 @@ test("bundler includes only trusted GitHub identity verifier from source", async
   assert.match(source, /GITHUB_OIDC_ACTIVITY_ENABLED/);
   assert.match(source, /verifyGithubIdentity/);
   assert.doesNotMatch(source, /JSON\.stringify\(auth\)/);
+});
+
+test("signed current claims fail closed with distinct temporary error when independent GitHub run lookup is unavailable", async () => {
+  const f = await fixture();
+  const issued = await f.issue();
+  for (const method of ["rate-limit", "network", "bad-response"]) {
+    let requests = 0;
+    const fetcher = async (url) => {
+      requests++;
+      if (url === "https://token.actions.githubusercontent.com/.well-known/jwks")
+        return Response.json({keys:[f.jwk]});
+      assert.match(url,/\/actions\/runs\/42837407732$/);
+      if (method === "rate-limit") return new Response(null,{
+        status:403,headers:{"x-ratelimit-remaining":"0"}
+      });
+      if (method === "network") throw Error("PRIVATE provider failure");
+      return Response.json({status:"in_progress",token:"PRIVATE"});
+    };
+    await assert.rejects(
+      verifyGithubActionsIdentity(issued,{fetcher,clock:()=>time}),
+      e => e instanceof GithubRunProviderUnavailable &&
+        !JSON.stringify(e).includes("PRIVATE"), method,
+    );
+    assert.equal(requests,2,"lookup is attempted only after real signature verification");
+  }
+  const invalidSignature = issued.slice(0,-8) + "a".repeat(8);
+  let calls=0;
+  assert.equal(await verifyGithubActionsIdentity(invalidSignature,{
+    clock:()=>time,
+    fetcher:async(url)=>{
+      calls++;
+      assert.equal(url,"https://token.actions.githubusercontent.com/.well-known/jwks");
+      return Response.json({keys:[f.jwk]});
+    }
+  }),null);
+  assert.equal(calls,1,"tampered token never reaches independent run lookup");
 });
