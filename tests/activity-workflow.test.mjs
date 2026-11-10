@@ -9,13 +9,13 @@ test("signed GitHub job identity reports only from trusted main pushes, never pu
   assert.doesNotMatch(workflow, /pull_request_target|workflow_run:/);
   assert.match(workflow, /persist-credentials: false/);
   const reporting = workflow.match(
-    /      - name: Test and report private CI activity \(trusted main push\)\n([\s\S]*?)(?=      - name:|\n\s*$)/,
+    /      - name: Test and report signed CI activity \(trusted main push\)\n([\s\S]*?)(?=      - name:|\n\s*$)/,
   )?.[1];
   assert.ok(reporting, "expected dedicated guarded reporting step");
   assert.match(
     reporting,
     /if: github\.event_name == 'push' && github\.ref == 'refs\/heads\/main'/,
-    "only the trusted main push can receive the secret",
+    "only a trusted main push invokes a signed reporter",
   );
   assert.match(reporting, /DEVON_ACTIVITY_GITHUB_OIDC: "true"/);
   assert.match(workflow, /id-token: write/);
