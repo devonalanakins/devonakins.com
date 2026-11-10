@@ -274,3 +274,36 @@ test("Threads credential check is owner-only, same-origin POST and cannot enable
   assert.equal(env.THREADS_PUBLIC_FEED_ENABLED,"false");
   assert.equal(env.THREADS_PUBLIC_RELEASE_APPROVED,"false");
 });
+
+test('legacy invalid project selection stays closed and is repairable only through owner choices',async()=>{
+  const f=fixture();
+  for(const invalid of [
+    JSON.stringify(['devonakins-com','unknown-private-project']),
+    JSON.stringify(['devonakins-com','devonakins-com']),
+    JSON.stringify('devonakins-com'),
+    '{invalid',
+  ]){
+    f.sql.prepare('UPDATE presence_state SET public_projects_json=? WHERE id=1').run(invalid);
+    const response=await f.api(f.request(),f.env,owner);
+    assert.equal(response.status,200);
+    const result=await response.json();
+    assert.equal(result.projectChoicesNeedReview,true);
+    assert.deepEqual(result.projects,[],'invalid selections never become public');
+  }
+  const ownerPage=await f.api(new Request('https://devonakins.com/owner/presence/'),f.env,owner);
+  assert.equal(ownerPage.status,200);
+  const markup=await ownerPage.text();
+  assert.match(markup,/id="project-policy-warning"/);
+  assert.match(markup,/Review and save only the projects/);
+  // No automatic migration or inferred consent. An explicit owner save
+  // replaces the stale list using the existing revision-checked operation.
+  assert.equal((await f.write('projects',{projects:['devonakins-com']})).status,200);
+  const saved=await (await f.api(f.request(),f.env,owner)).json();
+  assert.equal(saved.projectChoicesNeedReview,false);
+  assert.deepEqual(saved.projects,['devonakins-com']);
+  f.advance();
+  assert.equal((await f.write('projects',{projects:[]})).status,200);
+  const intentionallyEmpty=await (await f.api(f.request(),f.env,owner)).json();
+  assert.equal(intentionallyEmpty.projectChoicesNeedReview,false);
+  assert.deepEqual(intentionallyEmpty.projects,[]);
+});
