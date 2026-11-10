@@ -18,9 +18,9 @@ test("owner-published note persists as a clearly non-live focus fallback", () =>
 
 test("verified current work takes precedence without promoting a note to editor evidence", () => {
   const focus = publicHomepageFocus({available:true,focus:{kind:"editor",title:"DevonAkins.com",
-    source:"Editor observed",age:"12s ago"}},note(),now);
+    source:"Editor observed",at:iso(-12_000),age:"12s ago"}},note(),now);
   assert.deepEqual(focus,{kind:"observed",title:"DevonAkins.com",
-    detail:"Editor observed \u00b7 observed 12s ago"});
+    detail:"Editor observed \u00b7 observed under a minute ago"});
 });
 
 test("owner note can stand alone if separate V4 evidence is unavailable", () => {
@@ -44,4 +44,31 @@ test("fallback does not reclassify old history as ongoing work", () => {
   assert.deepEqual(publicHomepageFocus(old,null,now),{kind:"unavailable",
     title:"No current public work observed",
     detail:"No fresh approved editor or participating task observations."});
+});
+
+test("cached observations expire on rerender instead of remaining falsely active", () => {
+  const cached = {available:true,focus:{kind:"editor",title:"DevonAkins.com",
+    source:"Editor observed",at:iso(-119_000),age:"under a minute ago"}};
+  assert.equal(publicHomepageFocus(cached,null,now).kind,"observed");
+  assert.equal(publicHomepageFocus(cached,null,now+1_000).kind,"unavailable");
+  const fallback = publicHomepageFocus(cached,note(),now+1_000);
+  assert.equal(fallback.kind,"owner-note");
+  assert.match(fallback.detail,/not a live work session/);
+});
+
+test("remote observations are fresh only for their verified source and time", () => {
+  const focus = {kind:"remote",title:"DevonAkins.com",
+    source:"Workflow task",at:iso(-61_000),age:"under a minute ago"};
+  assert.equal(publicHomepageFocus({available:true,focus},null,now).detail,
+    "Workflow task \u00b7 observed 1m ago");
+  for (const invalid of [
+    {...focus,at:iso(-120_000)},
+    {...focus,at:iso(10_001)},
+    {...focus,at:"invalid"},
+    {...focus,source:"User-provided activity"},
+    {...focus,kind:"github"}
+  ]) {
+    assert.equal(publicHomepageFocus({available:true,focus:invalid},null,now).kind,
+      "unavailable");
+  }
 });
