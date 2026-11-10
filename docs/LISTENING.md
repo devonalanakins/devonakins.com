@@ -6,7 +6,7 @@ Status: SOURCE IMPLEMENTATION / REVIEW ONLY. Nothing here authorizes public Spot
 
 ## Purpose
 
-The site-wide **In the Zone** status combines an active development session with separately shared Spotify playback. Owner-declared sessions are labeled distinctly from any future editor-observed source. Spotify alone establishes listening, not coding. The dedicated `/listening/` route is an accessible, private-by-default view of the Spotify projection; `/studio/` explains the independent presence signal.
+The site-wide **In the Zone** status combines an active development session with separately shared Spotify playback. Owner-declared sessions are labeled distinctly from any future editor-observed source. Devon has explicitly declared a personal convention: listening on Spotify means he is coding. The professional website may call recent, approved public playback “In the Zone — Coding” with a clear Spotify/owner-defined source label. Spotify alone does not independently verify an editor session, code changes or a running task. The dedicated `/listening/` route is an accessible, private-by-default view of the Spotify projection; `/studio/` explains the independent presence signal.
 
 The existing V2 portrait, GPT snapshot, portfolio wordmarks, theme controls, navigation, routes and Cloudflare Worker architecture are preserved. No new third-party JavaScript, analytics or dependency has been introduced. No audio is auto-played or streamed.
 
