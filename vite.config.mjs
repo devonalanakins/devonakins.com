@@ -1,4 +1,5 @@
 import { defineConfig } from "vite";
+import {PROFESSIONAL_ROUTES} from "./src/professional/site.mjs";
 import { resolve } from "node:path";
 import { V5_PUBLIC_ROUTES } from "./src/v5/public-routes.mjs";
 import { publicNotes } from "./src/v5/public-notes.mjs";
@@ -6,6 +7,7 @@ import { pages, projects } from "./src/content.mjs";
 import { v5PreviewPlugin } from "./src/v5/preview-plugin.mjs";
 const paths = [
   ...pages.map((p) => p.path),
+  ...(process.env.PROFESSIONAL_SITE_CANDIDATE === "1" ? Object.values(PROFESSIONAL_ROUTES) : []),
   ...projects.map((p) => `/work/${p.slug}/`),
   "/404/",
   ...(process.env.V5_PUBLIC_SITE_CANDIDATE === "1" ? [...Object.values(V5_PUBLIC_ROUTES).filter(p=>!pages.some(page=>page.path===p)),...publicNotes.map(n=>"/knowledge/"+n.slug+"/")] : []),
