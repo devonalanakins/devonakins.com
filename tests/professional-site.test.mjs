@@ -124,7 +124,7 @@ test("Spotify, GPT, work and Threads appear as explicit consent-gated source pan
   assert.match(gpt,/not a manufactured live counter/);
   assert.match(gpt,/data-gpt-value/);
   assert.doesNotMatch(home+activity+listening+gpt,
-    /Currently playing: [A-Za-z]+|+94%|−62%|Pushed 4 commits|listening now to/i);
+    /Currently playing: [A-Za-z]+|\+94%|−62%|Pushed 4 commits|listening now to/i);
 });
 test("Spotify public pages reuse existing consented API and load no third-party script or audio element",async()=>{
   const markup=renderProfessionalPage("listening");
@@ -134,6 +134,9 @@ test("Spotify public pages reuse existing consented API and load no third-party 
   assert.match(bundle,/\/api\/listening\/collections/);
   assert.match(bundle,/\/api\/activity\/v4/);
   assert.match(bundle,/publicV5Playback/);
+  assert.match(bundle,/ownerCodingFromSpotify/);
+  assert.match(bundle,/SPOTIFY SIGNAL/);
+  assert.match(bundle,/In the Zone — Coding/);
   assert.match(bundle,/publicV5GptCapture/);
   assert.match(bundle,/publicV5Threads/);
   assert.match(bundle,/referrerPolicy="no-referrer"/);
