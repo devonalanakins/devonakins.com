@@ -8,7 +8,7 @@ import {
 } from "./listening-owner-core.mjs";
 import { approvedProjects } from "./presence-preferences.mjs";
 import { PUBLIC_PRESENCE_PROJECTS } from "./presence-model.mjs";
-import { verifyGithubActionsIdentity } from "./github-actions-oidc.mjs";
+import { verifyGithubActionsIdentity, GithubRunProviderUnavailable } from "./github-actions-oidc.mjs";
 import {
   CLOUD_STATES,
   CLOUD_CHECKPOINTS,
@@ -291,9 +291,21 @@ export function createActivityTasksApi({
         if (oidcStart) {
           // No long-lived reporter key crosses the build logs. GitHub's signed
           // job identity and actual running workflow must both be verified.
-          const identity = await verifyGithubIdentity(auth.slice(7), {
-            clock: () => at,
-          });
+          let identity;
+          try {
+            identity = await verifyGithubIdentity(auth.slice(7), {
+              clock: () => at,
+            });
+          } catch (error) {
+            if (error instanceof GithubRunProviderUnavailable) {
+              // A correctly signed claim is not permission to bypass the
+              // independent GitHub run-status check. Fail closed but report
+              // a bounded temporary verification outage, not a bad JWT.
+              return ownerJson({error:"Live workflow verification unavailable"},
+                503, {"Retry-After":"60"});
+            }
+            throw error;
+          }
           if (identity?.projectSlug !== "devonakins-com")
             return ownerError("Signed workflow authentication required", 401);
           const authorized = await rows(db.prepare(
