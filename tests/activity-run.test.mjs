@@ -269,3 +269,29 @@ test("local cryptographic diagnosis is opt-in, bounded, never logs JWT and never
  assert.match(workflow,/DEVON_ACTIVITY_DIAGNOSE_IDENTITY: "true"/);
  assert.match(workflow,/if: github\.event_name == 'push' && github\.ref == 'refs\/heads\/main'/);
 });
+
+test("only fixed verification stages appear in safe reporter HTTP failure diagnostics",async()=>{
+ for(const stage of ["keys","crypto","run"]) {
+   const err=new ActivityRequestFailure(503,stage);
+   assert.equal(err.stage,stage);
+   assert.match(activityFailureReason(err),new RegExp("HTTP 503.*verifier stage "+stage));
+ }
+ for(const bad of ["PRIVATE token", "jwt.payload.signature", "unknown", null, 123]) {
+   const err=new ActivityRequestFailure(503,bad);
+   assert.equal(err.stage,null);
+   assert.doesNotMatch(activityFailureReason(err),/PRIVATE|jwt|unknown|verifier stage/);
+ }
+ const signed=signedEnvironment(),status=[];
+ await assert.rejects(githubOidcTaskStart({
+   environment:signed,
+   fetcher:async(url,opts)=>{
+     if(url.startsWith("https://pipelines.actions.githubusercontent.com/"))
+       return Response.json({value:pretendJwt()});
+     if(url.endsWith("/github-oidc-start"))return new Response(
+       JSON.stringify({error:"PRIVATE SERVER ERROR",jwt:"PRIVATE KEY"}),
+       {status:503,headers:{"Content-Type":"application/json",
+       "X-Activity-Verification-Stage":"keys"}});
+     throw Error("Unexpected provider");
+   }
+ }),e=>e instanceof ActivityRequestFailure && e.status===503 && e.stage==="keys");
+});
