@@ -87,6 +87,11 @@ with sync_playwright() as p:
             assert alert.is_visible(), (engine.name, width, "missing warning")
             assert page.locator("input[data-public-project]").count() == len(CATALOG)
             assert not page.locator("input[data-public-project]:checked").count()
+            page.wait_for_function(
+                "document.querySelector('#task-notice').textContent.includes('Review and save')")
+            assert page.locator("#task-connect").is_disabled(), (
+                engine.name, width, "unapproved runner pairing visible")
+            assert page.locator("#task-project option").count() == 0
             assert page.evaluate("document.documentElement.scrollWidth <= innerWidth"), (
                 engine.name, width, "horizontal overflow")
             page.locator('input[data-public-project][value="devonakins-com"]').check()
@@ -99,6 +104,10 @@ with sync_playwright() as p:
             assert page.locator('input[data-public-project][value="devonakins-com"]').is_checked()
             assert not page.locator('input[data-public-project][value="merit"]').is_checked()
             assert page.locator("#project-policy-warning").is_hidden()
+            page.wait_for_function(
+                "document.querySelector('#task-connect').disabled === false")
+            assert page.locator("#task-project option").count() == 1
+            assert page.locator("#task-project").input_value() == "devonakins-com"
             assert page.evaluate("document.documentElement.scrollWidth <= innerWidth"), (
                 engine.name, width, "post-save horizontal overflow")
             context.close()
