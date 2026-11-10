@@ -43,7 +43,7 @@ export function manualReleaseError({
   }
   if (releaseVariant === "v5") {
     if (v5BuildFlag !== "1" || professionalBuildFlag !== "0")
-      return "V5 release requested but the V5 build is not exclusively selected.";
+      return "V5 build is not selected exclusively; professional must be off.";
     if (professionalConfirmation)
       return "V5 release cannot carry a professional cutover confirmation.";
     if (v5Confirmation !== "V5-CUTOVER-APPROVED")
