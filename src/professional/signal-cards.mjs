@@ -13,7 +13,7 @@ export function spotifyCard(variant="compact") {
     '<p data-spotify-artist>Source-qualified playback, when enabled.</p>'+
     '<progress data-spotify-progress max="1" value="0" aria-label="Track playback progress" hidden></progress>'+
     '<a class="p-text-link" data-spotify-link href="/listening/">Explore listening <span aria-hidden="true">↗</span></a></div></div>'+
-    '<p class="p-signal-foot" data-spotify-note>Listening is Devon's owner-defined coding signal. No audio streams here.</p></section>';
+    '<p class="p-signal-foot" data-spotify-note>Listening is Devon’s owner-defined coding signal. No audio streams here.</p></section>';
 }
 export function workSignalCard() {
   return '<section class="p-signal-card p-work-signal-card" data-public-work aria-labelledby="p-work-signals-title">'+
