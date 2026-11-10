@@ -296,3 +296,39 @@ branding. No pet, mascot, or cake-themed identity is part of the product.
 This is a source change only until CI passes and the exact commit is deployed
 and independently verified on the Cloudflare Worker. The audio program remains
 an experimental prototype, not a released DJ application.
+
+
+## Professional identity candidate — protected release gate (November 10, 2026)
+
+The November 10 owner-approved professional-first layout is an **independent,
+source-only candidate** in PR #98, not an automatic cutover and not a substitute
+for the existing protected V4/V5 release. Production defaults remain V4.
+
+- The opt-in build flag is `PROFESSIONAL_SITE_CANDIDATE=1`. This generates
+  professional Home, Experience, Work, Activity, Writing, About, Contact,
+  Listening and GPT pages; original public project/legacy routes remain.
+- A protected manual workflow exposes `release_variant=professional`, requiring
+  an exact tested **main** commit, production environment approval, exclusive
+  professional build flag, `PROFESSIONAL-CUTOVER-APPROVED` confirmation and
+  `github_oidc_action=preserve`. V5 confirmations must be empty.
+- The workflow first builds and tests **V4** with both candidate flags disabled,
+  then builds the selected professional artifact and runs
+  `scripts/verify-professional-candidate.mjs`. Wrangler inherits the same
+  professional flag when it builds the actual deployed Worker.
+- After the deploy, `scripts/verify-live-professional.mjs` checks the exact
+  release SHA, professional shell and case-study privacy, all curated and
+  legacy routes, public GitHub contract, consent-filtered V4 signal API,
+  source-unavailable behavior, security headers, assets, and write rejection.
+  `scripts/verify-oidc-release.mjs` still checks the original signed receiver.
+- No Nona business name, report-turnaround metric, management title or client
+  material is approved for public publication merely by this design decision.
+  Those require separate business permission and actual evidence.
+- Roll back using the immediately preceding Cloudflare Worker version and
+  verify its corresponding live route/source contract. Do not migrate or
+  delete private data, disable already approved signals, or alter secrets as
+  a routine website rollback.
+
+The `professional_candidate` CI job is separately dependent on the baseline
+`verify` job, and must complete exact-head Chromium/WebKit phone/desktop
+acceptance with generated review screenshots before the manual release is
+considered. An approved design is not an approved publication or deployment.
