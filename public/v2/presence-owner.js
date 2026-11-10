@@ -116,6 +116,13 @@ function lock(value) {
       threadsAuthBusy;
     el("threads-disconnect").disabled = !threadsAuthState?.connected ||
       threadsAuthBusy;
+    const last=Date.parse(threadsAuthState?.verifiedAt||"");
+    const expires=Date.parse(threadsAuthState?.expiresAt||"");
+    el("threads-renew").disabled = !threadsAuthState?.connected ||
+      threadsAuthBusy || !Number.isFinite(last) ||
+      !Number.isFinite(expires) ||
+      Date.now()-last < 24*60*60_000 ||
+      expires<=Date.now()+60_000;
   }
   if (state) el("presence-off").disabled = false;
 }
@@ -323,9 +330,12 @@ el("threads-check").onclick=checkThreadsConnection;
 function renderThreadsAuthorization(data) {
   if(!data || data.version!==1)throw Error("Invalid Threads status.");
   threadsAuthState=data;
+  const nextRenewal=Date.parse(data.verifiedAt||"")+24*60*60_000;
   const message=data.connected
     ? "Official Threads authorization securely stored. Expires " +
       new Date(data.expiresAt).toLocaleDateString() +
+      (Number.isFinite(nextRenewal) ? ". Renewal available after " +
+        new Date(nextRenewal).toLocaleString() : "") +
       ". Public posts are not enabled."
     : !data.appConfigured
       ? "Meta Threads App ID and secret are not configured on the Worker."
@@ -362,11 +372,17 @@ async function loadThreadsAuthorization() {
 async function changeThreadsAuthorization(action) {
   if(busy || threadsAuthBusy || !threadsAuthState?.storageReady ||
      (action==="start" && (!threadsAuthState.appConfigured || threadsAuthState.connected)) ||
-     (action==="disconnect" && !threadsAuthState.connected))return;
+     (action==="disconnect" && !threadsAuthState.connected) ||
+     (action==="renew" && (!threadsAuthState.connected ||
+       !Number.isFinite(Date.parse(threadsAuthState.verifiedAt||"")) ||
+       Date.now()-Date.parse(threadsAuthState.verifiedAt||"") < 24*60*60_000)))
+    return;
   threadsAuthBusy=true;
   lock(true);
   el("threads-connection-status").textContent=
-    action==="start"?"Preparing secure Meta authorization…":"Disconnecting Threads…";
+    action==="start"?"Preparing secure Meta authorization…" :
+      action==="renew"?"Renewing the private Threads credential…" :
+      "Removing locally stored Threads authorization…";
   try {
     const response=await fetch("/api/threads/auth/"+action,{
       method:"POST",credentials:"same-origin",cache:"no-store",
@@ -386,7 +402,9 @@ async function changeThreadsAuthorization(action) {
       window.location.assign(target.href);
     } else {
       await Promise.all([loadThreadsAuthorization(),load()]);
-      el("threads-check-result").textContent="Threads disconnected. Public posts remain off.";
+      el("threads-check-result").textContent=action==="renew"
+        ? "Private Threads authorization renewed. No posts shared."
+        : "Local Threads token removed. Revoke app access in Meta separately. Public posts remain off.";
     }
   } catch(error) {
     el("threads-connection-status").textContent=
@@ -398,6 +416,7 @@ async function changeThreadsAuthorization(action) {
 }
 el("threads-connect").onclick=()=>changeThreadsAuthorization("start");
 el("threads-disconnect").onclick=()=>changeThreadsAuthorization("disconnect");
+el("threads-renew").onclick=()=>changeThreadsAuthorization("renew");
 
 lock(true);
 load()
