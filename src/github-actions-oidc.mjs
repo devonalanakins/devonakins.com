@@ -125,6 +125,13 @@ export async function verifyGithubActionsIdentity(token, {
     try {
       jwks = await boundedJson(await fetcher(KEYS_URL, {
         method: "GET", redirect: "error", cache: "no-store",
+        // Workers fetch supplies no default User-Agent. Some issuer/WAF
+        // policies reject anonymous JWKS reads without explicit API headers.
+        // Request only the fixed public issuer endpoint; never send the JWT.
+        headers: {
+          Accept: "application/json",
+          "User-Agent": "devonakins-signed-activity",
+        },
         signal: AbortSignal.timeout(5000),
       }), 32768);
     } catch {
