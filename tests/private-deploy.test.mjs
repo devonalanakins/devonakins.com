@@ -1,6 +1,8 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
+import { DatabaseSync } from "node:sqlite";
+import { PUBLIC_PRESENCE_PROJECTS } from "../src/presence-model.mjs";
 import {
   privateDeploymentConfig,
   preparePrivateDeployment,
@@ -414,7 +416,9 @@ test("GitHub OIDC consent check is read-only, source-specific, dated and fail-cl
   assert.equal(captured[0].options.method,"POST");
   assert.equal(captured[0].options.redirect,"error");
   const body=JSON.parse(captured[0].options.body);
-  assert.deepEqual(body.params,["1700000000000"]);
+  assert.deepEqual(body.params,["1700000000000",
+    String(Object.keys(PUBLIC_PRESENCE_PROJECTS).length),
+    ...Object.keys(PUBLIC_PRESENCE_PROJECTS)]);
   assert.match(body.sql,/s.source='github-actions'/);
   assert.match(body.sql,/s.project_slug='devonakins-com'/);
   assert.match(body.sql,/s.token_until>\?/);
@@ -492,4 +496,74 @@ test("activation preflight needs exact protected-main confirmation plus approved
       : fetcher(url,opts),
   }),e=>e instanceof PrivatePreflightFailure && e.reason==="SOURCE_NOT_APPROVED");
   assert.equal(writes,0);
+});
+
+
+test("real SQLite/D1 migration schema matches the exact owner publication policy", async () => {
+  const sqlite = new DatabaseSync(":memory:");
+  try {
+    for (const name of ["0002_presence.sql","0003_presence_preferences.sql",
+      "0004_editor_pairing.sql","0006_cloud_presence.sql","0007_activity_tasks.sql"]) {
+      sqlite.exec(readFileSync(new URL("../migrations/"+name, import.meta.url), "utf8"));
+    }
+    const now = 1_800_000_000_000;
+    sqlite.exec("UPDATE presence_state SET public_enabled=1,editor_generation=3 WHERE id=1");
+    sqlite.prepare("INSERT INTO activity_sources(id,source,project_slug,generation,public_enabled,token_hash,token_until,created_at) VALUES(?,?,?,?,?,?,?,?)")
+      .run("source1","github-actions","devonakins-com",3,1,"opaque-hash",now+86_400_000,now);
+    const fetcher=async (url,request) => {
+      assert.ok(url.endsWith("/query"));
+      const {sql,params}=JSON.parse(request.body);
+      const queryParams=params.map((value,index)=>index<2?Number(value):value);
+      const results=sqlite.prepare(sql).all(...queryParams);
+      return Response.json({success:true,result:[{success:true,results}]});
+    };
+    const verify=()=>verifyGithubOidcOwnerConsent({
+      account:"a".repeat(32),token:"synthetic-ci",databaseId:id,
+      now,fetcher,
+    });
+    const permits=async (value, expected) => {
+      sqlite.prepare("UPDATE presence_state SET public_projects_json=? WHERE id=1").run(value);
+      if(expected) assert.equal(await verify(),true);
+      else await assert.rejects(verify(),e=>e instanceof PrivatePreflightFailure &&
+        e.reason==="SOURCE_NOT_APPROVED");
+    };
+    // A null allowlist means the normal default known-public-project list.
+    await permits(null,true);
+    await permits(JSON.stringify(["devonakins-com","merit"]),true);
+    for(const value of [
+      JSON.stringify(["merit"]),
+      JSON.stringify(["devonakins-com","devonakins-com"]),
+      JSON.stringify(["devonakins-com","unapproved-private"]),
+      JSON.stringify(["devonakins-com",null]),
+      JSON.stringify(["devonakins-com",1]),
+      JSON.stringify({"one":"devonakins-com"}),
+      JSON.stringify("devonakins-com"),
+      "{malformed",
+      JSON.stringify(["devonakins-com",...Object.keys(PUBLIC_PRESENCE_PROJECTS)]),
+    ]) await permits(value,false);
+    await permits(JSON.stringify(["devonakins-com"]),true);
+    for (const mutation of [
+      ["presence_state","public_enabled",0],
+      ["presence_state","private_work",1],
+      ["presence_state","paused",1],
+      ["presence_state","editor_generation",4],
+      ["activity_sources","public_enabled",0],
+      ["activity_sources","revoked",1],
+      ["activity_sources","token_until",now-1],
+    ]) {
+      const [table,column,bad]=mutation;
+      const original=sqlite.prepare("SELECT "+column+" AS value FROM "+table+" LIMIT 1").get().value;
+      sqlite.prepare("UPDATE "+table+" SET "+column+"=?").run(bad);
+      await assert.rejects(verify(), e=>e instanceof PrivatePreflightFailure &&
+        e.reason==="SOURCE_NOT_APPROVED",table+"."+column);
+      sqlite.prepare("UPDATE "+table+" SET "+column+"=?").run(original);
+      assert.equal(await verify(),true,"Recovered "+table+"."+column);
+    }
+    sqlite.prepare("INSERT INTO activity_sources(id,source,project_slug,generation,public_enabled,token_hash,token_until,created_at) VALUES(?,?,?,?,?,?,?,?)")
+      .run("source2","github-actions","devonakins-com",3,1,"second-opaque-hash",now+86_400_000,now);
+    await assert.rejects(verify(),e=>e instanceof PrivatePreflightFailure &&
+      e.reason==="SOURCE_NOT_APPROVED","ambiguous approved sources");
+  } finally {
+    sqlite.close();
+  }
 });
