@@ -49,13 +49,16 @@ function renderSourceReadiness(sources) {
         : sp.appConfigured
           ? "App configured; account playback connection not confirmed."
           : "Spotify application not configured."],
-    ["GitHub",gh.appIntegrationEnabled && gh.authorizationConfigured
+    ["GitHub",(gh.appIntegrationEnabled && gh.authorizationConfigured
       ? (gh.approvedRepositoryCount===0
           ? "GitHub App configured, but no public repositories are approved. Connect/review the repository inventory."
           : "GitHub App configured; "+gh.approvedRepositoryCount+
             " approved public repository connection(s). A live event still requires provider evidence.")
       : "Public GitHub history reader exists; authenticated GitHub App connection is not configured. "+
-        (gh.approvedRepositoryCount===0?"No repositories in the approved App inventory.":"")],
+        (gh.approvedRepositoryCount===0?"No repositories in the approved App inventory.":""))+
+      (gh.signedCiReceiverEnabled
+        ? " Signed main-branch CI receiver enabled; a real accepted workflow event is still required."
+        : " Signed CI receiver not yet activated.")],
     ["Editor",!ed.serverEnabled ? "Editor receiver not enabled."
       : ed.paired===false
         ? "Receiver enabled, but no editor credential is paired. Open the editor controls to pair VS Code."
