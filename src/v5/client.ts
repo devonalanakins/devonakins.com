@@ -1,6 +1,7 @@
 import { publicV5ProjectEvidence } from "./public-evidence.mjs";
 import { publicHomepageSourceSummary } from "./homepage-source-summary.mjs";
 import { publicHomepageTimeline } from "./homepage-timeline.mjs";
+import { publicHomepageNote, publicHomepageFocus } from "./homepage-focus.mjs";
 import { publicV5AtlasSignals } from "./atlas-live-evidence.mjs";
 import { publicV5Playback } from "./public-playback.mjs";
 import { publicV5GptCapture, formatPublicGptValue, publicGptCapturedAt } from "./public-gpt-capture.mjs";
@@ -111,11 +112,23 @@ inspector?.addEventListener("keydown", (event) => {
   }
 });
 
-// Owner-written profile notes are deliberately independent of live editing.
-// The endpoint is public only when both owner consent and release gates allow.
+// The owner-written note and live source are separate, explicitly labelled
+// evidence categories. A signed, released note survives a quiet editor.
+let lastHomepageSummary: ReturnType<typeof publicHomepageSourceSummary> | null = null;
+let sharedProfileNote: unknown = null;
+const renderHomepageFocus = (at = Date.now()) => {
+  const focus = publicHomepageFocus(lastHomepageSummary, sharedProfileNote, at);
+  const heading = document.querySelector<HTMLElement>("[data-v5-home-focus]");
+  const detail = document.querySelector<HTMLElement>("[data-v5-home-focus-detail]");
+  const card = document.querySelector<HTMLElement>(".v5-home-focus-card");
+  if (heading) heading.textContent = focus.title;
+  if (detail) detail.textContent = focus.detail;
+  if (card) card.dataset.v5FocusState = focus.kind;
+};
+
+// The endpoint is public only when BOTH owner consent and release gates allow.
+// An unreleased design preview must not fetch or display owner notes.
 const profileNote = document.querySelector<HTMLElement>("[data-v5-profile-note]");
-// A design preview must never fetch live owner notes on its own. Reuse the
-// existing server-issued release marker instead of introducing a new toggle.
 const profileNoteReleased = publicV5ActivationMode(
   window.location.pathname,
   document.documentElement.dataset.v5SignalMode,
@@ -123,13 +136,21 @@ const profileNoteReleased = publicV5ActivationMode(
 if (profileNote && profileNoteReleased) {
   const noteText = profileNote.querySelector<HTMLElement>("[data-v5-profile-note-text]");
   const noteExpiry = profileNote.querySelector<HTMLElement>("[data-v5-profile-note-expiry]");
+  let noteEpoch = 0;
+  let noteExpiryTimer: number | undefined;
   const hideNote = () => {
+    noteEpoch++;
+    if (noteExpiryTimer !== undefined) window.clearTimeout(noteExpiryTimer);
+    noteExpiryTimer = undefined;
+    sharedProfileNote = null;
     profileNote.hidden = true;
     if (noteText) noteText.textContent = "";
     if (noteExpiry) noteExpiry.textContent = "";
+    renderHomepageFocus();
   };
   const refreshNote = async () => {
     if (document.hidden) { hideNote(); return; }
+    const requestEpoch = ++noteEpoch;
     try {
       const response = await fetch("/api/presence/note", {
         cache: "no-store", credentials: "omit",
@@ -137,28 +158,27 @@ if (profileNote && profileNoteReleased) {
         signal: AbortSignal.timeout(8000),
       });
       if (!response.ok) throw new Error("Unavailable");
-      const note: unknown = await response.json();
-      if (!note || typeof note !== "object" || Array.isArray(note)) throw new Error("Invalid");
-      const value = note as Record<string, unknown>;
-      const posted = typeof value.postedAt === "string" ? Date.parse(value.postedAt) : NaN;
-      const expires = typeof value.expiresAt === "string" ? Date.parse(value.expiresAt) : NaN;
-      const now = Date.now();
-      if (value.version !== 1 || value.visibility !== "public" ||
-        typeof value.text !== "string" || value.text !== value.text.trim() ||
-        value.text.length < 1 || value.text.length > 60 ||
-        /[\p{Cc}\p{Cf}]/u.test(value.text) ||
-        !Number.isFinite(posted) || !Number.isFinite(expires) ||
-        posted > now + 10_000 || expires <= now ||
-        expires - posted > 7 * 24 * 60 * 60_000 ||
-        Object.keys(value).sort().join("|") !== "expiresAt|postedAt|text|version|visibility")
-        throw new Error("Invalid");
-      if (noteText) noteText.textContent = value.text;
-      if (noteExpiry) noteExpiry.textContent = "Expires " + new Date(expires).toLocaleString();
+      const value: unknown = await response.json();
+      // Backgrounding, explicit removal or a newer response must always win.
+      if (requestEpoch !== noteEpoch || document.hidden) return;
+      const note = publicHomepageNote(value, Date.now());
+      if (!note) throw new Error("Invalid or expired");
+      if (noteExpiryTimer !== undefined) window.clearTimeout(noteExpiryTimer);
+      sharedProfileNote = value;
+      if (noteText) noteText.textContent = note.text;
+      if (noteExpiry) noteExpiry.textContent =
+        "Expires " + new Date(note.expiresAtMs).toLocaleString();
       profileNote.hidden = false;
-    } catch { hideNote(); }
+      renderHomepageFocus();
+      noteExpiryTimer = window.setTimeout(() => {
+        if (requestEpoch === noteEpoch) hideNote();
+      }, Math.max(0, note.expiresAtMs - Date.now() + 25));
+    } catch {
+      if (requestEpoch === noteEpoch) hideNote();
+    }
   };
   void refreshNote();
-  const timer = window.setInterval(() => { void refreshNote(); }, 60_000);
+  window.setInterval(() => { void refreshNote(); }, 60_000);
   window.addEventListener("pagehide", hideNote);
   window.addEventListener("pageshow", () => { void refreshNote(); });
   document.addEventListener("visibilitychange", () => {
@@ -422,12 +442,8 @@ if ((field || workLivePanel) && (publicPreviewButton || activationMode === "auto
       item.append(link);
       return item;
     }));
-    put("[data-v5-home-focus]", homepage.focus
-      ? homepage.focus.title : "No current public work observed");
-    put("[data-v5-home-focus-detail]", homepage.focus
-      ? homepage.focus.source + " · observed " + homepage.focus.age
-      : homepage.available ? "No fresh approved editor or participating task observations."
-      : "Public work source unavailable or sharing disabled.");
+    lastHomepageSummary = homepage;
+    renderHomepageFocus(at);
     if (publicPreviewStatus) publicPreviewStatus.textContent = projection.available
       ? "Public V4 source checked · consented evidence only"
       : "Public source unavailable, disabled or stale";
