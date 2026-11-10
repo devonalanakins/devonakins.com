@@ -411,7 +411,8 @@ function createCompanion(
   subscriptions.push(
     api.workspace.onDidChangeTextDocument((event) => {
       // Open-document edits remain supported independently of file watchers.
-      if (!event.contentChanges.length) return;
+      if (!enabled || disposed || !api.window.state.focused ||
+          !event.contentChanges?.length) return;
       observedChange(event.document?.uri);
     }),
   );
