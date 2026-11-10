@@ -10,6 +10,16 @@ const ISSUER = "https://token.actions.githubusercontent.com";
 export const GITHUB_ACTIVITY_AUDIENCE = "https://devonakins.com/github-actions-activity-v1";
 const KEYS_URL = ISSUER + "/.well-known/jwks";
 const RUN_URL = "https://api.github.com/repos/devonalanakins/devonakins.com/actions/runs/";
+/** Only emitted *after* a verified GitHub signature when the independent
+ * live-workflow lookup cannot be completed. Never return token or provider
+ * payloads as part of errors. */
+export class GithubRunProviderUnavailable extends Error {
+  constructor() {
+    super("Trusted live-run verification temporarily unavailable");
+    this.name = "GithubRunProviderUnavailable";
+  }
+}
+
 const REPO_ID = "1439132762"; // immutable GitHub repository id, verified 2026-11-10
 const OWNER_ID = "324676006"; // immutable GitHub account id, verified 2026-11-10
 const REF = "refs/heads/main";
@@ -122,15 +132,22 @@ export async function verifyGithubActionsIdentity(token, {
       new TextEncoder().encode(parts[0] + "." + parts[1]),
     );
     if (!verified || !validGithubActivityClaims(payload, clock())) return null;
-    const run = await boundedJson(await fetcher(RUN_URL + payload.run_id, {
-      method: "GET", redirect: "error", cache: "no-store",
-      headers: {
-        Accept: "application/vnd.github+json",
-        "User-Agent": "devonakins-signed-activity",
-        "X-GitHub-Api-Version": "2022-11-28",
-      },
-      signal: AbortSignal.timeout(5000),
-    }), 65536);
+    // Do not mistake a rate-limited GitHub API for an invalid signed JWT.
+    // This lookup is still mandatory: no unverifiable run becomes a task.
+    let run;
+    try {
+      run = await boundedJson(await fetcher(RUN_URL + payload.run_id, {
+        method: "GET", redirect: "error", cache: "no-store",
+        headers: {
+          Accept: "application/vnd.github+json",
+          "User-Agent": "devonakins-signed-activity",
+          "X-GitHub-Api-Version": "2022-11-28",
+        },
+        signal: AbortSignal.timeout(5000),
+      }), 65536);
+    } catch {
+      throw new GithubRunProviderUnavailable();
+    }
     // A signed token for a completed, cancelled or PR run is never live work.
     if (asDigits(run.id) !== asDigits(payload.run_id) ||
         run.status !== "in_progress" ||
@@ -140,7 +157,8 @@ export async function verifyGithubActionsIdentity(token, {
         run.name !== "Verify website" ||
         asDigits(run.repository?.id) !== REPO_ID) return null;
     return Object.freeze({ projectSlug: "devonakins-com" });
-  } catch {
-    return null; // Any provider outage or malformed claim fails closed.
+  } catch (error) {
+    if (error instanceof GithubRunProviderUnavailable) throw error;
+    return null; // Any invalid signature, claim, or key fails closed.
   }
 }
