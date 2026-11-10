@@ -131,6 +131,10 @@ jobs:
           node-version: '22'
           cache: npm
       - run: npm ci
+      # Tests consume generated dist/ and .release/ assets. Match the normal
+      # verifier's build prerequisite instead of falsely failing actual work.
+      - name: Build reporter test prerequisites
+        run: npm run build
       - name: Test and report signed CI activity (trusted main push)
         env:
           DEVON_ACTIVITY_GITHUB_OIDC: "true"

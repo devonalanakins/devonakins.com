@@ -15,6 +15,7 @@ test("main-push GitHub identity is isolated from every untrusted PR verification
  assert.match(reporter,/if: github\.event_name == 'push' && github\.ref == 'refs\/heads\/main'/);
  assert.match(reporter,/permissions:\n      contents: read\n      id-token: write/);
  assert.match(reporter,/persist-credentials: false/);
+ assert.match(reporter,/Build reporter test prerequisites\n        run: npm run build/);
  assert.match(reporter,/DEVON_ACTIVITY_GITHUB_OIDC: "true"/);
  assert.match(reporter,/run: node scripts\/activity-run\.mjs -- npm test/);
  assert.doesNotMatch(reporter,/secrets\.|DEVON_ACTIVITY_SOURCE_TOKEN/);
