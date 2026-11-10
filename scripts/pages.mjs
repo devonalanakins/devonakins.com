@@ -1,5 +1,5 @@
 import { mkdir, readFile, writeFile } from "node:fs/promises";
-import {renderProfessionalPage, PROFESSIONAL_ROUTES} from "../src/professional/site.mjs";
+import {renderProfessionalPage, renderProfessionalProjectPage, PROFESSIONAL_ROUTES} from "../src/professional/site.mjs";
 import { pages } from "../src/content.mjs";
 import { approvedPublicProjects as projects } from "../src/publication-manifest.mjs";
 import { promotePortraitHome } from "../src/portrait-home.mjs";
@@ -38,6 +38,7 @@ for (const path of all) {
   const html=professionalCandidate && professionalPaths.has(path) ? renderProfessionalPage(professionalPaths.get(path)) :
     fullV5Candidate && routeKey ? renderV5PublicPage(routeKey) :
     fullV5Candidate && topic ? renderV5PublicPage("knowledge",{topic:topic.slug,publicPath:path}) :
+    professionalCandidate && project ? renderProfessionalProjectPage(project.slug) :
     fullV5Candidate && project ? renderV5ProjectPage(project.slug) :
     renderImmersiveRoute(home,path,projects,gptSnapshot);
   await writeFile(dir+"index.html",html);
