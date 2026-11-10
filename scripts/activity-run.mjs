@@ -1,10 +1,34 @@
 #!/usr/bin/env node
 /** Wrap real work once; no timer heartbeats and no command/output content leaves this process. */
 import { PUBLIC_REPOSITORIES } from "../src/activity-history.mjs";
+import { GITHUB_ACTIVITY_AUDIENCE } from "../src/github-actions-oidc.mjs";
 import { spawn, execFileSync } from "node:child_process";
 import { pathToFileURL } from "node:url";
 const ORIGIN = "https://devonakins.com";
 const secret = (v) => typeof v === "string" && /^[A-Za-z0-9_-]{43}$/.test(v);
+// Fixed status categories only. Never print a response body, bearer, URL,
+// provider account, command output or arbitrary exception text into CI logs.
+export class ActivityRequestFailure extends Error {
+  constructor(status) {
+    super("Reporter HTTP response rejected");
+    this.name = "ActivityRequestFailure";
+    this.status = status;
+  }
+}
+export function activityFailureReason(error) {
+  if (!(error instanceof ActivityRequestFailure)) return "network or invalid response";
+  const categories = {
+    400: "invalid reporter payload",
+    401: "credential rejected or expired",
+    403: "receiver denied",
+    404: "receiver not available",
+    409: "source project or state conflict",
+    429: "source cooldown or task limit",
+  };
+  return (categories[error.status] || "receiver error") +
+    " (HTTP " + (Number.isSafeInteger(error.status) && error.status >= 400 &&
+      error.status <= 599 ? error.status : "error") + ")";
+}
 export function projectFromRemote(remote) {
   if (typeof remote !== "string") return null;
   const match =
@@ -46,19 +70,72 @@ export async function activityRequest(path, body, token, fetcher = fetch) {
     body: JSON.stringify(body),
     signal: AbortSignal.timeout(8000),
   });
-  if (
-    !response.ok ||
-    !response.headers.get("Content-Type")?.includes("application/json")
-  )
-    throw Error("Activity request rejected (HTTP " + response.status + ").");
+  if (!response.ok) throw new ActivityRequestFailure(response.status);
+  if (!response.headers.get("Content-Type")?.includes("application/json"))
+    throw Error("Invalid reporter response");
   return response.json();
 }
+/**
+ * GitHub-minted short-lived identity; only trusted main-branch jobs opt in.
+ * Credentials and JWTs are never logged or inherited by the child command.
+ */
+export async function githubOidcTaskStart({
+  environment = process.env,
+  projectSlug = "devonakins-com",
+  fetcher = fetch,
+} = {}) {
+  if (environment.GITHUB_ACTIONS !== "true" ||
+      environment.GITHUB_EVENT_NAME !== "push" ||
+      environment.GITHUB_REF !== "refs/heads/main" ||
+      environment.GITHUB_REPOSITORY !== "devonalanakins/devonakins.com" ||
+      projectSlug !== "devonakins-com") throw Error("Untrusted workflow context");
+  const rawUrl = environment.ACTIONS_ID_TOKEN_REQUEST_URL;
+  const actionToken = environment.ACTIONS_ID_TOKEN_REQUEST_TOKEN;
+  if (typeof rawUrl !== "string" || rawUrl.length > 2048 ||
+      typeof actionToken !== "string" || !actionToken || actionToken.length > 4096)
+    throw Error("OIDC not available");
+  const idUrl = new URL(rawUrl);
+  if (idUrl.protocol !== "https:" ||
+      !/^(?:[a-z0-9-]+\.)*actions\.githubusercontent\.com$/.test(idUrl.hostname) ||
+      idUrl.username || idUrl.password || idUrl.port || idUrl.hash)
+    throw Error("OIDC endpoint unavailable");
+  idUrl.searchParams.set("audience", GITHUB_ACTIVITY_AUDIENCE);
+  const issued = await fetcher(idUrl.toString(), {
+    method: "GET", redirect: "error", credentials: "omit",
+    headers: { Authorization: "Bearer " + actionToken, Accept: "application/json" },
+    signal: AbortSignal.timeout(8000),
+  });
+  if (!issued.ok) throw new ActivityRequestFailure(issued.status);
+  if (!/application\/json/i.test(issued.headers.get("content-type") || ""))
+    throw Error("Invalid identity response");
+  const data = await issued.json();
+  const jwt = data?.value;
+  if (typeof jwt !== "string" || jwt.length < 250 || jwt.length > 8500 ||
+      jwt.split(".").length !== 3) throw Error("Invalid identity response");
+  const response = await fetcher(ORIGIN + "/api/activity/tasks/github-oidc-start", {
+    method: "POST", redirect: "error", credentials: "omit",
+    headers: {
+      Authorization: "Bearer " + jwt,
+      "Content-Type": "application/json",
+      Accept: "application/json",
+    },
+    body: JSON.stringify({ version: 1, projectSlug }),
+    signal: AbortSignal.timeout(8000),
+  });
+  if (!response.ok) throw new ActivityRequestFailure(response.status);
+  if (!/application\/json/i.test(response.headers.get("content-type") || ""))
+    throw Error("Invalid reporter response");
+  return response.json();
+}
+
 export async function runParticipatingTask(
   command,
   {
     sourceToken = process.env.DEVON_ACTIVITY_SOURCE_TOKEN,
     detectProject = repositoryProject,
     sourceTokens = process.env.DEVON_ACTIVITY_SOURCE_TOKENS,
+    useGithubOidc = process.env.DEVON_ACTIVITY_GITHUB_OIDC === "true",
+    oidcEnvironment = process.env,
     fetcher = fetch,
     clock = Date.now,
     spawnProcess = spawn,
@@ -98,9 +175,10 @@ export async function runParticipatingTask(
         task.token,
         fetcher,
       );
-    pending = pending.then(next).catch(() => {
+    pending = pending.then(next).catch((error) => {
       stderr.write(
-        "Activity checkpoint unavailable; source will expire automatically.\n",
+        "Activity checkpoint unavailable (" + activityFailureReason(error) +
+        "); source will expire automatically.\n",
       );
     });
     return pending;
@@ -126,26 +204,33 @@ export async function runParticipatingTask(
       sourceToken = null;
     }
   }
-  if (sourceToken) {
+  if (sourceToken || useGithubOidc) {
     try {
-      task = await activityRequest(
-        "/api/activity/tasks/start",
-        {
-          version: 1,
-          ...(observedProject.available
-            ? { projectSlug: observedProject.projectSlug }
-            : {}),
-        },
-        sourceToken,
-        fetcher,
-      );
+      task = useGithubOidc
+        ? await githubOidcTaskStart({
+            environment: oidcEnvironment,
+            projectSlug: observedProject.projectSlug,
+            fetcher,
+          })
+        : await activityRequest(
+            "/api/activity/tasks/start",
+            {
+              version: 1,
+              ...(observedProject.available
+                ? { projectSlug: observedProject.projectSlug }
+                : {}),
+            },
+            sourceToken,
+            fetcher,
+          );
       if (!secret(task.token) || !Number.isFinite(Date.parse(task.expiresAt)))
         throw Error();
       lastSent = clock();
-    } catch {
+    } catch (error) {
       task = null;
       stderr.write(
-        "Activity connection unavailable; continuing the requested command.\n",
+        "Activity connection unavailable (" + activityFailureReason(error) +
+        "); continuing the requested command.\n",
       );
     }
   }
@@ -158,6 +243,9 @@ export async function runParticipatingTask(
           ![
             "DEVON_ACTIVITY_SOURCE_TOKEN",
             "DEVON_ACTIVITY_SOURCE_TOKENS",
+            "ACTIONS_ID_TOKEN_REQUEST_URL",
+            "ACTIONS_ID_TOKEN_REQUEST_TOKEN",
+            "DEVON_ACTIVITY_GITHUB_OIDC",
           ].includes(key),
       ),
     ),

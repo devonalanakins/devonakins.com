@@ -26,6 +26,14 @@ function renderSourceReadiness(sources) {
   const t=sources.threads||{},sp=sources.spotify||{},
     gh=sources.github||{},ed=sources.editor||{},
     tasks=sources.tasks||{},gpt=sources.gpt||{};
+  const localObservation = value => {
+    if (typeof value!=="string") return null;
+    const parsed=Date.parse(value);
+    return Number.isFinite(parsed) && new Date(parsed).toISOString()===value
+      ? new Date(parsed).toLocaleString() : null;
+  };
+  const lastEditor=localObservation(ed.lastObservedAt);
+  const lastTask=localObservation(tasks.lastAcceptedAt);
   const rows=[
     ["Threads",t.privateConnected
       ? "Private Meta authorization stored. Public Threads posts remain a separate opt-in."
@@ -41,24 +49,35 @@ function renderSourceReadiness(sources) {
         : sp.appConfigured
           ? "App configured; account playback connection not confirmed."
           : "Spotify application not configured."],
-    ["GitHub",gh.appIntegrationEnabled && gh.authorizationConfigured
-      ? "Central repository integration configured; live event observation not checked."
-      : "Public event reader exists; central authenticated repository integration not verified."],
+    ["GitHub",(gh.appIntegrationEnabled && gh.authorizationConfigured
+      ? (gh.approvedRepositoryCount===0
+          ? "GitHub App configured, but no public repositories are approved. Connect/review the repository inventory."
+          : "GitHub App configured; "+gh.approvedRepositoryCount+
+            " approved public repository connection(s). A live event still requires provider evidence.")
+      : "Public GitHub history reader exists; authenticated GitHub App connection is not configured. "+
+        (gh.approvedRepositoryCount===0?"No repositories in the approved App inventory.":""))+
+      (gh.signedCiReceiverEnabled
+        ? " Signed main-branch CI receiver enabled; a real accepted workflow event is still required."
+        : " Signed CI receiver not yet activated.")],
     ["Editor",!ed.serverEnabled ? "Editor receiver not enabled."
       : ed.paired===false
-        ? "Receiver ready; no editor paired. Open the editor controls to pair VS Code."
+        ? "Receiver enabled, but no editor credential is paired. Open the editor controls to pair VS Code."
         : ed.paired===true
           ? (ed.ownerSharingSelected
-              ? "Editor paired and sharing selected; a fresh real edit is still required."
-              : "Editor paired; public sharing is not currently selected.")
-          : "Editor receiver enabled; pairing status not verified."],
+              ? "Editor sharing is approved, but pairing is not proof of a live editor. "+
+                (lastEditor?"Last accepted edit: "+lastEditor+".":"No accepted edit is recorded.")+
+                " Resume sharing in VS Code and edit an approved local Git file."
+              : "Editor credential paired; public sharing is not selected.")
+          : "Editor receiver enabled; pairing has not been verified."],
     ["Remote tasks",!tasks.reportersSupported ? "Task reporting unavailable."
       : Number.isSafeInteger(tasks.connectedSourceCount)
         ? (tasks.connectedSourceCount===0
-            ? "No trusted runner connected. Connect one workspace for real task checkpoints."
-            : tasks.connectedSourceCount+" connected runner source(s); "+
-              tasks.publicSourceCount+" selected for sharing. Active work not checked.")
-        : "Participating task reporters supported; active connections not checked."],
+            ? "No registered reporter credentials. Connect a trusted runner for real task checkpoints."
+            : tasks.connectedSourceCount+" registered reporter credential(s); "+
+              tasks.publicSourceCount+" approved for sharing. "+
+              (lastTask?"Last accepted task signal: "+lastTask+". ":"No task signal has been accepted. ")+
+              "Registration does not mean a reporter is currently running.")
+        : "Participating task reporters supported; current connections not verified."],
     ["GPT / Codex",gpt.captureToolAvailable
       ? "Owner-recorded, dated captures supported; automatic account telemetry not available."
       : "Capture storage not configured."],

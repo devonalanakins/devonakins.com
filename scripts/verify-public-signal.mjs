@@ -89,3 +89,6 @@ console.log("Observed modes: GPT=" + signal.gpt?.state +
   ", work=" + signal.work.visibility +
   ", remote=" + signal.remote.visibility +
   ", tasks=" + signal.remote.tasks.length + ".");
+console.log("Public GitHub history accepted: " +
+  (Array.isArray(signal.recent) ? signal.recent.length : 0) +
+  " dated event(s). This is not proof of current coding.");

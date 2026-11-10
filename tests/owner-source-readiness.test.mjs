@@ -180,3 +180,58 @@ test("owner integration actions use current protected routes and accessible link
   assert.match(js,/Test Threads connection privately|Checking the authorized Threads account/);
   assert.doesNotMatch(js,/THREADS_USER_ACCESS_TOKEN|SPOTIFY_CLIENT_SECRET|innerHTML=/);
 });
+
+test("owner readiness includes last accepted timestamps without implying live streams", async()=>{
+  const at=Date.parse("2026-11-10T14:20:00.000Z");
+  const editorSeen=at-29*60*60_000;
+  const taskSeen=at-14*60*60_000;
+  const observedQueries=[];
+  const db={prepare(sql){
+    observedQueries.push(sql);
+    if(sql==="SELECT * FROM listening_account WHERE id=1")return {first:async()=>null};
+    if(sql==="SELECT generation,token_hash,token_until,last_at FROM presence_editor WHERE id=1")
+      return {first:async()=>({generation:12,token_hash:"internalHashNeverPublish",
+        token_until:at+86400000,last_at:editorSeen})};
+    if(sql.startsWith("SELECT COUNT(*) AS total,"))
+      return {bind:()=>({first:async()=>({total:3,sharing:3})})};
+    if(sql.includes("MAX(t.received_at) AS last_seen"))
+      return {bind:(time,generation)=>{
+        assert.equal(time,at);assert.equal(generation,12);
+        return {first:async()=>({last_seen:taskSeen})};
+      }};
+    if(sql.includes("COUNT(*) AS approved FROM github_repositories"))
+      return {first:async()=>({approved:0})};
+    throw Error("Other private record absent");
+  }};
+  const state=await ownerSourceReadiness({...env,LISTENING_DB:db},
+    {...visibility,editor_generation:12},at);
+  assert.equal(state.editor.paired,true);
+  assert.equal(state.editor.lastObservedAt,new Date(editorSeen).toISOString());
+  assert.equal(state.tasks.connectedSourceCount,3);
+  assert.equal(state.tasks.lastAcceptedAt,new Date(taskSeen).toISOString());
+  assert.equal(state.github.approvedRepositoryCount,0);
+  assert.equal(state.editor.observed,"not-checked");
+  assert.equal(state.tasks.observed,"not-checked");
+  assert.doesNotMatch(JSON.stringify(state),/internalHashNeverPublish|token_hash/);
+  assert.ok(observedQueries.some(x=>x.includes("MAX(t.received_at)")));
+});
+
+test("owner source UI distinguishes credentials, stale events and genuine observations",()=>{
+  const js=readFileSync(new URL("../public/v2/presence-owner.js",import.meta.url),"utf8");
+  assert.match(js,/Last accepted edit:/);
+  assert.match(js,/Last accepted task signal:/);
+  assert.match(js,/Registration does not mean a reporter is currently running/);
+  assert.match(js,/No repositories in the approved App inventory/);
+  assert.doesNotMatch(js,/innerHTML\s*=/);
+});
+
+test("mobile owner status reports signed CI switch without claiming a live event",async()=>{
+  const offline=await ownerSourceReadiness({},null);
+  assert.equal(offline.github.signedCiReceiverEnabled,false);
+  const enabled=await ownerSourceReadiness({GITHUB_OIDC_ACTIVITY_ENABLED:"true"},null);
+  assert.equal(enabled.github.signedCiReceiverEnabled,true);
+  assert.equal(enabled.github.observed,"not-checked");
+  const js=readFileSync(new URL("../public/v2/presence-owner.js",import.meta.url),"utf8");
+  assert.match(js,/Signed main-branch CI receiver enabled/);
+  assert.match(js,/a real accepted workflow event is still required/);
+});

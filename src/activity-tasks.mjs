@@ -8,6 +8,7 @@ import {
 } from "./listening-owner-core.mjs";
 import { approvedProjects } from "./presence-preferences.mjs";
 import { PUBLIC_PRESENCE_PROJECTS } from "./presence-model.mjs";
+import { verifyGithubActionsIdentity } from "./github-actions-oidc.mjs";
 import {
   CLOUD_STATES,
   CLOUD_CHECKPOINTS,
@@ -119,7 +120,10 @@ export async function activityTasks(env, at, privateView = false) {
   }
 }
 
-export function createActivityTasksApi({ clock = Date.now } = {}) {
+export function createActivityTasksApi({
+  clock = Date.now,
+  verifyGithubIdentity = verifyGithubActionsIdentity,
+} = {}) {
   return async (request, env = {}, ctx = {}) => {
     if (env.PRESENCE_ENABLED !== "true" || !env.LISTENING_DB)
       return ownerError("Not found", 404);
@@ -264,11 +268,15 @@ export function createActivityTasksApi({ clock = Date.now } = {}) {
         }
         return ownerError("Invalid owner request", 400);
       }
+      const oidcStart = u.pathname === "/api/activity/tasks/github-oidc-start";
+      if (oidcStart && env.GITHUB_OIDC_ACTIVITY_ENABLED !== "true")
+        return ownerError("Not found", 404);
       const auth = request.headers.get("Authorization") || "";
-      if (!auth.startsWith("Bearer ") || !secret(auth.slice(7)))
+      if (!auth.startsWith("Bearer ") ||
+          (!oidcStart && !secret(auth.slice(7))))
         return ownerError("Reporter authentication required", 401);
-      const hash = await digest(auth.slice(7));
-      if (u.pathname === "/api/activity/tasks/start") {
+      const hash = oidcStart ? null : await digest(auth.slice(7));
+      if (u.pathname === "/api/activity/tasks/start" || oidcStart) {
         if (
           !(
             exactCloudKeys(data, ["version"]) ||
@@ -279,11 +287,31 @@ export function createActivityTasksApi({ clock = Date.now } = {}) {
           data.version !== 1
         )
           return ownerError("Invalid start", 400);
-        const s = await db
-          .prepare("SELECT * FROM activity_sources WHERE token_hash=?")
-          .bind(hash)
-          .first();
-        if (!allowed(s, o, at)) return ownerError("Source unavailable", 401);
+        let s;
+        if (oidcStart) {
+          // No long-lived reporter key crosses the build logs. GitHub's signed
+          // job identity and actual running workflow must both be verified.
+          const identity = await verifyGithubIdentity(auth.slice(7), {
+            clock: () => at,
+          });
+          if (identity?.projectSlug !== "devonakins-com")
+            return ownerError("Signed workflow authentication required", 401);
+          const authorized = await rows(db.prepare(
+            "SELECT * FROM activity_sources WHERE source='github-actions' "+
+            "AND project_slug='devonakins-com' AND revoked=0 LIMIT 2"
+          ));
+          // Ambiguity, disabled source or owner revocation fails closed.
+          if (authorized.length !== 1)
+            return ownerError("Source unavailable", 401);
+          s = authorized[0];
+        } else {
+          s = await db.prepare(
+            "SELECT * FROM activity_sources WHERE token_hash=?"
+          ).bind(hash).first();
+        }
+        if (!allowed(s, o, at) ||
+            (oidcStart && (s.public_enabled !== 1 || !publicAllowed(env, o))))
+          return ownerError("Source unavailable", 401);
         if (
           data.projectSlug !== undefined &&
           data.projectSlug !== s.project_slug
