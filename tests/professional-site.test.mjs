@@ -143,3 +143,29 @@ test("Spotify public pages reuse existing consented API and load no third-party 
   assert.match(bundle,/credentials:"omit"/);
   assert.doesNotMatch(bundle,/localStorage|sessionStorage|access_token|refresh_token|new Audio/);
 });
+
+test("approved concept palette and brand iconography are implemented without simulated statuses",async()=>{
+  const activity=renderProfessionalPage("activity");
+  const home=renderProfessionalPage("home");
+  assert.match(activity,/p-brand-github/);
+  assert.match(activity,/p-brand-spotify/);
+  assert.match(activity,/data-spotify-source-state/);
+  assert.match(home,/p-brand-spotify/);
+  const style=await readFile(new URL("../src/professional/site.css",import.meta.url),"utf8");
+  for(const color of ["#0b131b","#e8b987","#82d49c","#c4a2ec","#85c2f3","#eac182"]){
+    assert.ok(style.includes(color),"Missing approved palette token "+color);
+  }
+  for(const variant of ["merged","opened","release","issue"]){
+    assert.ok(style.includes('data-variant="'+variant+'"'),
+      "Missing accessible event variant styles: "+variant);
+  }
+  const client=await readFile(new URL("../src/professional/client.ts",import.meta.url),"utf8");
+  assert.match(client,/EVENT_ICONS/);
+  assert.match(client,/EVENT_CHIPS/);
+  assert.match(client,/p-event-meta/);
+  assert.match(client,/textContent=EVENT_CHIPS\[variant\]/);
+  assert.doesNotMatch(activity,/CONNECTED<\/|LISTENING NOW|Active development across public repos/);
+  const marks=await readFile(new URL("../src/professional/brand-icons.mjs",import.meta.url),"utf8");
+  assert.match(marks,/viewBox="0 0 24 24"/);
+  assert.doesNotMatch(marks,/<script|https?:\/\//);
+});
