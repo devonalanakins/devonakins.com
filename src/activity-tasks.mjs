@@ -303,7 +303,11 @@ export function createActivityTasksApi({
           } catch (error) {
             if (error instanceof GithubKeyProviderUnavailable)
               return ownerJson({error:"Identity verification keys unavailable"},
-                502, {"Retry-After":"60"});
+                502, {
+                  "Retry-After":"60",
+                  // Bounded status only; no JWT, key, issuer body or account data.
+                  "X-OIDC-JWKS-Failure":error.category,
+                });
             if (error instanceof GithubRunProviderUnavailable) {
               // A correctly signed claim is not permission to bypass the
               // independent GitHub run-status check. Fail closed but report
