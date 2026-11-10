@@ -14,10 +14,12 @@ const secret = (v) => typeof v === "string" && /^[A-Za-z0-9_-]{43}$/.test(v);
 // Fixed status categories only. Never print a response body, bearer, URL,
 // provider account, command output or arbitrary exception text into CI logs.
 export class ActivityRequestFailure extends Error {
-  constructor(status) {
+  constructor(status, stage = null) {
     super("Reporter HTTP response rejected");
     this.name = "ActivityRequestFailure";
     this.status = status;
+    // Never pass through a provider-controlled header without an allowlist.
+    this.stage = ["keys", "crypto", "run"].includes(stage) ? stage : null;
   }
 }
 export function activityFailureReason(error) {
@@ -30,9 +32,11 @@ export function activityFailureReason(error) {
     409: "source project or state conflict",
     429: "source cooldown or task limit",
   };
-  return (categories[error.status] || "receiver error") +
+  const message = (categories[error.status] || "receiver error") +
     " (HTTP " + (Number.isSafeInteger(error.status) && error.status >= 400 &&
       error.status <= 599 ? error.status : "error") + ")";
+  return message + (error.status === 503 && error.stage
+    ? "; verifier stage " + error.stage : "");
 }
 export function projectFromRemote(remote) {
   if (typeof remote !== "string") return null;
@@ -166,7 +170,9 @@ export async function githubOidcTaskStart({
     body: JSON.stringify({ version: 1, projectSlug }),
     signal: AbortSignal.timeout(8000),
   });
-  if (!response.ok) throw new ActivityRequestFailure(response.status);
+  if (!response.ok) throw new ActivityRequestFailure(
+    response.status, response.headers?.get("X-Activity-Verification-Stage"),
+  );
   if (!/application\/json/i.test(response.headers.get("content-type") || ""))
     throw Error("Invalid reporter response");
   return response.json();
