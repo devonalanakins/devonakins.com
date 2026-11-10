@@ -426,3 +426,45 @@ h1 em,h2 em,.p-footer-line em{font-style:italic;color:#e9c29a}
 .p-page-portrait img{top:0;right:0;width:100%;height:100%;max-width:100%;object-fit:contain;object-position:center bottom;opacity:1;filter:none;mask-image:none}
 @media(max-width:760px){.p-home-portrait img,.p-page-portrait img{top:0;right:0;width:100%;height:100%;object-fit:contain}}
 @media(max-width:530px){.p-home-portrait img,.p-page-portrait img{top:0;height:100%;max-height:100%}}
+
+/* Cropped from the owner-selected visual concepts and bundled locally; all
+ * artwork is decorative and does not represent verified client outcomes. */
+.p-work-art.p-art-ops,.p-work-art.p-art-build,.p-work-art.p-art-research,
+.p-study-art,.p-card-network,.p-card-code,.p-card-research,.p-card-book{
+ background-repeat:no-repeat,no-repeat;
+ background-size:cover,200% 300%;
+}
+.p-work-art.p-art-ops{
+ background-image:linear-gradient(to top,#08131ed2,transparent 87%),url("/professional/concept-art.webp");
+ background-position:center,0% 0%
+}
+.p-work-art.p-art-build{
+ background-image:linear-gradient(to top,#08131ec4,transparent 90%),url("/professional/concept-art.webp");
+ background-position:center,100% 0%
+}
+.p-work-art.p-art-research{
+ background-image:linear-gradient(to top,#091622bf,transparent 90%),url("/professional/concept-art.webp");
+ background-position:center,0% 50%
+}
+.p-work-art>span,.p-work-art>i,.p-work-art:after{display:none}
+.p-study-art{
+ background-image:linear-gradient(180deg,#08131a20,#08131c8c),url("/professional/concept-art.webp");
+ background-position:center,0% 0%;
+}
+.p-study-art:before{display:none}
+.p-card-network{
+ background-image:linear-gradient(180deg,#0c1720a1,#0c1822f2),url("/professional/concept-art.webp");
+ background-position:center,0% 0%;
+}
+.p-card-code{
+ background-image:linear-gradient(180deg,#0c1720a1,#0c1822f2),url("/professional/concept-art.webp");
+ background-position:center,100% 0%;
+}
+.p-card-research{
+ background-image:linear-gradient(180deg,#101923a0,#0d1823ed),url("/professional/concept-art.webp");
+ background-position:center,100% 50%;
+}
+.p-card-book{
+ background-image:linear-gradient(180deg,#101923a0,#0d1823f0),url("/professional/concept-art.webp");
+ background-position:center,0% 100%;
+}
