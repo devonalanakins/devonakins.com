@@ -37,7 +37,6 @@ mobileNav?.querySelectorAll("a").forEach(link =>
 let latest: Snapshot | null = null;
 let kind = "all";
 let busy = false;
-let checked = 0;
 
 const eventKinds = ["push", "pull_request", "release", "issue", "other"];
 const age = (value: string, now = Date.now()) => {
@@ -227,7 +226,6 @@ filters.forEach(filter=>filter.addEventListener("click",()=>{
 async function refresh(){
   if(busy || document.hidden || panels.length===0)return;
   busy=true;
-  checked=Date.now();
   try{
     const response=await fetch("/api/github/public-feed",{
       method:"GET",credentials:"omit",cache:"no-store",
