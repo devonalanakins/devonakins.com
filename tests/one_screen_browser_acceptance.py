@@ -71,7 +71,7 @@ try:
                     }"""),(engine,width,height,"source title containment")
                 # The page includes two differently sized tablists: choose visible tab.
                 tabs=page.locator('.one-tabs-mobile [role="tablist"]' if width<=760 else '.one-tabs-desktop [role="tablist"]')
-                for label,key in (("Experience","experience"),("Work","work"),("Activity","activity"),("Writing","writing"),("Contact","contact"),("Home","home")):
+                for label,key in (("Career","experience"),("Missions","work"),("Activity","activity"),("Writing","writing"),("Contact","contact"),("Profile","home")):
                     tabs.get_by_role("tab",name=label).click()
                     assert page.locator('[data-one-view="'+key+'"]').is_visible(),(engine,width,height,key)
                     assert page.locator('[data-one-view]:visible').count()==1,(engine,width,height,key)
