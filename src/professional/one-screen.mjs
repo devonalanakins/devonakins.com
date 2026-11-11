@@ -2,6 +2,7 @@ import {spotifyCard,gptSignalCard} from "./signal-cards.mjs";
 import {brandIcon} from "./brand-icons.mjs";
 import {renderOneScreenGptSummary} from "./gpt-capture.mjs";
 import {renderPrestigeHome} from "./prestige-profile.mjs";
+import {renderWorkingStandard} from "./working-standard.mjs";
 
 /**
  * Opt-in one-viewport design candidate. Existing routes and consent-filtered
@@ -52,17 +53,20 @@ function project(tag,name,text,link,art) {
 const home = view("home",renderPrestigeHome({publicFeed,button,spotifyCard}));
 
 const experience = view("experience",
-  '<div class="one-inner-layout"><div class="one-inner-intro">'+
-  eyebrow("002 / CAREER","PROFESSIONAL EXPERIENCE")+
-  '<h1>Independent by design.<br><em>Practical by nature.</em></h1>'+
-  '<p class="one-lede">I design, develop and maintain software, connect technology with business operations, and pursue original research and writing.</p>'+
-  '<p class="one-quiet">First-party applications, organizational systems and creative work—built to be understood, maintained and used.</p>'+
-  '<a class="one-detail-link" href="/experience/">Full résumé and academic background ↗</a></div>'+
-  '<div class="one-fact-stack">'+
-  '<article><span>01 / INDEPENDENT PRACTICE</span><h2>Software engineering</h2><p>Applications, infrastructure, integrations and verified delivery.</p></article>'+
-  '<article><span>02 / PROFESSIONAL PRACTICE</span><h2>Business operations</h2><p>Workflow design, organizational systems and technology leadership.</p></article>'+
-  '<article><span>03 / FOUNDATION</span><h2>Research and writing</h2><p>Mathematics, physics, technical inquiry, authorship and communication.</p></article>'+
-  '</div></div>');
+  '<div class="one-inner-layout career-scene">'+
+  '<div class="one-inner-intro career-intro">'+
+  eyebrow("002 / CAREER","HOW I WORK")+
+  '<p class="career-name">DEVON ALAN AKINS <span> / INDEPENDENT PRACTICE</span></p>'+
+  '<h1>Design it well.<br><em>Make it work.</em></h1>'+
+  '<p class="one-lede">I’m an independent software developer, systems designer, business operator, and author. I connect the experience people see with the engineering and operations that make it useful.</p>'+
+  '<p class="career-declaration">My work starts with understanding what is real, not selecting a technology. It ends only when the result is usable, verified, and maintainable.</p>'+
+  '<div class="career-practice" aria-label="Three complementary areas of practice">'+
+    '<div><span>01 / BUILD</span><strong>Software and systems</strong><small>First-party applications, infrastructure, connected tools</small></div>'+
+    '<div><span>02 / OPERATE</span><strong>Practical operations</strong><small>Professional workflows, communication, reliability</small></div>'+
+    '<div><span>03 / CREATE</span><strong>Writing and research</strong><small>Original work, technical inquiry, clear explanations</small></div>'+
+  '</div>'+
+  '<a class="one-detail-link" href="/experience/">Experience, education and background ↗</a>'+
+  '</div>'+renderWorkingStandard()+'</div>');
 
 const work = view("work",
   '<div class="one-view-frame">'+
@@ -84,6 +88,7 @@ const activity = view("activity",
   '<div class="one-activity-gpt">'+gptSignalCard()+'</div></div>'+
   '<section class="one-activity-feed one-panel"><header class="one-panel-head">'+brandIcon("github")+
   '<span><strong>PUBLIC EVENTS</strong><small>GitHub · source-qualified</small></span></header>'+
+  '<div class="one-activity-tools" role="group" aria-label="Filter GitHub history"><button type="button" data-github-filter="all" aria-pressed="true">All</button><button type="button" data-github-filter="push" aria-pressed="false">Pushes</button><button type="button" data-github-filter="pull_request" aria-pressed="false">PRs</button><button type="button" data-github-filter="issue" aria-pressed="false">Issues</button><button type="button" data-github-filter="release" aria-pressed="false">Releases</button><button type="button" data-github-refresh aria-label="Check GitHub for new public events">Refresh</button></div>'+
   publicFeed("one-activity-github",6)+
   '<p class="one-activity-note">GitHub events are timestamped history. Playback and editor status use separate sources.</p></section></div>');
 
@@ -110,7 +115,7 @@ const contact = view("contact",
   '<a href="/contact/">Full contact page ↗</a></div></div>'+
   '<div class="one-contact-art" aria-hidden="true"><span></span><span></span><span></span></div></div>');
 
-export function renderOneScreenHome({datedCapture=null}={}) {
+export function renderOneScreenHome({datedCapture=null,motionAssetAvailable=false}={}) {
   const homeGpt=datedCapture ? renderOneScreenGptSummary(datedCapture) : gptSignalCard();
   const description="Devon Alan Akins — independent software developer, systems designer, business operator and author.";
   return '<!doctype html><html lang="en" class="one-html"><head>'+
@@ -124,19 +129,23 @@ export function renderOneScreenHome({datedCapture=null}={}) {
     '<link rel="stylesheet" href="/src/professional/site.css">'+
     '<link rel="stylesheet" href="/src/professional/one-screen.css">'+
     '<link rel="stylesheet" href="/src/professional/prestige-profile.css">'+
+    '<link rel="stylesheet" href="/src/professional/living-atmosphere.css">'+
+    '<link rel="stylesheet" href="/src/professional/concept-console.css">'+
     '<link rel="preload" as="image" type="image/svg+xml" href="/professional/mission-operations.svg">'+
     '<link rel="preload" as="image" type="image/svg+xml" href="/professional/mission-systems.svg">'+
     '<link rel="preload" as="image" type="image/svg+xml" href="/professional/mission-site.svg">'+
     '<script type="module" src="/src/professional/client.ts"></script>'+
-    '<script type="module" src="/src/professional/one-screen.ts"></script>'+
+    '<script type="module" src="/src/professional/one-screen.ts"></script><script type="module" src="/src/professional/working-standard.ts"></script>'+
+    '<script type="module" src="/src/professional/living-atmosphere.ts"></script>'+ 
+    '<script type="module" src="/src/professional/concept-console.ts"></script>'+
     '</head><body class="p-body one-body">'+
     '<a class="one-skip" href="#one-stage">Skip to the content</a>'+
-    '<div class="one-world" aria-hidden="true"><div class="one-world-glow"></div><div class="one-world-grid"></div></div>'+
+    '<div class="one-world" data-living-scene aria-hidden="true">'+(motionAssetAvailable?'<video class="one-world-video" data-living-video muted autoplay loop playsinline preload="metadata" poster="/professional/living-atmosphere.png"><source src="/professional/living-atmosphere.mp4" type="video/mp4"></video>':'')+'<canvas class="one-world-canvas" data-living-canvas></canvas><div class="one-world-glow"></div><div class="one-world-grid"></div></div>'+
     '<header class="one-header"><a class="one-brand" href="/" aria-label="Devon Akins home">'+
     '<span class="one-brand-mark">DA</span><span class="one-brand-type">DEVON<span>AKINS</span><small>.COM</small></span></a>'+
     '<p class="one-header-descriptor">INDEPENDENT DEVELOPER <span>—</span> FLORIDA / REMOTE</p>'+
     tabs("desktop")+
-    '<a class="one-header-email" href="mailto:devon@anevum.com">CONTACT <span aria-hidden="true">↗</span></a></header>'+
+    '<div class="one-header-actions"><button type="button" class="one-motion-toggle" data-motion-toggle aria-pressed="true" aria-label="Pause background motion" title="Pause background motion"><span class="one-motion-dot" aria-hidden="true"></span><span data-motion-label>Motion on</span></button><a class="one-header-email" href="mailto:devon@anevum.com">CONTACT <span aria-hidden="true">↗</span></a></div></header>'+
     '<main id="one-stage" class="one-stage" tabindex="-1">'+home.replace('<!--ONE_SCREEN_GPT_SLOT-->',homeGpt)+experience+work+activity+writing+contact+'</main>'+
     tabs("mobile")+
     '<footer class="one-footer"><span>© 2026 DEVON ALAN AKINS</span><span class="one-footer-current">ONE MIND. REAL WORK. SOURCE-QUALIFIED SIGNALS.</span>'+

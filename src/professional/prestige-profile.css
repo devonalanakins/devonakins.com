@@ -410,3 +410,101 @@
   .prestige-player-actions .one-button{min-height:35px;padding:7px 12px}
   .prestige-player-bottom{padding-top:8px;margin-top:9px}
 }
+
+
+/* PROOF-OF-WORK / interactive methodology and evidence-driven public activity.
+   Preserves the no-scroll shell and existing, validated source integrations. */
+.one-method-workbench{display:flex;flex-direction:column;gap:clamp(11px,1.3vw,22px);height:100%;min-height:0;overflow:hidden;padding:clamp(14px,2vw,30px);border:1px solid #83d3d05e;border-radius:10px;background:radial-gradient(ellipse at 100% 0%,#2b6e7252,transparent 52%),linear-gradient(150deg,#132b39,#081521 76%);box-shadow:inset 0 1px #ffffff1a,0 24px 55px #0006}
+.one-method-overline{display:flex;align-items:center;justify-content:space-between;gap:8px;color:#91c9ce;font:700 10px ui-monospace,monospace;letter-spacing:.12em}
+.one-method-overline span:last-child{font-size:8px;color:#b3a48d;text-align:right}
+.one-method-controls{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px}
+.one-method-control{display:flex;flex-direction:column;align-items:flex-start;gap:14px;min-width:0;min-height:88px;padding:13px 10px;text-align:left;background:#1633409c;border:1px solid #8abdc33e;border-radius:5px;color:#aec4cb;transition:border-color .2s,background .2s,transform .2s;cursor:pointer}
+.one-method-control>span{font:750 10px ui-monospace,monospace;color:#bda681}
+.one-method-control strong{font-size:clamp(9px,.9vw,14px);font-weight:650;letter-spacing:-.02em;overflow-wrap:anywhere}
+.one-method-control[aria-pressed="true"]{border-color:#e9c593b5;color:#faead2;background:linear-gradient(150deg,#42636a,#193947);box-shadow:inset 0 2px #e9c5938c}
+.one-method-control:hover{border-color:#abd9d3;transform:translateY(-2px)}
+.one-method-content{display:flex;flex:1;min-height:0;align-items:center}
+.one-method-detail{width:100%;min-width:0;animation:prestige-reveal .28s ease-out}
+.one-method-phase{display:block;margin-bottom:13px;color:#e5bb84;font:750 10px ui-monospace,monospace;letter-spacing:.15em}
+.one-method-detail h2{font:400 clamp(22px,2.3vw,40px)/1.08 Georgia,serif;letter-spacing:-.045em;color:#f8eadb;margin:0 0 14px}
+.one-method-detail p{font-size:clamp(11px,1.03vw,15px);line-height:1.65;color:#aecbd0;margin:0 0 16px;max-width:52ch}
+.one-method-proof{display:flex;align-items:flex-start;gap:10px;font-size:clamp(10px,.88vw,12px);line-height:1.55;color:#e4c69d}
+.one-method-proof>span{flex:0 0 7px;width:7px;height:7px;transform:rotate(45deg);background:#9bd8cc;margin-top:5px}
+.one-method-rule{border-top:1px solid #b4d0cf30;padding-top:12px;font-size:10px;line-height:1.5;color:#a8b9bf;margin:0}
+.one-method-rule b{color:#f2d0a3;letter-spacing:.12em;margin-right:8px}
+.one-activity-tools{display:flex;align-items:center;gap:5px;flex-wrap:nowrap;margin:11px 0 0;min-width:0;overflow-x:auto;scrollbar-width:thin;flex:none;padding-bottom:2px}
+.one-activity-tools button{flex:0 0 auto;border:1px solid #85bdc044;background:#152d3b;color:#b0cbd3;padding:7px 10px;border-radius:5px;font:650 10px ui-monospace,monospace;cursor:pointer;transition:background .2s,border-color .2s,color .2s}
+.one-activity-tools button[aria-pressed="true"]{background:#e5c496;color:#14222b;border-color:#e5c496}
+.one-activity-tools button:hover:not([aria-pressed="true"]){border-color:#b4dedb;color:#e9f4f2}
+.one-activity-tools button[disabled]{opacity:.5;cursor:wait}
+.one-activity-tools [data-github-refresh]{margin-left:auto;color:#e4c38f}
+.one-activity-tools~.one-feed .one-feed-disclosure{font-size:9px}
+@media(max-width:1000px){
+ .one-method-workbench{gap:9px;padding:13px}
+ .one-method-control{min-height:60px;padding:8px;gap:7px}
+ .one-method-detail h2{font-size:clamp(20px,3vw,30px);margin-bottom:8px}
+ .one-method-detail p{font-size:11px;line-height:1.4;margin-bottom:9px}
+ .one-method-proof{font-size:10px}
+ .one-method-phase{margin-bottom:7px}
+ .one-method-rule{padding-top:6px;font-size:9px}
+}
+@media(max-width:760px){
+ .one-view-experience .one-inner-layout{grid-template-rows:auto minmax(0,1fr);gap:8px}
+ .one-view-experience .one-inner-intro .one-quiet{display:none}
+ .one-view-experience .one-inner-intro h1{font-size:clamp(26px,7vw,36px);margin-bottom:4px}
+ .one-view-experience .one-inner-intro .one-lede{font-size:10px;line-height:1.3}
+ .one-view-experience .one-inner-intro .one-detail-link{margin-top:6px}
+ .one-method-workbench{padding:10px 12px;gap:7px}
+ .one-method-overline{font-size:8px}
+ .one-method-overline span:last-child{font-size:7px}
+ .one-method-control{min-height:43px;padding:6px;gap:4px}
+ .one-method-control>span{font-size:8px}
+ .one-method-control strong{font-size:10px}
+ .one-method-detail h2{font-size:clamp(20px,5.7vw,28px);margin-bottom:5px}
+ .one-method-detail p{font-size:10px;line-height:1.32;margin-bottom:6px}
+ .one-method-phase{font-size:8px;margin-bottom:5px}
+ .one-method-proof{font-size:9px;line-height:1.27}
+ .one-method-rule{font-size:8px;line-height:1.25;padding-top:5px}
+ .one-activity-tools{gap:4px;margin-top:6px}
+ .one-activity-tools button{font-size:9px;padding:5px 7px}
+}
+@media(max-width:400px) and (max-height:700px){
+ .one-view-experience .one-inner-intro .one-lede{display:none}
+ .one-method-workbench{gap:4px;padding:7px}
+ .one-method-control{min-height:33px;padding:4px;gap:2px}
+ .one-method-control strong{font-size:9px}
+ .one-method-detail h2{font-size:19px;margin-bottom:4px}
+ .one-method-detail p{font-size:9px;line-height:1.27;margin-bottom:5px}
+ .one-method-proof{font-size:8px}
+ .one-method-rule{font-size:7px}
+ .one-activity-tools button{font-size:8px;padding:4px 6px}
+}
+@media(min-width:761px) and (max-height:700px){
+ .one-method-workbench{gap:7px;padding:11px}
+ .one-method-control{min-height:43px;padding:5px;gap:4px}
+ .one-method-detail h2{font-size:23px;margin:0 0 6px}
+ .one-method-detail p{font-size:10px;line-height:1.35;margin-bottom:6px}
+ .one-method-phase{margin-bottom:5px}
+}
+@media(prefers-reduced-motion:reduce){
+ .one-method-control{transition:none}
+ .one-method-control:hover{transform:none}
+ .one-method-detail{animation:none}
+ .one-activity-tools button{transition:none}
+}
+
+/* COMPACT WORKSTATION STATUS — avoid title/badge collisions on small phones. */
+@media(max-width:400px){
+  .prestige-command-top{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:7px;min-height:34px;padding-bottom:5px}
+  .prestige-command-top>div{display:flex;min-width:0;flex-direction:column;align-items:flex-start;justify-content:center;gap:2px}
+  .prestige-command-eyebrow{font-size:7px;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .prestige-command-top strong{display:block;max-width:100%;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .prestige-command-corner.prestige-presence{justify-self:end;min-width:0;max-width:92px;flex:none}
+}
+@media(max-width:400px) and (max-height:700px){
+  .prestige-command-top{min-height:27px;gap:5px;padding-bottom:3px}
+  .prestige-command-top>div{gap:0}
+  .prestige-command-eyebrow{font-size:6.5px}
+  .prestige-command-top strong{font-size:11px}
+  .prestige-command-corner.prestige-presence{max-width:76px}
+}

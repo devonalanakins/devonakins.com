@@ -14,6 +14,24 @@ assert.match(home,/href="\/assets\/[^"]+\.css"/);
 assert.match(home,/data-public-spotify/);
 assert.match(home,/data-public-github-feed/);
 assert.match(home,/data-public-gpt/);
+assert.match(home,/data-living-canvas/);
+assert.match(home,/data-motion-toggle/);
+if(home.includes('class="one-world-video"')){
+  const mp4="/professional/living-atmosphere.mp4";
+  const first=await get(mp4);
+  assert.equal(first.status,200);
+  assert.equal(first.headers.get("Content-Type"),"video/mp4");
+  assert.equal(first.headers.get("Accept-Ranges"),"bytes");
+  const bytes=new Uint8Array(await first.arrayBuffer());
+  assert.ok(bytes.length>1000 && bytes.length<=2_500_000);
+  const range=await site.fetch(new Request("https://devonakins.com"+mp4,{headers:{Range:"bytes=0-3"}}));
+  assert.equal(range.status,206);
+  assert.equal(range.headers.get("Content-Range"),"bytes 0-3/"+bytes.length);
+  assert.equal((await range.arrayBuffer()).byteLength,4);
+  const poster=await get("/professional/living-atmosphere.png");
+  assert.equal(poster.status,200);
+  assert.equal(poster.headers.get("Content-Type"),"image/png");
+}
 for(const value of ["≈3.3B","526.3M","308 MESSAGES","190 PLUGINS","126 SKILLS","Nov 10, 2026"]){
   assert.ok(home.includes(value),"Missing recorded GPT metric "+value);
 }

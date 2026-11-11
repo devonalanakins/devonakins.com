@@ -31,11 +31,74 @@ try:
                 assert page.locator(".one-portrait").count()==0,(engine,width,height,"portrait removed")
                 assert page.locator(".prestige-player").count()==1,(engine,width,height,"prestige identity")
                 assert page.locator(".prestige-command").count()==1,(engine,width,height,"public signal board")
+                # Concept review checks actual layout instead of only presence
+                # of familiar old Prestige classes. Primary actions must never
+                # be clipped underneath the mobile/short-laptop panel stack.
+                assert page.locator(".concept-console").count()==1,(engine,width,height,"concept layout")
+                assert page.locator(".concept-intro .prestige-player-actions .one-button").count()==2
+                assert page.locator(".concept-live [data-public-work]").count()==1
+                assert page.locator(".concept-signal-band .p-spotify-card").count()==1
+                assert page.locator(".concept-signal-band .one-gpt-record").count()==1
+                if height>470:
+                    assert page.evaluate("""() => {
+                      const section=document.querySelector('.concept-intro').getBoundingClientRect();
+                      const actions=[...document.querySelectorAll('.concept-intro .prestige-player-actions .one-button')];
+                      const heading=document.querySelector('.concept-intro h1').getBoundingClientRect();
+                      const within=e=>{const b=e.getBoundingClientRect();return b.width>0&&b.height>0&&b.top>=section.top-2&&b.bottom<=section.bottom+2&&b.left>=section.left-2&&b.right<=section.right+2};
+                      return heading.width>0&&heading.top>=section.top-2&&heading.bottom<=section.bottom+2&&actions.length===2&&actions.every(within);
+                    }"""),(engine,width,height,"concept hero or actions clipped")
+                if width>1200 and height>=820:
+                    for panel in (".concept-process",".concept-quality",".concept-featured",".concept-focus",".concept-activity-ribbon"):
+                        assert page.locator(panel).is_visible(),(engine,width,height,panel,"concept panel missing")
+                assert page.locator(".concept-live .concept-feed-filters [data-github-filter]").count()==3
+                # Motion preferences must not delete the centerpiece: the
+                # approved local poster replaces the decorative background film.
+                if width>1200 and height>470:
+                    still=page.evaluate("""() => ({
+                      scene:getComputedStyle(document.querySelector('.concept-visual')).backgroundImage,
+                      image:document.querySelector('.concept-visual').getBoundingClientRect().width,
+                      video:getComputedStyle(document.querySelector('.one-world-video')).display
+                    })""")
+                    assert "living-atmosphere.png" in still["scene"] and still["image"]>50 and still["video"]=="none",(
+                        engine,width,height,"missing reduced-motion neural image",still)
+                # Compact work badge must never cover the workstation heading.
+                # A full-viewport screenshot will not reveal intra-card overlap.
+                if width<=400:
+                    workstation=page.evaluate("""() => {
+                      const head=document.querySelector('.prestige-command-top');
+                      const title=head.querySelector('strong');
+                      const state=head.querySelector('[data-work-state]');
+                      const badge=head.querySelector('[data-public-work]');
+                      const a=title.getBoundingClientRect();
+                      const b=badge.getBoundingClientRect();
+                      const h=head.getBoundingClientRect();
+                      const s=state.getBoundingClientRect();
+                      const overlap=a.left<b.right-1 && b.left<a.right-1 &&
+                        a.top<b.bottom-1 && b.top<a.bottom-1;
+                      return {overlap,visible:a.width>65 && a.height>10,
+                        badgeInside:b.left>=h.left-2 && b.right<=h.right+2,
+                        titleInside:a.left>=h.left-2 && a.right<=h.right+2,
+                        statusInside:s.left>=b.left-2 && s.right<=b.right+2};
+                    }""")
+                    assert all([not workstation["overlap"],workstation["visible"],
+                        workstation["badgeInside"],workstation["titleInside"],
+                        workstation["statusInside"]]),(
+                          engine,width,height,"compact workstation heading/status collision",workstation)
                 assert page.locator(".prestige-identity-copy h1").is_visible()
                 assert "SOFTWARE DEVELOPER" in page.locator(".prestige-subtitle").inner_text()
                 # High-level gamer styling is editorial, not invented XP, levels, or ranks.
                 assert page.locator(".prestige-build-row").count()==3
-                for selector in (".prestige-player",".prestige-command",".prestige-player-actions",".prestige-activity-card",".prestige-stat-pair"):
+                # In a 390px-tall landscape viewport, source tiles remain in
+                # the DOM and accessible from deep links, but are intentionally
+                # hidden so the professional introduction/workstation fit.
+                if width>760 and height<=470:
+                    assert page.locator(".prestige-stat-pair").is_hidden(),(engine,width,height,"short-landscape signal priority")
+                else:
+                    assert page.locator(".prestige-stat-pair").is_visible(),(engine,width,height,"signal strip visibility")
+                contained=(".prestige-player",".prestige-command",".prestige-player-actions",".prestige-activity-card")
+                if height>470:
+                    contained+=(".prestige-stat-pair",)
+                for selector in contained:
                     assert page.evaluate("""selector => {
                       const root=document.querySelector('.one-stage').getBoundingClientRect();
                       const rect=document.querySelector(selector).getBoundingClientRect();
@@ -48,6 +111,11 @@ try:
                 assert page.locator('[data-public-github-feed]').count()==2
                 assert page.locator('[data-public-spotify]').count()==1
                 assert page.locator('.prestige-command [data-public-work]').count()==1
+                # The movie and reactive canvas are decorative layers only.
+                assert page.locator('[data-living-scene]').count()==1
+                assert page.locator('[data-living-canvas]').count()==1
+                assert page.locator('[data-motion-toggle]').count()==1
+                assert page.locator('[data-motion-toggle]').is_disabled(),(engine,width,height,"honor reduced motion")
 
                 # Reproduce the reported real-playback case with synthetic
                 # text *only inside local browser tests*. Provider secrets and
@@ -99,9 +167,10 @@ try:
                   progress.value=original.value;
                   return result;
                 }""")
-                assert all(spotify_layout[key] for key in ("inside","noHeadOverlap",
-                    "noHeaderLabelCollision","noArtworkOverlap","noTextOverlap","noteHidden",
-                    "titleVisible","stateVisible")),(engine,width,height,"live spotify layout",spotify_layout)
+                if height>470:
+                    assert all(spotify_layout[key] for key in ("inside","noHeadOverlap",
+                        "noHeaderLabelCollision","noArtworkOverlap","noTextOverlap","noteHidden",
+                        "titleVisible","stateVisible")),(engine,width,height,"live spotify layout",spotify_layout)
 
                 # The Home tile is a dated owner-recorded GPT snapshot;
                 # Activity retains a separate consent-filtered live card.
@@ -125,7 +194,7 @@ try:
                 assert page.locator("#one-activity-github").get_attribute("data-limit")==str(expected_activity),(engine,width,height,"activity capacity")
                 # In compact view the public playback title and GPT value must
                 # remain inside their actual tiles, not just the document.
-                if width<=760 or height<=470:
+                if width<=760:
                     assert page.evaluate("""() => {
                       const spotify=document.querySelector(".one-signal-bottom .p-spotify-card");
                       const recorded=document.querySelector(".one-signal-bottom .one-gpt-record");
@@ -176,6 +245,30 @@ try:
                         .map(el=>el.tagName+" "+el.className);
                     }""",key)
                     assert not outliers,(engine,width,height,key,"off-canvas content",outliers)
+                    if key=="experience":
+                        assert page.locator(".career-intro .career-name").count()==1
+                        assert page.locator(".one-method-path li").count()==6
+                        assert page.locator(".one-method-control").count()==4
+                        assert page.locator(".career-intro h1").is_visible()
+                        # Actual selected-gate behavior, not only static labels.
+                        engineering=page.locator('[data-method-select="engineering"]')
+                        engineering.click()
+                        assert engineering.get_attribute("aria-pressed")=="true"
+                        assert page.locator('[data-method-panel="engineering"]').is_visible()
+                        assert page.locator('[data-method-panel="product"]').is_hidden()
+                        engineering.focus()
+                        page.keyboard.press("ArrowRight")
+                        assert page.locator('[data-method-select="stewardship"]').get_attribute("aria-pressed")=="true"
+                        assert page.locator('[data-method-panel="stewardship"]').is_visible()
+                        page.keyboard.press("Home")
+                        assert page.locator('[data-method-select="product"]').get_attribute("aria-pressed")=="true"
+                        assert page.locator('[data-method-panel="product"]').is_visible()
+                        assert page.evaluate("""() => {
+                          const intro=document.querySelector('.career-intro').getBoundingClientRect();
+                          const scene=document.querySelector('.career-scene').getBoundingClientRect();
+                          return intro.top>=scene.top-3&&intro.bottom<=scene.bottom+3
+                            && intro.left>=scene.left-3&&intro.right<=scene.right+3
+                        }"""),(engine,width,height,"career identity clipped")
                     if key=="work":
                         # The source-only screenshot must actually show the new
                         # vector illustrations, not a transient blank placeholder.
@@ -230,6 +323,15 @@ try:
             })""")
             assert "prestige-nebula" in animation["backdrop"],(engine,"ambient animation",animation)
             assert "prestige-reveal" in animation["intro"],(engine,"identity entrance",animation)
+            button=motion_page.locator('[data-motion-toggle]')
+            assert button.is_enabled(),(engine,"motion control enabled")
+            assert button.get_attribute("aria-pressed")=="true"
+            button.click()
+            assert button.get_attribute("aria-pressed")=="false"
+            assert motion_page.locator('[data-living-scene]').get_attribute("data-motion")=="off"
+            button.click()
+            assert button.get_attribute("aria-pressed")=="true"
+            assert motion_page.locator('[data-living-scene]').get_attribute("data-motion")=="on"
             motion_context.close()
             browser.close()
 finally:

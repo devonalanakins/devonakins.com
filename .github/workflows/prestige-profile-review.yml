@@ -4,6 +4,7 @@ on:
     branches:
       - feat/professional-editorial-identity-20261111
       - fix/prestige-spotify-crisp-art-20261111
+      - feat/proof-of-work-profile-20261111
 permissions:
   contents: read
 concurrency:
@@ -51,6 +52,8 @@ jobs:
           python3 -c 'from playwright.sync_api import sync_playwright; print("Playwright bindings available")'
       - name: Verify real rendered profile, all six panels and short landscape
         run: python3 tests/one_screen_browser_acceptance.py
+      - name: Verify task-based visitor journeys and no-JavaScript deep routes
+        run: python3 tests/one_screen_visitor_journeys.py
       - name: Retain source-only screenshots for design review
         if: always()
         uses: actions/upload-artifact@v4
@@ -60,4 +63,52 @@ jobs:
             browser-qa/one-screen/
             dist/
           if-no-files-found: warn
+          retention-days: 14
+
+  # A separate host-runner job verifies that an actual, high-definition MP4
+  # is checksum-verified against approved source media. The browser container
+  # may lack ffmpeg but can still validate the pinned source and UI fallback.
+  # No production publishing occurs in this job.
+  motion_video:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+      - name: Install Ubuntu-packaged FFmpeg for reproducible H.264 motion build
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends ffmpeg
+          command -v ffmpeg
+          command -v ffprobe
+          ffmpeg -hide_banner -encoders | grep libx264
+      - run: npm ci
+      - name: Build the exact source-qualified one-screen variant with approved HD movie
+        env:
+          PROFESSIONAL_SITE_CANDIDATE: "1"
+          ONE_SCREEN_SITE_CANDIDATE: "1"
+          V5_PUBLIC_SITE_CANDIDATE: "0"
+          REQUIRE_APPROVED_NEURAL_ART: "1"
+        run: npm run build
+      - name: Verify generated MP4 dimensions, duration and Worker packaging
+        run: |
+          test -s public/professional/living-atmosphere.mp4
+          test -s public/professional/living-atmosphere.png
+          ffprobe -v error -select_streams v:0 -show_entries stream=codec_name,width,height -of csv=p=0 public/professional/living-atmosphere.mp4 | grep -Fx 'h264,1920,1080'
+          node --test tests/living-atmosphere.test.mjs
+          node scripts/verify-one-screen-candidate.mjs
+      - name: Attach real playable 1080p movie for design review
+        uses: actions/upload-artifact@v4
+        with:
+          name: living-atmosphere-hd
+          path: |
+            public/professional/living-atmosphere.mp4
+            public/professional/living-atmosphere.png
           retention-days: 14
