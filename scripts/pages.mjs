@@ -1,5 +1,6 @@
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import {renderProfessionalPage, renderProfessionalProjectPage, PROFESSIONAL_ROUTES} from "../src/professional/site.mjs";
+import {renderOneScreenHome} from "../src/professional/one-screen.mjs";
 import { pages } from "../src/content.mjs";
 import { approvedPublicProjects as projects } from "../src/publication-manifest.mjs";
 import { promotePortraitHome } from "../src/portrait-home.mjs";
@@ -19,6 +20,8 @@ const gptSnapshot = validatePublicGptSnapshot(JSON.parse(await readFile("public/
 const fullV5Candidate = process.env.V5_PUBLIC_SITE_CANDIDATE === "1";
 const v5Candidate = process.env.V5_PUBLIC_HOME_CANDIDATE === "1";
 const professionalCandidate = process.env.PROFESSIONAL_SITE_CANDIDATE === "1";
+// Explicit preview-only homepage design. Protected production defaults remain unchanged.
+const oneScreenCandidate = process.env.ONE_SCREEN_SITE_CANDIDATE === "1";
 const professionalPaths = new Map(Object.entries(PROFESSIONAL_ROUTES).map(([key,path]) => [path,key]));
 const professionalLegacyDestinations = Object.freeze({
   home: "/", work: "/work/", research: "/work/", contact: "/contact/",
@@ -36,7 +39,7 @@ function repairProfessionalLegacyNavigation(html) {
   });
 }
 
-await writeFile("index.html", professionalCandidate ? renderProfessionalPage("home") : fullV5Candidate ? renderV5PublicPage("home") : v5Candidate ? renderV5PublicHomepage() : home);
+await writeFile("index.html", oneScreenCandidate ? renderOneScreenHome() : professionalCandidate ? renderProfessionalPage("home") : fullV5Candidate ? renderV5PublicPage("home") : v5Candidate ? renderV5PublicHomepage() : home);
 const all = [...new Set([
   ...pages.map(({ path }) => path),
   ...(professionalCandidate ? [...professionalPaths.keys()] : []),
