@@ -1,4 +1,4 @@
-import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { mkdir, readFile, readdir, writeFile } from "node:fs/promises";
 import {renderProfessionalPage, renderProfessionalProjectPage, PROFESSIONAL_ROUTES} from "../src/professional/site.mjs";
 import { pages } from "../src/content.mjs";
 import { approvedPublicProjects as projects } from "../src/publication-manifest.mjs";
@@ -8,11 +8,22 @@ import { V5_PUBLIC_ROUTES } from "../src/v5/public-routes.mjs";
 import { publicNotes } from "../src/v5/public-notes.mjs";
 import { renderImmersiveRoute } from "../src/immersive-routes.mjs";
 import { validatePublicGptSnapshot } from "../src/gpt-profile.mjs";
+import { validateDatedGptCapture } from "../src/professional/gpt-capture.mjs";
 
 // All public routes use one independently audited cinematic shell. No legacy
 // homepage, navbar or old global CSS is generated for deep-linked pages.
 const home = promotePortraitHome(await readFile("v2/index.html", "utf8"));
 const gptSnapshot = validatePublicGptSnapshot(JSON.parse(await readFile("public/v2/usage-snapshot.json", "utf8")));
+const datedGptFiles = (await readdir("public/gpt/snapshots")).filter(name=>/^\d{4}-\d{2}-\d{2}\.json$/.test(name)).sort();
+const datedGptCaptures = await Promise.all(datedGptFiles.map(async name => {
+  const capture=validateDatedGptCapture(JSON.parse(await readFile("public/gpt/snapshots/"+name,"utf8")));
+  if(name !== capture.captureDate+".json") throw new Error("Capture filename/date mismatch: "+name);
+  return capture;
+}));
+if (!datedGptCaptures.length) throw new Error("Dated GPT capture history is missing");
+const datedGptCapture=datedGptCaptures.at(-1);
+const priorDatedGptCaptures=datedGptCaptures.slice(0,-1);
+
 // Explicit build-time candidate only. Ordinary builds keep the verified V4
 // document, including on production's existing deploy workflow. No URL/env
 // runtime parameter can switch a deployed site without a reviewed rebuild.
@@ -51,7 +62,7 @@ for (const path of all) {
   const routeKey=Object.keys(V5_PUBLIC_ROUTES).find(key=>V5_PUBLIC_ROUTES[key]===path);
   const topic=publicNotes.find(n=>path==="/knowledge/"+n.slug+"/");
   const project=projects.find(p=>path==="/work/"+p.slug+"/");
-  const html=professionalCandidate && professionalPaths.has(path) ? renderProfessionalPage(professionalPaths.get(path)) :
+  const html=professionalCandidate && professionalPaths.has(path) ? renderProfessionalPage(professionalPaths.get(path), {datedCapture:datedGptCapture,historicalSnapshot:gptSnapshot,previousCaptures:priorDatedGptCaptures}) :
     fullV5Candidate && routeKey ? renderV5PublicPage(routeKey) :
     fullV5Candidate && topic ? renderV5PublicPage("knowledge",{topic:topic.slug,publicPath:path}) :
     professionalCandidate && project ? renderProfessionalProjectPage(project.slug) :
