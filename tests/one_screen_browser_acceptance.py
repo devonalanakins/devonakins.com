@@ -32,7 +32,7 @@ try:
                 assert page.locator(".prestige-player").count()==1,(engine,width,height,"prestige identity")
                 assert page.locator(".prestige-command").count()==1,(engine,width,height,"public signal board")
                 assert page.locator(".prestige-identity-copy h1").is_visible()
-                assert "OPERATIONS ARCHITECT" in page.locator(".prestige-subtitle").inner_text()
+                assert "SOFTWARE DEVELOPER" in page.locator(".prestige-subtitle").inner_text()
                 # High-level gamer styling is editorial, not invented XP, levels, or ranks.
                 assert page.locator(".prestige-build-row").count()==3
                 for selector in (".prestige-player",".prestige-command",".prestige-player-actions",".prestige-activity-card",".prestige-stat-pair"):
@@ -47,6 +47,7 @@ try:
                 assert page.locator('[data-one-view]:visible').count()==1,(engine,width,height,"initial panel")
                 assert page.locator('[data-public-github-feed]').count()==2
                 assert page.locator('[data-public-spotify]').count()==1
+                assert page.locator('.prestige-command [data-public-work]').count()==1
                 # The Home tile is a dated owner-recorded GPT snapshot;
                 # Activity retains a separate consent-filtered live card.
                 assert page.locator('[data-public-gpt]').count()==1,(engine,width,height,"activity GPT")
