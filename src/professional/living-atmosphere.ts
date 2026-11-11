@@ -79,22 +79,57 @@ function draw(t:number){
   const points=nodes.slice(0,nodeCount).map(n=>projected(n,t));
   context.save();
   context.globalCompositeOperation="screen";
+  // A controlled spectrum of soft light anchors the native field in space.
+  // Volumetric gradients never represent any user or development activity.
+  const span=Math.min(width,height);
+  softLight(.53*width+pointerX*6,.475*height+pointerY*3,span*.235,
+    "246,165,127",.78*intensity);
+  softLight(.625*width,.30*height,span*.19,"88,224,217",.50*intensity);
+  softLight(.35*width,.71*height,span*.24,"166,103,230",.43*intensity);
+  softLight(.66*width,.73*height,span*.18,"82,162,214",.35*intensity);
 
-  // Translucent line-ruled terrain creates depth without painted smoke.
-  const waves=mobile?9:24;
-  for(let j=0;j<waves;j++){
-    const baseY=(.72+j*.0105)*height;
+  // A continuous point-cloud landscape replaces flat graphic waves.
+  // Physical pixel count stays bounded; mobile uses less than half as many dots.
+  const meshRows=mobile?13:25,meshCols=mobile?29:53;
+  const stepX=(mobile?.79:.63)*width/meshCols;
+  for(let row=0;row<meshRows;row++){
+    const z=row/(meshRows-1);
+    const rowY=(.675+z*.23)*height;
+    const left=(mobile?.13:.245)*width;
     context.beginPath();
-    for(let k=0;k<=27;k++){
-      const x=(.25+k*.022)*width;
-      const y=baseY+Math.sin(k*.31+j*.24+t*.14)*height*.008+
-        Math.sin(k*.12+j*.34)*height*.012;
-      if(k===0)context.moveTo(x,y);else context.lineTo(x,y);
+    for(let col=0;col<=meshCols;col++){
+      const u=col/meshCols;
+      const x=left+col*stepX;
+      const swell=Math.sin(u*8.2+z*2.4+t*.07)*.017+
+        Math.sin(u*14.9-z*4.1-t*.10)*.009;
+      const lift=Math.exp(-Math.pow((u-.53)*3.1,2))*.076;
+      const y=rowY+(swell-lift*(1-z*.45))*height;
+      if(col===0)context.moveTo(x,y);else context.lineTo(x,y);
     }
-    context.strokeStyle="rgba("+(j%4===0?"204,138,214":"96,192,196")+","+
-      (j%5===0?.09:.033)*intensity+")";
-    context.lineWidth=j%6===0?.85:.4;
+    const luminous=Math.sin(Math.PI*z)*Math.sin(Math.PI*z);
+    context.lineWidth=.4+z*.42;
+    context.strokeStyle="rgba("+(row%4===0?"206,137,229":"84,209,203")+","+
+      ((.022+luminous*.082)*intensity).toFixed(3)+")";
     context.stroke();
+  }
+  for(let row=0;row<meshRows;row++){
+    const z=row/(meshRows-1);
+    const rowY=(.675+z*.23)*height;
+    for(let col=0;col<=meshCols;col++){
+      const u=col/meshCols;
+      const x=(mobile?.13:.245)*width+col*stepX;
+      const swell=Math.sin(u*8.2+z*2.4+t*.07)*.017+
+        Math.sin(u*14.9-z*4.1-t*.10)*.009;
+      const lift=Math.exp(-Math.pow((u-.53)*3.1,2))*.076;
+      const y=rowY+(swell-lift*(1-z*.45))*height;
+      const center=Math.exp(-Math.pow((u-.52)*2.6,2));
+      const twinkle=(Math.sin(u*27+z*13+t*.29)+1)*.5;
+      const alpha=(.025+center*(.09+.22*twinkle)*Math.sin(Math.PI*z))*intensity;
+      context.fillStyle="rgba("+(col%6===0?"231,148,230":"92,221,210")+","+
+        Math.min(.5,alpha).toFixed(3)+")";
+      const size=center>.5?1.35:.85;
+      context.fillRect(x,y,size,size);
+    }
   }
 
   for(let i=0;i<edges.length;i++){
@@ -106,10 +141,21 @@ function draw(t:number){
     context.beginPath();context.moveTo(a.x,a.y);
     context.quadraticCurveTo(control.x,control.y,b.x,b.y);
     const tone=tones[link.tone>.68?2:link.tone>.32?1:0];
-    context.strokeStyle="rgba("+tone+","+
-      Math.min(.25,(.07+near*.125)*intensity).toFixed(3)+")";
-    context.lineWidth=.45+near*.54;
+    // Vary focus by depth, avoiding a uniform triangulated-wireframe look.
+    const focus=Math.exp(-Math.pow((a.x/width-.54)*2.6,2));
+    const alpha=Math.min(.52,(.095+near*.26)*(.63+focus*.8)*intensity);
+    context.strokeStyle="rgba("+tone+","+alpha.toFixed(3)+")";
+    context.lineWidth=.45+near*.85;
     context.stroke();
+    if(i%23===0&&!mobile){
+      context.save();
+      context.shadowBlur=10;
+      context.shadowColor="rgba("+tone+",.52)";
+      context.strokeStyle="rgba("+tone+","+(alpha*.62).toFixed(3)+")";
+      context.lineWidth=1.3;
+      context.stroke();
+      context.restore();
+    }
   }
 
   // Long orbital paths, intentionally incomplete rather than concentric rings.
@@ -123,8 +169,9 @@ function draw(t:number){
         width*(.66-j*.013),height*(.84-j*.014),
         width*(.78-j*.012),height*(.33+j*.038)
       );
-      context.strokeStyle="rgba("+tones[j%3]+","+(j%3===0?.13:.056)*intensity+")";
-      context.lineWidth=j%3===0?1.1:.6;
+      context.strokeStyle="rgba("+tones[j%3]+","+
+        ((j%3===0?.28:.105)*intensity).toFixed(3)+")";
+      context.lineWidth=j%3===0?1.35:.76;
       context.stroke();
     }
   }
@@ -132,16 +179,25 @@ function draw(t:number){
     const n=nodes[i],p=points[i];
     const r=mobile?.58+n.z*.65:.64+n.z*1.12*n.scale;
     const selected=i%19===0;
-    if(selected)softLight(p.x,p.y,mobile?13:22,tones[i%3],.55*intensity);
+    if(selected)softLight(p.x,p.y,mobile?16:33,tones[i%3],.77*intensity);
     context.beginPath();context.arc(p.x,p.y,selected?r*1.65:r,0,Math.PI*2);
     context.fillStyle="rgba("+tones[n.tone>.69?2:n.tone>.35?1:0]+","+
       Math.min(.92,(selected?.81:.19+.32*n.z)*intensity).toFixed(3)+")";
     context.fill();
   }
   const focalX=.522*width+pointerX*3,focalY=.48*height+pointerY*2;
-  softLight(focalX,focalY,mobile?27:57,"252,179,138",mobile?.46:.72);
-  context.beginPath();context.arc(focalX,focalY,mobile?2.2:3.1,0,Math.PI*2);
-  context.fillStyle="rgba(255,224,191,.90)";context.fill();
+  softLight(focalX,focalY,mobile?48:98,"252,179,138",mobile?.66:1.0);
+  softLight(focalX,focalY,mobile?19:37,"255,220,174",mobile?.6:.86);
+  for(let ring=0;ring<3;ring++){
+    context.beginPath();
+    context.arc(focalX,focalY,(mobile?8:12)+ring*(mobile?9:17),0,Math.PI*2);
+    context.strokeStyle="rgba(255,195,151,"+
+      ((ring===0?.52:ring===1?.28:.12)*intensity).toFixed(3)+")";
+    context.lineWidth=ring===0?1.25:.72;
+    context.stroke();
+  }
+  context.beginPath();context.arc(focalX,focalY,mobile?2.6:3.8,0,Math.PI*2);
+  context.fillStyle="rgba(255,228,197,.98)";context.fill();
 
   // Sparse moving electrical impulses; never used as a fabricated live-state signal.
   if(t>0){
