@@ -7,13 +7,68 @@
  * On ffmpeg-less browser CI we render the poster and use the same CSS/canvas fallback.
  */
 import sharp from "sharp";
-import {mkdir,writeFile,rm,stat} from "node:fs/promises";
+import {mkdir,writeFile,rm,stat,copyFile,readFile} from "node:fs/promises";
+import {existsSync} from "node:fs";
+import {createHash} from "node:crypto";
+import {dirname} from "node:path";
 import {join} from "node:path";
 import {tmpdir} from "node:os";
 import {spawnSync} from "node:child_process";
 const W=1920,H=1080,FPS=24,FRAMES=96;
 const output=process.argv[2]||"public/professional/living-atmosphere.mp4";
 const poster=process.argv[3]||"public/professional/living-atmosphere.png";
+
+/**
+ * Owner-approved neural-cosmos art is the preferred video. Content SHA-256
+ * pins prevent accidental substitutions or unaudited public-facing assets.
+ * The generated procedural atmosphere remains a reproducible source-only
+ * fallback until the owner files are included in the reviewed branch.
+ */
+const APPROVED_VIDEO="assets/approved/neural-cosmos-1920x1080.mp4";
+const APPROVED_POSTER="assets/approved/neural-cosmos-1920x1080.png";
+const APPROVED_DIGESTS=Object.freeze({
+  video:"cee2ca738e0be5d7fb635a19433d8785c2f51930c0c39560958e23d73c8f5c4d",
+  poster:"5ce613614ef94f4854c58ee32acc9f9a8236d1defa465dd3ae52d7e4f41aec6e",
+});
+const approvedVideoPresent=existsSync(APPROVED_VIDEO);
+const approvedPosterPresent=existsSync(APPROVED_POSTER);
+if(approvedVideoPresent!==approvedPosterPresent)
+  throw new Error("Approved neural-cosmos source is incomplete: both video and poster are required");
+if(approvedVideoPresent){
+  const [videoBytes,posterBytes]=await Promise.all([readFile(APPROVED_VIDEO),readFile(APPROVED_POSTER)]);
+  const digest=bytes=>createHash("sha256").update(bytes).digest("hex");
+  if(digest(videoBytes)!==APPROVED_DIGESTS.video||digest(posterBytes)!==APPROVED_DIGESTS.poster)
+    throw new Error("Approved neural-cosmos checksum mismatch; new art requires explicit review");
+  if(videoBytes.length>2_500_000||posterBytes.length>8_000_000)
+    throw new Error("Approved neural-cosmos media exceeds reviewed source budget");
+  const metadata=await sharp(posterBytes).metadata();
+  if(metadata.width!==1920||metadata.height!==1080||metadata.format!=="png")
+    throw new Error("Approved neural-cosmos poster must be 1920x1080 PNG");
+  const probe=spawnSync("ffprobe",["-v","error","-show_entries",
+    "format=duration:stream=codec_name,codec_type,width,height,r_frame_rate",
+    "-of","json",APPROVED_VIDEO],{encoding:"utf8",timeout:10000});
+  if(probe.status!==0)throw new Error("Approved neural-cosmos movie cannot be verified by ffprobe");
+  let info;
+  try{info=JSON.parse(probe.stdout);}catch{throw new Error("Invalid video probe result");}
+  const streams=info.streams||[];
+  if(streams.length!==1||streams[0].codec_type!=="video"||
+     streams[0].codec_name!=="h264"||streams[0].width!==1920||
+     streams[0].height!==1080||streams[0].r_frame_rate!=="24/1"||
+     Number(info.format?.duration)<3||Number(info.format?.duration)>5)
+    throw new Error("Approved movie must be silent 1080p/24fps H.264, between 3 and 5 seconds");
+  await mkdir(dirname(output),{recursive:true});
+  await mkdir(dirname(poster),{recursive:true});
+  await copyFile(APPROVED_VIDEO,output);
+  // A bounded palette poster is sufficient for the no-motion fallback and
+  // avoids packaging the 4.9 MB source PNG in the Cloudflare Worker.
+  await sharp(posterBytes).png({palette:true,colors:128,quality:80,effort:10}).toFile(poster);
+  console.log("Using checksum-verified owner-approved 1080p neural-cosmos art; video:",
+    videoBytes.length,"bytes; poster:",(await stat(poster)).size,"bytes");
+  process.exit(0);
+}
+if(process.env.REQUIRE_APPROVED_NEURAL_ART==="1")
+  throw new Error("Visual acceptance blocked: owner-approved neural-cosmos assets are missing");
+
 let seed=2077;
 const random=()=>{seed=(1664525*seed+1013904223)>>>0;return seed/4294967296;};
 const segments=[];
