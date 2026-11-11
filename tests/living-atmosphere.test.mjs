@@ -27,6 +27,9 @@ test("video is original source-generated artwork; no vendor or client content",a
   assert.match(source,/const W=1920,H=1080,FPS=24,FRAMES=96/);
   assert.match(source,/libx264/);
   assert.match(source,/faststart/);
+  // Cinematic detail is built with real fibers, not giant circle silhouettes.
+  assert.match(source,/neuralBrain\(\)/);
+  assert.doesNotMatch(source,/<ellipse\s/);
   assert.match(source,/ffmpeg unavailable/);
   assert.doesNotMatch(source,/fetch\(|secret|token|clinical/i);
   const pages=await readFile(new URL("../scripts/pages.mjs",import.meta.url),"utf8");
@@ -42,6 +45,7 @@ test("motion respects preferences, page visibility and an explicit pause button"
     assert.ok(js.includes(term),"Missing motion control: "+term);
   assert.match(js,/video\.play\(\)\.catch/);
   assert.match(js,/video\?\.pause\(\)/);
+  assert.doesNotMatch(js,/createRadialGradient|context\.arc\(/);
   assert.match(css,/prefers-reduced-motion:reduce/);
   assert.match(css,/\.one-world-video/);
   assert.doesNotMatch(css,/@import|https?:\/\//);
