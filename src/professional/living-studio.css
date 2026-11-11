@@ -241,3 +241,10 @@
   .one-body .one-header-email{display:inline-flex;align-items:center;justify-content:center;gap:13px;white-space:nowrap}
   .one-body .one-header-email span{font-size:18px;line-height:1}
 }
+
+/* Match the owner reference's high, oversized editorial hero on wide screens.
+ * Keep tablet, phone and short-landscape rules unchanged. */
+@media(min-width:1200px) and (min-height:761px){
+  .one-body .concept-intro{justify-content:flex-start;padding-top:clamp(34px,4.1vw,70px)}
+  .one-body .concept-intro h1{font-size:clamp(52px,4.05vw,70px)}
+}
