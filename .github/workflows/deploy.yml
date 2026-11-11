@@ -79,6 +79,12 @@ jobs:
         # The reviewed guard requires V5-CUTOVER-APPROVED for a V5 cutover.
         # Choosing v5 with the current v4 hotfix commit must fail visibly.
         run: node scripts/manual-release-guard.mjs
+      - name: Prepare cinematic MP4 build only for approved one-screen release
+        if: inputs.release_variant == 'one-screen'
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends ffmpeg
+          ffmpeg -hide_banner -encoders | grep libx264
       - name: Build and validate Worker
         run: |
           set -eu
