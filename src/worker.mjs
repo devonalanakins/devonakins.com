@@ -280,7 +280,7 @@ export function createHandler(assets, release, options = {}) {
         const headers={...securityHeaders,'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store','CDN-Cache-Control':'no-store'};
         return new Response(request.method==='HEAD'?null:JSON.stringify(await liveSignal(env)),{headers});
       }
-      if (url.pathname === "/api/github/public-feed") {
+      if (options.professionalCandidate === true && url.pathname === "/api/github/public-feed") {
         const headers = {
           ...securityHeaders,
           "Content-Type": "application/json; charset=utf-8",
