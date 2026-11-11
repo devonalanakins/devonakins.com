@@ -1,0 +1,33 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {readFile} from 'node:fs/promises';
+import {renderOneScreenHome} from '../src/professional/one-screen.mjs';
+const html=renderOneScreenHome({motionAssetAvailable:true});
+test('concept fidelity: hero, sourced workstation, quality, process, projects and activity ribbon exist',()=>{
+  for(const marker of ['concept-intro','concept-visual','concept-live','concept-signal-band',
+    'concept-process','concept-quality','concept-featured','concept-focus','concept-activity-ribbon'])
+      assert.match(html,new RegExp('class="[^"]*'+marker));
+  assert.equal((html.match(/data-process-step=/g)||[]).length,6);
+  assert.equal((html.match(/data-concept-gate=/g)||[]).length,4);
+  assert.match(html,/data-github-highlights/);
+  assert.match(html,/data-github-count="push"/);
+  assert.match(html,/data-public-github-feed/);
+  assert.match(html,/data-public-spotify/);
+  assert.match(html,/data-public-work data-work-mode="idle"/);
+  assert.match(html,/data-public-gpt/);
+  assert.doesNotMatch(html,/99\.9%|100% Operational|actively developing|live coding confirmed|Nona PR/i);
+});
+test('new navigation stays a six-view viewport, with no external dependencies',async()=>{
+  assert.equal((html.match(/role="tabpanel"/g)||[]).length,6);
+  assert.equal((html.match(/<h1(?:\s|>)/g)||[]).length,6);
+  assert.match(html,/concept-console\.css/);
+  assert.match(html,/concept-console\.ts/);
+  const css=await readFile(new URL('../src/professional/concept-console.css',import.meta.url),'utf8');
+  const ts=await readFile(new URL('../src/professional/concept-console.ts',import.meta.url),'utf8');
+  assert.match(css,/@media\(max-width:760px\)/);
+  assert.match(css,/prefers-reduced-motion:reduce/);
+  assert.doesNotMatch(css,/@import|url\(['"]?https?:/);
+  assert.match(ts,/ArrowRight/);
+  assert.match(ts,/Home/);
+  assert.doesNotMatch(ts,/fetch\(|localStorage|sessionStorage|Date\.now/);
+});

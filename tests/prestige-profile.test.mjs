@@ -6,7 +6,7 @@ import {renderOneScreenHome} from '../src/professional/one-screen.mjs';
 const html=renderOneScreenHome();
 test('prestige profile preserves the six existing sections and truth-qualified telemetry',()=>{
   assert.match(html,/prestige-home/);
-  assert.match(html,/DA \/ PROFESSIONAL PROFILE/);
+  assert.match(html,/DEVON \/ SYSTEMS \/ PEOPLE/);
   assert.match(html,/SOFTWARE DEVELOPER/);
   assert.match(html,/I engineer independent software/);
   for(const n of ['home','experience','work','activity','writing','contact'])
