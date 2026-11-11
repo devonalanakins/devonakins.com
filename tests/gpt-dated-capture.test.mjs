@@ -61,7 +61,7 @@ test("professional GPT page shows the new capture and preserves the prior dated 
 });
 
 test("earlier new captures remain accessible in the dated history if a later reading is added",()=>{
-  const later=clone();later.captureDate="2026-11-11";later.capturedAt="2026-11-11T16:00:00Z";
+  const later=clone();later.captureDate="2026-11-11";later.capturedAt="2026-11-11T03:06:00Z";
   const markup=renderDatedGptCapture(later,historical,[clone()]);
   assert.match(markup,/href="\/gpt\/snapshots\/2026-11-10\.json"/);
   assert.match(markup,/526,339,878 seven-day tokens/);
