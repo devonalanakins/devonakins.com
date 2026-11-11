@@ -19,7 +19,7 @@ try:
     with sync_playwright() as pw:
         for engine in ("chromium","webkit"):
             browser=getattr(pw,engine).launch()
-            for width,height in ((1440,900),(1024,768),(390,844),(320,640),(844,390)):
+            for width,height in ((1440,900),(1440,735),(1366,720),(1024,768),(390,844),(320,640),(844,390)):
                 mobile=width <= 844
                 context=browser.new_context(viewport={"width":width,"height":height},device_scale_factor=1,reduced_motion="reduce",is_mobile=mobile,has_touch=mobile)
                 page=context.new_page()
@@ -48,6 +48,61 @@ try:
                 assert page.locator('[data-public-github-feed]').count()==2
                 assert page.locator('[data-public-spotify]').count()==1
                 assert page.locator('.prestige-command [data-public-work]').count()==1
+
+                # Reproduce the reported real-playback case with synthetic
+                # text *only inside local browser tests*. Provider secrets and
+                # the public site are never modified.
+                spotify_layout=page.evaluate("""() => {
+                  const card=document.querySelector('.prestige-stat-pair .p-spotify-card');
+                  const title=card.querySelector('[data-spotify-title]');
+                  const artist=card.querySelector('[data-spotify-artist]');
+                  const note=card.querySelector('[data-spotify-note]');
+                  const state=card.querySelector('[data-spotify-state]');
+                  const progress=card.querySelector('[data-spotify-progress]');
+                  const original={mode:card.dataset.spotifyMode,title:title.textContent,
+                    artist:artist.textContent,note:note.textContent,state:state.textContent,
+                    hidden:progress.hidden,max:progress.max,value:progress.value};
+                  card.dataset.spotifyMode='playing';
+                  title.textContent='The Longest Synthwave Soundtrack Title That Could Ever Exist';
+                  artist.textContent='A Collaborative Producer Featuring Another Artist';
+                  state.textContent='IN THE ZONE';
+                  note.textContent='Owner-defined coding signal from public Spotify playback; editor activity separately observed.';
+                  progress.hidden=false;progress.max=180000;progress.value=90000;
+                  const visible=(el)=>getComputedStyle(el).display!=='none' &&
+                    getComputedStyle(el).visibility!=='hidden' && el.getClientRects().length>0;
+                  const bounds=el=>el.getBoundingClientRect();
+                  const inside=(el,box)=>{const a=bounds(el),b=bounds(box);
+                    return a.left>=b.left-2&&a.right<=b.right+2&&a.top>=b.top-2&&a.bottom<=b.bottom+2};
+                  const disjoint=(a,b)=>{const x=bounds(a),y=bounds(b);
+                    return x.right<=y.left+1||y.right<=x.left+1||x.bottom<=y.top+1||y.bottom<=x.top+1};
+                  const heading=card.querySelector('.p-spotify-heading');
+                  const header=card.querySelector('.p-signal-head');
+                  const body=card.querySelector('.p-spotify-body');
+                  const art=card.querySelector('.p-spotify-art');
+                  const meta=card.querySelector('.p-spotify-meta');
+                  const links=card.querySelectorAll('.p-text-link');
+                  const required=[header,body,title,state,...[artist,progress,...links].filter(visible)];
+                  const result={inside:required.every(el=>inside(el,card)),
+                    noHeadOverlap:disjoint(header,body),
+                    noHeaderLabelCollision:disjoint(heading,state),
+                    noArtworkOverlap:!visible(art)||disjoint(art,meta),
+                    noTextOverlap:!visible(artist)||disjoint(title,artist),
+                    noteHidden:!visible(note),titleVisible:visible(title),stateVisible:visible(state),
+                    cardWidth:bounds(card).width};
+                  // Return the page to its actual provider-driven status before
+                  // the screenshots are taken: never retain fabricated playback.
+                  if(original.mode===undefined)delete card.dataset.spotifyMode;
+                  else card.dataset.spotifyMode=original.mode;
+                  title.textContent=original.title;artist.textContent=original.artist;
+                  note.textContent=original.note;state.textContent=original.state;
+                  progress.hidden=original.hidden;progress.max=original.max;
+                  progress.value=original.value;
+                  return result;
+                }""")
+                assert all(spotify_layout[key] for key in ("inside","noHeadOverlap",
+                    "noHeaderLabelCollision","noArtworkOverlap","noTextOverlap","noteHidden",
+                    "titleVisible","stateVisible")),(engine,width,height,"live spotify layout",spotify_layout)
+
                 # The Home tile is a dated owner-recorded GPT snapshot;
                 # Activity retains a separate consent-filtered live card.
                 assert page.locator('[data-public-gpt]').count()==1,(engine,width,height,"activity GPT")
@@ -64,8 +119,8 @@ try:
                 })""")
                 assert dimensions["doc"] <= height+2,(engine,width,height,dimensions,"no vertical document scroll")
                 assert dimensions["width"] <= width+2,(engine,width,height,dimensions,"no horizontal document scroll")
-                expected_home = 1 if (width<=400 and height<=700) or (width>760 and height<=470) else 2 if width<=760 else 4
-                expected_activity = 2 if (width<=400 and height<=700) or (width>760 and height<=470) else 4 if width<=760 else 6
+                expected_home = 1 if (width<=400 and height<=700) or (width>760 and height<=470) else 2 if width<=760 or (width>760 and height<=800) else 4
+                expected_activity = 2 if (width<=400 and height<=700) or (width>760 and height<=470) else 4 if width<=760 or (width>760 and height<=800) else 6
                 assert page.locator("#one-home-github").get_attribute("data-limit")==str(expected_home),(engine,width,height,"home capacity")
                 assert page.locator("#one-activity-github").get_attribute("data-limit")==str(expected_activity),(engine,width,height,"activity capacity")
                 # In compact view the public playback title and GPT value must
@@ -121,6 +176,26 @@ try:
                         .map(el=>el.tagName+" "+el.className);
                     }""",key)
                     assert not outliers,(engine,width,height,key,"off-canvas content",outliers)
+                    if key=="work":
+                        # The source-only screenshot must actually show the new
+                        # vector illustrations, not a transient blank placeholder.
+                        art=page.evaluate("""async () => {
+                          const names=['operations','systems','site'];
+                          const checked=await Promise.all(names.map(async name => {
+                            const path='/professional/mission-'+name+'.svg';
+                            const response=await fetch(path,{cache:'force-cache'});
+                            if(!response.ok) return false;
+                            const svg=await response.text();
+                            if(!svg.includes('<svg'))return false;
+                            const image=new Image();image.src=path;
+                            try { await image.decode(); } catch { return false; }
+                            const node=document.querySelector('.one-project-'+name+' .one-project-art');
+                            const background=getComputedStyle(node).backgroundImage;
+                            return image.naturalWidth>=1200 && background.includes(path);
+                          }));
+                          return checked.every(Boolean);
+                        }""")
+                        assert art,(engine,width,height,"mission SVG loaded and rendered")
                     if key in ("work","experience","contact"):
                         page.screenshot(path=str(OUT/f"{engine}-{width}x{height}-{key}.png"))
                 tabs.get_by_role("tab",name="Activity").click()

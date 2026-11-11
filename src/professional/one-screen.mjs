@@ -124,6 +124,9 @@ export function renderOneScreenHome({datedCapture=null}={}) {
     '<link rel="stylesheet" href="/src/professional/site.css">'+
     '<link rel="stylesheet" href="/src/professional/one-screen.css">'+
     '<link rel="stylesheet" href="/src/professional/prestige-profile.css">'+
+    '<link rel="preload" as="image" type="image/svg+xml" href="/professional/mission-operations.svg">'+
+    '<link rel="preload" as="image" type="image/svg+xml" href="/professional/mission-systems.svg">'+
+    '<link rel="preload" as="image" type="image/svg+xml" href="/professional/mission-site.svg">'+
     '<script type="module" src="/src/professional/client.ts"></script>'+
     '<script type="module" src="/src/professional/one-screen.ts"></script>'+
     '</head><body class="p-body one-body">'+
