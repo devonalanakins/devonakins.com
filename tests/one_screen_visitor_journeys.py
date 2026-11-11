@@ -65,7 +65,9 @@ try:
 
                 # Task 2: The process must be understandable and its quality gates usable.
                 tabs.get_by_role("tab", name="Profile").click()
-                page.get_by_role("button", name=re.compile("See my process", re.I)).click()
+                page.get_by_role("button", name=re.compile("Get in touch", re.I)).click()
+                assert page.locator('[data-one-view="contact"]').is_visible()
+                tabs.get_by_role("tab", name="Career").click()
                 assert page.locator('[data-one-view="experience"]').is_visible()
                 assert "software developer" in page.locator(".career-intro").inner_text().lower()
                 assert page.locator(".one-method-path li").count() == 6

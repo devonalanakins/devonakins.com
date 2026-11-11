@@ -131,6 +131,7 @@ export function renderOneScreenHome({datedCapture=null,motionAssetAvailable=fals
     '<link rel="stylesheet" href="/src/professional/prestige-profile.css">'+
     '<link rel="stylesheet" href="/src/professional/living-atmosphere.css">'+
     '<link rel="stylesheet" href="/src/professional/concept-console.css">'+
+    '<link rel="stylesheet" href="/src/professional/living-studio.css">'+
     '<link rel="preload" as="image" type="image/svg+xml" href="/professional/mission-operations.svg">'+
     '<link rel="preload" as="image" type="image/svg+xml" href="/professional/mission-systems.svg">'+
     '<link rel="preload" as="image" type="image/svg+xml" href="/professional/mission-site.svg">'+
@@ -145,7 +146,7 @@ export function renderOneScreenHome({datedCapture=null,motionAssetAvailable=fals
     '<span class="one-brand-mark">DA</span><span class="one-brand-type">DEVON<span>AKINS</span><small>.COM</small></span></a>'+
     '<p class="one-header-descriptor">INDEPENDENT DEVELOPER <span>—</span> FLORIDA / REMOTE</p>'+
     tabs("desktop")+
-    '<div class="one-header-actions"><button type="button" class="one-motion-toggle" data-motion-toggle aria-pressed="true" aria-label="Pause background motion" title="Pause background motion"><span class="one-motion-dot" aria-hidden="true"></span><span data-motion-label>Motion on</span></button><a class="one-header-email" href="mailto:devon@anevum.com">CONTACT <span aria-hidden="true">↗</span></a></div></header>'+
+    '<div class="one-header-actions"><button type="button" class="one-motion-toggle" data-motion-toggle aria-pressed="true" aria-label="Pause background motion" title="Pause background motion"><span class="one-motion-dot" aria-hidden="true"></span><span data-motion-label>Motion on</span></button><a class="one-header-email" href="mailto:devon@anevum.com">LET’S TALK <span aria-hidden="true">→</span></a></div></header>'+
     '<main id="one-stage" class="one-stage" tabindex="-1">'+home.replace('<!--ONE_SCREEN_GPT_SLOT-->',homeGpt)+experience+work+activity+writing+contact+'</main>'+
     tabs("mobile")+
     '<footer class="one-footer"><span>© 2026 DEVON ALAN AKINS</span><span class="one-footer-current">ONE MIND. REAL WORK. SOURCE-QUALIFIED SIGNALS.</span>'+

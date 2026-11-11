@@ -6,9 +6,9 @@ import {renderOneScreenHome} from '../src/professional/one-screen.mjs';
 const html=renderOneScreenHome();
 test('prestige profile preserves the six existing sections and truth-qualified telemetry',()=>{
   assert.match(html,/prestige-home/);
-  assert.match(html,/DEVON \/ SYSTEMS \/ PEOPLE/);
+  assert.match(html,/THE LIVING STUDIO/);
   assert.match(html,/SOFTWARE DEVELOPER/);
-  assert.match(html,/I engineer independent software/);
+  assert.match(html,/Independent software developer, product builder/);
   for(const n of ['home','experience','work','activity','writing','contact'])
     assert.match(html,new RegExp('one-panel-'+n));
   assert.match(html,/data-public-github-feed/);
@@ -41,12 +41,23 @@ test('ambient animation is first-party, deterministic and disabled for reduced m
   assert.doesNotMatch(css,/@import|url\(https?:|position:\s*fixed;\s*inset:0;\s*pointer-events:auto/i);
 });
 
-test('compact Spotify HUD reserves space for the real song, and the note lives on the listening page',async()=>{
-  const css=await readFile(new URL('../src/professional/prestige-profile.css',import.meta.url),'utf8');
-  assert.match(css,/\.prestige-stat-pair \.p-spotify-card\s*\{[^}]*display:grid/);
-  assert.match(css,/\.prestige-stat-pair \.p-spotify-body\s*\{[^}]*grid-template-columns:52px minmax\(0,1fr\)/);
-  assert.match(css,/\.prestige-stat-pair \.p-spotify-card \.p-signal-foot\{display:none\}/);
-  assert.match(css,/\.prestige-stat-pair \.p-spotify-meta h3\s*\{[^}]*text-overflow:ellipsis/);
+test('Living Studio unifies public signals without duplicating providers',async()=>{
+  const css=await readFile(new URL('../src/professional/living-studio.css',import.meta.url),'utf8');
+  assert.match(html,/living-studio\.css/);
+  assert.match(html,/studio-project-card--knowledge/);
+  assert.match(html,/studio-project-card--station/);
+  assert.match(html,/href="\/work\/" class="studio-project-card studio-project-card--knowledge"/);
+  assert.match(html,/href="\/work\/devonstation\/" class="studio-project-card studio-project-card--station"/);
+  assert.match(html,/studio-rail-contact/);
+  assert.match(html,/studio-development/);
+  assert.match(html,/studio-spotify/);
+  assert.equal((html.match(/data-public-spotify/g)||[]).length,1);
+  assert.equal((html.match(/data-public-work data-work-mode="idle"/g)||[]).length,1);
+  assert.match(css,/\.studio-spotify \.p-spotify-body\{display:grid/);
+  assert.match(css,/\.studio-project-card/);
+  assert.match(css,/@media\(max-width:760px\)/);
+  assert.match(css,/prefers-reduced-motion:reduce/);
+  assert.doesNotMatch(css,/@import|url\(['"]?https?:/i);
 });
 test('mission artwork uses independent resolution-free assets, never a scaled 2x3 bitmap atlas',async()=>{
   const css=await readFile(new URL('../src/professional/prestige-profile.css',import.meta.url),'utf8');

@@ -1,0 +1,250 @@
+/* Living Studio reference - visual-only override; provider and consent behavior remain unchanged. */
+.one-body{--studio-ivory:#f4efed;--studio-teal:#6be9cd;--studio-lilac:#c99cee;--studio-gold:#e8b78d;background:#060b12}
+.one-body .one-header{height:78px;grid-template-columns:minmax(220px,1fr) auto minmax(150px,.7fr);gap:clamp(10px,2vw,32px);padding:0 clamp(20px,3.6vw,62px);background:#090e17dd;border-bottom:1px solid #eee8e72a;backdrop-filter:blur(24px)}
+.one-body .one-brand{gap:18px}.one-body .one-brand-mark{width:58px;height:52px;padding-right:18px;border:0;border-right:1px solid #ffedd492;border-radius:0;background:none;box-shadow:none;font:400 38px/1 Georgia,serif;color:#fff;letter-spacing:-.17em}
+.one-body .one-brand-type{font-size:clamp(13px,1.4vw,23px);letter-spacing:.26em;color:#f9f4ef;font-weight:650}.one-body .one-brand-type>span{color:inherit;margin-left:.42em}.one-body .one-brand-type small,.one-body .one-header-descriptor{display:none}
+.one-body .one-tabs-desktop .one-tablist{border:0;background:none;border-radius:0;padding:0;gap:clamp(1px,.75vw,18px)}
+.one-body .one-tabs-desktop .one-tablist button{min-height:43px;padding:0 8px;border-radius:0;box-shadow:none;background:none;color:#ddd9df;font-size:clamp(9px,.78vw,12px);font-weight:650;letter-spacing:.13em;text-transform:uppercase}
+.one-body .one-tabs-desktop .one-tablist button[aria-selected=true]{background:none;color:#fff;box-shadow:none}
+.one-body .one-tabs-desktop .one-tablist button[aria-selected=true]:before{content:"";display:inline-block;width:7px;height:7px;margin-right:7px;vertical-align:2px;background:var(--studio-teal);border-radius:50%;box-shadow:0 0 12px var(--studio-teal)}
+.one-body .one-header-actions{gap:10px}.one-body .one-motion-toggle{background:#0b2630b0;border-color:#8faeb655;color:#bdd5d5}
+.one-body .one-header-email{display:grid;place-items:center;min-height:43px;min-width:134px;border:1px solid #e6b88f;border-radius:8px;background:linear-gradient(110deg,#49352aa8,#161920aa);color:#f4d4b6;box-shadow:0 0 16px #e8a67136;padding:0 14px;font-size:10px;font-weight:750}
+.one-body .one-stage{height:calc(100dvh - 78px - 29px);width:100%;max-width:none;padding:clamp(12px,1.65vw,24px) clamp(20px,3.5vw,58px) 10px}
+.one-body .one-footer{height:29px;padding:0 clamp(20px,3.5vw,58px);font-size:8px;background:#070d16d9}
+.one-body .one-world-video{object-position:51% 45%;opacity:.85;filter:saturate(1.25) contrast(1.1)}
+.one-body .one-world:after{background:linear-gradient(90deg,#070b14e4,#080c15c7 22%,#06111a48 50%,#07101bb0 78%,#080d16e6),linear-gradient(0deg,#060a13a2,transparent 29%,transparent 75%,#070b15a1)}
+.one-body .one-world-grid{opacity:.04!important}
+.one-body .concept-console{position:relative;display:grid;grid-template-columns:minmax(0,34fr) minmax(0,36fr) minmax(0,30fr);grid-template-rows:minmax(0,1fr) 91px;gap:clamp(8px,1vw,16px);height:100%;width:100%;align-items:stretch;overflow:hidden}
+.one-body .concept-console>*{min-width:0;min-height:0}
+.one-body .concept-intro{position:static!important;grid-column:1;grid-row:1;align-self:stretch;display:flex;flex-direction:column;justify-content:center;gap:clamp(9px,1.1vw,16px);padding:10px 0 16px 2px;background:transparent!important;border:0!important;border-radius:0;box-shadow:none!important;backdrop-filter:none!important;overflow:visible;z-index:3}
+.one-body .concept-intro .prestige-player-top{display:flex;align-items:center;min-height:0;border:0;padding:0;margin:0 0 10px}
+.one-body .concept-intro .prestige-player-id{font-size:clamp(9px,.84vw,13px);letter-spacing:.29em;color:#f2cec0}
+.one-body .concept-intro .prestige-player-edition,.one-body .concept-intro .prestige-emblem,.one-body .concept-intro .prestige-eyebrow,.one-body .concept-intro .prestige-subtitle{display:none}
+.one-body .concept-intro .prestige-identity-main{display:block;padding:0;margin:0;min-width:0}.one-body .concept-intro .prestige-identity-copy{max-width:none;min-width:0}
+.one-body .concept-intro h1{font:800 clamp(39px,3.7vw,66px)/.99 system-ui,-apple-system,"Segoe UI",sans-serif;letter-spacing:-.064em;color:var(--studio-ivory);max-width:12ch;margin:0;text-transform:uppercase;text-wrap:normal;text-shadow:0 5px 25px #0007}
+.one-body .concept-intro h1 em{font:inherit;color:inherit;text-shadow:inherit;white-space:normal}
+.one-body .concept-intro .prestige-statement{font-size:clamp(14px,1.24vw,19px);line-height:1.48;max-width:29ch;margin:1px 0 8px;color:#e5e2e2}
+.one-body .concept-intro .prestige-player-actions{display:flex;flex-wrap:wrap;gap:11px;margin:0}
+.one-body .concept-intro .one-button{min-height:47px;max-height:none;padding:10px clamp(13px,1.5vw,25px);font-size:clamp(10px,.83vw,13px);font-weight:800;letter-spacing:.055em;text-transform:uppercase;border-radius:9px;white-space:nowrap;gap:12px}
+.one-body .concept-intro .one-button-primary{color:#fff4ff;background:linear-gradient(130deg,#6d447e,#3d254f);border:1px solid #d6a5ee;box-shadow:0 0 25px #c08ae45a,inset 0 1px #fff5}
+.one-body .concept-intro .one-button:not(.one-button-primary){border:0;border-bottom:1px solid #d4c4d4;background:transparent;color:#fff;border-radius:0;padding:9px 5px}
+.one-body .concept-intro .prestige-build{position:absolute;left:0;bottom:0;right:0;z-index:8;display:grid;grid-template-columns:1fr 1fr 1.1fr auto;align-items:center;height:91px;padding:7px 12px;margin:0;gap:0;border:1px solid #cbc8d338;border-left:0;border-right:0;border-radius:0;background:linear-gradient(90deg,#080914ef,#061820db,#080b14f2);backdrop-filter:blur(18px)}
+.one-body .concept-intro .prestige-build-row{display:flex;align-items:center;gap:12px;padding:4px clamp(7px,1vw,20px);min-height:56px;background:none;border:0;border-radius:0}
+.one-body .concept-intro .prestige-build-row:not(:first-child){border-left:1px solid #d5d2dd54}
+.one-body .concept-intro .prestige-build-row:before{content:"◇";flex:none;display:grid;place-items:center;width:35px;font:400 35px/1 Georgia,serif;color:var(--studio-lilac)}
+.one-body .concept-intro .prestige-build-row:nth-child(2):before{content:"✳";font-size:29px;color:var(--studio-teal)}
+.one-body .concept-intro .prestige-build-row:nth-child(3):before{content:"⚙";font-size:29px;color:var(--studio-gold)}
+.one-body .concept-intro .prestige-build-row strong{font-size:clamp(10px,.85vw,13px);font-weight:750;letter-spacing:.07em;color:#f7f3f3;line-height:1.3}
+.one-body .concept-intro .prestige-build-row small{font-size:clamp(9px,.7vw,11px);color:#bdbdc5;margin-top:3px;line-height:1.3;white-space:normal}
+.one-body .concept-intro .prestige-build-index,.one-body .concept-intro .prestige-build-end{display:none}
+.one-body .studio-rail-contact{display:flex;align-items:center;justify-content:center;gap:10px;white-space:nowrap;margin:0 5px 0 15px;padding:12px 15px;border:1px solid #e1ac80;border-radius:8px;background:linear-gradient(110deg,#53372c88,#171a20a8);color:#f2d0b5;font-size:clamp(9px,.75vw,12px);font-weight:780;letter-spacing:.055em}
+.one-body .studio-rail-contact span{font-size:19px}
+.one-body .concept-visual{display:block;position:relative;grid-column:2;grid-row:1;z-index:2;pointer-events:auto;background:transparent;border:0}
+.one-body .concept-visual-label{display:none}
+.one-body .studio-project-card{position:absolute;z-index:4;display:flex;align-items:center;gap:12px;width:clamp(206px,22vw,315px);min-height:83px;padding:15px 14px;border:1px solid #b38dca;background:linear-gradient(130deg,#161424dd,#10151deb);color:#fff;border-radius:13px;backdrop-filter:blur(14px);box-shadow:0 15px 34px #0009,0 0 27px #b77be42c,inset 0 1px #fff2;transition:transform .2s,border-color .2s}
+.one-body .studio-project-card:hover{transform:translateY(-4px);border-color:#e3b6ff}
+.one-body .studio-project-card--knowledge{top:12%;left:23%}
+.one-body .studio-project-card--station{bottom:15%;left:16%;width:clamp(205px,20vw,285px);border-color:#69dcc39c;background:linear-gradient(130deg,#0b2326dd,#0c1822e9)}
+.one-body .studio-project-card__icon{flex:none;display:grid;place-items:center;width:34px;height:34px;color:var(--studio-lilac)}
+.one-body .studio-project-card--station .studio-project-card__icon{color:var(--studio-teal)}
+.one-body .studio-project-card__icon svg{width:32px;height:32px}
+.one-body .studio-project-card__body{flex:1;min-width:0;display:flex;flex-direction:column;gap:5px}
+.one-body .studio-project-card strong{font-size:clamp(10px,.95vw,14px);font-weight:750;letter-spacing:.08em;color:#f5edf8}
+.one-body .studio-project-card small{font-size:clamp(10px,.77vw,12px);color:#c0c0cc;line-height:1.32}
+.one-body .studio-project-card__status{position:absolute;right:7px;top:7px;border:1px solid #bc8ee477;border-radius:99px;background:#27172ebe;color:#e6c2f1;font-size:7px;letter-spacing:.04em;padding:2px 5px}
+.one-body .studio-project-card--station .studio-project-card__status{border-color:#75dcb56b;color:#93f6d8;background:#0931299c}
+.one-body .concept-live{grid-column:3;grid-row:1;z-index:5;display:flex;flex-direction:column;gap:0;min-height:0;padding:clamp(12px,1.35vw,20px);border:1px solid #a6bcc364;border-radius:16px;background:linear-gradient(145deg,#101d2cdd,#09111aef);box-shadow:0 20px 52px #0009,inset 0 1px #fff1;backdrop-filter:blur(18px);overflow:hidden}
+.one-body .concept-live .prestige-command-top{display:flex;align-items:flex-start;justify-content:space-between;min-height:72px;gap:9px;padding:0 0 12px;border:0;border-bottom:1px solid #bac3c567;flex:none}
+.one-body .concept-live .prestige-command-eyebrow{display:block;font-size:8px;color:#84e5cd;letter-spacing:.12em;margin-bottom:6px}
+.one-body .concept-live .prestige-command-top strong{font:800 clamp(16px,1.37vw,21px)/1.15 system-ui,sans-serif;color:#fff;letter-spacing:.12em;white-space:normal}
+.one-body .studio-signal-caption{display:block;margin-top:7px;max-width:29ch;color:#aebbc6;font-size:9px;letter-spacing:.09em;line-height:1.4}
+.one-body .studio-signal-label{flex:none;border:1px solid #70dabc96;border-radius:99px;color:#a1f2dd;background:#14332d9e;padding:5px 8px;font-size:8px;letter-spacing:.06em}
+.one-body .concept-live .prestige-activity-card{flex:1 1 auto;min-height:75px;gap:0;padding:12px 0 7px;border:0;border-bottom:1px solid #b3c1c54a;border-radius:0;background:transparent!important;box-shadow:none;overflow:hidden}
+.one-body .concept-live .one-panel-head{padding:0 0 8px;border-bottom:1px solid #bcc6c03b;gap:8px}
+.one-body .concept-live .prestige-feed-mark{width:23px;height:23px;min-width:23px!important;flex-basis:23px!important;background:none;border:0;font-size:10px;color:#fff}
+.one-body .concept-live .one-panel-head strong{font-size:10px;color:#f7f5f4;letter-spacing:.10em}
+.one-body .concept-live .one-panel-head small{font-size:9px;color:#9eacb7}
+.one-body .concept-live .one-panel-head button{font-size:9px;padding:3px;color:#e9c09f}
+.one-body .concept-live .concept-feed-filters{min-height:22px;padding:3px 0 0;gap:5px}
+.one-body .concept-live .concept-feed-filters button{font-size:8px;padding:3px 6px;color:#cddadd;border-color:#90a9ad51;background:#10232d9e}
+.one-body .concept-live .concept-feed-filters button[aria-pressed=true]{background:#416861;border-color:#75b5a4;color:#fff}
+.one-body .concept-live .one-feed>[data-feed-status]{font-size:9px;color:#91a9b5;line-height:1.3;margin:4px 0 2px}
+.one-body .concept-live .one-feed li{padding:6px 0}
+.one-body .concept-live .one-feed li strong{font-size:10px;color:#f6eef4;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.one-body .concept-live .one-feed li small,.one-body .concept-live .one-feed li time{font-size:8px}
+.one-body .concept-live .one-feed-disclosure{display:none}
+.one-body .concept-live .concept-feed-empty{gap:5px;padding:6px}
+.one-body .concept-live .concept-feed-empty>span{width:32px;height:32px;font-size:21px}
+.one-body .concept-live .concept-feed-empty p,.one-body .concept-live .concept-feed-empty a{font-size:9px}
+.one-body .studio-development{flex:none;padding:11px 0;border-bottom:1px solid #b5c3c24b}
+.one-body .studio-development__head{font-size:10px;font-weight:800;color:#f5f4f4;letter-spacing:.1em;margin-bottom:7px}
+.one-body .studio-development .prestige-command-corner.prestige-presence{display:flex!important;position:relative;flex-direction:column;align-items:flex-start;justify-content:center;width:100%;max-width:none;min-height:52px;padding:8px 9px 8px 27px;background:linear-gradient(100deg,#153d35bd,#0e2426bd);border:1px solid #6ac9ad65;border-radius:10px;overflow:hidden;color:#e8fff7;white-space:normal}
+.one-body .studio-development .prestige-presence-dot{position:absolute;left:10px;top:18px;width:8px;height:8px}
+.one-body .studio-development [data-work-state]{font-size:10px;font-weight:750;white-space:normal;color:#f5fff9}
+.one-body .studio-development [data-work-title]{font-size:9px;color:#aacbc3;margin-top:3px;line-height:1.25}
+.one-body .studio-spotify{flex:none;min-height:136px;padding:10px 0 0}
+.one-body .studio-spotify .p-spotify-card{display:flex;height:100%!important;flex-direction:column;gap:6px;min-height:0;padding:0;border:0!important;background:transparent!important;box-shadow:none;overflow:hidden}
+.one-body .studio-spotify .p-signal-head{display:flex!important;flex-direction:row!important;flex-wrap:nowrap!important;align-items:center!important;justify-content:space-between!important;min-height:25px;padding:0;margin:0}
+.one-body .studio-spotify .p-spotify-heading{display:inline-flex!important;flex:1 1 auto;align-items:center!important;justify-content:flex-start!important;min-width:0;gap:7px;text-align:left;margin:0!important;font-size:10px;color:#fff;letter-spacing:.08em}
+.one-body .studio-spotify .p-spotify-heading svg{width:19px;height:19px;color:#60e3b8}
+.one-body .studio-spotify .p-signal-state{display:inline-flex!important;position:static!important;flex:none;align-self:center!important;max-width:42%;margin:0!important;font-size:8px;white-space:nowrap}
+.one-body .studio-spotify .p-spotify-body{display:grid!important;grid-template-columns:80px minmax(0,1fr)!important;align-items:center!important;min-height:90px!important;gap:11px;padding:7px;border:1px solid #b0bbc643;border-radius:10px;background:#151e2e9c;overflow:hidden}
+.one-body .studio-spotify .p-spotify-art{display:grid!important;grid-column:1!important;grid-row:1!important;width:80px;height:80px;min-width:80px;min-height:80px;border-radius:7px;overflow:hidden}
+.one-body .studio-spotify .p-spotify-meta{display:block!important;grid-column:2!important;grid-row:1!important;min-width:0!important;width:100%!important;align-self:center;overflow:hidden}
+.one-body .studio-spotify .p-spotify-meta h3{font-size:clamp(10px,.95vw,15px);max-width:100%;line-height:1.24;white-space:normal;overflow-wrap:anywhere;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden}
+.one-body .studio-spotify .p-spotify-meta p{font-size:9px;color:#b3bec9;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.one-body .studio-spotify .p-spotify-meta progress{display:block;width:100%;height:3px;margin:6px 0 0}
+.one-body .studio-spotify .p-signal-foot{display:none}.one-body .studio-spotify .p-text-link{font-size:9px;display:inline-block;padding-top:6px}
+.one-body .concept-live .concept-live-foot{min-height:21px;flex:none;display:flex;align-items:center;justify-content:space-between;padding-top:6px;border:0;font-size:8px}
+.one-body .concept-signal-band,.one-body .concept-process,.one-body .concept-quality,.one-body .concept-featured,.one-body .concept-focus,.one-body .concept-activity-ribbon{display:none!important}
+@media(min-width:761px) and (max-width:1199px){
+.one-body .one-header{grid-template-columns:minmax(180px,1fr) auto minmax(100px,.5fr);padding:0 17px;gap:5px}
+.one-body .one-brand-mark{width:45px;height:39px;padding-right:12px;font-size:29px}.one-body .one-brand-type{font-size:13px;letter-spacing:.12em}
+.one-body .one-tabs-desktop .one-tablist{gap:0}.one-body .one-tabs-desktop .one-tablist button{font-size:8px;padding:0 5px;letter-spacing:.035em}
+.one-body .one-header-email{min-width:94px;font-size:9px;padding:0 6px}.one-body .one-motion-toggle{display:none}
+.one-body .concept-console{grid-template-columns:minmax(0,35fr) minmax(0,30fr) minmax(0,35fr)}
+.one-body .concept-intro h1{font-size:clamp(32px,3.65vw,46px)}
+.one-body .concept-intro .prestige-statement{font-size:13px}
+.one-body .studio-project-card,.one-body .studio-project-card--station{left:5%;width:90%;padding:9px;min-height:68px}
+.one-body .concept-live{padding:10px}
+.one-body .studio-spotify .p-spotify-body{grid-template-columns:49px minmax(0,1fr)!important;gap:6px;min-height:60px!important}
+.one-body .studio-spotify .p-spotify-art{width:49px;height:49px;min-width:49px;min-height:49px}
+.one-body .concept-intro .prestige-build-row{padding:5px 7px;gap:5px}
+.one-body .concept-intro .prestige-build-row:before{width:22px;font-size:24px}
+.one-body .studio-rail-contact{font-size:9px;padding:10px 8px;margin-left:6px}
+}
+@media(min-width:761px) and (max-height:760px){
+.one-body .concept-console{grid-template-rows:minmax(0,1fr) 68px}
+.one-body .concept-intro .prestige-build{height:68px}
+.one-body .concept-intro .prestige-build-row{min-height:42px}
+.one-body .concept-intro .prestige-statement{font-size:12px}
+.one-body .concept-intro h1{font-size:clamp(32px,3.45vw,50px)}
+.one-body .concept-live{padding:8px 10px}
+.one-body .concept-live .prestige-command-top{min-height:52px;padding-bottom:7px}
+.one-body .concept-live .prestige-command-top strong{font-size:15px}
+.one-body .concept-live .prestige-activity-card{padding:6px 0}
+.one-body .concept-live .one-feed li{padding:4px 0}
+.one-body .studio-development{padding:6px 0}
+.one-body .studio-development .prestige-command-corner.prestige-presence{min-height:39px;padding:5px 7px 5px 26px}
+.one-body .studio-development .prestige-presence-dot{top:14px}
+.one-body .studio-spotify{min-height:91px;padding:5px 0 0}
+.one-body .studio-spotify .p-signal-head{min-height:17px}
+.one-body .studio-spotify .p-spotify-body{grid-template-columns:45px minmax(0,1fr)!important;min-height:52px!important;gap:6px;padding:5px}
+.one-body .studio-spotify .p-spotify-art{width:45px;height:45px;min-width:45px;min-height:45px}
+.one-body .studio-spotify .p-text-link{display:none}
+.one-body .concept-live .concept-live-foot{min-height:14px;padding-top:2px}
+}
+@media(max-width:760px){
+.one-body .one-header{height:58px;padding:0 14px;grid-template-columns:minmax(0,1fr) auto;gap:9px}
+.one-body .one-brand{gap:10px}.one-body .one-brand-mark{width:34px;height:37px;padding-right:9px;font-size:27px}.one-body .one-brand-type{font-size:12px;letter-spacing:.13em}
+.one-body .one-header-email{display:none}.one-body .one-motion-toggle{min-height:30px}
+.one-body .one-stage{height:calc(100dvh - 58px - 61px - 25px);padding:7px 10px 6px}
+.one-body .one-footer{height:25px;padding:0 12px;font-size:8px}
+.one-body .one-tabs-mobile{height:61px;z-index:20;background:#080d16e9;border-top:1px solid #ffffff22}
+.one-body .one-world-video{opacity:.54;object-position:56% center}
+.one-body .one-world:after{background:linear-gradient(to bottom,#060912d8,#060b16b1 37%,#071321e3 77%,#060b15ed)}
+.one-body .concept-console{grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(185px,.85fr) minmax(0,1.6fr) 52px;gap:6px;overflow:hidden}
+.one-body .concept-intro{grid-column:1;grid-row:1;padding:9px 11px 6px;gap:4px;background:linear-gradient(110deg,#0a0d1acb,#0b1020a0 65%,#09121a73)!important;border:1px solid #7f899846!important;border-radius:10px;justify-content:center}
+.one-body .concept-intro .prestige-player-top{min-height:0;margin:0}
+.one-body .concept-intro .prestige-player-id{font-size:7px;letter-spacing:.17em}
+.one-body .concept-intro h1{font-size:clamp(27px,7vw,37px);line-height:.98;max-width:20ch;margin:0}
+.one-body .concept-intro .prestige-statement{display:block;font-size:10px;line-height:1.3;max-width:37ch;margin:3px 0 4px;overflow:visible;-webkit-line-clamp:unset}
+.one-body .concept-intro .prestige-player-actions{gap:7px;margin:0}
+.one-body .concept-intro .one-button{min-height:30px;padding:6px 10px;font-size:9px;gap:7px}.one-body .concept-intro .one-button:not(.one-button-primary){padding:6px 4px}
+.one-body .concept-visual{display:none!important}
+.one-body .concept-live{grid-column:1;grid-row:2;padding:8px 11px;border-radius:10px}
+.one-body .concept-live .prestige-command-top{min-height:42px;padding-bottom:5px}
+.one-body .concept-live .prestige-command-top strong{font-size:14px}
+.one-body .studio-signal-caption{display:none}
+.one-body .concept-live .prestige-activity-card{padding:5px 0 2px;min-height:45px}
+.one-body .concept-live .one-panel-head{padding-bottom:3px}
+.one-body .concept-live .one-panel-head strong{font-size:9px}
+.one-body .concept-live .one-panel-head small{display:none}
+.one-body .concept-live .concept-feed-filters{min-height:16px;padding:2px 0}
+.one-body .concept-live .one-feed>[data-feed-status]{font-size:8px;margin:2px 0}
+.one-body .concept-live .one-feed li{padding:3px 0}
+.one-body .concept-live .one-feed li strong{font-size:9px}
+.one-body .concept-live .one-feed li small,.one-body .concept-live .one-feed li time{font-size:7px}
+.one-body .studio-development{padding:4px 0}
+.one-body .studio-development__head{font-size:9px;margin-bottom:3px}
+.one-body .studio-development .prestige-command-corner.prestige-presence{min-height:34px;padding:4px 7px 4px 25px}
+.one-body .studio-development .prestige-presence-dot{top:11px}
+.one-body .studio-development [data-work-state]{font-size:9px}.one-body .studio-development [data-work-title]{font-size:8px;margin-top:1px}
+.one-body .studio-spotify{min-height:102px;padding:5px 0 0}
+.one-body .studio-spotify .p-signal-head{min-height:17px}
+.one-body .studio-spotify .p-spotify-heading{font-size:9px}
+.one-body .studio-spotify .p-signal-state{font-size:8px}
+.one-body .studio-spotify .p-spotify-body{grid-template-columns:47px minmax(0,1fr)!important;min-height:60px!important;gap:7px;padding:5px}
+.one-body .studio-spotify .p-spotify-art{width:47px;height:47px;min-width:47px;min-height:47px}
+.one-body .studio-spotify .p-spotify-meta h3{font-size:10px}
+.one-body .studio-spotify .p-spotify-meta p{font-size:8px}
+.one-body .studio-spotify .p-text-link{display:none}
+.one-body .concept-live .concept-live-foot{min-height:12px;padding-top:2px}
+.one-body .concept-intro .prestige-build{grid-template-columns:repeat(3,minmax(0,1fr));height:52px;padding:3px 4px;border:1px solid #b5bdc744;border-radius:9px;background:#08101be8}
+.one-body .concept-intro .prestige-build-row{min-height:35px;padding:2px 5px;gap:4px}
+.one-body .concept-intro .prestige-build-row:before{width:15px;font-size:17px}
+.one-body .concept-intro .prestige-build-row:nth-child(2):before,.one-body .concept-intro .prestige-build-row:nth-child(3):before{font-size:16px}
+.one-body .concept-intro .prestige-build-row strong{font-size:7px;letter-spacing:.025em}
+.one-body .concept-intro .prestige-build-row small{font-size:7px;line-height:1.1}
+.one-body .studio-rail-contact{display:none}
+}
+@media(max-width:400px) and (max-height:700px){
+.one-body .concept-console{grid-template-rows:minmax(156px,.9fr) minmax(0,1.1fr)}
+.one-body .concept-intro .prestige-build{display:none}
+.one-body .concept-intro{padding:6px 9px;gap:2px}
+.one-body .concept-intro .prestige-player-id{font-size:6px}
+.one-body .concept-intro h1{font-size:clamp(23px,7vw,28px)}
+.one-body .concept-intro .prestige-statement{font-size:9px;line-height:1.2;margin:1px 0}
+.one-body .concept-live .prestige-command-top{min-height:30px}
+.one-body .studio-development__head{display:none}
+.one-body .studio-spotify{min-height:76px}
+.one-body .studio-spotify .p-spotify-heading{font-size:8px}
+.one-body .studio-spotify .p-spotify-body{grid-template-columns:35px minmax(0,1fr)!important;min-height:42px!important;padding:4px}
+.one-body .studio-spotify .p-spotify-art{width:35px;height:35px;min-width:35px;min-height:35px}
+.one-body .concept-live .concept-feed-filters{display:none}
+}
+@media(min-width:761px) and (max-height:470px){
+.one-body .one-header{height:54px}
+.one-body .one-stage{height:calc(100dvh - 54px - 24px);padding:6px 14px}
+.one-body .one-footer{height:24px}
+.one-body .concept-console{grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-rows:minmax(0,1fr);gap:12px}
+.one-body .concept-intro{grid-column:1;grid-row:1;padding:3px}
+.one-body .concept-intro .prestige-player-top{display:none}
+.one-body .concept-intro h1{font-size:clamp(25px,3vw,32px)}
+.one-body .concept-intro .prestige-statement{font-size:11px;max-width:47ch}
+.one-body .concept-intro .one-button{min-height:30px;padding:6px 8px;font-size:9px}
+.one-body .concept-visual{display:none!important}
+.one-body .concept-live{grid-column:2;grid-row:1;padding:8px}
+.one-body .concept-live .prestige-command-top{min-height:35px}
+.one-body .concept-live .prestige-command-top strong{font-size:13px}
+.one-body .concept-live .one-feed li{padding:3px 0}
+.one-body .studio-development,.one-body .studio-spotify,.one-body .concept-intro .prestige-build{display:none}
+}
+@media(prefers-reduced-motion:reduce){
+.one-body .studio-project-card{transition:none}
+.one-body .one-world-video{display:none}
+.one-body .one-world{background:#07101c url('/professional/living-atmosphere.png') 55% center/cover no-repeat}
+}
+/* A 320px-wide, short phone cannot show a complete feed row and all three
+ * source sections. Keep the verified count and Activity link, never a
+ * half-visible event that looks like a broken notification. */
+@media(max-width:400px) and (max-height:700px){
+  .one-body .concept-live .prestige-activity-card{flex:0 1 66px;min-height:0}
+  .one-body .concept-live .one-feed{flex:0 0 auto;min-height:0}
+  .one-body .concept-live .one-feed ol{display:none}
+  .one-body .concept-live .one-feed>[data-feed-status]{font-size:8px;line-height:1.2}
+  .one-body .concept-live .concept-feed-empty{display:none}
+}
+
+/* Header contact stays on one line with the arrow at every desktop width. */
+@media(min-width:761px){
+  .one-body .one-header-email{display:inline-flex;align-items:center;justify-content:center;gap:13px;white-space:nowrap}
+  .one-body .one-header-email span{font-size:18px;line-height:1}
+}
+
+/* Match the owner reference's high, oversized editorial hero on wide screens.
+ * Keep tablet, phone and short-landscape rules unchanged. */
+@media(min-width:1200px) and (min-height:761px){
+  .one-body .concept-intro{justify-content:flex-start;padding-top:clamp(34px,4.1vw,70px)}
+  .one-body .concept-intro h1{font-size:clamp(52px,4.05vw,70px)}
+}
