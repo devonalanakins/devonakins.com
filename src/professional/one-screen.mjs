@@ -108,7 +108,7 @@ const contact = view("contact",
   '<a href="/contact/">Full contact page ↗</a></div></div>'+
   '<div class="one-contact-art" aria-hidden="true"><span></span><span></span><span></span></div></div>');
 
-export function renderOneScreenHome({datedCapture=null}={}) {
+export function renderOneScreenHome({datedCapture=null,motionAssetAvailable=false}={}) {
   const homeGpt=datedCapture ? renderOneScreenGptSummary(datedCapture) : gptSignalCard();
   const description="Devon Alan Akins — independent software developer, systems designer, business operator and author.";
   return '<!doctype html><html lang="en" class="one-html"><head>'+
@@ -127,14 +127,15 @@ export function renderOneScreenHome({datedCapture=null}={}) {
     '<link rel="preload" as="image" type="image/svg+xml" href="/professional/mission-site.svg">'+
     '<script type="module" src="/src/professional/client.ts"></script>'+
     '<script type="module" src="/src/professional/one-screen.ts"></script><script type="module" src="/src/professional/working-standard.ts"></script>'+
+    '<script type="module" src="/src/professional/living-atmosphere.ts"></script>'+
     '</head><body class="p-body one-body">'+
     '<a class="one-skip" href="#one-stage">Skip to the content</a>'+
-    '<div class="one-world" aria-hidden="true"><div class="one-world-glow"></div><div class="one-world-grid"></div></div>'+
+    '<div class="one-world" data-living-scene aria-hidden="true">"'+(motionAssetAvailable?'<video class="one-world-video" data-living-video muted autoplay loop playsinline preload="metadata" poster="/professional/living-atmosphere.png"><source src="/professional/living-atmosphere.mp4" type="video/mp4"></video>':'')+'+"<canvas class="one-world-canvas" data-living-canvas></canvas><div class="one-world-glow"></div><div class="one-world-grid"></div></div>'+
     '<header class="one-header"><a class="one-brand" href="/" aria-label="Devon Akins home">'+
     '<span class="one-brand-mark">DA</span><span class="one-brand-type">DEVON<span>AKINS</span><small>.COM</small></span></a>'+
     '<p class="one-header-descriptor">INDEPENDENT DEVELOPER <span>—</span> FLORIDA / REMOTE</p>'+
     tabs("desktop")+
-    '<a class="one-header-email" href="mailto:devon@anevum.com">CONTACT <span aria-hidden="true">↗</span></a></header>'+
+    '<div class="one-header-actions"><button type="button" class="one-motion-toggle" data-motion-toggle aria-pressed="true" aria-label="Pause background motion" title="Pause background motion"><span class="one-motion-dot" aria-hidden="true"></span><span data-motion-label>Motion on</span></button><a class="one-header-email" href="mailto:devon@anevum.com">CONTACT <span aria-hidden="true">↗</span></a></div></header>'+
     '<main id="one-stage" class="one-stage" tabindex="-1">'+home.replace('<!--ONE_SCREEN_GPT_SLOT-->',homeGpt)+experience+work+activity+writing+contact+'</main>'+
     tabs("mobile")+
     '<footer class="one-footer"><span>© 2026 DEVON ALAN AKINS</span><span class="one-footer-current">ONE MIND. REAL WORK. SOURCE-QUALIFIED SIGNALS.</span>'+
