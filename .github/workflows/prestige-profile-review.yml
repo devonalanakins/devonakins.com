@@ -27,6 +27,8 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.13"
+      - name: Trust checked-out workspace for Git release SHA derivation
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
       - run: npm ci
       - name: Build verified baseline V4 for independent legacy regressions
         run: npm run build
