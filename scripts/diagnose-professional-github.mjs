@@ -46,6 +46,16 @@ console.log("GITHUB_ATOM_DIAG "+JSON.stringify({httpStatus:atom.status,error:ato
 if(atom.status===200){
   try{
     const xml=await atom.text();
+    const {projectProfessionalGithubAtom, validProfessionalGithub} =
+      await import("../src/professional/github-public.mjs");
+    let parsed={status:"invalid",count:0,safe:false};
+    try {
+      const mapped=projectProfessionalGithubAtom(xml,new Date());
+      parsed={status:mapped.status,count:mapped.events.length,
+        safe:validProfessionalGithub(mapped,new Date())};
+    } catch { /* No provider body is logged. */ }
+    console.log("REAL_ATOM_PARSER_DIAG "+JSON.stringify(parsed));
+
     const entries=[...xml.matchAll(/<entry>([\s\S]*?)<\/entry>/g)].slice(0,7).map(match=>{
       const s=match[1];
       const id=/<id>([^<]{1,200})<\/id>/.exec(s)?.[1]||"";
