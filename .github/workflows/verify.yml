@@ -212,6 +212,8 @@ jobs:
         run: PROFESSIONAL_SITE_CANDIDATE=1 npm run build
       - name: Verify generated routes and linked Worker assets
         run: node scripts/verify-professional-candidate.mjs
+      - name: Verify live GitHub browser CORS and safe public projection
+        run: node scripts/check-github-browser-origin.mjs
       - name: Install pinned Chromium and WebKit browser acceptance
         run: |
           python3 -m pip install --disable-pip-version-check playwright==1.57.0
