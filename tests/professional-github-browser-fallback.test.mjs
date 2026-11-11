@@ -90,5 +90,31 @@ test("professional UI source attribution and limited CSP are present in the real
   assert.match(client,/GitHub API queried directly by this browser/);
   assert.match(client,/BROWSER_GITHUB_SOURCE/);
   assert.match(worker,/connect-src 'self' https:\/\/api\.github\.com;/);
+  assert.match(worker,/securityHeaders\["Content-Security-Policy"\]\.replace/);
+  assert.match(worker,/options\.professionalCandidate === true && status === 200 && isHtml/);
   assert.doesNotMatch(worker,/connect-src [^;]*https:\/\/github\.com/);
+});
+
+test("cross-origin GitHub permission is scoped to professional public HTML, not private V2",async()=>{
+  const {createHandler}=await import("../src/worker.mjs");
+  const {default:assets}=await import("../.release/assets.mjs");
+  const request=path=>new Request("https://devonakins.com"+path);
+  const professional=createHandler(assets,{version:"test",commit:"test"},{
+    professionalCandidate:true,now:()=>at,cache:null,
+  });
+  const publicPage=await professional.fetch(request("/"));
+  assert.equal(publicPage.status,200);
+  assert.match(publicPage.headers.get("content-security-policy")||"",
+    /connect-src 'self' https:\/\/api\.github\.com;/);
+  const legacy=await professional.fetch(request("/v2/"));
+  assert.equal(legacy.status,200);
+  assert.match(legacy.headers.get("content-security-policy")||"",
+    /connect-src 'self';/);
+  assert.doesNotMatch(legacy.headers.get("content-security-policy")||"",/api\.github\.com/);
+  const v4=createHandler(assets,{version:"test",commit:"test"},{
+    now:()=>at,cache:null,
+  });
+  const oldHome=await v4.fetch(request("/"));
+  assert.equal(oldHome.status,200);
+  assert.doesNotMatch(oldHome.headers.get("content-security-policy")||"",/api\.github\.com/);
 });
