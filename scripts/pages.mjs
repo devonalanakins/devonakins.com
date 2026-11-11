@@ -1,4 +1,6 @@
 import { mkdir, readFile, readdir, writeFile } from "node:fs/promises";
+import { existsSync } from "node:fs";
+import { execFileSync } from "node:child_process";
 import {renderProfessionalPage, renderProfessionalProjectPage, PROFESSIONAL_ROUTES} from "../src/professional/site.mjs";
 import {renderOneScreenHome} from "../src/professional/one-screen.mjs";
 import { pages } from "../src/content.mjs";
@@ -32,6 +34,7 @@ const v5Candidate = process.env.V5_PUBLIC_HOME_CANDIDATE === "1";
 const professionalCandidate = process.env.PROFESSIONAL_SITE_CANDIDATE === "1";
 // Explicit preview-only homepage design. Protected production defaults remain unchanged.
 const oneScreenCandidate = process.env.ONE_SCREEN_SITE_CANDIDATE === "1";
+// The cinematic film is a deterministic first-party build asset only for the\n// selected one-screen candidate. Baseline V4 and other variants are unchanged.\nif(oneScreenCandidate && process.env.SKIP_LIVING_ATMOSPHERE !== "1") {\n  execFileSync(process.execPath,["scripts/generate-living-atmosphere.mjs"],{stdio:"inherit",timeout:120_000});\n}\nconst motionAssetAvailable = oneScreenCandidate && process.env.SKIP_LIVING_ATMOSPHERE !== "1" &&\n  existsSync("public/professional/living-atmosphere.mp4");
 const professionalPaths = new Map(Object.entries(PROFESSIONAL_ROUTES).map(([key,path]) => [path,key]));
 const professionalLegacyDestinations = Object.freeze({
   home: "/", work: "/work/", research: "/work/", contact: "/contact/",
@@ -49,7 +52,7 @@ function repairProfessionalLegacyNavigation(html) {
   });
 }
 
-await writeFile("index.html", oneScreenCandidate ? renderOneScreenHome({datedCapture:datedGptCapture}) : professionalCandidate ? renderProfessionalPage("home",publicGptContext) : fullV5Candidate ? renderV5PublicPage("home") : v5Candidate ? renderV5PublicHomepage() : home);
+await writeFile("index.html", oneScreenCandidate ? renderOneScreenHome({datedCapture:datedGptCapture,motionAssetAvailable}) : professionalCandidate ? renderProfessionalPage("home",publicGptContext) : fullV5Candidate ? renderV5PublicPage("home") : v5Candidate ? renderV5PublicHomepage() : home);
 const all = [...new Set([
   ...pages.map(({ path }) => path),
   ...(professionalCandidate ? [...professionalPaths.keys()] : []),
