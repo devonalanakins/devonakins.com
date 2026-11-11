@@ -143,6 +143,19 @@ try:
                 page.screenshot(path=str(OUT/f"{engine}-{width}x{height}-home.png"))
                 assert not errors,(engine,width,height,errors)
                 context.close()
+            # Normal motion is intentional; motion-reduced checks above verify
+            # every panel stays usable without animation.
+            motion_context=browser.new_context(viewport={"width":1440,"height":900},
+                reduced_motion="no-preference")
+            motion_page=motion_context.new_page()
+            motion_page.goto(BASE+"/",wait_until="domcontentloaded")
+            animation=motion_page.evaluate("""() => ({
+                backdrop:getComputedStyle(document.querySelector('.one-world-glow')).animationName,
+                intro:getComputedStyle(document.querySelector('.prestige-identity-main')).animationName
+            })""")
+            assert "prestige-nebula" in animation["backdrop"],(engine,"ambient animation",animation)
+            assert "prestige-reveal" in animation["intro"],(engine,"identity entrance",animation)
+            motion_context.close()
             browser.close()
 finally:
     process.terminate()
