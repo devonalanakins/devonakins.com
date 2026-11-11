@@ -2,6 +2,8 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {readFile} from "node:fs/promises";
 import {gzipSync} from "node:zlib";
+import {spawnSync} from "node:child_process";
+import {existsSync} from "node:fs";
 import {renderOneScreenHome} from "../src/professional/one-screen.mjs";
 import {createHandler} from "../src/worker.mjs";
 
@@ -77,4 +79,22 @@ test("Cloudflare Worker supports same-origin MP4 range and HEAD requests",async(
   assert.equal(r.status,200);
   assert.equal(r.headers.get("Content-Length"),"40");
   assert.equal(await r.text(),"");
+});
+
+test("approved neural-cosmos media are hash-pinned and a missing source cannot silently pass visual acceptance",async()=>{
+  const source=await readFile(new URL("../scripts/generate-living-atmosphere.mjs",import.meta.url),"utf8");
+  assert.match(source,/REQUIRE_APPROVED_NEURAL_ART/);
+  assert.match(source,/createHash\("sha256"\)/);
+  assert.match(source,/neural-cosmos-1920x1080\.mp4/);
+  assert.match(source,/neural-cosmos-1920x1080\.webp/);
+  assert.match(source,/cee2ca738e0be5d7fb635a19433d8785c2f51930c0c39560958e23d73c8f5c4d/);
+  assert.match(source,/b71490301500b59891613d19a954409c29f5420d8928c2ddac2f5c704db05054/);
+  const video="assets/approved/neural-cosmos-1920x1080.mp4";
+  const poster="assets/approved/neural-cosmos-1920x1080.webp";
+  if(!existsSync(video)&&!existsSync(poster)){
+    const result=spawnSync(process.execPath,["scripts/generate-living-atmosphere.mjs"],
+      {encoding:"utf8",env:{...process.env,REQUIRE_APPROVED_NEURAL_ART:"1"},timeout:30000});
+    assert.notEqual(result.status,0,"Missing approved media must block strict visual build");
+    assert.match((result.stderr||"")+(result.stdout||""),/Visual acceptance blocked/);
+  }
 });
