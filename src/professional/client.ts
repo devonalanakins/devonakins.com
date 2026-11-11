@@ -51,7 +51,7 @@ const age = (value: string, now = Date.now()) => {
 const valid = (input: unknown): input is Snapshot => {
   if (!input || typeof input !== "object" || Array.isArray(input)) return false;
   const item = input as Record<string,unknown>;
-  if (item.version !== 1 || item.source !== "GitHub public events API" ||
+  if (item.version !== 1 || !["GitHub public events API", "GitHub public Atom feed"].includes(String(item.source)) ||
       !["available", "empty", "unavailable"].includes(String(item.status)) ||
       !Array.isArray(item.events) || item.events.length > 32 ||
       typeof item.checkedAt !== "string" ||
