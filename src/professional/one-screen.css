@@ -348,3 +348,55 @@ body.one-body{height:100%;height:100dvh;min-height:0;overflow:hidden;background:
 @media(min-width:761px){
  .one-portrait img{width:210%}
 }
+
+
+/* Small phones: three professional facts must fit the available canvas. */
+@media(max-width:400px) and (max-height:700px){
+ .one-inner-layout{justify-content:flex-start;gap:8px;min-height:0}
+ .one-inner-intro{flex:none}
+ .one-inner-intro .one-eyebrow{margin:4px 0 11px}
+ .one-inner-intro h1{font-size:33px;line-height:1.01;margin:0 0 8px}
+ .one-inner-intro .one-lede{font-size:10px;line-height:1.35;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:3;overflow:hidden}
+ .one-inner-intro .one-quiet{display:none}
+ .one-inner-intro .one-detail-link{font-size:10px;margin-top:8px;padding-bottom:4px}
+ .one-fact-stack{flex:1;min-height:0;grid-template-rows:repeat(3,minmax(0,1fr));gap:5px}
+ .one-fact-stack article{padding:7px 11px;min-height:0;overflow:hidden}
+ .one-fact-stack article>span{font-size:7px}
+ .one-fact-stack h2{font-size:16px;line-height:1.1;margin:4px 0}
+ .one-fact-stack p{font-size:8.5px;line-height:1.25;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden}
+}
+/* Landscape phone: cards, case studies and the activity stream reflow instead
+   of expanding outside the no-scroll main viewport. */
+@media(min-width:761px) and (max-height:470px){
+ .one-inner-layout{min-height:0;grid-template-rows:minmax(0,1fr);gap:18px;align-items:stretch}
+ .one-inner-intro{align-self:center}
+ .one-inner-intro .one-eyebrow{margin-bottom:10px;font-size:9px}
+ .one-inner-intro h1{font-size:clamp(29px,3.8vw,41px);margin:0 0 9px}
+ .one-inner-intro .one-lede{font-size:10px;line-height:1.38}
+ .one-inner-intro .one-quiet{display:none}
+ .one-inner-intro .one-detail-link{font-size:10px;margin-top:10px;padding-bottom:4px}
+ .one-fact-stack{height:100%;min-height:0;grid-template-rows:repeat(3,minmax(0,1fr));gap:6px}
+ .one-fact-stack article{min-height:0;overflow:hidden;padding:8px 12px}
+ .one-fact-stack article>span{font-size:8px}
+ .one-fact-stack h2{font-size:17px;line-height:1.1;margin:5px 0 3px}
+ .one-fact-stack p{font-size:9px;line-height:1.25;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden}
+ .one-view-frame{justify-content:flex-start;gap:8px;min-height:0}
+ .one-view-top .one-eyebrow{margin-bottom:7px;font-size:8px}
+ .one-view-top h1{font-size:33px}
+ .one-view-top>p:last-child{display:none}
+ .one-projects{flex:1;min-height:0}
+ .one-project{min-height:0}
+ .one-project-art{height:33%;min-height:0;flex:none}
+ .one-project-copy{padding:7px 10px;min-height:0}
+ .one-project-tag{font-size:7px;margin:0 0 5px}
+ .one-project h2{font-size:17px;line-height:1.13;margin:0 0 4px}
+ .one-project-copy>p:not(.one-project-tag){display:none}
+ .one-project-copy a{font-size:9px;margin-top:auto}
+ .one-activity-layout{grid-template-rows:minmax(0,1fr);align-items:stretch}
+ .one-activity-feed{height:100%;min-height:0;overflow:hidden;padding:9px}
+ .one-activity-feed .one-feed{min-height:0}
+ .one-activity-feed .one-feed li{padding:6px 2px}
+ .one-activity-feed .one-feed li:nth-child(n+3){display:none}
+ .one-activity-feed .one-feed-disclosure{display:none}
+ .one-activity-note{font-size:8px;line-height:1.25;margin:3px 0 0}
+}
