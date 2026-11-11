@@ -29,6 +29,20 @@ try:
                 assert response.status==200,(engine,width,height,response.status)
                 assert page.locator('main#one-stage').count()==1
                 assert page.locator(".one-portrait").count()==0,(engine,width,height,"portrait removed")
+                assert page.locator(".prestige-player").count()==1,(engine,width,height,"prestige identity")
+                assert page.locator(".prestige-command").count()==1,(engine,width,height,"public signal board")
+                assert page.locator(".prestige-identity-copy h1").is_visible()
+                assert "OPERATIONS ARCHITECT" in page.locator(".prestige-subtitle").inner_text()
+                # High-level gamer styling is editorial, not invented XP, levels, or ranks.
+                assert page.locator(".prestige-build-row").count()==3
+                for selector in (".prestige-player",".prestige-command",".prestige-player-actions",".prestige-activity-card",".prestige-stat-pair"):
+                    assert page.evaluate("""selector => {
+                      const root=document.querySelector('.one-stage').getBoundingClientRect();
+                      const rect=document.querySelector(selector).getBoundingClientRect();
+                      return rect.top >= root.top-3 && rect.bottom <= root.bottom+3 &&
+                        rect.left >= root.left-3 && rect.right <= root.right+3;
+                    }""", selector),(engine,width,height,selector,"prestige panel containment")
+
                 assert page.locator('img[src*="headshot"]').count()==0,(engine,width,height,"no portrait resource")
                 assert page.locator('[data-one-view]:visible').count()==1,(engine,width,height,"initial panel")
                 assert page.locator('[data-public-github-feed]').count()==2
