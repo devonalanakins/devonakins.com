@@ -214,3 +214,60 @@
  .prestige-activity-card .one-feed li{padding:3px 0}
  .prestige-activity-card .one-feed-disclosure{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:7px;line-height:1.1;margin:0;padding-top:2px}
 }
+
+
+/* PRESTIGE PRESENCE — derived from the existing consented work projection. */
+.prestige-visually-hidden{position:absolute!important;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;clip-path:inset(50%)}
+.prestige-presence{display:inline-flex;gap:7px;align-items:center;max-width:47%;padding:7px 9px;border:1px solid #80b5c74f;border-radius:5px;color:#9db3bc;background:#112636ad;white-space:nowrap;letter-spacing:.065em;font-size:8px}
+.prestige-presence-dot{display:block;flex:0 0 6px;width:6px;height:6px;transform:rotate(45deg);background:#8396a1;box-shadow:none}
+.prestige-presence-detail{display:none}
+.prestige-presence[data-work-mode="active"]{border-color:#8eddd78c;color:#bff4e1;background:#10372fdb}
+.prestige-presence[data-work-mode="active"] .prestige-presence-dot{background:#8df7c6;box-shadow:0 0 13px #79e8b699;animation:prestige-pulse 2.6s ease-in-out infinite}
+.prestige-command [data-feed-status][data-status="available"]{color:#93d3cc}
+.prestige-command [data-feed-status][data-status="unavailable"]{color:#d6b287}
+.prestige-command [data-spotify-mode="playing"] .p-spotify-art .p-vinyl{animation:prestige-vinyl 9s linear infinite}
+.prestige-player,.prestige-activity-card,.prestige-stat-pair>*{transition:border-color .3s ease,box-shadow .3s ease,background-color .3s ease}
+.prestige-player:hover,.prestige-activity-card:hover{border-color:#b3dce19e;box-shadow:inset 0 1px #ffffff26,0 18px 48px #0009}
+.prestige-emblem{isolation:isolate;transition:filter .4s ease,transform .4s cubic-bezier(.2,.7,.2,1)}
+.prestige-player:hover .prestige-emblem{filter:drop-shadow(0 0 15px #b7eae525);transform:translateY(-2px)}
+.prestige-player-id i{animation:prestige-pulse 4s ease-in-out infinite}
+.prestige-identity-main,.prestige-statement,.prestige-build,.prestige-player-actions{animation:prestige-reveal .7s both cubic-bezier(.16,.8,.2,1)}
+.prestige-identity-main{animation-delay:.06s}
+.prestige-statement{animation-delay:.12s}
+.prestige-build{animation-delay:.17s}
+.prestige-player-actions{animation-delay:.2s}
+.one-body .one-world-glow{animation:prestige-nebula 24s ease-in-out infinite alternate}
+.one-body .one-world-grid{animation:prestige-grid 36s ease-in-out infinite alternate}
+.prestige-build-row{transition:transform .24s ease,border-color .24s ease,background .24s ease}
+.prestige-build-row:hover{transform:translateX(3px);border-color:#a6d4d47c;background:linear-gradient(90deg,#204353df,#0e2837ad)}
+.prestige-activity-card .one-feed li{transition:background-color .2s ease,transform .2s ease}
+.prestige-activity-card .one-feed li:hover{transform:translateX(2px);background-color:#ffffff07}
+@keyframes prestige-nebula{from{transform:translate3d(-1.5%,0,0) scale(1)}to{transform:translate3d(1.5%,-1%,0) scale(1.04)}}
+@keyframes prestige-grid{from{opacity:.1;transform:perspective(760px) rotateX(62deg) scale(1.6) translateY(22%)}to{opacity:.19;transform:perspective(760px) rotateX(62deg) scale(1.66) translateY(20%)}}
+@keyframes prestige-pulse{0%,100%{opacity:.65;filter:brightness(.85)}50%{opacity:1;filter:brightness(1.25)}}
+@keyframes prestige-reveal{from{opacity:.2;transform:translateY(9px)}to{opacity:1;transform:translateY(0)}}
+@keyframes prestige-vinyl{to{transform:rotate(360deg)}}
+@media(max-width:1000px){
+ .prestige-command-corner.prestige-presence{display:inline-flex;max-width:135px;padding:5px 6px;font-size:7px}
+ .prestige-presence-detail{display:none}
+}
+@media(max-width:760px){
+ .prestige-command-top{gap:6px}
+ .prestige-command-top>div{min-width:0}
+ .prestige-command-corner.prestige-presence{max-width:96px;padding:4px 5px;font-size:7px;gap:4px}
+ .prestige-presence-dot{flex-basis:4px;width:4px;height:4px}
+ .prestige-command-top strong{font-size:13px}
+ .prestige-build-row:hover,.prestige-activity-card .one-feed li:hover{transform:none}
+}
+@media(max-width:400px) and (max-height:700px){
+ .prestige-command-corner.prestige-presence{max-width:76px;padding:3px 4px;gap:3px;font-size:6px}
+ .prestige-command-top strong{font-size:11px}
+}
+@media(prefers-reduced-motion:reduce){
+ .prestige-player,.prestige-activity-card,.prestige-stat-pair>*,
+ .prestige-emblem,.prestige-build-row,.prestige-activity-card .one-feed li{transition:none!important}
+ .prestige-player-id i,.prestige-presence-dot,.prestige-identity-main,
+ .prestige-statement,.prestige-build,.prestige-player-actions,
+ .one-body .one-world-glow,.one-body .one-world-grid,
+ .prestige-command [data-spotify-mode="playing"] .p-spotify-art .p-vinyl{animation:none!important}
+}
