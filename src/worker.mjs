@@ -35,6 +35,7 @@ export function createHandler(assets, release, options = {}) {
     return new Response(head ? null : response.body,{status:response.status,headers});
   };
   const decoded = new Map();
+  const mediaDecoded = new Map(); // Bounded first-party short video loop only.
   let activityHistory = [];
   const taskApi=createActivityTasksApi({clock:()=> (options.now || (()=>new Date()))().getTime()});
   const githubIntegration=createGithubIntegration({clock:()=> (options.now || (()=>new Date()))().getTime(),githubFetch:options.githubFetch || fetch});
@@ -408,6 +409,48 @@ export function createHandler(assets, release, options = {}) {
         request.headers.get("If-None-Match") === selected.etag
       )
         return new Response(null, { status: 304, headers });
+      // Progressive MP4: Safari and mobile video players require byte ranges.
+      // This is a public, same-origin, short source-generated visual asset.
+      // Do not use the generic gzip streaming path for video Range responses.
+      if (status===200 && selected.type==="video/mp4") {
+        let media=mediaDecoded.get(selected.etag);
+        if(!media){
+          const zipped=Uint8Array.from(atob(selected.gzip),c=>c.charCodeAt(0));
+          media=new Uint8Array(await new Response(new Blob([zipped]).stream()
+            .pipeThrough(new DecompressionStream("gzip"))).arrayBuffer());
+          if(media.length>2_500_000) return new Response("Media unavailable", {status:503,headers:securityHeaders});
+          mediaDecoded.set(selected.etag,media);
+        }
+        const size=media.length;
+        headers.set("Accept-Ranges","bytes");
+        headers.set("Content-Length",String(size));
+        const rawRange=request.headers.get("Range");
+        if(rawRange){
+          const match=/^bytes=(\\d*)-(\\d*)$/.exec(rawRange.trim());
+          let start=0,end=size-1;
+          if(match){
+            if(match[1]==="" && match[2]!=="") {
+              const suffix=Number(match[2]);
+              start=Math.max(0,size-suffix);
+            }else{
+              start=Number(match[1]);
+              if(match[2]!=="")end=Number(match[2]);
+            }
+          }
+          if(!match || start<0 || start>=size || end<start || !Number.isSafeInteger(start) ||
+             !Number.isSafeInteger(end) || match[1]===""&&match[2]===""){
+            headers.set("Content-Range","bytes */"+size);
+            headers.set("Content-Length","0");
+            return new Response(null,{status:416,headers});
+          }
+          end=Math.min(end,size-1);
+          headers.set("Content-Range","bytes "+start+"-"+end+"/"+size);
+          headers.set("Content-Length",String(end-start+1));
+          return new Response(request.method==="HEAD"?null:media.slice(start,end+1),
+            {status:206,headers});
+        }
+        return new Response(request.method==="HEAD"?null:media,{status:200,headers});
+      }
       if (request.method === "HEAD")
         return new Response(null, { status, headers });
       let bytes = decoded.get(selected.etag);
