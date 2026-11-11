@@ -13,7 +13,7 @@ test('proof-of-work explorer exposes four independent acceptance gates without c
   }
   assert.match(html,/FINISHED/);
   assert.match(html,/supported by evidence/);
-  assert.match(html,/href="\/src\/professional\/working-standard.ts"/);
+  assert.match(html,/src="\/src\/professional\/working-standard.ts"/);
   assert.doesNotMatch(html,/100% complete|all checks passed|Nona Neuropsychology/);
 });
 test('activity workstation filters verified events and supports explicit refresh',async()=>{
