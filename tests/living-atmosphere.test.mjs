@@ -19,7 +19,7 @@ test("the optional 1080p video and reactive canvas are separate from real public
   assert.match(withVideo,/data-public-github-feed/);
   assert.match(withVideo,/data-public-spotify/);
   assert.match(withVideo,/data-public-work/);
-  assert.match(withVideo,/one-gpt-record/,{});
+  assert.match(withVideo,/data-public-gpt/);
   assert.doesNotMatch(withVideo,/fake metrics|rendered dashboard video|live coding confirmed/i);
 });
 test("video is original source-generated artwork; no vendor or client content",async()=>{
