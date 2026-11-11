@@ -5,7 +5,7 @@ import assets from "../.release/assets.mjs";
 import {PROFESSIONAL_ROUTES} from "../src/professional/site.mjs";
 import {approvedPublicProjects} from "../src/publication-manifest.mjs";
 
-const site=createHandler(assets,{version:"candidate-check",commit:"candidate"});
+const site=createHandler(assets,{version:"candidate-check",commit:"candidate"},{professionalCandidate:true});
 const get=async (path,options={})=>site.fetch(new Request("https://devonakins.com"+path,options));
 let checked=0;
 for(const [key,path] of Object.entries(PROFESSIONAL_ROUTES)){
@@ -43,6 +43,8 @@ assert.match(activity,/data-github-count/);
 assert.match(activity,/data-public-github-feed/);
 assert.doesNotMatch(activity,/Pushed 4 commits|Merged pull request #27|Released v0\.4\.0/);
 assert.equal((await get("/api/github/public-feed",{method:"HEAD"})).status,200);
+const compiledWorker=await readFile(".release/worker.mjs","utf8");
+assert.match(compiledWorker,/professionalCandidate:true/,"Selected production artifact must enable professional endpoint");
 for(const visual of ["/professional/headshot-concept.webp","/professional/concept-art.webp"]){
   const response=await get(visual);
   assert.equal(response.status,200,visual);
