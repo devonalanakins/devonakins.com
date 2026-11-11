@@ -4,6 +4,7 @@ on:
     branches:
       - feat/professional-editorial-identity-20261111
       - fix/prestige-spotify-crisp-art-20261111
+      - feat/proof-of-work-profile-20261111
 permissions:
   contents: read
 concurrency:
