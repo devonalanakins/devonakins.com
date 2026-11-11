@@ -28,6 +28,8 @@ try:
                 response=page.goto(BASE+"/",wait_until="domcontentloaded")
                 assert response.status==200,(engine,width,height,response.status)
                 assert page.locator('main#one-stage').count()==1
+                assert page.locator(".one-portrait").count()==0,(engine,width,height,"portrait removed")
+                assert page.locator('img[src*="headshot"]').count()==0,(engine,width,height,"no portrait resource")
                 assert page.locator('[data-one-view]:visible').count()==1,(engine,width,height,"initial panel")
                 assert page.locator('[data-public-github-feed]').count()==2
                 assert page.locator('[data-public-spotify]').count()==1
