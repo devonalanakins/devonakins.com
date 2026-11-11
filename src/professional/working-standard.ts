@@ -30,3 +30,5 @@ controls.forEach(control=>{
     selectMethod(keys[next],true);
   });
 });
+
+export {};
