@@ -9,7 +9,7 @@ import {renderPrestigeHome} from "./prestige-profile.mjs";
  * This is a layout, not a new telemetry source.
  */
 const navItems = Object.freeze([
-  ["home","Home"],["experience","Experience"],["work","Work"],
+  ["home","Profile"],["experience","Career"],["work","Missions"],
   ["activity","Activity"],["writing","Writing"],["contact","Contact"],
 ]);
 const esc = value => String(value ?? "").replace(/[&<>"']/g,
@@ -53,7 +53,7 @@ const home = view("home",renderPrestigeHome({publicFeed,button,spotifyCard}));
 
 const experience = view("experience",
   '<div class="one-inner-layout"><div class="one-inner-intro">'+
-  eyebrow("002 / EXPERIENCE","PROFESSIONAL PRACTICE")+
+  eyebrow("002 / CAREER","PROFESSIONAL EXPERIENCE")+
   '<h1>Operations with<br><em>technical depth.</em></h1>'+
   '<p class="one-lede">I bridge business operations and software engineering: organizing workflows, building infrastructure, and turning decisions into dependable systems.</p>'+
   '<p class="one-quiet">Nonclinical business responsibilities. Private client and patient work are never showcased.</p>'+
@@ -66,7 +66,7 @@ const experience = view("experience",
 
 const work = view("work",
   '<div class="one-view-frame">'+
-  '<div class="one-view-top">'+eyebrow("003 / WORK","SELECTED CASE STUDIES")+
+  '<div class="one-view-top">'+eyebrow("003 / MISSIONS","SELECTED CASE STUDIES")+
   '<h1>Work with <em>purpose.</em></h1>'+
   '<p>Only a focused selection appears here. GitHub activity is discovered separately across public repositories.</p></div>'+
   '<div class="one-projects">'+
@@ -77,7 +77,7 @@ const work = view("work",
 
 const activity = view("activity",
   '<div class="one-inner-layout one-activity-layout"><div class="one-inner-intro">'+
-  eyebrow("004 / ACTIVITY","THE PUBLIC WORK RECORD")+
+  eyebrow("004 / ACTIVITY","PUBLIC ACTIVITY LOG")+
   '<h1>Proof over<br><em>performance.</em></h1>'+
   '<p class="one-lede">A timestamped window into public repository activity, without hand-selecting every featured project. No private work, invented updates or claims of constant coding.</p>'+
   '<a href="https://github.com/devonalanakins" target="_blank" rel="noopener noreferrer" class="one-detail-link">Inspect the public GitHub profile ↗</a>'+
@@ -89,7 +89,7 @@ const activity = view("activity",
 
 const writing = view("writing",
   '<div class="one-inner-layout"><div class="one-inner-intro">'+
-  eyebrow("005 / WRITING","IDEAS AND ORIGINAL WORLDS")+
+  eyebrow("005 / CODEX","IDEAS AND ORIGINAL WORLDS")+
   '<h1>Curiosity,<br><em>in practice.</em></h1>'+
   '<p class="one-lede">Writing, mathematics, physics, and careful systems thinking inform the way I build. Original books and creative work develop alongside professional responsibilities.</p>'+
   '<a href="/writing/" class="one-detail-link">More about writing and research ↗</a></div>'+
