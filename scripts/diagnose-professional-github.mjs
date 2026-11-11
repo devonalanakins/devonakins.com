@@ -43,3 +43,20 @@ console.log("GITHUB_API_DIAG "+JSON.stringify({httpStatus:provider.status,error:
 const atom=await request("https://github.com/devonalanakins.atom",{Accept:"application/atom+xml", "User-Agent":"devonakins-public-feed-check"});
 console.log("GITHUB_ATOM_DIAG "+JSON.stringify({httpStatus:atom.status,error:atom.networkError||null,
   contentTypeOk:/xml|atom/i.test(atom.headers.get("content-type")||"")}));
+if(atom.status===200){
+  try{
+    const xml=await atom.text();
+    const entries=[...xml.matchAll(/<entry>([\\s\\S]*?)<\\/entry>/g)].slice(0,7).map(match=>{
+      const s=match[1];
+      const id=/<id>([^<]{1,200})<\\/id>/.exec(s)?.[1]||"";
+      const link=/<link[^>]*href="([^"]+)"[^>]*\\/>/.exec(s)?.[1]||"";
+      const repo=/^https:\\/\\/github\\.com\\/devonalanakins\\/([A-Za-z0-9_.-]{1,100})(?:[/?#]|$)/.exec(link)?.[1]||null;
+      const actor=/<author>[\\s\\S]*?<name>devonalanakins<\\/name>/.test(s);
+      const published=/<published>[^<]+<\\/published>/.test(s);
+      const updated=/<updated>[^<]+<\\/updated>/.test(s);
+      const idKind=/^tag:github\\.com,\\d{4}:([A-Za-z]+)\\//.exec(id)?.[1]||null;
+      return {idKind,repo,actor,published,updated,hasAlternateLink:link.startsWith("https://github.com/")};
+    });
+    console.log("GITHUB_ATOM_STRUCTURE "+JSON.stringify({size:xml.length,entries:entries.length,examples:entries}));
+  }catch { console.log("GITHUB_ATOM_STRUCTURE "+JSON.stringify({parseError:true}));}
+}
