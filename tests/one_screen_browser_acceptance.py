@@ -31,6 +31,26 @@ try:
                 assert page.locator(".one-portrait").count()==0,(engine,width,height,"portrait removed")
                 assert page.locator(".prestige-player").count()==1,(engine,width,height,"prestige identity")
                 assert page.locator(".prestige-command").count()==1,(engine,width,height,"public signal board")
+                # Concept review checks actual layout instead of only presence
+                # of familiar old Prestige classes. Primary actions must never
+                # be clipped underneath the mobile/short-laptop panel stack.
+                assert page.locator(".concept-console").count()==1,(engine,width,height,"concept layout")
+                assert page.locator(".concept-intro .prestige-player-actions .one-button").count()==2
+                assert page.locator(".concept-live [data-public-work]").count()==1
+                assert page.locator(".concept-signal-band .p-spotify-card").count()==1
+                assert page.locator(".concept-signal-band .one-gpt-record").count()==1
+                if height>470:
+                    assert page.evaluate("""() => {
+                      const section=document.querySelector('.concept-intro').getBoundingClientRect();
+                      const actions=[...document.querySelectorAll('.concept-intro .prestige-player-actions .one-button')];
+                      const heading=document.querySelector('.concept-intro h1').getBoundingClientRect();
+                      const within=e=>{const b=e.getBoundingClientRect();return b.width>0&&b.height>0&&b.top>=section.top-2&&b.bottom<=section.bottom+2&&b.left>=section.left-2&&b.right<=section.right+2};
+                      return heading.width>0&&heading.top>=section.top-2&&heading.bottom<=section.bottom+2&&actions.length===2&&actions.every(within);
+                    }"""),(engine,width,height,"concept hero or actions clipped")
+                if width>1200 and height>=820:
+                    for panel in (".concept-process",".concept-quality",".concept-featured",".concept-focus",".concept-activity-ribbon"):
+                        assert page.locator(panel).is_visible(),(engine,width,height,panel,"concept panel missing")
+                assert page.locator(".concept-live .concept-feed-filters [data-github-filter]").count()==3
                 # Compact work badge must never cover the workstation heading.
                 # A full-viewport screenshot will not reveal intra-card overlap.
                 if width<=400:
