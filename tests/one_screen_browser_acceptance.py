@@ -33,7 +33,13 @@ try:
                 assert page.locator('[data-one-view]:visible').count()==1,(engine,width,height,"initial panel")
                 assert page.locator('[data-public-github-feed]').count()==2
                 assert page.locator('[data-public-spotify]').count()==1
-                assert page.locator('[data-public-gpt]').count()==2
+                # The Home tile is a dated owner-recorded GPT snapshot;
+                # Activity retains a separate consent-filtered live card.
+                assert page.locator('[data-public-gpt]').count()==1,(engine,width,height,"activity GPT")
+                assert page.locator('.one-gpt-record').count()==1,(engine,width,height,"dated GPT")
+                assert page.locator('.one-gpt-record').get_attribute("href")=="/gpt/"
+                assert "≈3.3B" in page.locator('.one-gpt-record').inner_text()
+                assert "526.3M" in page.locator('.one-gpt-record').inner_text()
                 dimensions=page.evaluate("""() => ({
                   doc:document.documentElement.scrollHeight,
                   width:document.documentElement.scrollWidth,
@@ -51,12 +57,17 @@ try:
                 # remain inside their actual tiles, not just the document.
                 if width<=760 or height<=470:
                     assert page.evaluate("""() => {
-                      return [...document.querySelectorAll(".one-signal-bottom .p-signal-card")].every(card => {
-                        const child=card.querySelector("[data-spotify-title], [data-gpt-value]");
-                        if(!child)return false;
+                      const spotify=document.querySelector(".one-signal-bottom .p-spotify-card");
+                      const recorded=document.querySelector(".one-signal-bottom .one-gpt-record");
+                      const within=(card,child) => {
+                        if(!card || !child) return false;
                         const a=card.getBoundingClientRect(),b=child.getBoundingClientRect();
-                        return b.top>=a.top-2 && b.bottom<=a.bottom+2;
-                      });
+                        return b.top>=a.top-2 && b.bottom<=a.bottom+2 &&
+                          b.left>=a.left-2 && b.right<=a.right+2;
+                      };
+                      return within(spotify,spotify?.querySelector("[data-spotify-title]")) &&
+                        [...(recorded?.querySelectorAll(".one-gpt-record-values strong")||[])].length===2 &&
+                        [...recorded.querySelectorAll(".one-gpt-record-values strong")].every(v => within(recorded,v));
                     }"""),(engine,width,height,"source title containment")
                 # The page includes two differently sized tablists: choose visible tab.
                 tabs=page.locator('.one-tabs-mobile [role="tablist"]' if width<=760 else '.one-tabs-desktop [role="tablist"]')
