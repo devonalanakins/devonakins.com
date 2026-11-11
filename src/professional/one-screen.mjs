@@ -2,6 +2,7 @@ import {spotifyCard,gptSignalCard} from "./signal-cards.mjs";
 import {brandIcon} from "./brand-icons.mjs";
 import {renderOneScreenGptSummary} from "./gpt-capture.mjs";
 import {renderPrestigeHome} from "./prestige-profile.mjs";
+import {renderWorkingStandard} from "./working-standard.mjs";
 
 /**
  * Opt-in one-viewport design candidate. Existing routes and consent-filtered
@@ -58,11 +59,7 @@ const experience = view("experience",
   '<p class="one-lede">I design, develop and maintain software, connect technology with business operations, and pursue original research and writing.</p>'+
   '<p class="one-quiet">First-party applications, organizational systems and creative work—built to be understood, maintained and used.</p>'+
   '<a class="one-detail-link" href="/experience/">Full résumé and academic background ↗</a></div>'+
-  '<div class="one-fact-stack">'+
-  '<article><span>01 / INDEPENDENT PRACTICE</span><h2>Software engineering</h2><p>Applications, infrastructure, integrations and verified delivery.</p></article>'+
-  '<article><span>02 / PROFESSIONAL PRACTICE</span><h2>Business operations</h2><p>Workflow design, organizational systems and technology leadership.</p></article>'+
-  '<article><span>03 / FOUNDATION</span><h2>Research and writing</h2><p>Mathematics, physics, technical inquiry, authorship and communication.</p></article>'+
-  '</div></div>');
+  renderWorkingStandard()+'</div>');
 
 const work = view("work",
   '<div class="one-view-frame">'+
@@ -84,6 +81,7 @@ const activity = view("activity",
   '<div class="one-activity-gpt">'+gptSignalCard()+'</div></div>'+
   '<section class="one-activity-feed one-panel"><header class="one-panel-head">'+brandIcon("github")+
   '<span><strong>PUBLIC EVENTS</strong><small>GitHub · source-qualified</small></span></header>'+
+  <div class="one-activity-tools" role="group" aria-label="Filter GitHub history"><button type="button" data-github-filter="all" aria-pressed="true">All</button><button type="button" data-github-filter="push" aria-pressed="false">Pushes</button><button type="button" data-github-filter="pull_request" aria-pressed="false">PRs</button><button type="button" data-github-filter="issue" aria-pressed="false">Issues</button><button type="button" data-github-filter="release" aria-pressed="false">Releases</button><button type="button" data-github-refresh aria-label="Check GitHub for new public events">Refresh</button></div>'+
   publicFeed("one-activity-github",6)+
   '<p class="one-activity-note">GitHub events are timestamped history. Playback and editor status use separate sources.</p></section></div>');
 
@@ -128,7 +126,7 @@ export function renderOneScreenHome({datedCapture=null}={}) {
     '<link rel="preload" as="image" type="image/svg+xml" href="/professional/mission-systems.svg">'+
     '<link rel="preload" as="image" type="image/svg+xml" href="/professional/mission-site.svg">'+
     '<script type="module" src="/src/professional/client.ts"></script>'+
-    '<script type="module" src="/src/professional/one-screen.ts"></script>'+
+    '<script type="module" src="/src/professional/one-screen.ts"></script><script type="module" src="/src/professional/working-standard.ts"></script>'+
     '</head><body class="p-body one-body">'+
     '<a class="one-skip" href="#one-stage">Skip to the content</a>'+
     '<div class="one-world" aria-hidden="true"><div class="one-world-glow"></div><div class="one-world-grid"></div></div>'+
