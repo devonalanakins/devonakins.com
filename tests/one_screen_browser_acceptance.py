@@ -59,6 +59,9 @@ try:
                   const note=card.querySelector('[data-spotify-note]');
                   const state=card.querySelector('[data-spotify-state]');
                   const progress=card.querySelector('[data-spotify-progress]');
+                  const original={mode:card.dataset.spotifyMode,title:title.textContent,
+                    artist:artist.textContent,note:note.textContent,state:state.textContent,
+                    hidden:progress.hidden,max:progress.max,value:progress.value};
                   card.dataset.spotifyMode='playing';
                   title.textContent='The Longest Synthwave Soundtrack Title That Could Ever Exist';
                   artist.textContent='A Collaborative Producer Featuring Another Artist';
@@ -84,6 +87,14 @@ try:
                     noTextOverlap:!visible(artist)||disjoint(title,artist),
                     noteHidden:!visible(note),titleVisible:visible(title),stateVisible:visible(state),
                     cardWidth:bounds(card).width};
+                  // Return the page to its actual provider-driven status before
+                  // the screenshots are taken: never retain fabricated playback.
+                  if(original.mode===undefined)delete card.dataset.spotifyMode;
+                  else card.dataset.spotifyMode=original.mode;
+                  title.textContent=original.title;artist.textContent=original.artist;
+                  note.textContent=original.note;state.textContent=original.state;
+                  progress.hidden=original.hidden;progress.max=original.max;
+                  progress.value=original.value;
                   return result;
                 }""")
                 assert all(spotify_layout[key] for key in ("inside","noHeadOverlap",
