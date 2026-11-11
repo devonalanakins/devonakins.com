@@ -8,6 +8,7 @@ const get=path=>site.fetch(new Request("https://devonakins.com"+path));
 const home=await (await get("/")).text();
 assert.match(home,/class="p-body one-body"/);
 assert.match(home,/id="one-stage"/);
+assert.doesNotMatch(home,/headshot-concept\.webp|one-portrait/);
 assert.match(home,/src="\/assets\/[^"]+\.js"/);
 assert.match(home,/href="\/assets\/[^"]+\.css"/);
 assert.match(home,/data-public-spotify/);
