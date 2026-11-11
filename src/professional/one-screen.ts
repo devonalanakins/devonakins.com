@@ -11,17 +11,28 @@ const panels=[...document.querySelectorAll<HTMLElement>("[data-one-view]")];
 // A fixed viewport cannot show an unbounded list. Match the public event
 // summary to the number of rows the visible panel can actually accommodate.
 // The full recent public history remains accessible from the GitHub profile.
-const width=window.innerWidth;
-const height=window.innerHeight;
-const narrowShort=width<=400&&height<=700;
-const mobile=width<=760;
-const shortWide=width>760&&height<=470;
-const homeLimit=narrowShort||shortWide?1:mobile?2:4;
-const activityLimit=narrowShort||shortWide?2:mobile?4:6;
 const homeFeed=document.getElementById("one-home-github");
 const activityFeed=document.getElementById("one-activity-github");
-if(homeFeed)homeFeed.dataset.limit=String(homeLimit);
-if(activityFeed)activityFeed.dataset.limit=String(activityLimit);
+// The one-screen HUD can rotate without a reload. Recalculate the number of
+// visible, timestamped public events when the available viewport changes.
+function syncFeedCapacity(){
+  const width=window.innerWidth;
+  const height=window.innerHeight;
+  const narrowShort=width<=400&&height<=700;
+  const mobile=width<=760;
+  const shortWide=width>760&&height<=470;
+  const homeLimit=narrowShort||shortWide?1:mobile?2:4;
+  const activityLimit=narrowShort||shortWide?2:mobile?4:6;
+  const changed=(homeFeed&&homeFeed.dataset.limit!==String(homeLimit))||
+    (activityFeed&&activityFeed.dataset.limit!==String(activityLimit));
+  if(homeFeed)homeFeed.dataset.limit=String(homeLimit);
+  if(activityFeed)activityFeed.dataset.limit=String(activityLimit);
+  // Repaint only the existing validated snapshot; do not fetch or fabricate
+  // events on visual resize, and do not change source privacy permissions.
+  if(changed)window.dispatchEvent(new Event("devon:feed-layout-changed"));
+}
+syncFeedCapacity();
+window.addEventListener("resize",syncFeedCapacity);
 const known=(value:string|null):value is TabName=>!!value&&names.includes(value as TabName);
 const currentHash=():TabName=>{
   const raw=location.hash.slice(1).toLowerCase();
