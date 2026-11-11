@@ -71,7 +71,9 @@ for (const module of [
   "presence-preferences", "presence-editor-api",
   "cloud-presence-model", "cloud-presence-api", "activity-tasks", "github-actions-oidc", "live-signal", "activity-history",
   "listening-collections", "threads-public", "threads-public-d1", "threads-owner-probe", "threads-owner-oauth",
+  "professional/github-public",
 ]) {
+  if (module.includes("/")) await mkdir(".release/" + module.split("/")[0], {recursive:true});
   await writeFile(".release/" + module + ".mjs", await readFile("src/" + module + ".mjs"));
 }
 // Server-only pure public graph renderers support no-JS date replay on an
@@ -84,7 +86,7 @@ await writeFile(".release/content.mjs",await readFile("src/content.mjs"));
 await writeFile(".release/publication-manifest.mjs",await readFile("src/publication-manifest.mjs"));
 await writeFile(
   ".release/worker.mjs",
-  `import assets from './assets.mjs';import {createHandler} from './handler.mjs';export default createHandler(assets,${JSON.stringify(release)});\n`,
+  `import assets from './assets.mjs';import {createHandler} from './handler.mjs';export default createHandler(assets,${JSON.stringify(release)},{professionalCandidate:${JSON.stringify(process.env.PROFESSIONAL_SITE_CANDIDATE === "1")}});\n`,
 );
 await writeFile(
   ".release/release.json",

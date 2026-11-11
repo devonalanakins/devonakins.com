@@ -1,4 +1,5 @@
 import { renderPublishedField } from "./v5/field-response.mjs";
+import { createProfessionalGithubReader } from "./professional/github-public.mjs";
 import { projectPublicGithubEvents, unavailablePublicGithub, projectPublicTelemetry, validPublicGithubSignal, githubCooldownMs } from "./public-telemetry.mjs";
 import { createD1PresenceReader } from "./listening-d1-presence.mjs";
 import { createListeningOwnerApi } from "./listening-owner-api.mjs";
@@ -47,6 +48,9 @@ export function createHandler(assets, release, options = {}) {
   const collectionsApi = createListeningCollections({clock:()=> (options.now || (()=>new Date()))().getTime()});
   const now = options.now || (() => new Date());
   const githubFetch = options.githubFetch || fetch;
+  const readProfessionalGithub = createProfessionalGithubReader({
+    fetchImpl: githubFetch, clock: now, cache: options.cache,
+  });
   const successfulTtlMs = 5 * 60_000;
   const failureTtlMs = 10 * 60_000;
   const maxTtlMs = 4 * 60 * 60_000;
@@ -275,6 +279,15 @@ export function createHandler(assets, release, options = {}) {
       if(url.pathname==='/api/activity/v4') {
         const headers={...securityHeaders,'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store','CDN-Cache-Control':'no-store'};
         return new Response(request.method==='HEAD'?null:JSON.stringify(await liveSignal(env)),{headers});
+      }
+      if (options.professionalCandidate === true && url.pathname === "/api/github/public-feed") {
+        const headers = {
+          ...securityHeaders,
+          "Content-Type": "application/json; charset=utf-8",
+          "Cache-Control": "no-store",
+        };
+        if (request.method === "HEAD") return new Response(null, {headers});
+        return new Response(JSON.stringify(await readProfessionalGithub()), {headers});
       }
       if (url.pathname === "/_health")
         return new Response(

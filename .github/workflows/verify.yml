@@ -186,3 +186,45 @@ jobs:
           path: .artifacts/v5-site-candidate/
           if-no-files-found: warn
           retention-days: 14
+
+  professional_candidate:
+    # Source-only preview runs in parallel with the long baseline suite to
+    # produce timely desktop/mobile evidence. Baseline verify remains a separate
+    # required gate for review and protected release, never bypassed here.
+    if: github.head_ref == 'feat/professional-github-portfolio-20261110' || github.ref == 'refs/heads/feat/professional-github-portfolio-20261110'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - run: npm ci
+      - name: Build opt-in professional candidate (production defaults unchanged)
+        run: PROFESSIONAL_SITE_CANDIDATE=1 npm run build
+      - name: Verify generated routes and linked Worker assets
+        run: node scripts/verify-professional-candidate.mjs
+      - name: Install pinned Chromium and WebKit browser acceptance
+        run: |
+          python3 -m pip install --disable-pip-version-check playwright==1.57.0
+          python3 -m playwright install --with-deps chromium webkit
+      - name: Check desktop and phone interactions in both browser engines
+        run: python3 tests/professional_browser_acceptance.py
+      - name: Preserve reviewable professional candidate and screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: professional-site-candidate
+          path: |
+            dist/
+            browser-qa/professional/
+          if-no-files-found: warn
+          retention-days: 14

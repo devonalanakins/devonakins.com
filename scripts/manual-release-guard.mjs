@@ -10,6 +10,8 @@ export function manualReleaseError({
   releaseVariant,
   v5BuildFlag,
   v5Confirmation,
+  professionalBuildFlag = "0",
+  professionalConfirmation = "",
   githubOidcAction = "preserve",
   githubOidcConfirmation = "",
   workerConfig,
@@ -33,18 +35,31 @@ export function manualReleaseError({
   if (releaseVariant !== "v4" && githubOidcAction !== "preserve")
     return "GitHub OIDC activation and emergency disable are allowed on the protected V4 release only.";
   if (releaseVariant === "v4") {
-    if (v5BuildFlag !== "0")
-      return "The V4 release must use the V4 build. Do not enable V5 for the privacy hotfix.";
+    if (v5BuildFlag !== "0" || professionalBuildFlag !== "0")
+      return "The V4 release must use the V4 build. Do not enable V5 or professional during a V4 hotfix.";
+    if (v5Confirmation || professionalConfirmation)
+      return "The V4 release cannot carry another cutover confirmation.";
     return null;
   }
   if (releaseVariant === "v5") {
-    if (v5BuildFlag !== "1")
-      return "V5 release requested but the V5 build is not selected.";
+    if (v5BuildFlag !== "1" || professionalBuildFlag !== "0")
+      return "V5 build is not selected exclusively; professional must be off.";
+    if (professionalConfirmation)
+      return "V5 release cannot carry a professional cutover confirmation.";
     if (v5Confirmation !== "V5-CUTOVER-APPROVED")
       return "V5 cutover is not authorized. For the existing privacy hotfix select v4; V5 requires a tested main commit, approved review, and exact V5-CUTOVER-APPROVED confirmation.";
     return null;
   }
-  return "release_variant must be v4 or v5.";
+  if (releaseVariant === "professional") {
+    if (professionalBuildFlag !== "1" || v5BuildFlag !== "0")
+      return "Professional release requested but the exclusive professional build is not selected.";
+    if (v5Confirmation)
+      return "Professional release cannot carry a V5 cutover confirmation.";
+    if (professionalConfirmation !== "PROFESSIONAL-CUTOVER-APPROVED")
+      return "Professional cutover requires exact PROFESSIONAL-CUTOVER-APPROVED confirmation after review of the tested main commit and public-case-study privacy.";
+    return null;
+  }
+  return "release_variant must be v4, v5, or professional."
 }
 
 // Workflow-only CLI. Never contacts providers or prints tokens.
@@ -61,6 +76,8 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === resolve(process.argv[1
       releaseVariant: process.env.RELEASE_VARIANT,
       v5BuildFlag: process.env.V5_PUBLIC_SITE_CANDIDATE,
       v5Confirmation: process.env.V5_CONFIRMATION,
+      professionalBuildFlag: process.env.PROFESSIONAL_SITE_CANDIDATE,
+      professionalConfirmation: process.env.PROFESSIONAL_CONFIRMATION,
       githubOidcAction: process.env.GITHUB_OIDC_ACTION || "preserve",
       githubOidcConfirmation: process.env.GITHUB_OIDC_CONFIRMATION || "",
       workerConfig,
