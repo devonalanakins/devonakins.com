@@ -41,6 +41,11 @@ for(const path of all){
   assert.equal(res.status,200,"Missing professional route "+path);
   assert.match(res.headers.get("content-type")||"",/text\/html/i,path);
   assert.match(res.headers.get("content-security-policy")||"",/frame-ancestors 'none'/i,path);
+  if(path==="/" || path==="/activity/")
+    assert.match(res.headers.get("content-security-policy")||"",
+      /connect-src 'self' https:\/\/api\.github\.com;/,
+      "Professional browser fallback must be allowed by deployed CSP");
+
   assert.equal(res.headers.get("x-content-type-options"),"nosniff",path);
   const html=await res.text();
   assert.match(html,/class="p-body p-page-/,path+" must use professional shell");
@@ -121,7 +126,10 @@ assert.ok(["hidden","public"].includes(snapshot.work?.visibility));
 assert.ok(["hidden","public"].includes(snapshot.remote?.visibility));
 if(snapshot.remote?.visibility==="hidden")assert.deepEqual(snapshot.remote.tasks,[]);
 for(const path of ["/source/","/v2/","/studio/"]){
-  assert.equal((await get(path)).status,200,"Legacy route lost: "+path);
+  const legacy=await get(path);
+  assert.equal(legacy.status,200,"Legacy route lost: "+path);
+  assert.doesNotMatch(legacy.headers.get("content-security-policy")||"",
+    /api\.github\.com/, "Legacy or owner-facing content must retain self-only CSP");
 }
 assert.equal((await get("/__v5_preview__/")).status,404,"V5 preview must remain unavailable");
 assert.equal((await get("/api/github/public-feed",{method:"POST"})).status,405);
