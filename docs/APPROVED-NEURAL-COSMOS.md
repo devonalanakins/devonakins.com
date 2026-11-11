@@ -1,25 +1,35 @@
-# Neural-cosmos owner-art integration (PR #106)
+# Neural-cosmos art — source, verification and release (PR #106)
 
-**Status: source implemented; awaiting final reviewed media in this branch. Not released.**
+**Status as of 2026-11-11:** Original motion source and poster are **committed in draft PR #106**; technical verification is in progress. **Not merged, not deployed, and not creatively accepted yet.**
 
-The original 1920×1080, 24fps, silent 3.5-second H.264 film and 1920×1080 WebP poster are kept separate from the decorative UI code and all public telemetry. The current generator retains its first-party procedural fallback. Never claim that the fallback satisfies creative acceptance.
+The Living Console keeps its real GitHub/Spotify/work/GPT UI and source contracts in DOM/JavaScript. The silent neural-cosmos film is decorative. Never use motion to imply work status, live activity, or account usage.
 
-## Exact approved inputs
+## Source assets
 
-Unpack the ready-to-commit `DevonAkins-Neural-Cosmos-Repo-Assets.zip` at the repository root. It contains exactly:
+These assets are part of the repository, not external URLs or simulated data:
 
-- `assets/approved/neural-cosmos-1920x1080.mp4` — SHA-256 `cee2ca738e0be5d7fb635a19433d8785c2f51930c0c39560958e23d73c8f5c4d`.
-- `assets/approved/neural-cosmos-1920x1080.webp` — SHA-256 `b71490301500b59891613d19a954409c29f5420d8928c2ddac2f5c704db05054`.
+- `assets/approved/neural-cosmos-1920x1080.mp4` — H.264, 1920 × 1080, 24 fps, 3.5 s, silent, 337,081 bytes. SHA-256: `cee2ca738e0be5d7fb635a19433d8785c2f51930c0c39560958e23d73c8f5c4d`. Git blob: `6ba3357b08941bbdeeb71272f4468ea124131307`.
+- `assets/approved/neural-cosmos-1920x1080.webp` — 1920 × 1080, 319,620 bytes. SHA-256: `b71490301500b59891613d19a954409c29f5420d8928c2ddac2f5c704db05054`. Git blob: `f4e672f3c75b14f5fed266bb9613877f1d0ca66a`.
 
-The generator checks each digest, verifies poster dimensions, probes the video for codec/frame size/frame rate/audio absence and duration, then copies the film into `public/professional/living-atmosphere.mp4` and transcodes the optimized poster to `public/professional/living-atmosphere.png`. The Cloudflare build continues to package these same-origin assets; its existing MP4 range/HEAD implementation remains unchanged.
+Both are integrated in commit `34292b78c5e84a2eee0c303729774116726d42b7`; GitHub's recursive tree was checked at later branch head and showed the two expected sizes and blob SHAs.
 
-A missing pair retains the existing procedural fallback for ordinary technical CI. `REQUIRE_APPROVED_NEURAL_ART=1` fails closed when the artwork is absent. A single missing file or digest mismatch always fails, even without the strict flag.
+The selected one-screen build verifies both SHA-256 digests, checks 1920×1080 poster dimensions, validates video codec, frame size, frame rate, absence of audio, and duration when ffprobe is present, then packages a local `/professional/living-atmosphere.mp4` and PNG poster. The existing Cloudflare Worker MP4 range/HEAD handling is preserved.
 
-## Final acceptance gates
+### Strict release behavior
 
-1. Add the exact two binary assets to **this draft branch** and require the strict flag for the selected full-motion build. Do not switch the existing protected production release before this happens.
-2. Execute baseline `npm run build && npm test`, one-screen candidate build, FFmpeg movie verification, protected Worker asset checks and Chromium/WebKit desktop/mobile/landscape screenshots on the exact commit.
-3. Inspect actual on-page framing, contrast, reduced-motion and data-saver behavior, control accessibility and interaction with real provider empty/available states. Confirm that no UI is baked into the film and that the motion never masquerades as live activity.
-4. Obtain explicit owner creative acceptance and the normal protected exact-main-SHA release approval. After deploying, verify live Worker SHA, video byte-range response, poster, source-qualified public feeds and mobile experience.
+- `REQUIRE_APPROVED_NEURAL_ART=1` **fails closed** if either original asset is missing or if ffprobe is unavailable. Any digest mismatch or incomplete pair fails even without that flag.
+- `.github/workflows/prestige-profile-review.yml` enables strict verification for the HD motion job with FFmpeg installed. Chromium/WebKit candidate review uses the same committed assets without requiring ffprobe inside its browser image.
+- `.github/workflows/deploy.yml` enables strict verification only for a separately approved `release_variant=one-screen`. Baseline V4, V5 and professional variants remain isolated.
+- Source-level tests assert the two real digests, strict negative case in an isolated empty directory, and both workflow gates.
 
-The provided media zip is a local build artifact, not a GitHub commit. No direct binary upload into the connected repository was available through the current tools. Do not mark this task **LIVE** or creatively **VERIFIED** until the binary files and visual checks exist in GitHub and production.
+The procedural generator remains a fail-safe when the new art is absent in an ordinary exploratory build, **not** an acceptable substitute for approved site release.
+
+## Evidence and remaining gates
+
+**Local media evidence:** source ZIP SHA-256 hashes and exact Git blobs verified; ffprobe reported H.264, 1920×1080, 24 fps, 3.5 s and only one video stream.
+
+**Local visual evidence:** an offline render of the existing compiled candidate with the original film and later compact-header CSS checked Chromium at 1440×900, 390×844, 320×640 and 844×390. The film decoded and played in all four; the document had no horizontal or vertical overflow. This was a local static/inlined-asset rendering, **not** a full networked application/API acceptance and not an exact-head GitHub build. The mobile header collision was fixed and a dedicated browser assertion was added to the source.
+
+**Pending:** exact-head CI success on the final SHA (baseline, strict motion, real browser assets and responsive screenshots); human creative acceptance; non-expert usability check; protected production release approval; post-release HTTP, source-feed and phone verification. No changes to production Cloudflare secrets, bindings, consent or reporter identity are authorized by this PR.
+
+Keep [PR #106](https://github.com/devonalanakins/devonakins.com/pull/106) draft/unmerged until all appropriate gates pass. Green CI alone does not authorize production cutover.
