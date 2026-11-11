@@ -83,6 +83,23 @@ try:
                         [...(recorded?.querySelectorAll(".one-gpt-record-values strong")||[])].length===2 &&
                         [...recorded.querySelectorAll(".one-gpt-record-values strong")].every(v => within(recorded,v));
                     }"""),(engine,width,height,"source title containment")
+                # Dense 320px phones must keep both career actions together and
+                # never clip the labels or the sourced GPT numbers behind a panel.
+                if width<=400 and height<=700:
+                    assert page.evaluate("""() => {
+                      const actions=[...document.querySelectorAll('.prestige-player-actions .one-button')];
+                      const player=document.querySelector('.prestige-player').getBoundingClientRect();
+                      const tiles=document.querySelector('.prestige-stat-pair').getBoundingClientRect();
+                      const stage=document.querySelector('.one-stage').getBoundingClientRect();
+                      const status=document.querySelector('#one-home-github [data-feed-status]').getBoundingClientRect();
+                      if(actions.length!==2)return false;
+                      const a=actions[0].getBoundingClientRect(),b=actions[1].getBoundingClientRect();
+                      return Math.abs(a.top-b.top)<3 && a.right<=player.right+2 &&
+                        b.right<=player.right+2 && b.bottom<=player.bottom+2 &&
+                        tiles.bottom<=stage.bottom+2 && tiles.height>=84 &&
+                        status.top>=stage.top && status.bottom<=tiles.top;
+                    }"""),(engine,width,height,"compact action wrapping or sourced stat clipping")
+
                 # The page includes two differently sized tablists: choose visible tab.
                 tabs=page.locator('.one-tabs-mobile [role="tablist"]' if width<=760 else '.one-tabs-desktop [role="tablist"]')
                 for label,key in (("Career","experience"),("Missions","work"),("Activity","activity"),("Writing","writing"),("Contact","contact"),("Profile","home")):
