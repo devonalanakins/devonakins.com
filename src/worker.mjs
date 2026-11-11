@@ -392,6 +392,16 @@ export function createHandler(assets, release, options = {}) {
         ETag: selected.etag,
         Vary: "Accept-Encoding",
       });
+      // The browser-direct GitHub resilience path is permitted only on
+      // explicitly public professional HTML. Owner/private V2/legacy pages
+      // retain the original self-only connect-src policy.
+      if (options.professionalCandidate === true && status === 200 && isHtml &&
+          (path === "/" ||
+           /^\/(?:activity|experience|work|writing|about|contact|gpt|listening)(?:\/|$)/.test(path))) {
+        headers.set("Content-Security-Policy",
+          securityHeaders["Content-Security-Policy"].replace(
+            "connect-src 'self';","connect-src 'self' https://api.github.com;"));
+      }
       if (status === 404) headers.set("Cache-Control", "no-store");
       if (
         status === 200 &&
