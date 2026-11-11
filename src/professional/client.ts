@@ -167,9 +167,10 @@ function paint(){
     const stamp=snapshot && Number.isFinite(Date.parse(snapshot.checkedAt))
       ? " · checked "+new Date(snapshot.checkedAt).toLocaleTimeString([],{hour:"numeric",minute:"2-digit"})
       : "";
+    const browserDirect=snapshot?.source===BROWSER_GITHUB_SOURCE;
     status.textContent=state==="available"
-      ? visible.length+" public event"+(visible.length===1?"":"s")+" in this view"+stamp
-      : state==="empty" ? "No qualifying recent public GitHub events"+stamp
+      ? visible.length+" public event"+(visible.length===1?"":"s")+" in this view"+(browserDirect?" · browser-direct GitHub API":"")+stamp
+      : state==="empty" ? "No qualifying recent public GitHub events"+(browserDirect?" · browser-direct GitHub API":"")+stamp
       : "Public GitHub feed temporarily unavailable. GitHub may be limiting requests; retrying automatically.";
   }
 
