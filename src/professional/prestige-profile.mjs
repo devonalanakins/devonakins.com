@@ -15,24 +15,24 @@ export function renderPrestigeHome({publicFeed,button,spotifyCard}) {
         '<div class="prestige-identity-copy">'+
           '<p class="prestige-eyebrow">OWNER-OPERATED · FLORIDA / REMOTE</p>'+
           '<h1>Devon <em>Akins.</em></h1>'+
-          '<p class="prestige-subtitle">OPERATIONS ARCHITECT <span aria-hidden="true">//</span> SOFTWARE ENGINEER</p>'+
+          '<p class="prestige-subtitle">SOFTWARE DEVELOPER <span aria-hidden="true">//</span> SYSTEMS DESIGNER</p>'+
         '</div>'+
       '</div>'+
-      '<p class="one-lede prestige-statement">I run nonclinical business operations and build the systems behind more reliable work.</p>'+
+      '<p class="one-lede prestige-statement">I build independent software, design useful systems and help organizations turn complex work into reliable operations.</p>'+
       '<div class="prestige-divider" aria-hidden="true"><span></span><b>PROFESSIONAL BUILD</b><span></span></div>'+
       '<div class="prestige-build" aria-label="Professional areas of work">'+
-        '<div class="prestige-build-row"><span class="prestige-build-index">01</span><div><strong>OPERATIONS</strong><small>Workflow reliability · administration</small></div><span class="prestige-build-end">PRIMARY</span></div>'+
-        '<div class="prestige-build-row"><span class="prestige-build-index">02</span><div><strong>ENGINEERING</strong><small>Software · infrastructure · delivery</small></div><span class="prestige-build-end">BUILDER</span></div>'+
-        '<div class="prestige-build-row"><span class="prestige-build-index">03</span><div><strong>AUTHORSHIP</strong><small>Original writing · research</small></div><span class="prestige-build-end">CREATOR</span></div>'+
+        '<div class="prestige-build-row"><span class="prestige-build-index">01</span><div><strong>ENGINEERING</strong><small>Applications · infrastructure · delivery</small></div><span class="prestige-build-end">BUILDER</span></div>'+
+        '<div class="prestige-build-row"><span class="prestige-build-index">02</span><div><strong>OPERATIONS</strong><small>Process design · coordination · strategy</small></div><span class="prestige-build-end">BUILDER</span></div>'+
+        '<div class="prestige-build-row"><span class="prestige-build-index">03</span><div><strong>AUTHORSHIP</strong><small>Writing · research · original worlds</small></div><span class="prestige-build-end">CREATOR</span></div>'+
       '</div>'+
       '<div class="prestige-player-actions">'+button('work','View missions',true)+button('experience','Career build')+'</div>'+
       '<div class="prestige-player-bottom">'+
-        '<span><b>CURRENT FOCUS</b><small>Professional operations & systems</small></span>'+
+        '<span><b>MY PRACTICE</b><small>Independent engineering · operations</small></span>'+
         '<span class="prestige-source-promise">REAL WORK <i aria-hidden="true">/</i> PUBLIC EVIDENCE</span>'+
       '</div>'+
     '</section>'+
     '<aside class="one-signals prestige-command" aria-label="Source-qualified public statistics and activity">'+
-      '<div class="prestige-command-top"><div><span class="prestige-command-eyebrow">LIVE OBSERVATORY / <b>PUBLIC RECORD</b></span><strong>THE SIGNAL BOARD</strong></div><span class="prestige-command-corner">VERIFIED WHEN AVAILABLE <i aria-hidden="true"></i></span></div>'+
+      '<div class="prestige-command-top"><div><span class="prestige-command-eyebrow">LIVE OBSERVATORY / <b>PUBLIC RECORD</b></span><strong>THE SIGNAL BOARD</strong></div><span class="prestige-command-corner prestige-presence" data-public-work data-work-mode="idle" role="status"><i class="prestige-presence-dot" aria-hidden="true"></i><span data-work-state>CHECKING SOURCE</span><span class="prestige-presence-detail" data-work-title>No verified active session</span><span class="prestige-visually-hidden" data-work-detail>Source status pending</span></span></div>'+
       '<section class="one-github one-panel prestige-activity-card"><header class="one-panel-head">'+
         '<span class="prestige-feed-mark" aria-hidden="true">GH</span>'+
         '<span><strong>GITHUB / ACTIVITY LOG</strong><small>Source-qualified public events</small></span>'+
