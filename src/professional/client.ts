@@ -139,7 +139,8 @@ function paintPublicEventSpark(snapshot: Snapshot | null, now: number){
   const bins=Array<number>(7).fill(0);
   if(available){
     for(const event of snapshot.events){
-      if(event.kind!=="push")continue; // Match the sourced push counter, not unrelated activity.\n      const stamp=Date.parse(event.at);
+      if(event.kind!=="push")continue; // Match the sourced push counter, not unrelated activity.
+      const stamp=Date.parse(event.at);
       if(!Number.isFinite(stamp)||stamp>now)continue;
       const daysAgo=Math.floor((now-stamp)/86400000);
       if(daysAgo>=0&&daysAgo<7)bins[6-daysAgo]++;
