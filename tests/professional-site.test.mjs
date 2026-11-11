@@ -14,7 +14,7 @@ const event={
   payload:{commits:[{message:"private details must not be rendered"}]},
 };
 const site=createHandler(assets,{version:"test",commit:"test"},{
-  now:()=>at,cache:null,
+  professionalCandidate:true, now:()=>at,cache:null,
   githubFetch:async()=>new Response(JSON.stringify([event]),{headers:{"Content-Type":"application/json"}}),
 });
 test("professional site has complete independent pages and accessible main navigation",()=>{
@@ -61,6 +61,14 @@ test("public GitHub route returns independently discovered public events, not pr
   assert.equal(await head.text(),"");
   const post=await site.fetch(new Request("https://devonakins.com/api/github/public-feed",{method:"POST"}));
   assert.equal(post.status,405);
+});
+test("V4 default build does not expose opt-in professional GitHub endpoint",async()=>{
+  const v4=createHandler(assets,{version:"test",commit:"test"},{now:()=>at,cache:null});
+  for(const method of ["GET","HEAD"]){
+    const result=await v4.fetch(new Request("https://devonakins.com/api/github/public-feed",{method}));
+    assert.equal(result.status,404,"V4 release must not publish professional endpoint");
+  }
+  assert.equal((await v4.fetch(new Request("https://devonakins.com/_health"))).status,200);
 });
 test("professional CSS obeys first-party CSP and supplies mobile/reduced motion styles",async()=>{
   const style=await readFile(new URL("../src/professional/site.css",import.meta.url),"utf8");
