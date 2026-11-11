@@ -18,6 +18,7 @@ type Snapshot = {
 };
 const panels = [...document.querySelectorAll<HTMLElement>("[data-public-github-feed]")];
 const filters = [...document.querySelectorAll<HTMLButtonElement>("[data-github-filter]")];
+const refreshButtons=[...document.querySelectorAll<HTMLButtonElement>("[data-github-refresh]")];
 const source = document.querySelector<HTMLElement>("[data-github-source-state]");
 const toggle = document.querySelector<HTMLButtonElement>(".p-mobile-toggle");
 const mobileNav = document.querySelector<HTMLElement>("#p-mobile-nav");
@@ -229,6 +230,7 @@ filters.forEach(filter=>filter.addEventListener("click",()=>{
 async function refresh(){
   if(busy || document.hidden || panels.length===0)return;
   busy=true;
+  refreshButtons.forEach(button=>{button.disabled=true;button.setAttribute("aria-busy","true");});
   try{
     const response=await fetch("/api/github/public-feed",{
       method:"GET",credentials:"omit",cache:"no-store",
@@ -249,9 +251,11 @@ async function refresh(){
     latest=rescue && valid(rescue) ? rescue : null;
   }finally{
     busy=false;
+    refreshButtons.forEach(button=>{button.disabled=false;button.removeAttribute("aria-busy");});
     paint();
   }
 }
+refreshButtons.forEach(button=>button.addEventListener("click",()=>{void refresh();}));
 if(panels.length){
   void refresh();
   window.setInterval(()=>{if(!document.hidden)void refresh()},5*60000);
