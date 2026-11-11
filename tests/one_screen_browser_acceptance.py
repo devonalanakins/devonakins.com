@@ -41,8 +41,6 @@ try:
                 })""")
                 assert dimensions["doc"] <= height+2,(engine,width,height,dimensions,"no vertical document scroll")
                 assert dimensions["width"] <= width+2,(engine,width,height,dimensions,"no horizontal document scroll")
-                group="Mobile sections" if width<=760 else "Explore"
-                tabs=page.get_by_role("tablist",name="Website sections").filter(visible=True)
                 # The page includes two differently sized tablists: choose visible tab.
                 tabs=page.locator('.one-tabs-mobile [role="tablist"]' if width<=760 else '.one-tabs-desktop [role="tablist"]')
                 for label,key in (("Experience","experience"),("Work","work"),("Activity","activity"),("Writing","writing"),("Contact","contact"),("Home","home")):
