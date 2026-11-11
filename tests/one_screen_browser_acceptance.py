@@ -125,6 +125,20 @@ try:
                 tabs.get_by_role("tab",name="Activity").click()
                 page.screenshot(path=str(OUT/f"{engine}-{width}x{height}-activity.png"))
                 tabs.get_by_role("tab",name="Profile").click()
+                if (width,height) in ((1440,900),(390,844)):
+                    # Keyboard equivalents for the six-panel gamer HUD must
+                    # select, focus and visibly render the intended panels.
+                    tabs.get_by_role("tab",name="Profile").focus()
+                    page.keyboard.press("ArrowRight")
+                    assert tabs.get_by_role("tab",name="Career").get_attribute("aria-selected")=="true"
+                    assert page.locator('[data-one-view="experience"]').is_visible()
+                    assert tabs.get_by_role("tab",name="Career").evaluate("(el) => el===document.activeElement")
+                    page.keyboard.press("End")
+                    assert tabs.get_by_role("tab",name="Contact").get_attribute("aria-selected")=="true"
+                    assert page.locator('[data-one-view="contact"]').is_visible()
+                    page.keyboard.press("Home")
+                    assert tabs.get_by_role("tab",name="Profile").get_attribute("aria-selected")=="true"
+                    assert page.locator('[data-one-view="home"]').is_visible()
                 page.screenshot(path=str(OUT/f"{engine}-{width}x{height}-home.png"))
                 assert not errors,(engine,width,height,errors)
                 context.close()
