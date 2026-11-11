@@ -252,9 +252,9 @@ jobs:
           python-version: "3.13"
       - run: npm ci
       - name: Build single-viewport professional candidate
-        run: ONE_SCREEN_SITE_CANDIDATE=1 npm run build
+        run: PROFESSIONAL_SITE_CANDIDATE=1 ONE_SCREEN_SITE_CANDIDATE=1 npm run build
       - name: Check candidate route and generated assets
-        run: node scripts/verify-professional-candidate.mjs
+        run: node scripts/verify-one-screen-candidate.mjs
       - name: Install pinned cross-browser verifier
         run: |
           python3 -m pip install --disable-pip-version-check playwright==1.57.0
