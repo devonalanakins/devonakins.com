@@ -71,7 +71,8 @@ assert.match(feedRes.headers.get("cache-control")||"",/no-store/i);
 const feed=await feedRes.json();
 assert.equal(feed.version,1);
 assert.ok(["GitHub public events API","GitHub public Atom feed"].includes(feed.source),"GitHub feed must name actual verified public source");
-assert.ok(["available","empty","unavailable"].includes(feed.status));
+assert.ok(["available","empty"].includes(feed.status),
+  "Production GitHub feed must be reachable, not merely return a valid unavailable envelope");
 assert.ok(Array.isArray(feed.events)&&feed.events.length<=32);
 for(const event of feed.events){
   assert.deepEqual(Object.keys(event).sort(),["at","kind","label","repo","url"]);
