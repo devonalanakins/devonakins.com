@@ -48,9 +48,6 @@ function project(tag,name,text,link,art) {
     '<h2>'+esc(name)+'</h2><p>'+esc(text)+'</p>'+
     '<a href="'+esc(link)+'" aria-label="Read more about '+esc(name)+'">Explore the work ↗</a></div></article>';
 }
-const commonPortrait='<div class="one-portrait" aria-hidden="true"><div class="one-portrait-aurora"></div>'+
-  '<img src="/professional/headshot-concept.webp" width="640" height="502" alt="" fetchpriority="high" decoding="async"></div>';
-
 const home = view("home",
   '<div class="one-home-layout"><div class="one-hero-copy">'+
   eyebrow("001 / IDENTITY","DEVON ALAN AKINS")+
@@ -59,7 +56,6 @@ const home = view("home",
   '<p class="one-lede">I help complex work run better through practical operations, thoughtful technology, and independently engineered systems.</p>'+
   '<div class="one-actions">'+button("experience","Experience",true)+button("work","Selected work")+'</div>'+
   '<p class="one-understatement">BUILT TO BE USEFUL. DESIGNED TO LAST.</p></div>'+
-  commonPortrait+
   '<aside class="one-signals" aria-label="Qualified public signals">'+
   '<section class="one-github one-panel"><header class="one-panel-head">'+brandIcon("github")+
   '<span><strong>PUBLIC WORK RECORD</strong><small>Recent GitHub activity</small></span>'+
