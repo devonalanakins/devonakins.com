@@ -19,7 +19,7 @@ try:
     with sync_playwright() as pw:
         for engine in ("chromium","webkit"):
             browser=getattr(pw,engine).launch()
-            for width,height in ((1440,900),(1024,768),(390,844),(320,640),(844,390)):
+            for width,height in ((1440,900),(1440,735),(1366,720),(1024,768),(390,844),(320,640),(844,390)):
                 mobile=width <= 844
                 context=browser.new_context(viewport={"width":width,"height":height},device_scale_factor=1,reduced_motion="reduce",is_mobile=mobile,has_touch=mobile)
                 page=context.new_page()
@@ -75,6 +75,7 @@ try:
                     return a.left>=b.left-2&&a.right<=b.right+2&&a.top>=b.top-2&&a.bottom<=b.bottom+2};
                   const disjoint=(a,b)=>{const x=bounds(a),y=bounds(b);
                     return x.right<=y.left+1||y.right<=x.left+1||x.bottom<=y.top+1||y.bottom<=x.top+1};
+                  const heading=card.querySelector('.p-spotify-heading');
                   const header=card.querySelector('.p-signal-head');
                   const body=card.querySelector('.p-spotify-body');
                   const art=card.querySelector('.p-spotify-art');
@@ -83,6 +84,7 @@ try:
                   const required=[header,body,title,state,...[artist,progress,...links].filter(visible)];
                   const result={inside:required.every(el=>inside(el,card)),
                     noHeadOverlap:disjoint(header,body),
+                    noHeaderLabelCollision:disjoint(heading,state),
                     noArtworkOverlap:!visible(art)||disjoint(art,meta),
                     noTextOverlap:!visible(artist)||disjoint(title,artist),
                     noteHidden:!visible(note),titleVisible:visible(title),stateVisible:visible(state),
@@ -98,7 +100,7 @@ try:
                   return result;
                 }""")
                 assert all(spotify_layout[key] for key in ("inside","noHeadOverlap",
-                    "noArtworkOverlap","noTextOverlap","noteHidden",
+                    "noHeaderLabelCollision","noArtworkOverlap","noTextOverlap","noteHidden",
                     "titleVisible","stateVisible")),(engine,width,height,"live spotify layout",spotify_layout)
 
                 # The Home tile is a dated owner-recorded GPT snapshot;
