@@ -59,6 +59,8 @@ jobs:
       V5_PUBLIC_SITE_CANDIDATE: ${{ inputs.release_variant == 'v5' && '1' || '0' }}
       PROFESSIONAL_SITE_CANDIDATE: ${{ (inputs.release_variant == 'professional' || inputs.release_variant == 'one-screen') && '1' || '0' }}
       ONE_SCREEN_SITE_CANDIDATE: ${{ inputs.release_variant == 'one-screen' && '1' || '0' }}
+      # A protected one-screen release must never silently use schematic fallback art.
+      REQUIRE_APPROVED_NEURAL_ART: ${{ inputs.release_variant == 'one-screen' && '1' || '0' }}
     steps:
       - uses: actions/checkout@v4
         with:
