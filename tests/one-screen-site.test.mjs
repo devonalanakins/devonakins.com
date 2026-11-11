@@ -25,7 +25,7 @@ test("existing consent-filtered public sources appear without invented live clai
   assert.match(html,/not a claim of coding now/);
   assert.doesNotMatch(html,/Pushed \d+ commits|Playing: .* by .*|LIVE NOW|Active editor session/i);
   assert.match(html,/mailto:devon@anevum\.com/);
-  assert.match(html,/headshot-concept\.webp/);
+  assert.doesNotMatch(html,/headshot-concept\.webp|one-portrait/,"No portrait imagery or placeholders in the one-screen homepage");
 });
 test("one-screen presentation remains first-party, motion-aware and viewport contained",async()=>{
   const css=await readFile(new URL("../src/professional/one-screen.css",import.meta.url),"utf8");
@@ -33,6 +33,8 @@ test("one-screen presentation remains first-party, motion-aware and viewport con
   const page=await readFile(new URL("../scripts/pages.mjs",import.meta.url),"utf8");
   assert.match(css,/height:100dvh/);
   assert.match(css,/overflow:hidden/);
+  assert.match(css,/\.one-home-layout\{height:100%;display:grid;grid-template-columns:minmax\(0,1fr\) minmax\(0,1\.07fr\)/);
+  assert.doesNotMatch(css,/\.one-portrait/);
   assert.match(css,/@media\(max-width:760px\)/);
   assert.match(css,/prefers-reduced-motion:reduce/);
   assert.doesNotMatch(css,/@import|https:\/\/fonts\./);
