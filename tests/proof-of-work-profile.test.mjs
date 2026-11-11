@@ -51,3 +51,10 @@ test('career explains real capability and its six-stage, four-gate working stand
   assert.equal((html.match(/<li><span>0[1-6]<\/span>/g)||[]).length,6);
   assert.doesNotMatch(html,/99.9% operational|all four passed|certified|10 years experience/i);
 });
+
+test('career evidence pane has a distinct focus surface and remains reduced-motion friendly',async()=>{
+  const css=await readFile(new URL('../src/professional/concept-console.css',import.meta.url),'utf8');
+  assert.match(css,/\.career-scene \.one-method-content\s*\{/);
+  assert.match(css,/\.career-scene \.one-method-detail\s*\{/);
+  assert.match(css,/@media\(max-width:400px\) and \(max-height:700px\)/);
+});

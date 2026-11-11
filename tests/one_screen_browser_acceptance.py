@@ -250,6 +250,19 @@ try:
                         assert page.locator(".one-method-path li").count()==6
                         assert page.locator(".one-method-control").count()==4
                         assert page.locator(".career-intro h1").is_visible()
+                        # Actual selected-gate behavior, not only static labels.
+                        engineering=page.locator('[data-method-select="engineering"]')
+                        engineering.click()
+                        assert engineering.get_attribute("aria-pressed")=="true"
+                        assert page.locator('[data-method-panel="engineering"]').is_visible()
+                        assert page.locator('[data-method-panel="product"]').is_hidden()
+                        engineering.focus()
+                        page.keyboard.press("ArrowRight")
+                        assert page.locator('[data-method-select="stewardship"]').get_attribute("aria-pressed")=="true"
+                        assert page.locator('[data-method-panel="stewardship"]').is_visible()
+                        page.keyboard.press("Home")
+                        assert page.locator('[data-method-select="product"]').get_attribute("aria-pressed")=="true"
+                        assert page.locator('[data-method-panel="product"]').is_visible()
                         assert page.evaluate("""() => {
                           const intro=document.querySelector('.career-intro').getBoundingClientRect();
                           const scene=document.querySelector('.career-scene').getBoundingClientRect();
