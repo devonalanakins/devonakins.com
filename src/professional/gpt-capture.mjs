@@ -34,9 +34,11 @@ export function validateDatedGptCapture(value) {
     throw new Error("Invalid owner-recorded GPT capture");
   }
   const instant = Date.parse(value.capturedAt);
-  const utcDate = new Date(instant).toISOString().slice(0,10);
-  const prevUtcDate = new Date(instant - 86400000).toISOString().slice(0,10);
-  if (![utcDate,prevUtcDate].includes(value.captureDate) || instant > Date.now()+60000)
+  const local = Object.fromEntries(new Intl.DateTimeFormat("en-US", {
+    timeZone:"America/New_York",year:"numeric",month:"2-digit",day:"2-digit",
+  }).formatToParts(new Date(instant)).map(part=>[part.type,part.value]));
+  const localDate = [local.year,local.month,local.day].join("-");
+  if (value.captureDate !== localDate || instant > Date.now()+60000)
     throw new Error("Invalid capture chronology");
 
   const p = value.profile;
@@ -46,7 +48,9 @@ export function validateDatedGptCapture(value) {
     ![p.lifetimeTokensApprox,p.peakTokensApprox,p.longestTaskHours,
       p.longestStreakDays,p.currentStreakDays,p.skillsExplored,p.totalSkillUses,
       p.fastModePercent,p.mostUsedReasoningPercent].every(integer) ||
-    p.fastModePercent > 100 || p.mostUsedReasoningPercent > 100 || p.mostUsedReasoning !== "Light")
+    p.fastModePercent > 100 || p.mostUsedReasoningPercent > 100 ||
+    typeof p.mostUsedReasoning !== "string" ||
+    !/^[A-Za-z][A-Za-z0-9 -]{0,39}$/.test(p.mostUsedReasoning))
     throw new Error("Invalid cumulative profile metrics");
 
   const w=value.usage7d;
@@ -101,7 +105,9 @@ export function renderDatedGptCapture(capture, oldSnapshot, priorCaptures=[]) {
     '<p class="p-gpt-source-note">Source panels refresh independently. Token panel last updated ' +
     escapeHtml(sourceTimeLabel(w.tokensUpdatedAt)) + '; plugin and skill panel last updated ' +
     escapeHtml(sourceTimeLabel(w.toolsUpdatedAt)) +
-    '. Values were observed in the owner recording, not retrieved from an OpenAI account API.</p></section>' +
+    '. Values were observed in the owner recording, not retrieved from an OpenAI account API. ' +
+    '<a class="p-text-link" href="/gpt/snapshots/' + escapeHtml(c.captureDate) +
+    '.json">Review this dated source</a></p></section>' +
     '<section class="p-section p-gpt-history" aria-labelledby="p-gpt-history-heading">' +
     '<div class="p-section-heading"><div><p class="p-eyebrow">HISTORICAL RECORD / PRESERVED</p>' +
     '<h2 id="p-gpt-history-heading">Earlier dated capture.</h2></div>' +
