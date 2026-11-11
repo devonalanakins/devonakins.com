@@ -146,6 +146,46 @@ try:
                 assert page.get_by_role("button",name="Pull requests").count()==1
                 page.get_by_role("button",name="Pull requests").click()
                 assert page.get_by_role("button",name="Pull requests").get_attribute("aria-pressed")=="true"
+                # When Cloudflare cannot reach GitHub, Chromium/WebKit must
+                # fetch only GitHub's public events API via browser CORS,
+                # discard private/unowned events and disclose the source.
+                page.unroute("**/api/github/public-feed")
+                from datetime import datetime, timezone
+                import json
+                rescue_at=datetime.now(timezone.utc).isoformat(timespec="milliseconds").replace("+00:00","Z")
+                unavailable={
+                    "version":1,"source":"GitHub public events API","status":"unavailable",
+                    "checkedAt":rescue_at,"reason":"rate-limited","retryAt":rescue_at,
+                    "events":[]}
+                public_api_events=[
+                    {"id":"123","type":"PushEvent","public":True,
+                     "actor":{"login":"devonalanakins"},
+                     "repo":{"name":"devonalanakins/unfeatured-browser-work"},
+                     "created_at":rescue_at,
+                     "payload":{"commits":[{"message":"NEVER SHOW PRIVATE-LOOKING COMMIT CONTENT"}]}},
+                    {"id":"124","type":"PushEvent","public":False,
+                     "actor":{"login":"devonalanakins"},
+                     "repo":{"name":"devonalanakins/private-work"},
+                     "created_at":rescue_at},
+                ]
+                page.route("**/api/github/public-feed",lambda route: route.fulfill(
+                    status=200,content_type="application/json",body=json.dumps(unavailable)))
+                api_url="https://api.github.com/users/devonalanakins/events/public?per_page=100"
+                page.route(api_url,lambda route: route.fulfill(
+                    status=200,headers={
+                        "Content-Type":"application/json",
+                        "Access-Control-Allow-Origin":"*",
+                        "Access-Control-Allow-Methods":"GET"},
+                    body=json.dumps(public_api_events)))
+                page.goto(BASE+"/activity/",wait_until="domcontentloaded")
+                page.get_by_text("devonalanakins/unfeatured-browser-work").first.wait_for(timeout=10000)
+                assert "browser-direct GitHub API" in page.locator("[data-feed-status]").inner_text()
+                assert "directly by this browser" in page.locator("[data-github-source-state]").inner_text()
+                assert page.locator("[data-feed-list] li").count()==1
+                assert page.get_by_text("NEVER SHOW PRIVATE-LOOKING COMMIT CONTENT").count()==0
+                assert page.get_by_text("devonalanakins/private-work").count()==0
+                page.unroute("**/api/github/public-feed")
+                page.unroute(api_url)
                 # All source fixtures are local, explicitly synthetic,
                 # and never committed to public site pages or live source APIs.
                 from datetime import datetime, timezone
