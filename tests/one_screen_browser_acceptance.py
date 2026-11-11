@@ -78,7 +78,17 @@ try:
                 assert "SOFTWARE DEVELOPER" in page.locator(".prestige-subtitle").inner_text()
                 # High-level gamer styling is editorial, not invented XP, levels, or ranks.
                 assert page.locator(".prestige-build-row").count()==3
-                for selector in (".prestige-player",".prestige-command",".prestige-player-actions",".prestige-activity-card",".prestige-stat-pair"):
+                # In a 390px-tall landscape viewport, source tiles remain in
+                # the DOM and accessible from deep links, but are intentionally
+                # hidden so the professional introduction/workstation fit.
+                if width>760 and height<=470:
+                    assert page.locator(".prestige-stat-pair").is_hidden(),(engine,width,height,"short-landscape signal priority")
+                else:
+                    assert page.locator(".prestige-stat-pair").is_visible(),(engine,width,height,"signal strip visibility")
+                contained=(".prestige-player",".prestige-command",".prestige-player-actions",".prestige-activity-card")
+                if height>470:
+                    contained+=(".prestige-stat-pair",)
+                for selector in contained:
                     assert page.evaluate("""selector => {
                       const root=document.querySelector('.one-stage').getBoundingClientRect();
                       const rect=document.querySelector(selector).getBoundingClientRect();
@@ -147,9 +157,10 @@ try:
                   progress.value=original.value;
                   return result;
                 }""")
-                assert all(spotify_layout[key] for key in ("inside","noHeadOverlap",
-                    "noHeaderLabelCollision","noArtworkOverlap","noTextOverlap","noteHidden",
-                    "titleVisible","stateVisible")),(engine,width,height,"live spotify layout",spotify_layout)
+                if height>470:
+                    assert all(spotify_layout[key] for key in ("inside","noHeadOverlap",
+                        "noHeaderLabelCollision","noArtworkOverlap","noTextOverlap","noteHidden",
+                        "titleVisible","stateVisible")),(engine,width,height,"live spotify layout",spotify_layout)
 
                 # The Home tile is a dated owner-recorded GPT snapshot;
                 # Activity retains a separate consent-filtered live card.
@@ -173,7 +184,7 @@ try:
                 assert page.locator("#one-activity-github").get_attribute("data-limit")==str(expected_activity),(engine,width,height,"activity capacity")
                 # In compact view the public playback title and GPT value must
                 # remain inside their actual tiles, not just the document.
-                if width<=760 or height<=470:
+                if width<=760:
                     assert page.evaluate("""() => {
                       const spotify=document.querySelector(".one-signal-bottom .p-spotify-card");
                       const recorded=document.querySelector(".one-signal-bottom .one-gpt-record");
