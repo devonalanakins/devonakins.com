@@ -79,8 +79,10 @@ jobs:
         with:
           node-version: "22"
           cache: npm
-      - name: Require available H.264 encoder for full-HD movie candidate
+      - name: Install Ubuntu-packaged FFmpeg for reproducible H.264 motion build
         run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends ffmpeg
           command -v ffmpeg
           command -v ffprobe
           ffmpeg -hide_banner -encoders | grep libx264
