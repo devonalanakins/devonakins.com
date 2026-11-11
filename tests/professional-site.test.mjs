@@ -217,3 +217,12 @@ test("responsive curated gallery keeps keyboard focus and reduced-motion styles"
   assert.match(css,/\.p-research-links a:focus-visible/);
   assert.match(css,/@media\(prefers-reduced-motion:reduce\)/);
 });
+
+
+test("professional GitHub client accepts attributed Atom events and refreshes on visibility return",async()=>{
+  const client=await readFile(new URL("../src/professional/client.ts",import.meta.url),"utf8");
+  assert.match(client,/\["GitHub public events API", "GitHub public Atom feed"\]/);
+  assert.match(client,/document\.addEventListener\("visibilitychange",\(\)=>\{/);
+  assert.match(client,/if\(document\.hidden\)\{\s*latest=null;\s*paint\(\);\s*\}else void refresh\(\)/);
+  assert.doesNotMatch(client,/else if\(Date\.now\(\)-checked>=60000\)/);
+});
