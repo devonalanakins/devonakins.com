@@ -426,7 +426,7 @@ export function createHandler(assets, release, options = {}) {
         headers.set("Content-Length",String(size));
         const rawRange=request.headers.get("Range");
         if(rawRange){
-          const match=/^bytes=(\\d*)-(\\d*)$/.exec(rawRange.trim());
+          const match=/^bytes=(\d*)-(\d*)$/.exec(rawRange.trim());
           let start=0,end=size-1;
           if(match){
             if(match[1]==="" && match[2]!=="") {
