@@ -27,9 +27,74 @@ function grow(x,y,a,n,depth){
   grow(x2,y2,a+.19+random()*.13+twist,n*(.73+random()*.04),depth-1);
   if(depth>3&&random()>.67)grow(x2,y2,a+(random()-.5)*.32,n*.62,depth-2);
 }
-grow(1050,1035,-Math.PI/2,235,8);
+// A rooted structure transitions into two hemispheres rather than a lollipop tree.
+grow(1255,1000,-Math.PI/2,114,6);
+grow(1275,730,-2.02,73,7);
+grow(1400,725,-1.17,76,7);
+grow(1168,625,-2.44,60,6);
+grow(1470,635,-.76,61,6);
 const stars=Array.from({length:265},()=>({x:random()*W,y:random()*H,r:random()>.95?1.9:.7,a:.12+random()*.35}));
 const nodes=segments.filter(s=>s.depth<=3);
+const brain={cx:1290,cy:390,rx:347,ry:223};
+const neurons=[];
+for(let i=0;i<1050&&neurons.length<380;i++){
+  const x=brain.cx+(random()*2-1)*brain.rx;
+  const y=brain.cy+(random()*2-1)*brain.ry;
+  const a=Math.atan2((y-brain.cy)/brain.ry,(x-brain.cx)/brain.rx);
+  const fold=.055*Math.sin(7*a)+.035*Math.sin(13*a+1.1);
+  if(((x-brain.cx)/brain.rx)**2+((y-brain.cy)/brain.ry)**2>(.89+fold)**2)continue;
+  neurons.push({x,y,weight:.3+random()*.7,tone:random()});
+}
+const fibers=[];
+for(let i=0;i<neurons.length;i++){
+  const a=neurons[i];
+  const near=neurons.map((b,j)=>({j,b,d:Math.hypot(b.x-a.x,b.y-a.y)}))
+    .filter(p=>p.j!==i&&p.d<66&&p.d>13).sort((u,v)=>u.d-v.d).slice(0,3);
+  for(const {j,b,d} of near){
+    if(j<i)continue;
+    const bend=(random()-.5)*d*.27;
+    const mx=(a.x+b.x)*.5+(a.y-b.y)*bend/d;
+    const my=(a.y+b.y)*.5+(b.x-a.x)*bend/d;
+    fibers.push({d:'M'+xval(a.x)+' '+xval(a.y)+' Q'+xval(mx)+' '+xval(my)+' '+xval(b.x)+' '+xval(b.y),
+      tone:a.tone,weight:a.weight});
+  }
+}
+function xval(n){return n.toFixed(1);}
+function neuralBrain(){
+  const rim=[];
+  for(let j=0;j<=160;j++){
+    const a=j/160*Math.PI*2;
+    const r=1+.055*Math.sin(7*a)+.04*Math.cos(13*a+.45)+.025*Math.sin(19*a);
+    rim.push((j===0?'M':'L')+xval(brain.cx+Math.cos(a)*brain.rx*r)+' '+
+      xval(brain.cy+Math.sin(a)*brain.ry*r));
+  }
+  const outline=rim.join(' ')+' Z';
+  const membrane='<defs><linearGradient id="cortex-membrane" x2=".9" y2="1">'+
+    '<stop stop-color="#112d42" stop-opacity=".58"/>'+
+    '<stop offset=".55" stop-color="#1a2b3d" stop-opacity=".36"/>'+
+    '<stop offset="1" stop-color="#302636" stop-opacity=".22"/></linearGradient></defs>'+
+    '<path d="'+outline+'" fill="url(#cortex-membrane)" stroke="#79bfd0" stroke-opacity=".21" stroke-width=".9"/>';
+  const links=fibers.map((l,i)=>'<path d="'+l.d+'" fill="none" stroke="'+
+    (l.tone>.48?'#f1b679':'#70d1e1')+'" stroke-opacity="'+(.13+.36*l.weight).toFixed(2)+
+    '" stroke-width="'+(.46+.44*l.weight).toFixed(2)+'"/>').join('');
+  const cells=neurons.filter((_,i)=>i%7===0).map((n,i)=>'<circle cx="'+xval(n.x)+
+    '" cy="'+xval(n.y)+'" r="'+(i%6===0?1.45:.8)+'" fill="'+
+    (n.tone>.52?'#f7cb94':'#96e4ed')+'" opacity=".64"/>').join('');
+  const gyri=[];
+  for(let k=0;k<52;k++){
+    const y=brain.cy-brain.ry+10+k*8.1;
+    let d='';
+    for(let n=0;n<=95;n++){
+      const x=brain.cx-brain.rx+12+n*brain.rx*1.96/95;
+      const yy=y+8*Math.sin(x*.036+k*.83)+4*Math.sin(x*.077+k*.4);
+      const inside=((x-brain.cx)/brain.rx)**2+((yy-brain.cy)/brain.ry)**2<.81;
+      d+=inside?(d?' L':'M')+xval(x)+' '+xval(yy):'';
+    }
+    if(d)gyri.push('<path d="'+d+'" fill="none" stroke="'+(k%3?'#669cae':'#b68d76')+
+      '" stroke-opacity=".22" stroke-width=".65"/>');
+  }
+  return membrane+gyri.join('')+links+cells;
+}
 const q=x=>Number(x).toFixed(1);
 function background(){
   const paths=segments.map(s=>{
@@ -47,14 +112,9 @@ function background(){
   const sky=stars.map(s=>'<circle cx="'+q(s.x)+'" cy="'+q(s.y)+'" r="'+s.r+
     '" fill="#bde0df" opacity="'+q(s.a)+'"/>').join("");
   return '<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1080" viewBox="0 0 1920 1080">'+
-    '<defs><radialGradient id="ambient"><stop stop-color="#122e3c"/><stop offset=".48" stop-color="#081b2a"/><stop offset="1" stop-color="#050b13"/></radialGradient>'+
-    '<radialGradient id="warm"><stop stop-color="#dcb57a" stop-opacity=".26"/><stop offset="1" stop-color="#e6a065" stop-opacity="0"/></radialGradient>'+
-    '<radialGradient id="cold"><stop stop-color="#50c9cd" stop-opacity=".27"/><stop offset="1" stop-color="#50c9cd" stop-opacity="0"/></radialGradient>'+
-    '<filter id="blur"><feGaussianBlur stdDeviation="10"/></filter></defs>'+
-    '<rect width="1920" height="1080" fill="url(#ambient)"/>'+
-    '<ellipse cx="980" cy="480" rx="670" ry="560" fill="url(#warm)"/>'+
-    '<ellipse cx="1300" cy="630" rx="700" ry="520" fill="url(#cold)"/>'+
-    sky+'<path d="M160 975C500 820 540 405 1120 375S1680 220 1880 300" fill="none" stroke="#73e2e9" stroke-opacity=".18"/>'+
+    '<defs><filter id="blur"><feGaussianBlur stdDeviation="4"/></filter></defs>'+
+    '<rect width="1920" height="1080" fill="#060c17"/>'+
+    sky+neuralBrain()+'<path d="M160 975C500 820 540 405 1120 375S1680 220 1880 300" fill="none" stroke="#73e2e9" stroke-opacity=".18"/>'+
     '<path d="M320 190C710 290 950 100 1575 770" fill="none" stroke="#c7a275" stroke-opacity=".2"/>'+
     halos+paths+dots+
     '<path d="M0 1015C440 970 720 1040 1120 990S1620 1015 1920 970V1080H0Z" fill="#03070f" opacity=".28"/></svg>';
@@ -80,10 +140,10 @@ try{
       if(alpha<.04)continue;
       const x=s.x+(s.x2-s.x)*t,y=s.y+(s.y2-s.y)*t;
       const hue=s.tone>.48?"#71eaf0":"#ffd09c";
-      points.push('<circle cx="'+q(x)+'" cy="'+q(y)+'" r="'+q(3.6+4*alpha)+
+      points.push('<circle cx="'+q(x)+'" cy="'+q(y)+'" r="'+q(1.2+1.35*alpha)+
         '" fill="'+hue+'" opacity="'+q(Math.min(1,alpha*1.3))+'"/>');
-      points.push('<circle cx="'+q(x)+'" cy="'+q(y)+'" r="'+q(21+18*alpha)+
-        '" fill="'+hue+'" opacity="'+(alpha*.22).toFixed(3)+'"/>');
+      points.push('<circle cx="'+q(x)+'" cy="'+q(y)+'" r="'+q(4+5*alpha)+
+        '" fill="'+hue+'" opacity="'+(alpha*.075).toFixed(3)+'"/>');
     }
     for(let j=0;j<24;j++){
       const x=200+j*61+Math.sin(2*Math.PI*(phase+j*.13))*45;
@@ -91,16 +151,8 @@ try{
       points.push('<circle cx="'+q(x)+'" cy="'+q(y)+'" r="1.7" fill="'+
         (j%2?"#59cbd7":"#e8ad73")+'" opacity=".12"/>');
     }
-    const auraX=q(1020+95*Math.sin(2*Math.PI*phase));
-    const auraY=q(520+48*Math.cos(2*Math.PI*phase));
-    const secondaryX=q(1170-70*Math.sin(2*Math.PI*phase));
+    // Thin axonal currents, not circular lighting masks or bokeh auras.
     const svg='<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1080">'+
-      '<defs><radialGradient id="fogA"><stop stop-color="#ffce91" stop-opacity=".15"/>'+
-      '<stop offset="1" stop-color="#ffce91" stop-opacity="0"/></radialGradient>'+
-      '<radialGradient id="fogB"><stop stop-color="#77e7ef" stop-opacity=".2"/>'+
-      '<stop offset="1" stop-color="#77e7ef" stop-opacity="0"/></radialGradient></defs>'+
-      '<ellipse cx="'+auraX+'" cy="'+auraY+'" rx="450" ry="360" fill="url(#fogA)"/>'+
-      '<ellipse cx="'+secondaryX+'" cy="540" rx="400" ry="330" fill="url(#fogB)"/>'+
       points.join("")+'</svg>';
     const overlay=await sharp(Buffer.from(svg)).png().toBuffer();
     const frame=await sharp(base).composite([{input:overlay,top:0,left:0}]).png().toBuffer();
