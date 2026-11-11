@@ -26,3 +26,17 @@ test('prestige override is first-party and respects reduced motion',async()=>{
   assert.doesNotMatch(css,/@import|url\(https?:/i);
   assert.match(html,/href="\/src\/professional\/prestige-profile.css"/);
 });
+test('source-qualified work badge is initially idle and cannot claim an active editor',()=>{
+  assert.match(html,/data-public-work data-work-mode="idle"/);
+  assert.match(html,/data-work-state>CHECKING SOURCE/);
+  assert.match(html,/data-work-title>No verified active session/);
+  assert.doesNotMatch(html,/Editor online|LIVE CODING|WORKING NOW/);
+});
+test('ambient animation is first-party, deterministic and disabled for reduced motion',async()=>{
+  const css=await readFile(new URL('../src/professional/prestige-profile.css',import.meta.url),'utf8');
+  for(const key of ['prestige-nebula','prestige-grid','prestige-pulse','prestige-reveal'])
+    assert.match(css,new RegExp('@keyframes '+key));
+  assert.match(css,/prefers-reduced-motion:reduce/);
+  assert.match(css,/data-work-mode="active"/);
+  assert.doesNotMatch(css,/@import|url\(https?:|position:\s*fixed;\s*inset:0;\s*pointer-events:auto/i);
+});
