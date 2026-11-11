@@ -1,6 +1,7 @@
 import {approvedPublicProjects} from "../publication-manifest.mjs";
 import {spotifyCard,workSignalCard,gptSignalCard,threadsSignalCard,signalDeck,listeningCollections} from "./signal-cards.mjs";
 import {brandIcon} from "./brand-icons.mjs";
+import {renderDatedGptCapture} from "./gpt-capture.mjs";
 
 const esc = value => String(value ?? "").replace(/[&<>"']/g,
   c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
@@ -130,7 +131,7 @@ function listening(){
   '<section class="p-section">'+listeningCollections()+'</section>'+
   '<section class="p-section p-inline-cta"><div><p class="p-eyebrow">WORK & MUSIC</p><h2>Two different signals.</h2><p>My consented Spotify playback signals my personal coding mode. GitHub activity and authenticated editor reports independently document work that actually occurred.</p></div>'+button("/activity/","View activity",true)+'</section>';
 }
-function gpt(){
+function gpt({datedCapture=null,historicalSnapshot=null,previousCaptures=[]}={}){
   return intro("GPT / OBSERVATIONS","AI in <em>practice.</em>","A dated, owner-approved view of my GPT usage observations, not a manufactured live counter or a claim of access to private ChatGPT account statistics.",
     button("/activity/","All public signals",true)+button("/experience/","Professional profile"))+
   '<section class="p-section p-gpt-editorial"><div>'+heading("CAPTURED USAGE","Numbers with provenance.")+
@@ -140,7 +141,7 @@ function gpt(){
   '<section class="p-section p-quiet-grid"><div>'+heading("METHOD","Evidence before display.")+
   '<p>Only consent-filtered records from the existing public telemetry source are displayed. Missing or expired records remain unavailable instead of being estimated.</p></div>'+
   '<div>'+heading("ENGINEERING","The underlying work.")+
-  '<p>Real commits, reviewed changes and published releases are independently available through the public GitHub activity feed.</p>'+button("/activity/","Explore GitHub activity",true)+'</div></section>';
+  '<p>Real commits, reviewed changes and published releases are independently available through the public GitHub activity feed.</p>'+button("/activity/","Explore GitHub activity",true)+'</div></section>'+(datedCapture && historicalSnapshot ? renderDatedGptCapture(datedCapture,historicalSnapshot,previousCaptures) : '');
 }
 function writing(){
   return intro("WRITING / 04","Writing & <em>perspective.</em>","Books, research and notes on the connection between systems, software, operations and human decisions.",
@@ -196,11 +197,11 @@ function renderShell(key,label,description,publicPath,content) {
     '</body></html>';
 }
 
-export function renderProfessionalPage(key="home") {
+export function renderProfessionalPage(key="home",options={}) {
   if (!Object.hasOwn(pages,key)) throw new Error("Unknown professional page");
   const [label,description] = pages[key];
   return renderShell(key,label,description,route[key],
-    {home,experience,work,activity,writing,about,contact,listening,gpt}[key]());
+    {home,experience,work,activity,writing,about,contact,listening,gpt:()=>gpt(options)}[key]());
 }
 
 /** All existing published project URLs stay functional within the new design.
