@@ -92,6 +92,19 @@ try:
                         workstation["badgeInside"],workstation["titleInside"],
                         workstation["statusInside"]]),(
                           engine,width,height,"compact workstation heading/status collision",workstation)
+                if width<=400 and height<=700:
+                    # Short phones retain the verified source count and the full
+                    # Activity tab, rather than showing a clipped event row.
+                    assert page.evaluate("""() => {
+                      const feed=document.querySelector('#one-home-github');
+                      const items=feed.querySelector('ol');
+                      const status=feed.querySelector('[data-feed-status]');
+                      const rect=status.getBoundingClientRect();
+                      const panel=document.querySelector('.prestige-activity-card').getBoundingClientRect();
+                      return getComputedStyle(items).display==='none' &&
+                        rect.width>0 && rect.height>0 &&
+                        rect.top>=panel.top && rect.bottom<=panel.bottom+2;
+                    }"""),(engine,width,height,"short phone GitHub feed must not clip a row")
                 assert page.locator(".prestige-identity-copy h1").is_visible()
                 assert "I DESIGN" in page.locator(".prestige-identity-copy h1").inner_text()
                 # High-level gamer styling is editorial, not invented XP, levels, or ranks.
