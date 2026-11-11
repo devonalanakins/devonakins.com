@@ -61,11 +61,15 @@ test("professional GPT page shows the new capture and preserves the prior dated 
 });
 
 test("earlier new captures remain accessible in the dated history if a later reading is added",()=>{
-  const later=clone();later.captureDate="2026-11-11";later.capturedAt="2026-11-11T03:06:00Z";
-  const markup=renderDatedGptCapture(later,historical,[clone()]);
-  assert.match(markup,/href="\/gpt\/snapshots\/2026-11-10\.json"/);
+  const older=clone();
+  older.captureDate="2026-11-09";
+  older.capturedAt="2026-11-10T03:05:55Z";
+  older.usage7d.tokensUpdatedAt="2026-11-10T01:00:00Z";
+  older.usage7d.toolsUpdatedAt="2026-11-09T17:54:00Z";
+  const markup=renderDatedGptCapture(newCapture,historical,[older]);
+  assert.match(markup,/href="\/gpt\/snapshots\/2026-11-09\.json"/);
   assert.match(markup,/526,339,878 seven-day tokens/);
-  assert.throws(()=>renderDatedGptCapture(newCapture,historical,[later]),/not chronological/);
+  assert.throws(()=>renderDatedGptCapture(older,historical,[newCapture]),/not chronological/);
 });
 
 test("untrusted or malformed future-dated values fail closed and cannot publish a site record",()=>{
