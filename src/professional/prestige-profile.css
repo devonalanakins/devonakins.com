@@ -189,3 +189,13 @@
 .prestige-activity-card{position:relative}
 .prestige-activity-card:before{content:"";position:absolute;pointer-events:none;inset:49px 0 0;background:radial-gradient(ellipse at 90% 73%,#73d7dc13,transparent 47%),repeating-linear-gradient(0deg,transparent 0,transparent 47px,#8ebecb0c 48px);mask-image:linear-gradient(to bottom,transparent 1%,#000 32%,transparent 100%)}
 .prestige-activity-card>*{position:relative;z-index:1}
+/* Fixed-height landscape uses a compact identity, not clipped loadout rows. */
+.prestige-feed-mark{flex:0 0 29px!important;min-width:29px!important}
+@media(max-width:760px){.prestige-feed-mark{flex:0 0 22px!important;min-width:22px!important}}
+@media(min-width:761px) and (max-height:470px){
+ .prestige-divider,.prestige-build,.prestige-player-bottom{display:none}
+ .prestige-player{justify-content:center}
+ .prestige-identity-main{padding:9px 0 5px}
+ .prestige-player-actions{margin:8px 0 0}
+ .prestige-player-top{margin-bottom:3px}
+}
