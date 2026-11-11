@@ -340,6 +340,23 @@ try:
             })""")
             assert "prestige-nebula" in animation["backdrop"],(engine,"ambient animation",animation)
             assert "prestige-reveal" in animation["intro"],(engine,"identity entrance",animation)
+            # The native scene must actually draw pixels without the film asset.
+            motion_page.wait_for_timeout(550)
+            field=motion_page.evaluate("""() => {
+                const world=document.querySelector('[data-living-scene]');
+                const canvas=document.querySelector('[data-living-canvas]');
+                const ctx=canvas.getContext('2d');
+                if(!ctx)return {renderer:world.dataset.renderer,lit:0};
+                const pixels=ctx.getImageData(0,0,canvas.width,canvas.height).data;
+                let lit=0;
+                for(let i=3;i<pixels.length;i+=256)if(pixels[i]>8)lit++;
+                return {renderer:world.dataset.renderer,
+                    lit,canvasW:canvas.width,canvasH:canvas.height,
+                    videoCount:document.querySelectorAll('.one-world-video').length};
+            }""")
+            assert field["renderer"]=="native-canvas" and field["lit"]>35 and field["videoCount"]==0,(
+                engine,"native scene must draw real pixels without MP4 playback",field)
+            motion_page.screenshot(path=str(OUT/f"{engine}-1440x900-native-motion.png"))
             button=motion_page.locator('[data-motion-toggle]')
             assert button.is_enabled(),(engine,"motion control enabled")
             assert button.get_attribute("aria-pressed")=="true"
