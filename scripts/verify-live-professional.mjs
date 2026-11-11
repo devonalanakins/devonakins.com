@@ -70,7 +70,7 @@ assert.match(feedRes.headers.get("content-type")||"",/application\/json/i);
 assert.match(feedRes.headers.get("cache-control")||"",/no-store/i);
 const feed=await feedRes.json();
 assert.equal(feed.version,1);
-assert.equal(feed.source,"GitHub public events API");
+assert.ok(["GitHub public events API","GitHub public Atom feed"].includes(feed.source),"GitHub feed must name actual verified public source");
 assert.ok(["available","empty","unavailable"].includes(feed.status));
 assert.ok(Array.isArray(feed.events)&&feed.events.length<=32);
 for(const event of feed.events){
