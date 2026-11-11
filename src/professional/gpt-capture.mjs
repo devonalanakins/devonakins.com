@@ -17,6 +17,10 @@ const timeLabel = value => new Date(value).toLocaleString("en-US", {
   timeZone:"America/New_York",month:"short",day:"numeric",hour:"numeric",
   minute:"2-digit",timeZoneName:"short",
 });
+const sourceTimeLabel = value => new Date(value).toLocaleString("en-US", {
+  timeZone:"UTC",month:"short",day:"numeric",year:"numeric",hour:"numeric",
+  minute:"2-digit",timeZoneName:"short",
+});
 
 export function validateDatedGptCapture(value) {
   if (!shape(value, ["version","capturedAt","captureDate","source","attestation","profile","usage7d"]) ||
@@ -95,8 +99,8 @@ export function renderDatedGptCapture(capture, oldSnapshot, priorCaptures=[]) {
     usageCard("Plugin calls",w.pluginCalls,"plugin calls") +
     usageCard("Skill uses",w.skillUses,"skill uses") + '</div>' +
     '<p class="p-gpt-source-note">Source panels refresh independently. Token panel last updated ' +
-    escapeHtml(timeLabel(w.tokensUpdatedAt)) + '; plugin and skill panel last updated ' +
-    escapeHtml(timeLabel(w.toolsUpdatedAt)) +
+    escapeHtml(sourceTimeLabel(w.tokensUpdatedAt)) + '; plugin and skill panel last updated ' +
+    escapeHtml(sourceTimeLabel(w.toolsUpdatedAt)) +
     '. Values were observed in the owner recording, not retrieved from an OpenAI account API.</p></section>' +
     '<section class="p-section p-gpt-history" aria-labelledby="p-gpt-history-heading">' +
     '<div class="p-section-heading"><div><p class="p-eyebrow">HISTORICAL RECORD / PRESERVED</p>' +
