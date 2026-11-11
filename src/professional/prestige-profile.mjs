@@ -22,7 +22,7 @@ export function renderPrestigeHome({publicFeed,button,spotifyCard}) {
       '<div class="prestige-divider" aria-hidden="true"><span></span><b>PROFESSIONAL BUILD</b><span></span></div>'+
       '<div class="prestige-build" aria-label="Professional areas of work">'+
         '<div class="prestige-build-row"><span class="prestige-build-index">01</span><div><strong>ENGINEERING</strong><small>Applications · infrastructure · delivery</small></div><span class="prestige-build-end">BUILDER</span></div>'+
-        '<div class="prestige-build-row"><span class="prestige-build-index">02</span><div><strong>OPERATIONS</strong><small>Process design · coordination · strategy</small></div><span class="prestige-build-end">BUILDER</span></div>'+
+        '<div class="prestige-build-row"><span class="prestige-build-index">02</span><div><strong>OPERATIONS</strong><small>Process design · coordination · strategy</small></div><span class="prestige-build-end">OPERATOR</span></div>'+
         '<div class="prestige-build-row"><span class="prestige-build-index">03</span><div><strong>AUTHORSHIP</strong><small>Writing · research · original worlds</small></div><span class="prestige-build-end">CREATOR</span></div>'+
       '</div>'+
       '<div class="prestige-player-actions">'+button('work','View missions',true)+button('experience','Career build')+'</div>'+
