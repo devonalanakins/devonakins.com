@@ -853,43 +853,6 @@ h1 em,h2 em,.p-footer-line em{font-style:italic;color:#e9c29a}
 }
 
 
-/* Owner-recorded GPT analytics: independently dated profile and seven-day scopes. */
-.p-gpt-recorded .p-section-heading>p,.p-gpt-history .p-section-heading>p{max-width:420px}
-.p-gpt-record-hero{padding:clamp(24px,4vw,45px);overflow:hidden}
-.p-gpt-lifetime{display:block;margin:12px 0 18px;font-family:"Manrope",sans-serif;font-size:clamp(3.2rem,7vw,6rem);font-weight:700;line-height:1;letter-spacing:-.065em;color:#f3d09b;font-variant-numeric:tabular-nums}
-.p-gpt-record-hero>p:not(.p-card-over){max-width:710px;font-size:.95rem;line-height:1.75;color:#c1cbd0}
-.p-gpt-facts{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:0;margin-top:30px;border-top:1px solid #c6d8df2c}
-.p-gpt-facts>div{min-width:0;padding:22px 16px 6px 0}
-.p-gpt-facts strong{display:block;font-size:clamp(1.1rem,1.65vw,1.55rem);line-height:1.3;font-weight:650;color:#e9edf1;overflow-wrap:anywhere;font-variant-numeric:tabular-nums}
-.p-gpt-facts small{display:block;margin-top:7px;color:#a7bac3;font-size:.73rem;line-height:1.5}
-.p-gpt-weekly-head{margin:38px 0 20px}
-.p-gpt-weekly-head h3{margin:9px 0;font-size:clamp(1.35rem,2.5vw,1.9rem);letter-spacing:-.03em}
-.p-gpt-weekly-head>p:last-child,.p-gpt-source-note{color:#abbac3;font-size:.86rem;line-height:1.7}
-.p-gpt-weekly-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
-.p-gpt-record-card{min-height:145px;padding:24px}
-.p-gpt-record-card .p-card-over{margin-bottom:12px}
-.p-gpt-record-number{font-size:clamp(1.6rem,3.2vw,2.6rem);font-weight:650;letter-spacing:-.045em;line-height:1.15;font-variant-numeric:tabular-nums;overflow-wrap:anywhere;color:#f0e4d6}
-.p-gpt-record-card>p:last-child{margin:13px 0 0;font-size:.81rem}
-.p-gpt-source-note{margin-top:16px}
-.p-gpt-history-card{padding:24px 28px}
-.p-gpt-history-card time{display:block;color:#c9a676;font-size:.75rem;letter-spacing:.08em;font-weight:700;text-transform:uppercase}
-.p-gpt-history-card strong{display:block;margin:11px 0;font-size:clamp(1.15rem,2.4vw,1.55rem);letter-spacing:-.02em;line-height:1.4}
-.p-gpt-history-card p{font-size:.87rem;line-height:1.7;color:#abbac3}
-.p-gpt-history-card .p-text-link{display:inline-flex;margin-top:12px}
-.p-gpt-prior-records{display:grid;gap:14px;margin-top:14px}
-@media(max-width:930px){
- .p-gpt-facts{grid-template-columns:repeat(2,minmax(0,1fr))}
-}
-@media(max-width:530px){
- .p-gpt-lifetime{font-size:clamp(3rem,12vw,4.5rem)}
- .p-gpt-facts>div{padding:18px 9px 4px 0}
- .p-gpt-weekly-grid{grid-template-columns:1fr}
- .p-gpt-record-card{min-height:auto;padding:22px}
- .p-gpt-record-number{font-size:clamp(1.55rem,7vw,2.2rem)}
- .p-gpt-history-card{padding:22px}
-}
-
-
 /* Provenance-first GPT capture: a separate dated record, never a live counter. */
 .p-gpt-record-hero{padding:clamp(24px,4vw,46px);background:radial-gradient(circle at 82% 10%,#8ac6d51c,transparent 42%),linear-gradient(140deg,#1b2b32,#0c151b 72%)}
 .p-gpt-lifetime{display:block;font-family:"Manrope",sans-serif;font-size:clamp(3.1rem,8vw,6.3rem);line-height:1.12;letter-spacing:-.07em;color:#e9bd89;font-variant-numeric:tabular-nums}
