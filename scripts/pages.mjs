@@ -30,7 +30,8 @@ const professionalLegacyDestinations = Object.freeze({
 function repairProfessionalLegacyNavigation(html) {
   return html.replace(/href="\/#([a-z-]+)"/g, (whole, fragment) => {
     const destination = professionalLegacyDestinations[fragment];
-    if (!destination) throw Error("Unmapped professional legacy anchor: " + fragment);
+    if (!Object.hasOwn(professionalLegacyDestinations, fragment))
+      throw Error("Unmapped professional legacy anchor: " + fragment);
     return 'href="' + destination + '"';
   });
 }
