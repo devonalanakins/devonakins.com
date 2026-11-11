@@ -8,7 +8,7 @@ test('prestige profile preserves the six existing sections and truth-qualified t
   assert.match(html,/prestige-home/);
   assert.match(html,/DA \/ PROFESSIONAL PROFILE/);
   assert.match(html,/SOFTWARE DEVELOPER/);
-  assert.match(html,/I build independent software/);
+  assert.match(html,/I engineer independent software/);
   for(const n of ['home','experience','work','activity','writing','contact'])
     assert.match(html,new RegExp('one-panel-'+n));
   assert.match(html,/data-public-github-feed/);
