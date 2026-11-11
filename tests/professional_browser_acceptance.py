@@ -186,6 +186,8 @@ try:
                 assert page.get_by_text("devonalanakins/private-work").count()==0
                 page.unroute("**/api/github/public-feed")
                 page.unroute(api_url)
+                page.route("**/api/github/public-feed",lambda route: route.fulfill(
+                    status=200,content_type="application/json",body=json.dumps(fixture)))
                 # All source fixtures are local, explicitly synthetic,
                 # and never committed to public site pages or live source APIs.
                 from datetime import datetime, timezone
