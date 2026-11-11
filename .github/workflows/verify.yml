@@ -228,21 +228,3 @@ jobs:
             browser-qa/professional/
           if-no-files-found: warn
           retention-days: 14
-
-  github_feed_diagnostic:
-    # Temporary production-read-only diagnosis; never writes credentials,
-    # changes source publication gates, or deploys anything.
-    if: github.ref == 'refs/heads/fix/professional-github-feed-20261111'
-    runs-on: ubuntu-24.04
-    timeout-minutes: 3
-    permissions:
-      contents: read
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          persist-credentials: false
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-      - name: Diagnose public feed status without exposing event details
-        run: node scripts/diagnose-professional-github.mjs
