@@ -64,8 +64,9 @@ jobs:
           retention-days: 14
 
   # A separate host-runner job verifies that an actual, high-definition MP4
-  # is generated. The browser container may lack ffmpeg but must retain its
-  # motion-safe fallback. No production publishing occurs in this job.
+  # is checksum-verified against approved source media. The browser container
+  # may lack ffmpeg but can still validate the pinned source and UI fallback.
+  # No production publishing occurs in this job.
   motion_video:
     runs-on: ubuntu-24.04
     timeout-minutes: 12
@@ -87,11 +88,12 @@ jobs:
           command -v ffprobe
           ffmpeg -hide_banner -encoders | grep libx264
       - run: npm ci
-      - name: Build the exact source-qualified one-screen variant with generated movie
+      - name: Build the exact source-qualified one-screen variant with approved HD movie
         env:
           PROFESSIONAL_SITE_CANDIDATE: "1"
           ONE_SCREEN_SITE_CANDIDATE: "1"
           V5_PUBLIC_SITE_CANDIDATE: "0"
+          REQUIRE_APPROVED_NEURAL_ART: "1"
         run: npm run build
       - name: Verify generated MP4 dimensions, duration and Worker packaging
         run: |
