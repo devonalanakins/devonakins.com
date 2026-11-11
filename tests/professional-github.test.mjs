@@ -85,7 +85,7 @@ test("reader caches successful results, fails closed and shows provider outages"
 
 test("edge cache cannot inject arbitrary GitHub fields",async()=>{
   const poison={
-    version:1,expiresAt:new Date(date.getTime()+60000).toISOString(),
+    version:2,expiresAt:new Date(date.getTime()+60000).toISOString(),
     value:{...projectProfessionalGithub([sample("repo")],date),token:"secret"},
   };
   let calls=0;
