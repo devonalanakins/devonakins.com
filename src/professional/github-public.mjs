@@ -7,6 +7,8 @@ import { githubCooldownMs } from "../public-telemetry.mjs";
 
 const USER = "devonalanakins";
 const SOURCE = "GitHub public events API";
+const ATOM_SOURCE = "GitHub public Atom feed";
+const ATOM_URL = "https://github.com/" + USER + ".atom";
 const SCOPE = "Latest public user events across repositories; bounded sample, not exhaustive history or private activity";
 const URL = "https://api.github.com/users/" + USER + "/events/public?per_page=100";
 const REPO = /^[A-Za-z0-9_.-]{1,39}\/[A-Za-z0-9_.-]{1,100}$/;
@@ -31,7 +33,9 @@ const LIMIT = 32;
 const SUCCESS_TTL = 5 * 60_000;
 const FAILURE_TTL = 10 * 60_000;
 const MAX_TTL = 4 * 60 * 60_000;
-const cacheKey = new Request("https://devonakins.com/__cache/professional-github-public-v1");
+// A new cache namespace prevents a previous long-lived rate-limit response
+// from masking the repaired source after deployment.
+const cacheKey = new Request("https://devonakins.com/__cache/professional-github-public-v2");
 
 function safeTime(raw, now) {
   if (typeof raw !== "string" || raw.length > 36) return null;
@@ -79,6 +83,45 @@ export function projectProfessionalGithub(raw, now = new Date()) {
   };
 }
 
+
+/**
+ * Official anonymous GitHub profile Atom feed. This is a fallback only when
+ * the REST API is blocked/rate-limited. No raw titles, content, author HTML,
+ * links, commit messages or arbitrary provider fields leave this parser.
+ * All output is projected through the exact same trusted event allowlist.
+ */
+export function projectProfessionalGithubAtom(xml, now = new Date()) {
+  if (typeof xml !== "string" || xml.length > 600_000 ||
+      !/<feed\b[^>]{0,2000}xmlns="http:\/\/www\.w3\.org\/2005\/Atom"/.test(xml))
+    throw new Error("Unexpected public GitHub Atom feed");
+  const entries = [...xml.matchAll(/<entry\b[^>]*>([\s\S]*?)<\/entry>/g)];
+  if (entries.length > 100) throw new Error("Oversized Atom event collection");
+  const events = [];
+  for (const [, entry] of entries) {
+    if (entry.length > 50000 ||
+        !/<author\b[^>]*>[\s\S]*?<name>\s*devonalanakins\s*<\/name>[\s\S]*?<\/author>/.test(entry))
+      continue;
+    const tags = [...entry.matchAll(/<link\b[^>]{0,500}>/g)].map(m => m[0]);
+    const linkTag = tags.find(tag => /\brel="alternate"/.test(tag)) || tags[0];
+    const href = /\bhref="([^"]{1,500})"/.exec(linkTag || "")?.[1] || "";
+    const match = /^https:\/\/github\.com\/devonalanakins\/([A-Za-z0-9_.-]{1,100})(?:[/?#]|$)/.exec(href);
+    if (!match) continue;
+    const at = /<published>([^<]{1,50})<\/published>/.exec(entry)?.[1] ||
+      /<updated>([^<]{1,50})<\/updated>/.exec(entry)?.[1];
+    const id = /<id>([^<]{1,200})<\/id>/.exec(entry)?.[1] || "";
+    const type = /\/pull\/[0-9]+(?:[/?#]|$)/.test(href) ? "PullRequestEvent" :
+      /\/issues\/[0-9]+(?:[/?#]|$)/.test(href) ? "IssuesEvent" :
+      /\/releases\//.test(href) ? "ReleaseEvent" :
+      /:push\/|\/compare\/|\/commit\//.test(id + " " + href) ? "PushEvent" :
+      "CreateEvent";
+    events.push({
+      public: true, actor: {login: USER}, repo: {name: USER + "/" + match[1]},
+      created_at: at, type, payload: {},
+    });
+  }
+  return {...projectProfessionalGithub(events, now), source: ATOM_SOURCE};
+}
+
 export function unavailableProfessionalGithub(now, reason, ttlMs) {
   const retry = new Date(now.getTime() + ttlMs).toISOString();
   return {
@@ -93,7 +136,8 @@ export function validProfessionalGithub(value, now = new Date()) {
   if (!value || typeof value !== "object" || Array.isArray(value) ||
       Object.keys(value).sort().join("|") !==
         "checkedAt|events|reason|retryAt|scope|source|status|version" ||
-      value.version !== 1 || value.source !== SOURCE || value.scope !== SCOPE ||
+      value.version !== 1 || ![SOURCE, ATOM_SOURCE].includes(value.source) ||
+      value.scope !== SCOPE ||
       !Array.isArray(value.events) || value.events.length > LIMIT ||
       !safeTime(value.checkedAt, now.getTime())) return false;
   if (value.status === "unavailable")
@@ -145,7 +189,7 @@ export function createProfessionalGithubReader({
           if (found?.ok) {
             const entry = await found.json();
             const expiry = Date.parse(entry?.expiresAt);
-            if (entry?.version === 1 && Number.isFinite(expiry) &&
+            if (entry?.version === 2 && Number.isFinite(expiry) &&
                 expiry > time && expiry <= time + MAX_TTL &&
                 validProfessionalGithub(entry.value, at)) {
               cached = {expiresAt: expiry, value: entry.value};
@@ -190,15 +234,41 @@ export function createProfessionalGithubReader({
         if (reason === "network-error" &&
             ["AbortError", "TimeoutError"].includes(error?.name))
           reason = "timeout";
-        failures = Math.min(failures + 1, 6);
-        ttl = ttl === SUCCESS_TTL ? FAILURE_TTL : ttl;
-        value = unavailableProfessionalGithub(at, reason, ttl);
+        // Do not treat a rate limit on Cloudflare's shared egress IP as
+        // absence of public activity. GitHub's own public Atom feed is an
+        // independent, anonymous origin with separately managed throttling.
+        let backupValid = false;
+        try {
+          const backup = await fetchImpl(ATOM_URL, {
+            headers: {
+              Accept: "application/atom+xml",
+              "User-Agent": "devonakins-professional-public-feed",
+            },
+            redirect: "error",
+            signal: AbortSignal.timeout(3500),
+          });
+          if (backup.ok &&
+              /application\/(?:atom\+xml|xml)|text\/xml/i.test(
+                backup.headers.get("content-type") || "")) {
+            value = projectProfessionalGithubAtom(await backup.text(), at);
+            if (!validProfessionalGithub(value, at))
+              throw new Error("Unsafe Atom projection");
+            backupValid = true;
+            ttl = SUCCESS_TTL;
+            failures = 0;
+          }
+        } catch { /* Both providers unavailable: preserve original reason. */ }
+        if (!backupValid) {
+          failures = Math.min(failures + 1, 6);
+          ttl = ttl === SUCCESS_TTL ? FAILURE_TTL : ttl;
+          value = unavailableProfessionalGithub(at, reason, ttl);
+        }
       }
       cached = {expiresAt: time + ttl, value};
       if (edge) {
         try {
           await edge.put(cacheKey, new Response(JSON.stringify({
-            version: 1, expiresAt: new Date(time + ttl).toISOString(), value,
+            version: 2, expiresAt: new Date(time + ttl).toISOString(), value,
           }), {
             headers: {
               "Content-Type": "application/json; charset=utf-8",
