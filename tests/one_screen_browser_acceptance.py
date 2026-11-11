@@ -48,6 +48,11 @@ try:
                 assert page.locator('[data-public-github-feed]').count()==2
                 assert page.locator('[data-public-spotify]').count()==1
                 assert page.locator('.prestige-command [data-public-work]').count()==1
+                # The movie and reactive canvas are decorative layers only.
+                assert page.locator('[data-living-scene]').count()==1
+                assert page.locator('[data-living-canvas]').count()==1
+                assert page.locator('[data-motion-toggle]').count()==1
+                assert page.locator('[data-motion-toggle]').is_disabled(),(engine,width,height,"honor reduced motion")
 
                 # Reproduce the reported real-playback case with synthetic
                 # text *only inside local browser tests*. Provider secrets and
@@ -230,6 +235,15 @@ try:
             })""")
             assert "prestige-nebula" in animation["backdrop"],(engine,"ambient animation",animation)
             assert "prestige-reveal" in animation["intro"],(engine,"identity entrance",animation)
+            button=motion_page.locator('[data-motion-toggle]')
+            assert button.is_enabled(),(engine,"motion control enabled")
+            assert button.get_attribute("aria-pressed")=="true"
+            button.click()
+            assert button.get_attribute("aria-pressed")=="false"
+            assert motion_page.locator('[data-living-scene]').get_attribute("data-motion")=="off"
+            button.click()
+            assert button.get_attribute("aria-pressed")=="true"
+            assert motion_page.locator('[data-living-scene]').get_attribute("data-motion")=="on"
             motion_context.close()
             browser.close()
 finally:
