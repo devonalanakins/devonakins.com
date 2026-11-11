@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {
   projectProfessionalGithub,
+  projectProfessionalGithubAtom,
   validProfessionalGithub,
   createProfessionalGithubReader,
 } from "../src/professional/github-public.mjs";
@@ -96,4 +97,92 @@ test("edge cache cannot inject arbitrary GitHub fields",async()=>{
   });
   assert.equal((await reader()).events[0].repo,"devonalanakins/safe");
   assert.equal(calls,1);
+});
+
+
+const atomEntry = ({repo="devonakins.com",actor="devonalanakins",event="push",
+  href="https://github.com/devonalanakins/"+repo+"/compare/a..b",
+  timestamp="2026-11-10T19:59:00Z"}={}) => 
+  '<entry><id>tag:github.com,2008:'+event+'/1234</id>'+
+  '<published>'+timestamp+'</published><updated>'+timestamp+'</updated>'+
+  '<link rel="alternate" type="text/html" href="'+href+'"/>'+
+  '<title type="html">Untrusted raw private-looking commit details</title>'+
+  '<author><name>'+actor+'</name></author>'+
+  '<content type="html">&lt;script&gt;never-publish&lt;/script&gt;</content>'+
+  '</entry>';
+const atomFeed = (...entries) =>
+  '<?xml version="1.0" encoding="UTF-8"?>'+
+  '<feed xmlns="http://www.w3.org/2005/Atom" xmlns:media="http://search.yahoo.com/mrss/">'+
+  entries.join("")+'</feed>';
+
+test("GitHub official public Atom fallback is safely projected and attributed",()=>{
+  const projected=projectProfessionalGithubAtom(atomFeed(
+    atomEntry({repo:"any-public-repository"}),
+    atomEntry({repo:"knowledge",event:"pull_request",
+      href:"https://github.com/devonalanakins/knowledge/pull/123"}),
+    atomEntry({repo:"someone-elses-repo",actor:"not-the-owner"}),
+    atomEntry({repo:"bad",href:"https://attacker.invalid/devonalanakins/bad"}),
+  ),date);
+  assert.equal(projected.source,"GitHub public Atom feed");
+  assert.equal(projected.status,"available");
+  assert.deepEqual(projected.events.map(x=>({kind:x.kind,repo:x.repo})),[
+    {kind:"push",repo:"devonalanakins/any-public-repository"},
+    {kind:"pull_request",repo:"devonalanakins/knowledge"},
+  ]);
+  assert.equal(validProfessionalGithub(projected,date),true);
+  assert.doesNotMatch(JSON.stringify(projected),/Untrusted raw|never-publish|<script>|attacker/);
+});
+
+test("API 403 rate limit uses official public Atom instead of exposing unavailable state",async()=>{
+  const called=[];
+  const reader=createProfessionalGithubReader({
+    clock:()=>date,cache:null,
+    fetchImpl:async(url)=>{
+      called.push(String(url));
+      return String(url).includes("api.github.com")
+        ? new Response("provider denied",{status:403,headers:{"x-ratelimit-remaining":"0","Retry-After":"1800"}})
+        : new Response(atomFeed(atomEntry({repo:"unfeatured-live-work"})),{
+            status:200,headers:{"Content-Type":"application/atom+xml; charset=utf-8"}});
+    },
+  });
+  const first=await reader(),again=await reader();
+  assert.equal(first.status,"available");
+  assert.equal(first.source,"GitHub public Atom feed");
+  assert.equal(first.events[0].repo,"devonalanakins/unfeatured-live-work");
+  assert.equal(validProfessionalGithub(first,date),true);
+  assert.deepEqual(first,again);
+  assert.equal(called.length,2,"Cached fallback must not refetch for every visitor");
+  assert.match(called[1],/^https:\/\/github\.com\/devonalanakins\.atom$/);
+});
+
+test("malformed fallback never leaks feed fields and respects original API cooldown",async()=>{
+  const bad=[
+    atomFeed(atomEntry({href:"https://evil.example/devonalanakins/repo"})),
+    "<!DOCTYPE html><html>Not an atom feed</html>",
+    atomFeed(atomEntry({actor:"another-user"})),
+  ];
+  for(const xml of bad){
+    const reader=createProfessionalGithubReader({
+      clock:()=>date,cache:null,
+      fetchImpl:async(url)=>String(url).includes("api.github.com")
+        ? new Response("limited",{status:429,headers:{"Retry-After":"100"}})
+        : new Response(xml,{status:200,headers:{"Content-Type":"application/atom+xml"}}),
+    });
+    const value=await reader();
+    if(xml.includes("<!DOCTYPE")) {
+      assert.equal(value.status,"unavailable");
+      assert.equal(value.reason,"rate-limited");
+    } else {
+      // Valid public feed documents with no eligible owned events are empty,
+      // never an invented project or an unavailable credential.
+      assert.equal(value.status,"empty");
+    }
+    assert.doesNotMatch(JSON.stringify(value),/evil.example|another-user|limited/);
+    assert.equal(validProfessionalGithub(value,date),true);
+  }
+});
+
+test("fallback rejects oversized or non-Atom XML without publishing content",()=>{
+  assert.throws(()=>projectProfessionalGithubAtom("<html>not a feed</html>",date));
+  assert.throws(()=>projectProfessionalGithubAtom("X".repeat(600001),date));
 });
