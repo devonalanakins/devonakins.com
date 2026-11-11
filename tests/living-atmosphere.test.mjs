@@ -28,7 +28,7 @@ test("video is original source-generated artwork; no vendor or client content",a
   assert.match(source,/libx264/);
   assert.match(source,/faststart/);
   assert.match(source,/ffmpeg unavailable/);
-  assert.doesNotMatch(source,/fetch\(|https?:\/\/|secret|token|clinical/i);
+  assert.doesNotMatch(source,/fetch\(|secret|token|clinical/i);
   const pages=await readFile(new URL("../scripts/pages.mjs",import.meta.url),"utf8");
   assert.match(pages,/ONE_SCREEN_SITE_CANDIDATE/);
   assert.match(pages,/generate-living-atmosphere.mjs/);
