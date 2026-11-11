@@ -7,6 +7,7 @@ import assert from "node:assert/strict";
 import {readFile} from "node:fs/promises";
 import {PROFESSIONAL_ROUTES} from "../src/professional/site.mjs";
 import {approvedPublicProjects} from "../src/publication-manifest.mjs";
+import {validPublicListening} from "./validate-public-listening.mjs";
 
 const origin=(process.env.VERIFY_ORIGIN||"https://devonakins.com").replace(/\/+$/,"");
 const expectedCommit=process.env.EXPECTED_COMMIT||process.env.GITHUB_SHA;
@@ -78,6 +79,15 @@ for(const event of feed.events){
   assert.equal(event.url,"https://github.com/"+event.repo);
 }
 assert.doesNotMatch(JSON.stringify(feed),/access_token|client_secret|commit_message|private_client/i);
+const listeningRes=await get("/api/listening/now");
+assert.equal(listeningRes.status,200,"Public Spotify presence endpoint");
+assert.match(listeningRes.headers.get("content-type")||"",/application\/json/i);
+assert.match(listeningRes.headers.get("cache-control")||"",/no-store/i);
+assert.match(listeningRes.headers.get("cdn-cache-control")||"",/no-store/i);
+const listening=await listeningRes.json();
+assert.ok(validPublicListening(listening),"Spotify playback must be consent-filtered with bounded allowlisted fields");
+if(listening.mode==="hidden")assert.equal(listening.detailsVisible,false);
+assert.doesNotMatch(JSON.stringify(listening),/access_token|refresh_cipher|client_secret|device_id|user_id/i);
 const activity=await get("/api/activity/v4");
 assert.equal(activity.status,200,"Previously approved consent-filtered signals must remain available");
 assert.match(activity.headers.get("cache-control")||"",/no-store/i);
