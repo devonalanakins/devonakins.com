@@ -1,4 +1,5 @@
 import {initProfessionalSignals} from "./signals";
+import {BROWSER_GITHUB_SOURCE,readBrowserGithubFallback} from "./github-browser-fallback.mjs";
 type Activity = {
   kind: "push" | "pull_request" | "release" | "issue" | "other";
   label: string;
@@ -50,7 +51,7 @@ const age = (value: string, now = Date.now()) => {
 const valid = (input: unknown): input is Snapshot => {
   if (!input || typeof input !== "object" || Array.isArray(input)) return false;
   const item = input as Record<string,unknown>;
-  if (item.version !== 1 || !["GitHub public events API", "GitHub public Atom feed"].includes(String(item.source)) ||
+  if (item.version !== 1 || !["GitHub public events API", "GitHub public Atom feed", BROWSER_GITHUB_SOURCE].includes(String(item.source)) ||
       !["available", "empty", "unavailable"].includes(String(item.status)) ||
       !Array.isArray(item.events) || item.events.length > 32 ||
       typeof item.checkedAt !== "string" ||
@@ -209,10 +210,11 @@ function paint(){
     highlights.replaceChildren(fragment);
   }
   if(source){
+    const direct=snapshot?.source===BROWSER_GITHUB_SOURCE;
     source.textContent=snapshot?.status==="available"
-      ? "Public GitHub source responding · checked "+new Date(snapshot.checkedAt).toLocaleString()
+      ? (direct ? "Public GitHub API fetched directly by this browser · checked " : "Public GitHub source responding · checked ")+new Date(snapshot.checkedAt).toLocaleString()
       : snapshot?.status==="empty"
-      ? "Public source reachable · no qualifying recent events"
+      ? (direct ? "GitHub API queried directly by this browser · no qualifying recent events" : "Public source reachable · no qualifying recent events")
       : "Public GitHub source unavailable; no activity inferred.";
   }
 }
@@ -237,8 +239,13 @@ async function refresh(){
     const body:unknown=await response.json();
     if(!valid(body))throw new Error("Invalid source");
     latest=body;
+    if(body.status==="unavailable"){
+      const rescue=await readBrowserGithubFallback();
+      if(rescue && valid(rescue))latest=rescue;
+    }
   }catch{
-    latest=null;
+    const rescue=await readBrowserGithubFallback();
+    latest=rescue && valid(rescue) ? rescue : null;
   }finally{
     busy=false;
     paint();
