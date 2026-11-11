@@ -28,8 +28,8 @@ body.one-body{height:100%;height:100dvh;min-height:0;overflow:hidden;background:
 .one-stage{position:relative;height:calc(100dvh - 76px - 36px);min-height:0;width:min(1580px,100%);margin:0 auto;padding:clamp(18px,2vw,34px) clamp(20px,3.8vw,70px)}
 .one-view{height:100%;min-height:0;width:100%;animation:one-enter .35s ease-out both}
 .one-view:focus{outline:none}
-.one-home-layout{height:100%;display:grid;grid-template-columns:minmax(0,1.06fr) minmax(240px,.78fr) minmax(340px,1.05fr);align-items:center;gap:clamp(14px,2.2vw,35px)}
-.one-hero-copy{position:relative;z-index:2;align-self:center;min-width:0;padding-bottom:24px}
+.one-home-layout{height:100%;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.07fr);align-items:center;gap:clamp(24px,4.5vw,85px)}
+.one-hero-copy{position:relative;z-index:2;align-self:center;min-width:0;padding:0}
 .one-eyebrow{font-size:10px;letter-spacing:.19em;font-weight:750;color:#c9ac89;margin:0 0 29px;white-space:nowrap}
 .one-eyebrow span{color:#f6dbc1;border:1px solid #e7ba844d;border-radius:50px;padding:7px 10px;margin-right:9px}
 .one-kicker{font-size:10px;letter-spacing:.23em;color:#b3c1c8;font-weight:600;margin:0 0 18px;line-height:1.7}
@@ -41,9 +41,6 @@ body.one-body{height:100%;height:100dvh;min-height:0;overflow:hidden;background:
 .one-button:hover{transform:translateY(-2px);background:#ffffff1a}
 .one-button-primary{background:linear-gradient(115deg,#f6d8ad,#c39a76);color:#171a1c;border-color:#eac59e}
 .one-understatement{font-size:9px;letter-spacing:.28em;color:#778998;line-height:1.5;margin-top:50px}
-.one-portrait{position:relative;align-self:stretch;min-height:0;z-index:1;display:flex;align-items:flex-end;justify-content:center;isolation:isolate;overflow:hidden;mask-image:linear-gradient(to bottom,#000 73%,transparent 100%)}
-.one-portrait-aurora{position:absolute;inset:13% -25% 8%;border-radius:50%;background:radial-gradient(ellipse,#c1907659 0,#a5736642 29%,#3a677a2d 53%,transparent 72%);filter:blur(14px);transform:scale(1.3);z-index:-1}
-.one-portrait img{position:relative;width:175%;height:100%;max-width:none;object-fit:contain;object-position:center bottom;filter:drop-shadow(0 22px 44px #0009);opacity:.98}
 .one-signals{display:grid;grid-template-rows:minmax(0,1.25fr) minmax(0,.92fr);gap:14px;align-self:stretch;min-width:0;min-height:0;padding:clamp(4px,1vw,14px) 0}
 .one-panel{background:linear-gradient(145deg,#172632c9,#0b141edb);border:1px solid #c7d4d53c;border-radius:14px;box-shadow:inset 0 1px 0 #ffffff0c,0 24px 58px #0004;min-height:0}
 .one-github,.one-activity-feed{display:flex;flex-direction:column;overflow:hidden;padding:20px 21px}
@@ -136,7 +133,7 @@ body.one-body{height:100%;height:100dvh;min-height:0;overflow:hidden;background:
 @media(max-width:1300px){
  .one-header{grid-template-columns:auto 1fr auto;gap:15px}
  .one-header-descriptor{display:none}
- .one-home-layout{grid-template-columns:minmax(0,1.1fr) minmax(180px,.75fr) minmax(320px,1fr);gap:15px}
+ .one-home-layout{grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);gap:clamp(16px,3vw,42px)}
  .one-tablist button{padding:0 11px}
  .one-view h1{font-size:clamp(41px,5.5vw,68px)}
  .one-understatement{margin-top:25px}
@@ -145,8 +142,7 @@ body.one-body{height:100%;height:100dvh;min-height:0;overflow:hidden;background:
  .one-header{height:67px}
  .one-header-email{display:none}
  .one-stage{height:calc(100dvh - 67px - 36px)}
- .one-home-layout{grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);gap:15px}
- .one-portrait{position:absolute;inset:5% 32% 0 18%;opacity:.26;z-index:-1;pointer-events:none}
+ .one-home-layout{grid-template-columns:minmax(0,.88fr) minmax(0,1.12fr);gap:18px}
  .one-signals{grid-column:2}
  .one-header{grid-template-columns:auto 1fr}
  .one-tabs-desktop{justify-self:end}
@@ -175,7 +171,6 @@ body.one-body{height:100%;height:100dvh;min-height:0;overflow:hidden;background:
  .one-actions{margin:14px 0 0}
  .one-button{min-height:37px;padding:8px 12px;font-size:11px}
  .one-understatement{display:none}
- .one-portrait{inset:12% -12% 38% 40%;opacity:.32;mask-image:linear-gradient(90deg,transparent,#000 38%,#000 80%,transparent)}
  .one-signals{flex:1;min-height:0;grid-template-rows:minmax(0,1fr) minmax(0,.74fr);gap:8px;padding:0;z-index:4}
  .one-github{padding:10px 12px}
  .one-panel-head{padding-bottom:7px;gap:8px}
@@ -247,7 +242,6 @@ body.one-body{height:100%;height:100dvh;min-height:0;overflow:hidden;background:
  .one-lede{font-size:11px}
  .one-actions{margin-top:8px}
  .one-button{min-height:31px;padding:6px 10px}
- .one-portrait{opacity:.15}
  .one-fact-stack article{padding:9px 12px}
  .one-fact-stack h2{font-size:18px}
  .one-fact-stack p{font-size:9px}
@@ -271,10 +265,7 @@ body.one-body{height:100%;height:100dvh;min-height:0;overflow:hidden;background:
 }
 
 
-/* Final viewport polish: preserve the cinematic portrait and legible compact
-   source states without cutting off a live title on short mobile displays. */
-.one-portrait img{height:auto;align-self:center;transform:translateY(40px);
-  mask-image:linear-gradient(to bottom,transparent 0%,#000 21%,#000 68%,transparent 100%)}
+/* Compact source states must remain readable on short mobile displays. */
 @media(max-width:760px){
  .one-tabs-mobile .one-tablist button{letter-spacing:-.045em;font-size:9px;padding:0 1px}
  .one-signals .p-signal-card{justify-content:flex-start;padding:9px 10px}
@@ -332,7 +323,6 @@ body.one-body{height:100%;height:100dvh;min-height:0;overflow:hidden;background:
  .one-signals .p-spotify-meta h3{font-size:11px;line-height:1.1;margin:0}
  .one-signals .p-gpt-signal-card h3{font-size:16px;margin:0}
  .one-signals .p-gpt-signal-card p,.one-signals .p-gpt-signal-card time{display:none}
- .one-portrait{opacity:.1}
 }
 
 
@@ -344,9 +334,6 @@ body.one-body{height:100%;height:100dvh;min-height:0;overflow:hidden;background:
 }
 @media(max-width:400px) and (max-height:700px){
  .one-signals .p-spotify-heading span:after{font-size:8px}
-}
-@media(min-width:761px){
- .one-portrait img{width:210%}
 }
 
 
