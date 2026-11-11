@@ -71,7 +71,8 @@ assert.doesNotMatch(html,/SYNTHETIC QA FIXTURE|SYNTHETIC TEST DATA|noindex,nofol
 assert.match(html,/rel="canonical" href="https:\/\/devonakins\.com\/"/);
 
 const routes=[...new Set([...Object.values(PROFESSIONAL_ROUTES),
-  ...approvedPublicProjects.map(p=>"/work/"+p.slug+"/")])];
+  ...approvedPublicProjects.map(p=>"/work/"+p.slug+"/")])]
+  .filter(path=>path!=="/");
 for(const path of routes){
   const response=await get(path);
   assert.equal(response.status,200,"Missing preserved professional route "+path);
