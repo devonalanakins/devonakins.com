@@ -38,11 +38,11 @@ export function validateDatedGptCapture(value) {
   const p = value.profile;
   if (!shape(p, ["lifetimeTokensApprox","peakTokensApprox","longestTaskHours",
     "longestStreakDays","currentStreakDays","skillsExplored","totalSkillUses",
-    "fastModePercent","mostUsedReasoning"]) ||
+    "fastModePercent","mostUsedReasoning","mostUsedReasoningPercent"]) ||
     ![p.lifetimeTokensApprox,p.peakTokensApprox,p.longestTaskHours,
       p.longestStreakDays,p.currentStreakDays,p.skillsExplored,p.totalSkillUses,
-      p.fastModePercent].every(integer) ||
-    p.fastModePercent > 100 || p.mostUsedReasoning !== "Light")
+      p.fastModePercent,p.mostUsedReasoningPercent].every(integer) ||
+    p.fastModePercent > 100 || p.mostUsedReasoningPercent > 100 || p.mostUsedReasoning !== "Light")
     throw new Error("Invalid cumulative profile metrics");
 
   const w=value.usage7d;
@@ -64,7 +64,7 @@ const usageCard = (label, value, units) =>
   '</p><strong class="p-gpt-record-number">' + full(value) + '</strong>' +
   '<p>Seven-day ' + escapeHtml(units) + ', as displayed in Usage Analytics.</p></article>';
 
-export function renderDatedGptCapture(capture, oldSnapshot) {
+export function renderDatedGptCapture(capture, oldSnapshot, priorCaptures=[]) {
   const c=validateDatedGptCapture(capture);
   const old=validatePublicGptSnapshot(oldSnapshot);
   const p=c.profile, w=c.usage7d, date=dayLabel(c.captureDate);
@@ -84,7 +84,7 @@ export function renderDatedGptCapture(capture, oldSnapshot) {
     fact("Lifetime skill uses",full(p.totalSkillUses)) +
     fact("Skills explored",full(p.skillsExplored)) +
     fact("Fast mode",p.fastModePercent+"%") +
-    fact("Most-used reasoning",p.mostUsedReasoning) + '</div></div>' +
+    fact("Most-used reasoning",p.mostUsedReasoning+" · "+p.mostUsedReasoningPercent+"%") + '</div></div>' +
     '<div class="p-gpt-weekly-head"><p class="p-eyebrow">USAGE / LAST SEVEN DAYS</p>' +
     '<h3>Seven-day activity, separate from lifetime.</h3>' +
     '<p>Seven-day tab selected in the recording on ' + escapeHtml(date) +
@@ -111,5 +111,18 @@ export function renderDatedGptCapture(capture, oldSnapshot) {
     full(old.profile.weeklyActivity.messages) + ' messages, ' +
     full(old.profile.weeklyActivity.pluginCalls) + ' plugin calls, ' +
     full(old.profile.weeklyActivity.skillUses) + ' skill uses.</p>' +
-    '<a class="p-text-link" href="/v2/usage-snapshot.json">View preserved November 4 source</a></div></section>';
+    '<a class="p-text-link" href="/v2/usage-snapshot.json">View preserved November 4 source</a></div>' +
+    (priorCaptures.length ? '<div class="p-gpt-prior-records">' + priorCaptures.map(previous=>{
+      const older=validateDatedGptCapture(previous);
+      if (older.capturedAt>=c.capturedAt) throw new Error("Dated capture history is not chronological");
+      return '<div class="p-aside-panel p-gpt-history-card"><time datetime="' +
+        escapeHtml(older.captureDate) + '">' + escapeHtml(dayLabel(older.captureDate)) +
+        '</time><strong>≈' + short(older.profile.lifetimeTokensApprox) +
+        ' profile lifetime tokens</strong><p>' + full(older.usage7d.tokens) +
+        ' seven-day tokens, ' + full(older.usage7d.messages) + ' messages, ' +
+        full(older.usage7d.pluginCalls) + ' plugin calls, ' +
+        full(older.usage7d.skillUses) + ' skill uses.</p>' +
+        '<a class="p-text-link" href="/gpt/snapshots/' +
+        escapeHtml(older.captureDate) + '.json">View dated source</a></div>';
+      }).join("") + '</div>' : '') + '</section>';
 }
