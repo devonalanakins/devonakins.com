@@ -34,7 +34,13 @@ const v5Candidate = process.env.V5_PUBLIC_HOME_CANDIDATE === "1";
 const professionalCandidate = process.env.PROFESSIONAL_SITE_CANDIDATE === "1";
 // Explicit preview-only homepage design. Protected production defaults remain unchanged.
 const oneScreenCandidate = process.env.ONE_SCREEN_SITE_CANDIDATE === "1";
-// The cinematic film is a deterministic first-party build asset only for the\n// selected one-screen candidate. Baseline V4 and other variants are unchanged.\nif(oneScreenCandidate && process.env.SKIP_LIVING_ATMOSPHERE !== "1") {\n  execFileSync(process.execPath,["scripts/generate-living-atmosphere.mjs"],{stdio:"inherit",timeout:120_000});\n}\nconst motionAssetAvailable = oneScreenCandidate && process.env.SKIP_LIVING_ATMOSPHERE !== "1" &&\n  existsSync("public/professional/living-atmosphere.mp4");
+// The cinematic film is a deterministic first-party build asset only for the
+// selected one-screen candidate. Baseline V4 and other variants are unchanged.
+if(oneScreenCandidate && process.env.SKIP_LIVING_ATMOSPHERE !== "1") {
+  execFileSync(process.execPath,["scripts/generate-living-atmosphere.mjs"],{stdio:"inherit",timeout:120_000});
+}
+const motionAssetAvailable = oneScreenCandidate && process.env.SKIP_LIVING_ATMOSPHERE !== "1" &&
+  existsSync("public/professional/living-atmosphere.mp4");
 const professionalPaths = new Map(Object.entries(PROFESSIONAL_ROUTES).map(([key,path]) => [path,key]));
 const professionalLegacyDestinations = Object.freeze({
   home: "/", work: "/work/", research: "/work/", contact: "/contact/",
