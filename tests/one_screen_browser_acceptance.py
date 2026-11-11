@@ -31,6 +31,29 @@ try:
                 assert page.locator(".one-portrait").count()==0,(engine,width,height,"portrait removed")
                 assert page.locator(".prestige-player").count()==1,(engine,width,height,"prestige identity")
                 assert page.locator(".prestige-command").count()==1,(engine,width,height,"public signal board")
+                # Compact work badge must never cover the workstation heading.
+                # A full-viewport screenshot will not reveal intra-card overlap.
+                if width<=400:
+                    workstation=page.evaluate("""() => {
+                      const head=document.querySelector('.prestige-command-top');
+                      const title=head.querySelector('strong');
+                      const state=head.querySelector('[data-work-state]');
+                      const badge=head.querySelector('[data-public-work]');
+                      const a=title.getBoundingClientRect();
+                      const b=badge.getBoundingClientRect();
+                      const h=head.getBoundingClientRect();
+                      const s=state.getBoundingClientRect();
+                      const overlap=a.left<b.right-1 && b.left<a.right-1 &&
+                        a.top<b.bottom-1 && b.top<a.bottom-1;
+                      return {overlap,visible:a.width>65 && a.height>10,
+                        badgeInside:b.left>=h.left-2 && b.right<=h.right+2,
+                        titleInside:a.left>=h.left-2 && a.right<=h.right+2,
+                        statusInside:s.left>=b.left-2 && s.right<=b.right+2};
+                    }""")
+                    assert all([not workstation["overlap"],workstation["visible"],
+                        workstation["badgeInside"],workstation["titleInside"],
+                        workstation["statusInside"]]),(
+                          engine,width,height,"compact workstation heading/status collision",workstation)
                 assert page.locator(".prestige-identity-copy h1").is_visible()
                 assert "SOFTWARE DEVELOPER" in page.locator(".prestige-subtitle").inner_text()
                 # High-level gamer styling is editorial, not invented XP, levels, or ranks.
