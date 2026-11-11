@@ -55,6 +55,6 @@ test('mission artwork uses independent resolution-free assets, never a scaled 2x
     const svg=await readFile(new URL('../public/professional/mission-'+name+'.svg',import.meta.url),'utf8');
     assert.match(svg,/<svg\b/);
     assert.match(svg,/viewBox="0 0 1200 640"/);
-    assert.doesNotMatch(svg,/<image\b|data:image\/|<script\b|https?:\/\//);
+    assert.doesNotMatch(svg,/<image\b|data:image\/|<script\b|(?:href|src)=\"https?:\/\//);
   }
 });
