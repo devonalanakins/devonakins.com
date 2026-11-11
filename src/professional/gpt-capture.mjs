@@ -1,0 +1,115 @@
+import {validatePublicGptSnapshot} from "../gpt-profile.mjs";
+
+// Rendering is deliberately static: this is an owner-supplied recording, not an API connection.
+const shape = (value, fields) => value && typeof value === "object" && !Array.isArray(value) &&
+  Object.keys(value).sort().join("|") === [...fields].sort().join("|");
+const integer = value => Number.isSafeInteger(value) && value >= 0;
+const escapeHtml = value => String(value).replace(/[&<>"']/g, c =>
+  ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const full = value => new Intl.NumberFormat("en-US").format(value);
+const short = value => new Intl.NumberFormat("en-US", {
+  notation:"compact",maximumFractionDigits:1,
+}).format(value);
+const dayLabel = value => new Date(value + "T12:00:00Z").toLocaleDateString("en-US", {
+  timeZone:"UTC",month:"long",day:"numeric",year:"numeric",
+});
+const timeLabel = value => new Date(value).toLocaleString("en-US", {
+  timeZone:"America/New_York",month:"short",day:"numeric",hour:"numeric",
+  minute:"2-digit",timeZoneName:"short",
+});
+
+export function validateDatedGptCapture(value) {
+  if (!shape(value, ["version","capturedAt","captureDate","source","attestation","profile","usage7d"]) ||
+      value.version !== 1 || value.attestation !== "owner-recorded" ||
+      value.source !== "Owner-provided ChatGPT public profile and Usage Analytics recording" ||
+      typeof value.capturedAt !== "string" ||
+      !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/.test(value.capturedAt) ||
+      !Number.isFinite(Date.parse(value.capturedAt)) ||
+      typeof value.captureDate !== "string" ||
+      !/^\d{4}-\d{2}-\d{2}$/.test(value.captureDate)) {
+    throw new Error("Invalid owner-recorded GPT capture");
+  }
+  const instant = Date.parse(value.capturedAt);
+  const utcDate = new Date(instant).toISOString().slice(0,10);
+  const prevUtcDate = new Date(instant - 86400000).toISOString().slice(0,10);
+  if (![utcDate,prevUtcDate].includes(value.captureDate) || instant > Date.now()+60000)
+    throw new Error("Invalid capture chronology");
+
+  const p = value.profile;
+  if (!shape(p, ["lifetimeTokensApprox","peakTokensApprox","longestTaskHours",
+    "longestStreakDays","currentStreakDays","skillsExplored","totalSkillUses",
+    "fastModePercent","mostUsedReasoning"]) ||
+    ![p.lifetimeTokensApprox,p.peakTokensApprox,p.longestTaskHours,
+      p.longestStreakDays,p.currentStreakDays,p.skillsExplored,p.totalSkillUses,
+      p.fastModePercent].every(integer) ||
+    p.fastModePercent > 100 || p.mostUsedReasoning !== "Light")
+    throw new Error("Invalid cumulative profile metrics");
+
+  const w=value.usage7d;
+  if (!shape(w, ["selection","tokens","messages","pluginCalls","skillUses",
+    "tokensUpdatedAt","toolsUpdatedAt"]) ||
+    w.selection !== "7d" ||
+    ![w.tokens,w.messages,w.pluginCalls,w.skillUses].every(integer) ||
+    ![w.tokensUpdatedAt,w.toolsUpdatedAt].every(t => typeof t === "string" &&
+      /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/.test(t) &&
+      Number.isFinite(Date.parse(t)) && Date.parse(t) <= instant))
+    throw new Error("Invalid seven-day usage metrics");
+  return value;
+}
+
+const fact = (label, value) =>
+  '<div><strong>' + escapeHtml(value) + '</strong><small>' + escapeHtml(label) + '</small></div>';
+const usageCard = (label, value, units) =>
+  '<article class="p-card p-gpt-record-card"><p class="p-card-over">' + escapeHtml(label) +
+  '</p><strong class="p-gpt-record-number">' + full(value) + '</strong>' +
+  '<p>Seven-day ' + escapeHtml(units) + ', as displayed in Usage Analytics.</p></article>';
+
+export function renderDatedGptCapture(capture, oldSnapshot) {
+  const c=validateDatedGptCapture(capture);
+  const old=validatePublicGptSnapshot(oldSnapshot);
+  const p=c.profile, w=c.usage7d, date=dayLabel(c.captureDate);
+  return '<section class="p-section p-gpt-recorded" aria-labelledby="p-gpt-record-heading">' +
+    '<div class="p-section-heading"><div><p class="p-eyebrow">OWNER-RECORDED / ' +
+    escapeHtml(c.captureDate) + '</p><h2 id="p-gpt-record-heading">Latest dated snapshot.</h2></div>' +
+    '<p>Captured ' + escapeHtml(timeLabel(c.capturedAt)) +
+    ' from the public profile and the selected seven-day Usage Analytics view. Not live account telemetry.</p></div>' +
+    '<div class="p-aside-panel p-gpt-record-hero"><p class="p-card-over">PERSONAL PROFILE / APPROXIMATE LIFETIME TOKENS</p>' +
+    '<strong class="p-gpt-lifetime">≈' + short(p.lifetimeTokensApprox) + '</strong>' +
+    '<p>Displayed by the public ChatGPT profile at capture time. This cumulative profile figure is not the seven-day token total or API billing.</p>' +
+    '<div class="p-gpt-facts">' +
+    fact("Peak tokens (approx.)","≈"+short(p.peakTokensApprox)) +
+    fact("Longest task",p.longestTaskHours+"h") +
+    fact("Longest streak",p.longestStreakDays+" days") +
+    fact("Current streak at capture",p.currentStreakDays+" days") +
+    fact("Lifetime skill uses",full(p.totalSkillUses)) +
+    fact("Skills explored",full(p.skillsExplored)) +
+    fact("Fast mode",p.fastModePercent+"%") +
+    fact("Most-used reasoning",p.mostUsedReasoning) + '</div></div>' +
+    '<div class="p-gpt-weekly-head"><p class="p-eyebrow">USAGE / LAST SEVEN DAYS</p>' +
+    '<h3>Seven-day activity, separate from lifetime.</h3>' +
+    '<p>Seven-day tab selected in the recording on ' + escapeHtml(date) +
+    '. Exact totals shown; no daily series has been inferred.</p></div>' +
+    '<div class="p-card-grid p-gpt-weekly-grid">' +
+    usageCard("Tokens",w.tokens,"tokens") +
+    usageCard("Messages",w.messages,"messages") +
+    usageCard("Plugin calls",w.pluginCalls,"plugin calls") +
+    usageCard("Skill uses",w.skillUses,"skill uses") + '</div>' +
+    '<p class="p-gpt-source-note">Source panels refresh independently. Token panel last updated ' +
+    escapeHtml(timeLabel(w.tokensUpdatedAt)) + '; plugin and skill panel last updated ' +
+    escapeHtml(timeLabel(w.toolsUpdatedAt)) +
+    '. Values were observed in the owner recording, not retrieved from an OpenAI account API.</p></section>' +
+    '<section class="p-section p-gpt-history" aria-labelledby="p-gpt-history-heading">' +
+    '<div class="p-section-heading"><div><p class="p-eyebrow">HISTORICAL RECORD / PRESERVED</p>' +
+    '<h2 id="p-gpt-history-heading">Earlier dated capture.</h2></div>' +
+    '<p>Previous observations remain unchanged and separately attributed. Differently scoped captures should not be treated as a precise growth series.</p></div>' +
+    '<div class="p-aside-panel p-gpt-history-card"><time datetime="' +
+    escapeHtml(old.asOf) + '">' + escapeHtml(dayLabel(old.asOf)) + '</time>' +
+    '<strong>≈' + short(old.count) + ' recorded cumulative Work/Codex tokens</strong>' +
+    '<p>Original seven-day period ' + escapeHtml(old.profile.weeklyActivity.startDate) +
+    ' to ' + escapeHtml(old.profile.weeklyActivity.endDate) + ': ' +
+    full(old.profile.weeklyActivity.tokens) + ' tokens, ' +
+    full(old.profile.weeklyActivity.messages) + ' messages, ' +
+    full(old.profile.weeklyActivity.pluginCalls) + ' plugin calls, ' +
+    full(old.profile.weeklyActivity.skillUses) + ' skill uses.</p>' +
+    '<a class="p-text-link" href="/v2/usage-snapshot.json">View preserved November 4 source</a></div></section>';
+}
