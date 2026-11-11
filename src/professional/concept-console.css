@@ -391,3 +391,9 @@
 @media(max-width:760px){.one-body .concept-feed-filters button{padding:3px 6px;font-size:8px}}
 @media(max-width:400px) and (max-height:700px){.one-body .concept-feed-filters{display:none}}
 @media(prefers-reduced-motion:reduce){.one-body .concept-feed-filters button{transition:none}}
+
+/* Observed GitHub events only: never draw placeholder bars on source failure. */
+.one-body .concept-event-spark{display:block;flex:0 1 86px;width:86px;height:31px;margin-left:auto;min-width:48px;overflow:visible;filter:drop-shadow(0 0 4px #69d9e36a)}
+.one-body .concept-event-spark rect{fill:#87dcdf}
+@media(max-width:1200px){.one-body .concept-event-spark{flex-basis:55px;width:55px}}
+@media(prefers-reduced-motion:reduce){.one-body .concept-event-spark{filter:none}}

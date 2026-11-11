@@ -53,7 +53,7 @@ export function renderPrestigeHome({publicFeed,button,spotifyCard}) {
       '<div class="concept-live-foot"><span>PROVENANCE FIRST</span><button type="button" data-github-refresh aria-label="Refresh GitHub events now">↻ Refresh</button></div>'+
     '</aside>'+
     '<section class="concept-signal-band" aria-label="Publicly sourced signals">'+
-      '<div class="concept-signal-metric concept-github-stat"><span class="concept-signal-label">GITHUB · RECENT PUBLIC EVENTS</span><div><strong data-github-count="push" aria-label="Pushes unavailable">—</strong><small>Push activity</small></div><span class="concept-signal-provenance">Event-count window, not lifetime totals</span></div>'+
+      '<div class="concept-signal-metric concept-github-stat"><span class="concept-signal-label">GITHUB · RECENT PUBLIC EVENTS</span><div><strong data-github-count="push" aria-label="Pushes unavailable">—</strong><small>Push activity</small><svg class="concept-event-spark" data-github-spark viewBox="0 0 112 32" role="img" aria-label="Waiting for public GitHub event data" focusable="false"></svg></div><span class="concept-signal-provenance">Event-count window, not lifetime totals</span></div>'+
       '<div class="one-signal-bottom prestige-stat-pair"><div class="one-spotify">'+spotifyCard()+'</div><div class="one-gpt"><!--ONE_SCREEN_GPT_SLOT--></div></div>'+
       '<button type="button" data-one-go="activity" class="concept-signal-metric concept-source-tile"><span class="concept-signal-label">WORK / SOURCE STATUS</span><strong>Observe the record <span aria-hidden="true">↗</span></strong><small>GitHub history · authenticated presence · separate from music</small></button>'+
     '</section>'+

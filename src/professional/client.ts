@@ -128,9 +128,55 @@ const chip=(event:Activity)=>{
   span.textContent=EVENT_CHIPS[variant];
   return span;
 };
+
+/**
+ * Public-event histogram driven entirely by the validated recent GitHub
+ * snapshot. Days with zero observed events have no synthetic bars; a source
+ * outage clears the graph and cannot look like a real-time activity stream.
+ */
+function paintPublicEventSpark(snapshot: Snapshot | null, now: number){
+  const available=snapshot?.status==="available"||snapshot?.status==="empty";
+  const bins=Array<number>(7).fill(0);
+  if(available){
+    for(const event of snapshot.events){
+      const stamp=Date.parse(event.at);
+      if(!Number.isFinite(stamp)||stamp>now)continue;
+      const daysAgo=Math.floor((now-stamp)/86400000);
+      if(daysAgo>=0&&daysAgo<7)bins[6-daysAgo]++;
+    }
+  }
+  for(const graph of document.querySelectorAll<SVGSVGElement>("[data-github-spark]")){
+    graph.replaceChildren();
+    if(!available){
+      graph.setAttribute("aria-label","Public GitHub event chart unavailable; no activity inferred.");
+      graph.dataset.source="unavailable";
+      continue;
+    }
+    const max=Math.max(1,...bins);
+    bins.forEach((count,day)=>{
+      if(!count)return;
+      const height=Math.max(4,Math.round(count/max*24));
+      const bar=document.createElementNS(SVG_NS,"rect");
+      bar.setAttribute("x",String(3+day*16));
+      bar.setAttribute("y",String(29-height));
+      bar.setAttribute("width","9");
+      bar.setAttribute("height",String(height));
+      bar.setAttribute("rx","2");
+      const title=document.createElementNS(SVG_NS,"title");
+      title.textContent=count+" observed event"+(count===1?"":"s")+" in day bin "+(day+1)+" of 7";
+      bar.append(title);
+      graph.append(bar);
+    });
+    const total=bins.reduce((a,b)=>a+b,0);
+    graph.setAttribute("aria-label",total+" public GitHub events observed in the last seven days within the fetched sample, oldest to newest daily counts: "+bins.join(", ")+". This is not a complete account activity count.");
+    graph.dataset.source="observed";
+  }
+}
+
 function paint(){
   const snapshot=latest;
   const now=Date.now();
+  paintPublicEventSpark(snapshot,now);
   for(const panel of panels){
     const list=panel.querySelector<HTMLOListElement>("[data-feed-list]");
     const status=panel.querySelector<HTMLElement>("[data-feed-status]");

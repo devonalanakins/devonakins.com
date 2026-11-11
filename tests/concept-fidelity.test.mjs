@@ -13,6 +13,7 @@ test('concept fidelity: hero, sourced workstation, quality, process, projects an
   assert.match(html,/concept-feed-filters/);
   for(const filter of ['all','push','pull_request']) assert.match(html,new RegExp('data-github-filter="'+filter+'"')); 
   assert.match(html,/data-github-count="push"/);
+  assert.match(html,/data-github-spark/);
   assert.match(html,/data-public-github-feed/);
   assert.match(html,/data-public-spotify/);
   assert.match(html,/data-public-work data-work-mode="idle"/);
@@ -39,4 +40,13 @@ test('public event filters remain synchronized in homepage and the Activity pane
   assert.doesNotMatch(client,/item===filter/);
   assert.match(html,/data-github-refresh/);
   assert.match(html,/data-github-highlights/);
+});
+
+test('observed activity visualization is data-backed and clears on source outage',async()=>{
+  const client=await readFile(new URL('../src/professional/client.ts',import.meta.url),'utf8');
+  assert.match(client,/function paintPublicEventSpark/);
+  assert.match(client,/snapshot\.events/);
+  assert.match(client,/graph\.replaceChildren\(\)/);
+  assert.match(client,/No activity inferred|no activity inferred/);
+  assert.doesNotMatch(client.slice(client.indexOf('function paintPublicEventSpark'),client.indexOf('function paint(){')),/Math\.random|setInterval|fake activity/i);
 });
