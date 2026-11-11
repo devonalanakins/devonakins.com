@@ -40,3 +40,21 @@ test('ambient animation is first-party, deterministic and disabled for reduced m
   assert.match(css,/data-work-mode="active"/);
   assert.doesNotMatch(css,/@import|url\(https?:|position:\s*fixed;\s*inset:0;\s*pointer-events:auto/i);
 });
+
+test('compact Spotify HUD reserves space for the real song, and the note lives on the listening page',async()=>{
+  const css=await readFile(new URL('../src/professional/prestige-profile.css',import.meta.url),'utf8');
+  assert.match(css,/\.prestige-stat-pair \.p-spotify-card\s*\{[^}]*display:grid/);
+  assert.match(css,/\.prestige-stat-pair \.p-spotify-body\s*\{[^}]*grid-template-columns:52px minmax\(0,1fr\)/);
+  assert.match(css,/\.prestige-stat-pair \.p-spotify-card \.p-signal-foot\{display:none\}/);
+  assert.match(css,/\.prestige-stat-pair \.p-spotify-meta h3\s*\{[^}]*text-overflow:ellipsis/);
+});
+test('mission artwork uses independent resolution-free assets, never a scaled 2x3 bitmap atlas',async()=>{
+  const css=await readFile(new URL('../src/professional/prestige-profile.css',import.meta.url),'utf8');
+  for(const name of ['operations','systems','site']){
+    assert.match(css,new RegExp('mission-'+name+'\\\\.svg'.replace('\\\\','\\')));
+    const svg=await readFile(new URL('../public/professional/mission-'+name+'.svg',import.meta.url),'utf8');
+    assert.match(svg,/<svg\b/);
+    assert.match(svg,/viewBox="0 0 1200 640"/);
+    assert.doesNotMatch(svg,/<image\b|data:image\/|<script\b|https?:\/\//);
+  }
+});
