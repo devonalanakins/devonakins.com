@@ -13,7 +13,8 @@
     "skillsExplored": 93,
     "totalSkillUses": 6795,
     "fastModePercent": 2,
-    "mostUsedReasoning": "Light"
+    "mostUsedReasoning": "Light",
+    "mostUsedReasoningPercent": 36
   },
   "usage7d": {
     "selection": "7d",
