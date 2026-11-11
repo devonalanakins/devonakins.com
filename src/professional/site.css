@@ -888,3 +888,29 @@ h1 em,h2 em,.p-footer-line em{font-style:italic;color:#e9c29a}
  .p-gpt-record-number{font-size:clamp(1.55rem,7vw,2.2rem)}
  .p-gpt-history-card{padding:22px}
 }
+
+
+/* Provenance-first GPT capture: a separate dated record, never a live counter. */
+.p-gpt-record-hero{padding:clamp(24px,4vw,46px);background:radial-gradient(circle at 82% 10%,#8ac6d51c,transparent 42%),linear-gradient(140deg,#1b2b32,#0c151b 72%)}
+.p-gpt-lifetime{display:block;font-family:"Manrope",sans-serif;font-size:clamp(3.1rem,8vw,6.3rem);line-height:1.12;letter-spacing:-.07em;color:#e9bd89;font-variant-numeric:tabular-nums}
+.p-gpt-record-hero>p:not(.p-card-over){max-width:800px;color:#bdc7cb;font-size:.9rem;line-height:1.7}
+.p-gpt-facts{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));margin-top:34px;border-top:1px solid #c6d8df24}
+.p-gpt-facts>div{padding:23px 15px 10px 0;min-width:0;display:flex;flex-direction:column;gap:7px}
+.p-gpt-facts strong{color:#eef6f6;font-size:clamp(.99rem,1.65vw,1.38rem);letter-spacing:-.025em;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.p-gpt-facts small{font-size:.68rem;line-height:1.55;color:#9eafb6;text-transform:uppercase;letter-spacing:.1em}
+.p-gpt-weekly-head{margin:45px 0 20px}
+.p-gpt-weekly-head h3{font-family:"Manrope",sans-serif;font-weight:600;font-size:clamp(1.5rem,3.3vw,2.6rem);letter-spacing:-.045em;margin:0 0 10px}
+.p-gpt-weekly-head>p:last-child,.p-gpt-source-note{max-width:850px;color:#acbbc0;font-size:.82rem;line-height:1.75}
+.p-gpt-weekly-grid{grid-template-columns:repeat(4,minmax(0,1fr))}
+.p-gpt-record-card{padding:24px 19px;min-height:unset}
+.p-gpt-record-number{display:block;color:#e8f0ee;font-size:clamp(1.08rem,2.1vw,1.7rem);font-variant-numeric:tabular-nums;letter-spacing:-.045em;overflow-wrap:anywhere}
+.p-gpt-record-card p:last-child{margin:14px 0 0}
+.p-gpt-source-note{margin-top:20px}
+.p-gpt-history-card{padding:30px;display:flex;flex-direction:column;gap:12px}
+.p-gpt-history-card time{font-size:.72rem;color:#e4b582;letter-spacing:.09em;text-transform:uppercase}
+.p-gpt-history-card>strong{font-family:"Manrope",sans-serif;font-size:clamp(1.2rem,2.6vw,1.9rem);font-weight:600;letter-spacing:-.04em;overflow-wrap:anywhere}
+.p-gpt-history-card>p{margin:0;color:#acbbc0;font-size:.86rem;line-height:1.7}
+.p-gpt-history-card>a{align-self:flex-start}
+.p-gpt-prior-records{display:grid;gap:14px;margin-top:16px}
+@media(max-width:930px){.p-gpt-facts{grid-template-columns:repeat(2,minmax(0,1fr))}.p-gpt-weekly-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:530px){.p-gpt-facts{grid-template-columns:repeat(2,minmax(0,1fr))}.p-gpt-record-hero{padding:21px}.p-gpt-weekly-grid{grid-template-columns:1fr}.p-gpt-record-card{padding:22px}.p-gpt-record-number{font-size:1.48rem}.p-gpt-history-card{padding:22px}}
