@@ -1,5 +1,6 @@
 """Single-viewport candidate acceptance: Chromium/WebKit, desktop and phone."""
-import subprocess, time, urllib.request
+import subprocess, time, urllib.request, json
+from datetime import datetime, timezone
 from pathlib import Path
 from playwright.sync_api import sync_playwright
 
@@ -156,6 +157,37 @@ try:
             assert "prestige-nebula" in animation["backdrop"],(engine,"ambient animation",animation)
             assert "prestige-reveal" in animation["intro"],(engine,"identity entrance",animation)
             motion_context.close()
+            # Rotate a device without a hard reload. A synthetic, source-shaped
+            # GitHub response verifies the actual cached event count changes
+            # immediately with the viewport while the source labels remain.
+            timestamp=datetime.now(timezone.utc).isoformat(timespec="seconds").replace("+00:00","Z")
+            event={"kind":"push","label":"Pushed commits",
+                   "repo":"devonalanakins/devonakins.com","at":timestamp,
+                   "url":"https://github.com/devonalanakins/devonakins.com"}
+            response={"version":1,"source":"GitHub public events API",
+                      "status":"available","checkedAt":timestamp,
+                      "reason":None,"retryAt":None,"events":[event]*5}
+            rotation=browser.new_context(viewport={"width":390,"height":844},
+                device_scale_factor=1,reduced_motion="reduce",is_mobile=True,has_touch=True)
+            rotated=rotation.new_page()
+            rotated.route("**/api/github/public-feed",lambda route:route.fulfill(
+                status=200,content_type="application/json",body=json.dumps(response)))
+            rotated.goto(BASE+"/",wait_until="domcontentloaded")
+            rotated.wait_for_function("""() =>
+                document.querySelector('#one-home-github [data-feed-list]').children.length===2""")
+            assert rotated.locator("#one-home-github").get_attribute("data-limit")=="2"
+            rotated.set_viewport_size({"width":844,"height":390})
+            rotated.wait_for_function("""() =>
+                document.querySelector('#one-home-github').dataset.limit==='1' &&
+                document.querySelector('#one-home-github [data-feed-list]').children.length===1 &&
+                document.querySelector('#one-activity-github').dataset.limit==='2'""")
+            rotated.set_viewport_size({"width":1440,"height":900})
+            rotated.wait_for_function("""() =>
+                document.querySelector('#one-home-github').dataset.limit==='4' &&
+                document.querySelector('#one-home-github [data-feed-list]').children.length===4 &&
+                document.querySelector('#one-activity-github').dataset.limit==='6'""")
+            assert rotated.locator("#one-home-github li").first.inner_text().find("devonalanakins/devonakins.com")>=0
+            rotation.close()
             browser.close()
 finally:
     process.terminate()
