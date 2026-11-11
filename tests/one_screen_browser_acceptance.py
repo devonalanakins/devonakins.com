@@ -51,6 +51,16 @@ try:
                     for panel in (".concept-process",".concept-quality",".concept-featured",".concept-focus",".concept-activity-ribbon"):
                         assert page.locator(panel).is_visible(),(engine,width,height,panel,"concept panel missing")
                 assert page.locator(".concept-live .concept-feed-filters [data-github-filter]").count()==3
+                # Motion preferences must not delete the centerpiece: the
+                # approved local poster replaces the decorative background film.
+                if width>1200 and height>470:
+                    still=page.evaluate("""() => ({
+                      scene:getComputedStyle(document.querySelector('.concept-visual')).backgroundImage,
+                      image:document.querySelector('.concept-visual').getBoundingClientRect().width,
+                      video:getComputedStyle(document.querySelector('.one-world-video')).display
+                    })""")
+                    assert "living-atmosphere.png" in still["scene"] and still["image"]>50 and still["video"]=="none",(
+                        engine,width,height,"missing reduced-motion neural image",still)
                 # Compact work badge must never cover the workstation heading.
                 # A full-viewport screenshot will not reveal intra-card overlap.
                 if width<=400:

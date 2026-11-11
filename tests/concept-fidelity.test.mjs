@@ -59,3 +59,11 @@ test('work-feed indicator is neutral without observed public events and chart ma
   assert.match(client,/event\.kind!=="push"/);
   assert.match(client,/observed public push event/);
 });
+
+test('reduced-motion homepage retains the approved still neural-cosmos focal image',async()=>{
+  const css=await readFile(new URL('../src/professional/concept-console.css',import.meta.url),'utf8');
+  assert.match(css,/@media\(prefers-reduced-motion:reduce\)/);
+  assert.match(css,/\.one-body \.concept-visual\s*\{/);
+  assert.match(css,/url\('\/professional\/living-atmosphere\.png'\)/);
+  assert.doesNotMatch(css,/url\(['"]?https?:/i);
+});
