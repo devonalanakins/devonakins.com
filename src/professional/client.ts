@@ -139,7 +139,7 @@ function paintPublicEventSpark(snapshot: Snapshot | null, now: number){
   const bins=Array<number>(7).fill(0);
   if(available){
     for(const event of snapshot.events){
-      const stamp=Date.parse(event.at);
+      if(event.kind!=="push")continue; // Match the sourced push counter, not unrelated activity.\n      const stamp=Date.parse(event.at);
       if(!Number.isFinite(stamp)||stamp>now)continue;
       const daysAgo=Math.floor((now-stamp)/86400000);
       if(daysAgo>=0&&daysAgo<7)bins[6-daysAgo]++;
@@ -163,12 +163,12 @@ function paintPublicEventSpark(snapshot: Snapshot | null, now: number){
       bar.setAttribute("height",String(height));
       bar.setAttribute("rx","2");
       const title=document.createElementNS(SVG_NS,"title");
-      title.textContent=count+" observed event"+(count===1?"":"s")+" in day bin "+(day+1)+" of 7";
+      title.textContent=count+" observed public push event"+(count===1?"":"s")+" in day bin "+(day+1)+" of 7";
       bar.append(title);
       graph.append(bar);
     });
     const total=bins.reduce((a,b)=>a+b,0);
-    graph.setAttribute("aria-label",total+" public GitHub events observed in the last seven days within the fetched sample, oldest to newest daily counts: "+bins.join(", ")+". This is not a complete account activity count.");
+    graph.setAttribute("aria-label",total+" public GitHub push events observed in the last seven days within the fetched sample, oldest to newest daily counts: "+bins.join(", ")+". This is not a complete account activity count.");
     graph.dataset.source="observed";
   }
 }
@@ -222,6 +222,10 @@ function paint(){
   }
 
   const observed=snapshot?.status==="available" ? snapshot.events : [];
+  for(const ribbon of document.querySelectorAll<HTMLElement>(".concept-activity-ribbon")){
+    ribbon.dataset.source=observed.length>0?"observed":
+      snapshot?.status==="empty" || snapshot?.status==="available"?"empty":"unavailable";
+  }
   for(const counter of document.querySelectorAll<HTMLElement>("[data-github-count]")){
     const requested=counter.dataset.githubCount;
     counter.textContent=snapshot?.status==="available" || snapshot?.status==="empty"

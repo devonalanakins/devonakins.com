@@ -50,3 +50,12 @@ test('observed activity visualization is data-backed and clears on source outage
   assert.match(client,/No activity inferred|no activity inferred/);
   assert.doesNotMatch(client.slice(client.indexOf('function paintPublicEventSpark'),client.indexOf('function paint(){')),/Math\.random|setInterval|fake activity/i);
 });
+
+test('work-feed indicator is neutral without observed public events and chart matches push count',async()=>{
+  const css=await readFile(new URL('../src/professional/concept-console.css',import.meta.url),'utf8');
+  const client=await readFile(new URL('../src/professional/client.ts',import.meta.url),'utf8');
+  assert.match(css,/concept-activity-ribbon\[data-source="observed"\]/);
+  assert.match(client,/ribbon\.dataset\.source=observed\.length>0/);
+  assert.match(client,/event\.kind!=="push"/);
+  assert.match(client,/observed public push event/);
+});

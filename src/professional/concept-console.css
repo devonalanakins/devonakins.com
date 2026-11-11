@@ -397,3 +397,12 @@
 .one-body .concept-event-spark rect{fill:#87dcdf}
 @media(max-width:1200px){.one-body .concept-event-spark{flex-basis:55px;width:55px}}
 @media(prefers-reduced-motion:reduce){.one-body .concept-event-spark{filter:none}}
+
+/* Keep the neural-cosmos visual recognizable on phones instead of hiding the
+   dedicated center scene and leaving only anonymous abstract gradients. */
+@media(max-width:760px){
+ .one-body .concept-intro{background:linear-gradient(100deg,#04101cf6 0%,#071420eb 53%,#07121db8 100%),url('/professional/living-atmosphere.png') 71% 39%/cover no-repeat!important}
+}
+/* An unverified or unavailable source must not have a green live indicator. */
+.one-body .concept-ribbon-label i{background:#849ca8;box-shadow:none}
+.one-body .concept-activity-ribbon[data-source="observed"] .concept-ribbon-label i{background:#63efac;box-shadow:0 0 9px #47eab185}
