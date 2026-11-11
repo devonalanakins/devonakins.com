@@ -29,10 +29,25 @@ try:
                 assert response.status==200,(engine,width,height,response.status)
                 assert page.locator('main#one-stage').count()==1
                 assert page.locator(".one-portrait").count()==0,(engine,width,height,"portrait removed")
+                assert page.locator(".prestige-player").count()==1,(engine,width,height,"prestige identity")
+                assert page.locator(".prestige-command").count()==1,(engine,width,height,"public signal board")
+                assert page.locator(".prestige-identity-copy h1").is_visible()
+                assert "SOFTWARE DEVELOPER" in page.locator(".prestige-subtitle").inner_text()
+                # High-level gamer styling is editorial, not invented XP, levels, or ranks.
+                assert page.locator(".prestige-build-row").count()==3
+                for selector in (".prestige-player",".prestige-command",".prestige-player-actions",".prestige-activity-card",".prestige-stat-pair"):
+                    assert page.evaluate("""selector => {
+                      const root=document.querySelector('.one-stage').getBoundingClientRect();
+                      const rect=document.querySelector(selector).getBoundingClientRect();
+                      return rect.top >= root.top-3 && rect.bottom <= root.bottom+3 &&
+                        rect.left >= root.left-3 && rect.right <= root.right+3;
+                    }""", selector),(engine,width,height,selector,"prestige panel containment")
+
                 assert page.locator('img[src*="headshot"]').count()==0,(engine,width,height,"no portrait resource")
                 assert page.locator('[data-one-view]:visible').count()==1,(engine,width,height,"initial panel")
                 assert page.locator('[data-public-github-feed]').count()==2
                 assert page.locator('[data-public-spotify]').count()==1
+                assert page.locator('.prestige-command [data-public-work]').count()==1
                 # The Home tile is a dated owner-recorded GPT snapshot;
                 # Activity retains a separate consent-filtered live card.
                 assert page.locator('[data-public-gpt]').count()==1,(engine,width,height,"activity GPT")
@@ -69,9 +84,26 @@ try:
                         [...(recorded?.querySelectorAll(".one-gpt-record-values strong")||[])].length===2 &&
                         [...recorded.querySelectorAll(".one-gpt-record-values strong")].every(v => within(recorded,v));
                     }"""),(engine,width,height,"source title containment")
+                # Dense 320px phones must keep both career actions together and
+                # never clip the labels or the sourced GPT numbers behind a panel.
+                if width<=400 and height<=700:
+                    assert page.evaluate("""() => {
+                      const actions=[...document.querySelectorAll('.prestige-player-actions .one-button')];
+                      const player=document.querySelector('.prestige-player').getBoundingClientRect();
+                      const tiles=document.querySelector('.prestige-stat-pair').getBoundingClientRect();
+                      const stage=document.querySelector('.one-stage').getBoundingClientRect();
+                      const status=document.querySelector('#one-home-github [data-feed-status]').getBoundingClientRect();
+                      if(actions.length!==2)return false;
+                      const a=actions[0].getBoundingClientRect(),b=actions[1].getBoundingClientRect();
+                      return Math.abs(a.top-b.top)<3 && a.right<=player.right+2 &&
+                        b.right<=player.right+2 && b.bottom<=player.bottom+2 &&
+                        tiles.bottom<=stage.bottom+2 && tiles.height>=84 &&
+                        status.top>=stage.top && status.bottom<=tiles.top;
+                    }"""),(engine,width,height,"compact action wrapping or sourced stat clipping")
+
                 # The page includes two differently sized tablists: choose visible tab.
                 tabs=page.locator('.one-tabs-mobile [role="tablist"]' if width<=760 else '.one-tabs-desktop [role="tablist"]')
-                for label,key in (("Experience","experience"),("Work","work"),("Activity","activity"),("Writing","writing"),("Contact","contact"),("Home","home")):
+                for label,key in (("Career","experience"),("Missions","work"),("Activity","activity"),("Writing","writing"),("Contact","contact"),("Profile","home")):
                     tabs.get_by_role("tab",name=label).click()
                     assert page.locator('[data-one-view="'+key+'"]').is_visible(),(engine,width,height,key)
                     assert page.locator('[data-one-view]:visible').count()==1,(engine,width,height,key)
@@ -93,10 +125,37 @@ try:
                         page.screenshot(path=str(OUT/f"{engine}-{width}x{height}-{key}.png"))
                 tabs.get_by_role("tab",name="Activity").click()
                 page.screenshot(path=str(OUT/f"{engine}-{width}x{height}-activity.png"))
-                tabs.get_by_role("tab",name="Home").click()
+                tabs.get_by_role("tab",name="Profile").click()
+                if (width,height) in ((1440,900),(390,844)):
+                    # Keyboard equivalents for the six-panel gamer HUD must
+                    # select, focus and visibly render the intended panels.
+                    tabs.get_by_role("tab",name="Profile").focus()
+                    page.keyboard.press("ArrowRight")
+                    assert tabs.get_by_role("tab",name="Career").get_attribute("aria-selected")=="true"
+                    assert page.locator('[data-one-view="experience"]').is_visible()
+                    assert tabs.get_by_role("tab",name="Career").evaluate("(el) => el===document.activeElement")
+                    page.keyboard.press("End")
+                    assert tabs.get_by_role("tab",name="Contact").get_attribute("aria-selected")=="true"
+                    assert page.locator('[data-one-view="contact"]').is_visible()
+                    page.keyboard.press("Home")
+                    assert tabs.get_by_role("tab",name="Profile").get_attribute("aria-selected")=="true"
+                    assert page.locator('[data-one-view="home"]').is_visible()
                 page.screenshot(path=str(OUT/f"{engine}-{width}x{height}-home.png"))
                 assert not errors,(engine,width,height,errors)
                 context.close()
+            # Normal motion is intentional; motion-reduced checks above verify
+            # every panel stays usable without animation.
+            motion_context=browser.new_context(viewport={"width":1440,"height":900},
+                reduced_motion="no-preference")
+            motion_page=motion_context.new_page()
+            motion_page.goto(BASE+"/",wait_until="domcontentloaded")
+            animation=motion_page.evaluate("""() => ({
+                backdrop:getComputedStyle(document.querySelector('.one-world-glow')).animationName,
+                intro:getComputedStyle(document.querySelector('.prestige-identity-main')).animationName
+            })""")
+            assert "prestige-nebula" in animation["backdrop"],(engine,"ambient animation",animation)
+            assert "prestige-reveal" in animation["intro"],(engine,"identity entrance",animation)
+            motion_context.close()
             browser.close()
 finally:
     process.terminate()

@@ -1,0 +1,62 @@
+name: Prestige profile candidate review
+on:
+  push:
+    branches:
+      - feat/professional-editorial-identity-20261111
+permissions:
+  contents: read
+concurrency:
+  group: prestige-profile-review-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+jobs:
+  candidate:
+    runs-on: ubuntu-24.04
+    # Pin the browser/runtime image so intermittent Ubuntu apt mirror outages
+    # cannot block the actual visual checks for fifteen minutes.
+    container:
+      image: mcr.microsoft.com/playwright/python:v1.57.0-noble
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Trust checked-out workspace for Git release SHA derivation
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+      - run: npm ci
+      - name: Build verified baseline V4 for independent legacy regressions
+        run: npm run build
+      - name: Verify complete legacy and source-level profile contracts
+        run: npm test
+      - name: Build source-qualified one-screen prestige profile
+        env:
+          PROFESSIONAL_SITE_CANDIDATE: "1"
+          ONE_SCREEN_SITE_CANDIDATE: "1"
+          V5_PUBLIC_SITE_CANDIDATE: "0"
+        run: npm run build
+      - name: Recheck isolated prestige source contracts on candidate build
+        run: node --test tests/one-screen-site.test.mjs tests/prestige-profile.test.mjs
+      - name: Verify protected Worker assets and preserved routes
+        run: node scripts/verify-one-screen-candidate.mjs
+      - name: Install matching Playwright Python bindings (browsers preinstalled)
+        run: |
+          python3 -m pip install --disable-pip-version-check playwright==1.57.0
+          python3 -c 'from playwright.sync_api import sync_playwright; print("Playwright bindings available")'
+      - name: Verify real rendered profile, all six panels and short landscape
+        run: python3 tests/one_screen_browser_acceptance.py
+      - name: Retain source-only screenshots for design review
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: prestige-profile-candidate
+          path: |
+            browser-qa/one-screen/
+            dist/
+          if-no-files-found: warn
+          retention-days: 14
