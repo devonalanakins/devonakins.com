@@ -57,16 +57,16 @@ try:
                     assert page.locator(".studio-project-card--station").is_visible()
                     assert page.locator(".studio-rail-contact").is_visible()
                 assert page.locator(".concept-live .concept-feed-filters [data-github-filter]").count()==3
-                # Motion preferences must not delete the centerpiece: the
-                # approved local poster replaces the decorative background film.
+                # Reduced motion uses a first-party crisp SVG rather than a movie.
                 if width>1200 and height>470:
                     still=page.evaluate("""() => ({
                       scene:getComputedStyle(document.querySelector('.one-world')).backgroundImage,
                       image:document.querySelector('.concept-visual').getBoundingClientRect().width,
-                      video:getComputedStyle(document.querySelector('.one-world-video')).display
+                      canvas:getComputedStyle(document.querySelector('.one-world-canvas')).display,
+                      video:document.querySelector('.one-world-video')===null
                     })""")
-                    assert "living-atmosphere.png" in still["scene"] and still["image"]>50 and still["video"]=="none",(
-                        engine,width,height,"missing reduced-motion neural image",still)
+                    assert "neural-field.svg" in still["scene"] and still["image"]>50 and still["video"] and still["canvas"]=="none",(
+                        engine,width,height,"missing reduced-motion vector fallback",still)
                 # Compact work badge must never cover the workstation heading.
                 # A full-viewport screenshot will not reveal intra-card overlap.
                 if width<=400:
