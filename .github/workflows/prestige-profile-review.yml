@@ -31,14 +31,18 @@ jobs:
         with:
           python-version: "3.13"
       - run: npm ci
+      - name: Build verified baseline V4 for independent legacy regressions
+        run: npm run build
+      - name: Verify complete legacy and source-level profile contracts
+        run: npm test
       - name: Build source-qualified one-screen prestige profile
         env:
           PROFESSIONAL_SITE_CANDIDATE: "1"
           ONE_SCREEN_SITE_CANDIDATE: "1"
           V5_PUBLIC_SITE_CANDIDATE: "0"
         run: npm run build
-      - name: Verify standard and prestige profile contracts
-        run: npm test
+      - name: Recheck isolated prestige source contracts on candidate build
+        run: node --test tests/one-screen-site.test.mjs tests/prestige-profile.test.mjs
       - name: Verify protected Worker assets and preserved routes
         run: node scripts/verify-one-screen-candidate.mjs
       - name: Install tested Chromium and WebKit engines
