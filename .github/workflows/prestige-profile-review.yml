@@ -11,6 +11,10 @@ concurrency:
 jobs:
   candidate:
     runs-on: ubuntu-24.04
+    # Pin the browser/runtime image so intermittent Ubuntu apt mirror outages
+    # cannot block the actual visual checks for fifteen minutes.
+    container:
+      image: mcr.microsoft.com/playwright/python:v1.57.0-noble
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
@@ -38,10 +42,10 @@ jobs:
         run: node --test tests/one-screen-site.test.mjs tests/prestige-profile.test.mjs
       - name: Verify protected Worker assets and preserved routes
         run: node scripts/verify-one-screen-candidate.mjs
-      - name: Install tested Chromium and WebKit engines
+      - name: Install matching Playwright Python bindings (browsers preinstalled)
         run: |
           python3 -m pip install --disable-pip-version-check playwright==1.57.0
-          python3 -m playwright install --with-deps chromium webkit
+          python3 -c 'from playwright.sync_api import sync_playwright; print("Playwright bindings available")'
       - name: Verify real rendered profile, all six panels and short landscape
         run: python3 tests/one_screen_browser_acceptance.py
       - name: Retain source-only screenshots for design review
