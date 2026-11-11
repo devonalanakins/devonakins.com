@@ -48,6 +48,48 @@ try:
                 assert page.locator('[data-public-github-feed]').count()==2
                 assert page.locator('[data-public-spotify]').count()==1
                 assert page.locator('.prestige-command [data-public-work]').count()==1
+
+                # Reproduce the reported real-playback case with synthetic
+                # text *only inside local browser tests*. Provider secrets and
+                # the public site are never modified.
+                spotify_layout=page.evaluate("""() => {
+                  const card=document.querySelector('.prestige-stat-pair .p-spotify-card');
+                  const title=card.querySelector('[data-spotify-title]');
+                  const artist=card.querySelector('[data-spotify-artist]');
+                  const note=card.querySelector('[data-spotify-note]');
+                  const state=card.querySelector('[data-spotify-state]');
+                  const progress=card.querySelector('[data-spotify-progress]');
+                  card.dataset.spotifyMode='playing';
+                  title.textContent='The Longest Synthwave Soundtrack Title That Could Ever Exist';
+                  artist.textContent='A Collaborative Producer Featuring Another Artist';
+                  state.textContent='IN THE ZONE';
+                  note.textContent='Owner-defined coding signal from public Spotify playback; editor activity separately observed.';
+                  progress.hidden=false;progress.max=180000;progress.value=90000;
+                  const visible=(el)=>getComputedStyle(el).display!=='none' &&
+                    getComputedStyle(el).visibility!=='hidden' && el.getClientRects().length>0;
+                  const bounds=el=>el.getBoundingClientRect();
+                  const inside=(el,box)=>{const a=bounds(el),b=bounds(box);
+                    return a.left>=b.left-2&&a.right<=b.right+2&&a.top>=b.top-2&&a.bottom<=b.bottom+2};
+                  const disjoint=(a,b)=>{const x=bounds(a),y=bounds(b);
+                    return x.right<=y.left+1||y.right<=x.left+1||x.bottom<=y.top+1||y.bottom<=x.top+1};
+                  const header=card.querySelector('.p-signal-head');
+                  const body=card.querySelector('.p-spotify-body');
+                  const art=card.querySelector('.p-spotify-art');
+                  const meta=card.querySelector('.p-spotify-meta');
+                  const links=card.querySelectorAll('.p-text-link');
+                  const required=[header,body,title,state,...[artist,progress,...links].filter(visible)];
+                  const result={inside:required.every(el=>inside(el,card)),
+                    noHeadOverlap:disjoint(header,body),
+                    noArtworkOverlap:!visible(art)||disjoint(art,meta),
+                    noTextOverlap:!visible(artist)||disjoint(title,artist),
+                    noteHidden:!visible(note),titleVisible:visible(title),stateVisible:visible(state),
+                    cardWidth:bounds(card).width};
+                  return result;
+                }""")
+                assert all(spotify_layout[key] for key in ("inside","noHeadOverlap",
+                    "noArtworkOverlap","noTextOverlap","noteHidden",
+                    "titleVisible","stateVisible")),(engine,width,height,"live spotify layout",spotify_layout)
+
                 # The Home tile is a dated owner-recorded GPT snapshot;
                 # Activity retains a separate consent-filtered live card.
                 assert page.locator('[data-public-gpt]').count()==1,(engine,width,height,"activity GPT")
