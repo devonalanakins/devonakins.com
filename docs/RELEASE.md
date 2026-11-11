@@ -328,7 +328,9 @@ for the existing protected V4/V5 release. Production defaults remain V4.
   delete private data, disable already approved signals, or alter secrets as
   a routine website rollback.
 
-The `professional_candidate` CI job is separately dependent on the baseline
-`verify` job, and must complete exact-head Chromium/WebKit phone/desktop
-acceptance with generated review screenshots before the manual release is
-considered. An approved design is not an approved publication or deployment.
+The `professional_candidate` CI job runs independently in parallel with the
+baseline `verify` job to produce timely review screenshots. **Both jobs must
+pass at the exact reviewed head** before the protected manual release can be
+considered. The professional job validates Chromium/WebKit phone/desktop pages,
+and the production verifier independently checks the public Spotify projection
+alongside GitHub and privacy-filtered activity. An approved design is not an approved publication or deployment.
