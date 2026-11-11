@@ -271,3 +271,120 @@
  .one-body .one-world-glow,.one-body .one-world-grid,
  .prestige-command [data-spotify-mode="playing"] .p-spotify-art .p-vinyl{animation:none!important}
 }
+
+
+/* Signal-board layout correction: live Spotify metadata must not overlap.
+   The full listening explanation belongs on /listening/, not a 155px HUD tile. */
+.prestige-stat-pair .p-spotify-card{
+  display:grid;
+  grid-template-rows:auto minmax(0,1fr);
+  align-items:stretch;
+  gap:7px;
+  padding:clamp(9px,1.15vw,14px);
+  min-width:0;
+}
+.prestige-stat-pair .p-signal-head{
+  display:flex;
+  flex-direction:row;
+  align-items:center;
+  justify-content:space-between;
+  flex-wrap:nowrap;
+  flex:none;
+  gap:6px;
+  min-height:20px;
+  min-width:0;
+  margin:0;
+}
+.prestige-stat-pair .p-spotify-heading{min-width:0;white-space:nowrap;gap:6px;overflow:hidden}
+.prestige-stat-pair .p-spotify-heading .p-brand-icon{width:17px;height:17px;flex:none}
+.prestige-stat-pair .p-spotify-heading span:after{font-size:9px;letter-spacing:.045em}
+.prestige-stat-pair .p-signal-state{
+  flex:none;
+  max-width:46%;
+  text-align:center;
+  font-size:8px;
+  line-height:1.15;
+  padding:4px 6px;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.prestige-stat-pair .p-spotify-body{
+  display:grid;
+  grid-template-columns:52px minmax(0,1fr);
+  align-items:center;
+  gap:10px;
+  min-height:0;
+  min-width:0;
+  overflow:hidden;
+}
+.prestige-stat-pair .p-spotify-art{display:grid;width:52px;height:52px;min-width:52px;min-height:52px;aspect-ratio:1;border-radius:6px}
+.prestige-stat-pair .p-spotify-art img{image-rendering:auto}
+.prestige-stat-pair .p-spotify-meta{
+  min-width:0;min-height:0;max-height:100%;
+  display:flex;flex-direction:column;justify-content:center;
+  align-items:stretch;gap:3px;overflow:hidden;
+}
+.prestige-stat-pair .p-spotify-eyebrow{display:none}
+.prestige-stat-pair .p-spotify-meta h3{
+  display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  font-size:clamp(12px,.97vw,14px);line-height:1.25;letter-spacing:0;margin:0;
+}
+.prestige-stat-pair .p-spotify-meta p{
+  display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  font-size:10px;line-height:1.25;margin:0;
+}
+.prestige-stat-pair .p-spotify-meta progress{display:block;flex:none;width:100%;height:3px;margin:3px 0 0}
+.prestige-stat-pair .p-spotify-meta progress[hidden]{display:none}
+.prestige-stat-pair .p-spotify-meta .p-text-link{
+  display:block;align-self:start;white-space:nowrap;overflow:hidden;
+  max-width:100%;text-overflow:ellipsis;
+  font-size:9px;line-height:1.2;padding:1px 0 0;margin:0;
+}
+.prestige-stat-pair .p-spotify-card .p-signal-foot{display:none}
+/* Mission art: individually scaled vector illustrations rather than a low-res
+   2x3 WebP sprite atlas enlarged by 200%/300%. */
+.one-project-operations .one-project-art{
+  background-image:linear-gradient(to top,#09141b62,transparent 68%),url("/professional/mission-operations.svg");
+  background-size:cover,cover;background-position:center,center;
+}
+.one-project-systems .one-project-art{
+  background-image:linear-gradient(to top,#09141b62,transparent 68%),url("/professional/mission-systems.svg");
+  background-size:cover,cover;background-position:center,center;
+}
+.one-project-site .one-project-art{
+  background-image:linear-gradient(to top,#09141b62,transparent 68%),url("/professional/mission-site.svg");
+  background-size:cover,cover;background-position:center,center;
+}
+@media(min-width:761px) and (max-height:700px){
+  .prestige-stat-pair .p-spotify-card{padding:6px 9px;gap:2px}
+  .prestige-stat-pair .p-signal-head{min-height:14px;gap:3px}
+  .prestige-stat-pair .p-spotify-heading .p-brand-icon{width:12px;height:12px}
+  .prestige-stat-pair .p-spotify-heading span:after{font-size:8px}
+  .prestige-stat-pair .p-signal-state{font-size:7px;padding:2px 4px}
+  .prestige-stat-pair .p-spotify-body{grid-template-columns:minmax(0,1fr)}
+  .prestige-stat-pair .p-spotify-art,
+  .prestige-stat-pair .p-spotify-meta p,
+  .prestige-stat-pair .p-spotify-meta progress,
+  .prestige-stat-pair .p-spotify-meta .p-text-link{display:none}
+  .prestige-stat-pair .p-spotify-meta h3{font-size:11px}
+}
+@media(max-width:760px){
+  .prestige-stat-pair .p-spotify-card{padding:7px 9px;gap:3px}
+  .prestige-stat-pair .p-signal-head{min-height:15px;gap:4px}
+  .prestige-stat-pair .p-spotify-heading .p-brand-icon{width:13px;height:13px}
+  .prestige-stat-pair .p-spotify-heading span:after{font-size:8px}
+  .prestige-stat-pair .p-signal-state{font-size:8px;padding:2px 4px}
+  .prestige-stat-pair .p-spotify-body{grid-template-columns:minmax(0,1fr)}
+  .prestige-stat-pair .p-spotify-art,
+  .prestige-stat-pair .p-spotify-meta p,
+  .prestige-stat-pair .p-spotify-meta progress,
+  .prestige-stat-pair .p-spotify-meta .p-text-link{display:none}
+  .prestige-stat-pair .p-spotify-meta h3{font-size:11px}
+}
+@media(max-width:400px) and (max-height:700px){
+  .prestige-stat-pair .p-spotify-card{padding:6px 7px}
+  .prestige-stat-pair .p-signal-head{gap:2px;min-height:12px}
+  .prestige-stat-pair .p-spotify-heading span:after{font-size:7px}
+  .prestige-stat-pair .p-signal-state{font-size:7px;padding:1px 3px}
+  .prestige-stat-pair .p-spotify-meta h3{font-size:10px}
+}
