@@ -3,13 +3,6 @@ on:
   push:
     branches:
       - feat/professional-editorial-identity-20261111
-  pull_request:
-    paths:
-      - "src/professional/one-screen.*"
-      - "src/professional/prestige-profile.*"
-      - "tests/prestige-profile.test.mjs"
-      - "tests/one_screen_browser_acceptance.py"
-      - ".github/workflows/prestige-profile-review.yml"
 permissions:
   contents: read
 concurrency:
