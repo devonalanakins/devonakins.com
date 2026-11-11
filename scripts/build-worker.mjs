@@ -86,7 +86,7 @@ await writeFile(".release/content.mjs",await readFile("src/content.mjs"));
 await writeFile(".release/publication-manifest.mjs",await readFile("src/publication-manifest.mjs"));
 await writeFile(
   ".release/worker.mjs",
-  `import assets from './assets.mjs';import {createHandler} from './handler.mjs';export default createHandler(assets,${JSON.stringify(release)});\n`,
+  `import assets from './assets.mjs';import {createHandler} from './handler.mjs';export default createHandler(assets,${JSON.stringify(release)},{professionalCandidate:${JSON.stringify(process.env.PROFESSIONAL_SITE_CANDIDATE === "1")}});\n`,
 );
 await writeFile(
   ".release/release.json",
