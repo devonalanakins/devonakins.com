@@ -37,14 +37,17 @@ test("professional site has complete independent pages and accessible main navig
 test("public work is curated and private-client outcome claims are not fabricated",()=>{
   const html=renderProfessionalPage("work");
   assert.match(html,/Selected technical projects/);
-  assert.match(html,/permission and supporting evidence/);
+  assert.match(html,/Operational design, workflow improvement and practical digital infrastructure/);
   assert.doesNotMatch(html,/patient name|client record|−62%|\+94%/i);
   assert.match(html,/Independent of the selected portfolio|public GitHub timeline is not/i);
 });
 test("experience does not invent a bachelor's degree, role dates or unverified Nona metrics",()=>{
   const html=renderProfessionalPage("experience");
   assert.match(html,/Associate of Arts degree/);
-  assert.match(html,/not represented as an earned bachelor/);
+  assert.match(html,/University of Arkansas/);
+  assert.match(html,/University of Central Florida/);
+  assert.match(html,/Independent software developer/);
+  assert.doesNotMatch(html,/Roles and workstreams are described without invented|not represented as an earned bachelor/);
   assert.doesNotMatch(html,/2021 – Present|2015 – 2018|Business & Technology bachelor's/i);
 });
 test("public GitHub route returns independently discovered public events, not project selections",async()=>{
@@ -202,7 +205,7 @@ test("selected work preserves real destinations and nonclinical publication boun
   for(const href of ["/work/operations/","/work/devonstation/","/work/ideaflow/","/work/merit/","/work/mizvo/","/work/rhen-language/"]){
     assert.ok(work.includes('href="'+href+'"'),"Missing work link: "+href);
   }
-  assert.match(work,/Measured outcomes are not yet published or independently verified/);
+  assert.match(work,/Operational design, workflow improvement and practical digital infrastructure/);
   assert.match(work,/nonclinical/i);
   assert.doesNotMatch(work,/Nona Neuropsychology|Cristy Russo|CEO of Nona|report turnaround improved by/);
   const operations=renderProfessionalProjectPage("operations");
