@@ -1,6 +1,10 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import {readFile} from "node:fs/promises";
+import {readFile,mkdtemp,rm} from "node:fs/promises";
+import {createHash} from "node:crypto";
+import {tmpdir} from "node:os";
+import {join} from "node:path";
+import {fileURLToPath} from "node:url";
 import {gzipSync} from "node:zlib";
 import {spawnSync} from "node:child_process";
 import {existsSync} from "node:fs";
@@ -91,10 +95,21 @@ test("approved neural-cosmos media are hash-pinned and a missing source cannot s
   assert.match(source,/b71490301500b59891613d19a954409c29f5420d8928c2ddac2f5c704db05054/);
   const video="assets/approved/neural-cosmos-1920x1080.mp4";
   const poster="assets/approved/neural-cosmos-1920x1080.webp";
-  if(!existsSync(video)&&!existsSync(poster)){
-    const result=spawnSync(process.execPath,["scripts/generate-living-atmosphere.mjs"],
-      {encoding:"utf8",env:{...process.env,REQUIRE_APPROVED_NEURAL_ART:"1"},timeout:30000});
+  assert.ok(existsSync(video)&&existsSync(poster),"Approved neural-cosmos media must be committed as a complete pair");
+  const [movieBytes,posterBytes]=await Promise.all([readFile(video),readFile(poster)]);
+  const digest=bytes=>createHash("sha256").update(bytes).digest("hex");
+  assert.equal(digest(movieBytes),"cee2ca738e0be5d7fb635a19433d8785c2f51930c0c39560958e23d73c8f5c4d");
+  assert.equal(digest(posterBytes),"b71490301500b59891613d19a954409c29f5420d8928c2ddac2f5c704db05054");
+  const temp=await mkdtemp(join(tmpdir(),"approved-neural-strict-"));
+  try{
+    const generator=fileURLToPath(new URL("../scripts/generate-living-atmosphere.mjs",import.meta.url));
+    const result=spawnSync(process.execPath,[generator],
+      {cwd:temp,encoding:"utf8",env:{...process.env,REQUIRE_APPROVED_NEURAL_ART:"1"},timeout:30000});
     assert.notEqual(result.status,0,"Missing approved media must block strict visual build");
     assert.match((result.stderr||"")+(result.stdout||""),/Visual acceptance blocked/);
-  }
+  }finally{await rm(temp,{recursive:true,force:true});}
+  const release=await readFile(new URL("../.github/workflows/deploy.yml",import.meta.url),"utf8");
+  const review=await readFile(new URL("../.github/workflows/prestige-profile-review.yml",import.meta.url),"utf8");
+  assert.match(release,/REQUIRE_APPROVED_NEURAL_ART:.*inputs.release_variant == 'one-screen'/);
+  assert.match(review,/REQUIRE_APPROVED_NEURAL_ART: "1"/);
 });
