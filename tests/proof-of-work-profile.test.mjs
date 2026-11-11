@@ -40,3 +40,14 @@ test('quality interaction is source-isolated and keyboard accessible',async()=>{
   assert.match(css,/\.one-activity-tools/);
   assert.match(css,/prefers-reduced-motion:reduce/);
 });
+
+test('career explains real capability and its six-stage, four-gate working standard',()=>{
+  assert.match(html,/DEVON ALAN AKINS/);
+  assert.match(html,/Design it well/);
+  assert.match(html,/Make it work/);
+  assert.match(html,/Three complementary areas of practice/);
+  assert.match(html,/Professional workflows/);
+  assert.equal((html.match(/class="one-method-path"/g)||[]).length,1);
+  assert.equal((html.match(/one-method-path"[^>]*>[\\s\\S]*?<\\/ol>/g)||[]).length,0);
+  assert.doesNotMatch(html,/99.9% operational|all four passed|certified|10 years experience/i);
+});

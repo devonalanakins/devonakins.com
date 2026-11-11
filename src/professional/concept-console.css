@@ -425,3 +425,154 @@
       url('/professional/living-atmosphere.png') 70% center/cover no-repeat!important
   }
 }
+
+/* Career experience — evidence-led professional identity, not empty-template art.
+   This is intentionally scoped to the Career view. The existing data sources,
+   route architecture, keyboard controls, and homepage remain untouched. */
+.one-body .one-view-experience .career-scene{
+  position:relative;isolation:isolate;max-width:none;width:100%;height:100%;
+  grid-template-columns:minmax(0,1.03fr) minmax(0,.97fr);
+  gap:clamp(22px,3vw,52px);padding:clamp(16px,2.6vw,39px);
+  background:linear-gradient(112deg,#04101be9,#071521ed 59%,#061521f5);
+  border:1px solid #8cc9d341;overflow:hidden;align-items:stretch
+}
+.one-body .one-view-experience .career-scene:before{
+  content:"";position:absolute;inset:0;pointer-events:none;z-index:-1;opacity:.17;
+  background:url('/professional/living-atmosphere.png') 11% 50%/cover no-repeat;
+  mask-image:linear-gradient(90deg,#000 4%,transparent 72%)
+}
+.one-body .career-intro{
+  min-width:0;display:flex;flex-direction:column;justify-content:center;
+  align-items:flex-start;gap:clamp(10px,1.2vw,19px);padding:2px 0
+}
+.one-body .career-intro .one-eyebrow{margin:0;color:#8dcdd7;font-size:10px}
+.one-body .career-name{color:#f5c88e;letter-spacing:.16em;font:700 11px ui-monospace,monospace;margin:0}
+.one-body .career-name span{color:#93adbb;letter-spacing:.1em;font-size:9px}
+.one-body .career-intro h1{
+  margin:0;font:400 clamp(42px,4.6vw,76px)/1.04 Georgia,serif;
+  letter-spacing:-.052em;color:#fff1df;max-width:14ch;text-wrap:balance
+}
+.one-body .career-intro h1 em{color:#ffc27f;white-space:normal}
+.one-body .career-intro .one-lede{
+  margin:0;max-width:59ch;font-size:clamp(12px,1.05vw,16px);
+  line-height:1.62;color:#cfdee0
+}
+.one-body .career-declaration{
+  max-width:58ch;margin:0;padding-left:14px;border-left:2px solid #f3b871;
+  font-size:clamp(11px,.93vw,14px);line-height:1.62;color:#bbd3d8
+}
+.one-body .career-practice{width:100%;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.one-body .career-practice>div{
+  min-width:0;border:1px solid #81c4cc4f;border-top:2px solid #edb77a93;
+  border-radius:8px;background:#061c2ac7;padding:14px 11px;min-height:114px
+}
+.one-body .career-practice span{display:block;color:#f0c38a;font:700 9px ui-monospace,monospace;letter-spacing:.1em;margin-bottom:12px}
+.one-body .career-practice strong{display:block;color:#f2ebe0;font:400 clamp(14px,1.13vw,19px)/1.17 Georgia,serif}
+.one-body .career-practice small{display:block;color:#a6c0ca;font-size:10px;line-height:1.45;margin-top:8px}
+.one-body .career-intro .one-detail-link{font-size:12px;margin:0;border-color:#d8ab72a1;color:#ffd192}
+.one-body .career-scene .one-method-workbench{
+  min-height:0;height:100%;display:flex;flex-direction:column;
+  gap:clamp(9px,1vw,15px);padding:clamp(15px,1.7vw,26px);
+  border-color:#78c9d473;background:linear-gradient(146deg,#0d2738ea,#05121feb);
+  box-shadow:0 0 40px #0c6d8112,inset 0 1px #dff9ff1c
+}
+.one-body .career-scene .one-method-overline{color:#91d8db}
+.one-body .one-method-path{
+  display:grid;grid-template-columns:repeat(3,minmax(0,1fr));grid-template-rows:repeat(2,minmax(0,1fr));
+  gap:7px;list-style:none;margin:0;padding:0;flex:0 0 auto
+}
+.one-body .one-method-path li{
+  min-width:0;min-height:72px;display:flex;flex-direction:column;justify-content:center;
+  gap:5px;padding:8px 10px;border-radius:7px;border:1px solid #8fc6c249;
+  background:linear-gradient(140deg,#132d3aca,#061723bd);position:relative
+}
+.one-body .one-method-path li:before{content:"";position:absolute;left:0;top:8px;bottom:8px;width:2px;background:#e4b6787d}
+.one-body .one-method-path li span{color:#eac08a;font:700 9px ui-monospace,monospace;letter-spacing:.1em}
+.one-body .one-method-path li strong{color:#f4e8d5;font-size:12px;line-height:1.1}
+.one-body .one-method-path li small{color:#9dc2cd;font-size:10px;line-height:1.24}
+.one-body .career-quality-label{margin:1px 0 -4px;color:#f3d19f;font:700 10px ui-monospace,monospace;letter-spacing:.09em}
+.one-body .career-scene .one-method-control{min-height:63px;gap:7px;padding:9px 11px;border-radius:7px}
+.one-body .career-scene .one-method-control strong{font-size:12px}
+.one-body .career-scene .one-method-content{flex:1;min-height:0;align-items:center}
+.one-body .career-scene .one-method-detail h2{font-size:clamp(24px,2.3vw,36px)}
+.one-body .career-scene .one-method-detail p{font-size:clamp(11px,.95vw,14px)}
+.one-body .career-scene .one-method-rule{margin-top:auto}
+@media(max-width:1200px){
+  .one-body .career-practice{grid-template-columns:1fr;gap:6px}
+  .one-body .career-practice>div{min-height:0;display:grid;grid-template-columns:94px minmax(0,1fr);gap:3px 9px;padding:8px 10px}
+  .one-body .career-practice span{grid-row:1/3;margin:0;align-self:center}
+  .one-body .career-practice strong{font-size:15px}
+  .one-body .career-practice small{margin:0;font-size:10px}
+  .one-body .career-intro h1{font-size:clamp(37px,4vw,56px)}
+  .one-body .one-method-path li{min-height:64px}
+  .one-body .one-method-path li small{font-size:9px}
+}
+@media(max-width:760px){
+  .one-body .one-view-experience .career-scene{
+    display:grid;grid-template-columns:1fr;grid-template-rows:auto minmax(0,1fr);
+    gap:10px;padding:10px;align-items:stretch
+  }
+  .one-body .career-intro{gap:6px;justify-content:flex-start}
+  .one-body .career-intro .one-eyebrow{margin:0;font-size:8px}
+  .one-body .career-name{font-size:9px}
+  .one-body .career-name span{font-size:8px}
+  .one-body .career-intro h1{font-size:clamp(26px,7.1vw,33px);line-height:1.02;max-width:none}
+  .one-body .career-intro .one-lede{display:block;font-size:10px;line-height:1.4}
+  .one-body .career-declaration,.one-body .career-practice{display:none}
+  .one-body .career-intro .one-detail-link{font-size:10px;margin:0;padding-bottom:4px}
+  .one-body .career-scene .one-method-workbench{min-height:0;padding:10px;gap:7px}
+  .one-body .career-scene .one-method-overline{font-size:8px}
+  .one-body .one-method-path{gap:4px}
+  .one-body .one-method-path li{min-height:46px;padding:5px 7px;gap:2px}
+  .one-body .one-method-path li span{font-size:7px}
+  .one-body .one-method-path li strong{font-size:10px}
+  .one-body .one-method-path li small{font-size:8px;line-height:1.1}
+  .one-body .career-quality-label{font-size:9px;margin:0}
+  .one-body .career-scene .one-method-control{min-height:44px;padding:5px 7px;gap:3px}
+  .one-body .career-scene .one-method-control strong{font-size:10px}
+  .one-body .career-scene .one-method-detail h2{font-size:clamp(20px,5.6vw,26px)}
+  .one-body .career-scene .one-method-detail p{font-size:10px;line-height:1.36}
+  .one-body .career-scene .one-method-proof{font-size:9px}
+  .one-body .career-scene .one-method-rule{font-size:8px}
+}
+@media(max-width:400px) and (max-height:700px){
+  .one-body .one-view-experience .career-scene{gap:5px;padding:7px}
+  .one-body .career-intro{gap:3px}
+  .one-body .career-intro h1{font-size:23px;line-height:1}
+  .one-body .career-name{font-size:8px}
+  .one-body .career-intro .one-lede{font-size:9px;line-height:1.24}
+  .one-body .career-intro .one-detail-link{font-size:9px}
+  .one-body .career-scene .one-method-workbench{gap:4px;padding:7px}
+  .one-body .one-method-path{gap:3px}
+  .one-body .one-method-path li{min-height:35px;padding:3px 6px;gap:1px}
+  .one-body .one-method-path li small{display:none}
+  .one-body .one-method-path li strong{font-size:9px}
+  .one-body .career-quality-label{font-size:8px}
+  .one-body .career-scene .one-method-control{min-height:34px;padding:4px}
+  .one-body .career-scene .one-method-detail h2{font-size:20px}
+  .one-body .career-scene .one-method-detail p{font-size:9px}
+  .one-body .career-scene .one-method-proof{font-size:8px}
+  .one-body .career-scene .one-method-rule{font-size:7px}
+}
+@media(min-width:761px) and (max-height:700px){
+  .one-body .career-intro{gap:8px}
+  .one-body .career-intro h1{font-size:clamp(28px,3.3vw,44px)}
+  .one-body .career-intro .one-lede,.one-body .career-declaration{font-size:10px;line-height:1.3}
+  .one-body .career-practice{display:none}
+  .one-body .one-method-path li{min-height:49px;padding:4px 7px}
+  .one-body .one-method-path li small{font-size:8px}
+  .one-body .career-scene .one-method-workbench{gap:6px;padding:10px}
+  .one-body .career-scene .one-method-control{min-height:42px;padding:5px}
+  .one-body .career-scene .one-method-detail h2{font-size:21px;margin-bottom:5px}
+  .one-body .career-scene .one-method-detail p{font-size:10px;line-height:1.3;margin-bottom:6px}
+}
+@media(min-width:761px) and (max-height:470px){
+  .one-body .career-scene .one-method-path,.one-body .career-quality-label,.one-body .career-declaration{display:none}
+  .one-body .career-intro h1{font-size:clamp(27px,3vw,36px)}
+  .one-body .career-intro .one-lede{font-size:10px;line-height:1.3}
+  .one-body .career-scene .one-method-rule{display:none}
+  .one-body .career-scene .one-method-detail p{display:none}
+}
+@media(prefers-reduced-motion:reduce){
+  .one-body .career-scene .one-method-control:hover{transform:none}
+}

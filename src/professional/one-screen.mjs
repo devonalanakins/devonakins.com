@@ -53,13 +53,20 @@ function project(tag,name,text,link,art) {
 const home = view("home",renderPrestigeHome({publicFeed,button,spotifyCard}));
 
 const experience = view("experience",
-  '<div class="one-inner-layout"><div class="one-inner-intro">'+
-  eyebrow("002 / CAREER","PROFESSIONAL EXPERIENCE")+
-  '<h1>Independent by design.<br><em>Practical by nature.</em></h1>'+
-  '<p class="one-lede">I design, develop and maintain software, connect technology with business operations, and pursue original research and writing.</p>'+
-  '<p class="one-quiet">First-party applications, organizational systems and creative work—built to be understood, maintained and used.</p>'+
-  '<a class="one-detail-link" href="/experience/">Full résumé and academic background ↗</a></div>'+
-  renderWorkingStandard()+'</div>');
+  '<div class="one-inner-layout career-scene">'+
+  '<div class="one-inner-intro career-intro">'+
+  eyebrow("002 / CAREER","HOW I WORK")+
+  '<p class="career-name">DEVON ALAN AKINS <span> / INDEPENDENT PRACTICE</span></p>'+
+  '<h1>Design it well.<br><em>Make it work.</em></h1>'+
+  '<p class="one-lede">I’m an independent software developer, systems designer, business operator, and author. I connect the experience people see with the engineering and operations that make it useful.</p>'+
+  '<p class="career-declaration">My work starts with understanding what is real, not selecting a technology. It ends only when the result is usable, verified, and maintainable.</p>'+
+  '<div class="career-practice" aria-label="Three complementary areas of practice">'+
+    '<div><span>01 / BUILD</span><strong>Software and systems</strong><small>First-party applications, infrastructure, connected tools</small></div>'+
+    '<div><span>02 / OPERATE</span><strong>Practical operations</strong><small>Professional workflows, communication, reliability</small></div>'+
+    '<div><span>03 / CREATE</span><strong>Writing and research</strong><small>Original work, technical inquiry, clear explanations</small></div>'+
+  '</div>'+
+  '<a class="one-detail-link" href="/experience/">Experience, education and background ↗</a>'+
+  '</div>'+renderWorkingStandard()+'</div>');
 
 const work = view("work",
   '<div class="one-view-frame">'+

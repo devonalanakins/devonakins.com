@@ -21,11 +21,23 @@ export const qualityGates = Object.freeze([
     description:"Record the decisions, explain the architecture, make operations understandable and improve from verified results without erasing approved work.",
     proof:"Acceptance: an intelligible handoff and repeatable operating process." },
 ]);
+export const processStages = Object.freeze([
+  {number:"01",label:"Understand",detail:"Actual conditions"},
+  {number:"02",label:"Define",detail:"What excellence means"},
+  {number:"03",label:"Choose",detail:"The right solution"},
+  {number:"04",label:"Establish",detail:"Proof of acceptance"},
+  {number:"05",label:"Verify",detail:"Real use and tests"},
+  {number:"06",label:"Preserve",detail:"Knowledge and handoff"},
+]);
 const esc = value => String(value).replace(/[&<>"']/g,
   c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 export function renderWorkingStandard(){
   return '<section class="one-method-workbench one-panel" aria-label="How Devon defines finished work">'+
-    '<div class="one-method-overline"><span>THE WORKING STANDARD</span><span>FOUR INDEPENDENT CHECKS</span></div>'+
+    '<div class="one-method-overline"><span>MY WORKING STANDARD</span><span>06 STAGES / 04 QUALITY CHECKS</span></div>'+
+    '<ol class="one-method-path" aria-label="Six stages from a real problem to a sustainable result">'+
+      processStages.map(step=>'<li><span>'+step.number+'</span><strong>'+esc(step.label)+'</strong><small>'+esc(step.detail)+'</small></li>').join('')+
+    '</ol>'+
+    '<h3 class="career-quality-label">Four independent checks define finished.</h3>'+
     '<div class="one-method-controls" role="group" aria-label="Explore the four quality checks">'+
       qualityGates.map((gate,i)=>'<button type="button" class="one-method-control" data-method-select="'+gate.key+
         '" aria-controls="one-method-'+gate.key+'" aria-pressed="'+(i===0?'true':'false')+'">'+

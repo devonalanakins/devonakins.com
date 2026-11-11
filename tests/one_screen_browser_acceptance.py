@@ -245,6 +245,17 @@ try:
                         .map(el=>el.tagName+" "+el.className);
                     }""",key)
                     assert not outliers,(engine,width,height,key,"off-canvas content",outliers)
+                    if key=="experience":
+                        assert page.locator(".career-intro .career-name").count()==1
+                        assert page.locator(".one-method-path li").count()==6
+                        assert page.locator(".one-method-control").count()==4
+                        assert page.locator(".career-intro h1").is_visible()
+                        assert page.evaluate("""() => {
+                          const intro=document.querySelector('.career-intro').getBoundingClientRect();
+                          const scene=document.querySelector('.career-scene').getBoundingClientRect();
+                          return intro.top>=scene.top-3&&intro.bottom<=scene.bottom+3
+                            && intro.left>=scene.left-3&&intro.right<=scene.right+3
+                        }"""),(engine,width,height,"career identity clipped")
                     if key=="work":
                         # The source-only screenshot must actually show the new
                         # vector illustrations, not a transient blank placeholder.
