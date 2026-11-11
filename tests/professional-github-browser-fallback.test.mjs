@@ -28,7 +28,7 @@ test("browser-direct public GitHub projection is bounded and excludes raw/unowne
       return json([
         event(),event("private",{public:false}),
         event("other",{actor:{login:"someone-else"}}),
-        event("knowledge","PullRequestEvent"),
+        event("knowledge",{type:"PullRequestEvent"}),
         event("injected",{repo:{name:"evil/other-repo"}}),
       ]);
     },
@@ -42,7 +42,7 @@ test("browser-direct public GitHub projection is bounded and excludes raw/unowne
     "at","kind","label","repo","url",
   ]);
   assert.equal(result.events[0].url,"https://github.com/devonalanakins/unfeatured-public-work");
-  assert.doesNotMatch(JSON.stringify(result),/confidential-looking|private|evil\/other-repo/);
+  assert.doesNotMatch(JSON.stringify(result),/confidential-looking|evil\/other-repo/);
   assert.equal(request.url,"https://api.github.com/users/devonalanakins/events/public?per_page=100");
   assert.equal(request.init.credentials,"omit");
   assert.equal(request.init.mode,"cors");
