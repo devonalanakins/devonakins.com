@@ -25,10 +25,10 @@ const poster=process.argv[3]||"public/professional/living-atmosphere.png";
  * fallback until the owner files are included in the reviewed branch.
  */
 const APPROVED_VIDEO="assets/approved/neural-cosmos-1920x1080.mp4";
-const APPROVED_POSTER="assets/approved/neural-cosmos-1920x1080.png";
+const APPROVED_POSTER="assets/approved/neural-cosmos-1920x1080.webp";
 const APPROVED_DIGESTS=Object.freeze({
   video:"cee2ca738e0be5d7fb635a19433d8785c2f51930c0c39560958e23d73c8f5c4d",
-  poster:"5ce613614ef94f4854c58ee32acc9f9a8236d1defa465dd3ae52d7e4f41aec6e",
+  poster:"b71490301500b59891613d19a954409c29f5420d8928c2ddac2f5c704db05054",
 });
 const approvedVideoPresent=existsSync(APPROVED_VIDEO);
 const approvedPosterPresent=existsSync(APPROVED_POSTER);
@@ -42,8 +42,8 @@ if(approvedVideoPresent){
   if(videoBytes.length>2_500_000||posterBytes.length>8_000_000)
     throw new Error("Approved neural-cosmos media exceeds reviewed source budget");
   const metadata=await sharp(posterBytes).metadata();
-  if(metadata.width!==1920||metadata.height!==1080||metadata.format!=="png")
-    throw new Error("Approved neural-cosmos poster must be 1920x1080 PNG");
+  if(metadata.width!==1920||metadata.height!==1080||metadata.format!=="webp")
+    throw new Error("Approved neural-cosmos poster must be 1920x1080 WebP");
   const probe=spawnSync("ffprobe",["-v","error","-show_entries",
     "format=duration:stream=codec_name,codec_type,width,height,r_frame_rate",
     "-of","json",APPROVED_VIDEO],{encoding:"utf8",timeout:10000});
