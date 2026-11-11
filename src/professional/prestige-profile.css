@@ -199,3 +199,18 @@
  .prestige-player-actions{margin:8px 0 0}
  .prestige-player-top{margin-bottom:3px}
 }
+
+/* Short compact phones: keep both career actions on one row and free feed space. */
+@media(max-width:400px) and (max-height:700px){
+ .prestige-player-actions{flex-wrap:nowrap;gap:5px}
+ .prestige-player-actions .one-button{min-width:0;gap:7px;white-space:nowrap;padding:5px 7px;min-height:30px;font-size:9px}
+ .prestige-command-top>div{gap:5px}
+ .prestige-command-eyebrow{font-size:6.5px;white-space:nowrap}
+ .prestige-command-top strong{font-size:11px;white-space:nowrap}
+ .prestige-stat-pair{min-height:87px;flex-basis:87px}
+ .prestige-activity-card .one-panel-head{padding-bottom:3px}
+ .prestige-activity-card .one-panel-head small{display:none}
+ .prestige-activity-card .one-feed>[data-feed-status]{font-size:8px;line-height:1.1;max-height:20px;overflow:hidden;margin:4px 0 2px}
+ .prestige-activity-card .one-feed li{padding:3px 0}
+ .prestige-activity-card .one-feed-disclosure{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:7px;line-height:1.1;margin:0;padding-top:2px}
+}
