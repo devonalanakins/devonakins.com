@@ -1,6 +1,7 @@
 import {spotifyCard,gptSignalCard} from "./signal-cards.mjs";
 import {brandIcon} from "./brand-icons.mjs";
 import {renderOneScreenGptSummary} from "./gpt-capture.mjs";
+import {renderPrestigeHome} from "./prestige-profile.mjs";
 
 /**
  * Opt-in one-viewport design candidate. Existing routes and consent-filtered
@@ -48,22 +49,7 @@ function project(tag,name,text,link,art) {
     '<h2>'+esc(name)+'</h2><p>'+esc(text)+'</p>'+
     '<a href="'+esc(link)+'" aria-label="Read more about '+esc(name)+'">Explore the work ↗</a></div></article>';
 }
-const home = view("home",
-  '<div class="one-home-layout"><div class="one-hero-copy">'+
-  eyebrow("001 / IDENTITY","DEVON ALAN AKINS")+
-  '<p class="one-kicker">BUSINESS OPERATIONS · TECHNOLOGY · SOFTWARE</p>'+
-  '<h1>Better systems.<br><em>Better work.</em></h1>'+
-  '<p class="one-lede">I help complex work run better through practical operations, thoughtful technology, and independently engineered systems.</p>'+
-  '<div class="one-actions">'+button("experience","Experience",true)+button("work","Selected work")+'</div>'+
-  '<p class="one-understatement">BUILT TO BE USEFUL. DESIGNED TO LAST.</p></div>'+
-  '<aside class="one-signals" aria-label="Qualified public signals">'+
-  '<section class="one-github one-panel"><header class="one-panel-head">'+brandIcon("github")+
-  '<span><strong>PUBLIC WORK RECORD</strong><small>Recent GitHub activity</small></span>'+
-  '<button type="button" data-one-go="activity" aria-label="Open full activity panel">View ↗</button></header>'+
-  publicFeed("one-home-github",4)+'</section>'+
-  '<div class="one-signal-bottom"><div class="one-spotify">'+spotifyCard()+'</div>'+
-  '<div class="one-gpt"><!--ONE_SCREEN_GPT_SLOT--></div></div>'+
-  '</aside></div>');
+const home = view("home",renderPrestigeHome({publicFeed,button,spotifyCard}));
 
 const experience = view("experience",
   '<div class="one-inner-layout"><div class="one-inner-intro">'+
@@ -126,17 +112,18 @@ const contact = view("contact",
 
 export function renderOneScreenHome({datedCapture=null}={}) {
   const homeGpt=datedCapture ? renderOneScreenGptSummary(datedCapture) : gptSignalCard();
-  const description="Devon Alan Akins — business operations, technology and software engineering. An independent professional work observatory.";
+  const description="Devon Alan Akins — nonclinical business operations, independent software engineering and public, source-qualified development activity.";
   return '<!doctype html><html lang="en" class="one-html"><head>'+
     '<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">'+
     '<meta name="theme-color" content="#080d14"><meta name="color-scheme" content="dark">'+
     '<meta name="description" content="'+esc(description)+'">'+
     '<link rel="canonical" href="https://devonakins.com/">'+
-    '<meta property="og:type" content="website"><meta property="og:title" content="Devon Akins — Systems that work">'+
+    '<meta property="og:type" content="website"><meta property="og:title" content="Devon Akins — Professional Profile & Live Work Record">'+
     '<meta property="og:description" content="'+esc(description)+'">'+
     '<link rel="icon" href="/favicon-32.png"><title>Devon Akins — Operations & Technology</title>'+
     '<link rel="stylesheet" href="/src/professional/site.css">'+
     '<link rel="stylesheet" href="/src/professional/one-screen.css">'+
+    '<link rel="stylesheet" href="/src/professional/prestige-profile.css">'+
     '<script type="module" src="/src/professional/client.ts"></script>'+
     '<script type="module" src="/src/professional/one-screen.ts"></script>'+
     '</head><body class="p-body one-body">'+
