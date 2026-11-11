@@ -254,7 +254,7 @@ if(panels.length){
     if(document.hidden){
       latest=null;
       paint();
-    }else if(Date.now()-checked>=60000)void refresh();
+    }else void refresh(); // Hidden state clears the feed, so restore it immediately.
   });
   window.addEventListener("pageshow",event=>{if(event.persisted){latest=null;paint();void refresh()}});
 }
