@@ -14,11 +14,14 @@ type NavigatorWithConnection = Navigator & {connection?:{saveData?:boolean}};
 const saver=Boolean((navigator as NavigatorWithConnection).connection?.saveData);
 let requested=true,scheduled=0,lastFrame=-Infinity;
 let viewW=0,viewH=0,pointerX=0,pointerY=0;
-const points=Array.from({length:38},(_,i)=>({
-  x:((i*191+37)%1019)/1019,
-  y:((i*i*71+47)%931)/931,
-  phase:(i*0.61803398875)%1,
-  radius:i%7===0?2.4:1.1,
+// Small traveling axonal currents, not radial particle circles.
+const fibers=Array.from({length:49},(_,i)=>({
+  x:.51+(((i*41)%127)/127)*.26,
+  y:.24+(((i*67)%157)/157)*.45,
+  phase:(i*.61803398875)%1,
+  color:i%4===0?"233,178,111":"110,214,227",
+  bend:Math.sin(i*1.23)*.13,
+  drift:Math.cos(i*2.16)*(.15+(i%7)*.031),
 }));
 const active=()=>requested&&!reduced.matches&&!saver&&!document.hidden;
 function resize(){
@@ -42,28 +45,26 @@ function draw(timestamp:number){
   const observed=work?.dataset.workMode==="active";
   const listening=playback?.dataset.spotifyMode==="playing";
   const intensity=observed?1.3:listening?1.16:1;
-  const t=timestamp*.000065;
-  const dx=pointerX*10,dy=pointerY*8;
-  const centerX=viewW*.56+dx,centerY=viewH*.58+dy;
-  // First-party energy nodes are a visual metaphor, not invented telemetry.
-  const count=viewW<760?17:points.length;
+  const t=timestamp*.000085;
+  const count=viewW<760?19:fibers.length;
   context.save();
   context.globalCompositeOperation="screen";
   for(let i=0;i<count;i++){
-    const p=points[i];
-    const orbit=t*Math.PI*2+p.phase*Math.PI*2;
-    const x=centerX+(p.x-.5)*viewW*.86+Math.sin(orbit)*12;
-    const y=centerY+(p.y-.5)*viewH*.65+Math.cos(orbit*.83)*10;
-    const wave=.42+.58*(.5+.5*Math.sin(orbit*2));
-    const color=i%3?"100,211,221":"244,184,116";
-    const r=(p.radius+1.3*wave)*(viewW<760?.74:1);
-    const glow=context.createRadialGradient(x,y,0,x,y,r*7);
-    glow.addColorStop(0,"rgba("+color+","+(0.24*wave*intensity).toFixed(3)+")");
-    glow.addColorStop(1,"rgba("+color+",0)");
-    context.fillStyle=glow;
-    context.beginPath();context.arc(x,y,r*7,0,Math.PI*2);context.fill();
-    context.fillStyle="rgba("+color+","+(0.34*wave*intensity).toFixed(3)+")";
-    context.beginPath();context.arc(x,y,r*.38,0,Math.PI*2);context.fill();
+    const f=fibers[i],p=(t+f.phase)%1;
+    const a=Math.sin(Math.PI*p)**2;
+    if(a<.02)continue;
+    const curve=(position:number)=>{
+      const u=1-position;
+      const x=f.x*u*u+2*u*position*(f.x+f.bend)+position*position*(f.x+f.drift);
+      const y=f.y*u*u+2*u*position*(f.y+.15)+position*position*(f.y+.41);
+      return {x:x*viewW+pointerX*4,y:y*viewH+pointerY*3};
+    };
+    const head=curve(p),tail=curve(Math.max(0,p-.08));
+    context.beginPath();context.moveTo(tail.x,tail.y);context.lineTo(head.x,head.y);
+    context.lineWidth=i%8===0?1.5:.8;
+    context.lineCap="round";
+    context.strokeStyle="rgba("+f.color+","+(Math.min(.78,.48*a*intensity)).toFixed(3)+")";
+    context.stroke();
   }
   context.restore();
 }
