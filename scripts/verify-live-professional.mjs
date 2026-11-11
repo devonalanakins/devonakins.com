@@ -8,6 +8,7 @@ import {readFile} from "node:fs/promises";
 import {PROFESSIONAL_ROUTES} from "../src/professional/site.mjs";
 import {approvedPublicProjects} from "../src/publication-manifest.mjs";
 import {validPublicListening} from "./validate-public-listening.mjs";
+import {BROWSER_GITHUB_SOURCE,readBrowserGithubFallback} from "../src/professional/github-browser-fallback.mjs";
 
 const origin=(process.env.VERIFY_ORIGIN||"https://devonakins.com").replace(/\/+$/,"");
 const expectedCommit=process.env.EXPECTED_COMMIT||process.env.GITHUB_SHA;
@@ -71,8 +72,30 @@ assert.match(feedRes.headers.get("cache-control")||"",/no-store/i);
 const feed=await feedRes.json();
 assert.equal(feed.version,1);
 assert.ok(["GitHub public events API","GitHub public Atom feed"].includes(feed.source),"GitHub feed must name actual verified public source");
-assert.ok(["available","empty"].includes(feed.status),
-  "Production GitHub feed must be reachable, not merely return a valid unavailable envelope");
+assert.ok(["available","empty","unavailable"].includes(feed.status),
+  "Production GitHub feed must report an explicit source status");
+if(feed.status==="unavailable"){
+  // On Cloudflare shared egress, both official public endpoints can be
+  // throttled simultaneously. In that case, a real owner-profile request
+  // from the public browser path must independently work before cutover.
+  let corsAllowed=false;
+  const browserProjection=await readBrowserGithubFallback({
+    fetcher:async(url,options)=>{
+      const response=await fetch(url,{
+        ...options,
+        headers:{...options.headers,Origin:"https://devonakins.com"},
+      });
+      const cors=response.headers.get("access-control-allow-origin");
+      corsAllowed=cors==="*" || cors==="https://devonakins.com";
+      return response;
+    },
+  });
+  assert.ok(corsAllowed && browserProjection?.source===BROWSER_GITHUB_SOURCE &&
+    ["available","empty"].includes(browserProjection.status) &&
+    Array.isArray(browserProjection.events),
+  "Production GitHub feed is unavailable and real browser-direct public API/CORS fallback was not verified");
+  console.log("GitHub Worker source unavailable; live public GitHub browser-direct fallback verified");
+}
 assert.ok(Array.isArray(feed.events)&&feed.events.length<=32);
 for(const event of feed.events){
   assert.deepEqual(Object.keys(event).sort(),["at","kind","label","repo","url"]);
