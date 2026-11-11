@@ -80,10 +80,10 @@ try{
       if(alpha<.04)continue;
       const x=s.x+(s.x2-s.x)*t,y=s.y+(s.y2-s.y)*t;
       const hue=s.tone>.48?"#71eaf0":"#ffd09c";
-      points.push('<circle cx="'+q(x)+'" cy="'+q(y)+'" r="'+q(2.3+2*alpha)+
-        '" fill="'+hue+'" opacity="'+q(alpha)+'"/>');
-      points.push('<circle cx="'+q(x)+'" cy="'+q(y)+'" r="'+q(9+8*alpha)+
-        '" fill="'+hue+'" opacity="'+(alpha*.05).toFixed(3)+'"/>');
+      points.push('<circle cx="'+q(x)+'" cy="'+q(y)+'" r="'+q(3.6+4*alpha)+
+        '" fill="'+hue+'" opacity="'+q(Math.min(1,alpha*1.3))+'"/>');
+      points.push('<circle cx="'+q(x)+'" cy="'+q(y)+'" r="'+q(21+18*alpha)+
+        '" fill="'+hue+'" opacity="'+(alpha*.22).toFixed(3)+'"/>');
     }
     for(let j=0;j<24;j++){
       const x=200+j*61+Math.sin(2*Math.PI*(phase+j*.13))*45;
@@ -91,13 +91,24 @@ try{
       points.push('<circle cx="'+q(x)+'" cy="'+q(y)+'" r="1.7" fill="'+
         (j%2?"#59cbd7":"#e8ad73")+'" opacity=".12"/>');
     }
-    const overlay=await sharp(Buffer.from('<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1080">'+points.join("")+'</svg>')).png().toBuffer();
+    const auraX=q(1020+95*Math.sin(2*Math.PI*phase));
+    const auraY=q(520+48*Math.cos(2*Math.PI*phase));
+    const secondaryX=q(1170-70*Math.sin(2*Math.PI*phase));
+    const svg='<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1080">'+
+      '<defs><radialGradient id="fogA"><stop stop-color="#ffce91" stop-opacity=".15"/>'+
+      '<stop offset="1" stop-color="#ffce91" stop-opacity="0"/></radialGradient>'+
+      '<radialGradient id="fogB"><stop stop-color="#77e7ef" stop-opacity=".2"/>'+
+      '<stop offset="1" stop-color="#77e7ef" stop-opacity="0"/></radialGradient></defs>'+
+      '<ellipse cx="'+auraX+'" cy="'+auraY+'" rx="450" ry="360" fill="url(#fogA)"/>'+
+      '<ellipse cx="'+secondaryX+'" cy="540" rx="400" ry="330" fill="url(#fogB)"/>'+
+      points.join("")+'</svg>';
+    const overlay=await sharp(Buffer.from(svg)).png().toBuffer();
     const frame=await sharp(base).composite([{input:overlay,top:0,left:0}]).png().toBuffer();
     await writeFile(join(folder,"frame-"+String(i).padStart(3,"0")+".png"),frame);
   }
   const encoded=spawnSync("ffmpeg",["-hide_banner","-loglevel","error","-y","-framerate",String(FPS),
     "-i",join(folder,"frame-%03d.png"),"-c:v","libx264","-preset","fast",
-    "-crf","29","-pix_fmt","yuv420p","-movflags","+faststart","-an",output],{stdio:"inherit"});
+    "-crf","26","-pix_fmt","yuv420p","-movflags","+faststart","-an",output],{stdio:"inherit"});
   if(encoded.status!==0)throw new Error("ffmpeg encode failed");
   const size=(await stat(output)).size;
   if(size>2_500_000)throw new Error("Motion asset exceeds 2.5 MB Worker budget");
