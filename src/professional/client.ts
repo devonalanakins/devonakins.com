@@ -224,7 +224,7 @@ filters.forEach(filter=>filter.addEventListener("click",()=>{
   const next=filter.dataset.githubFilter;
   if(!next || (next!=="all" && !eventKinds.includes(next)))return;
   kind=next;
-  filters.forEach(item=>item.setAttribute("aria-pressed",String(item===filter)));
+  filters.forEach(item=>item.setAttribute("aria-pressed",String(item.dataset.githubFilter===kind)));
   paint();
 }));
 async function refresh(){
