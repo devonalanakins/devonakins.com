@@ -46,6 +46,8 @@ test('Living Studio unifies public signals without duplicating providers',async(
   assert.match(html,/living-studio\.css/);
   assert.match(html,/studio-project-card--knowledge/);
   assert.match(html,/studio-project-card--station/);
+  assert.match(html,/href="\/work\/" class="studio-project-card studio-project-card--knowledge"/);
+  assert.match(html,/href="\/work\/devonstation\/" class="studio-project-card studio-project-card--station"/);
   assert.match(html,/studio-rail-contact/);
   assert.match(html,/studio-development/);
   assert.match(html,/studio-spotify/);
