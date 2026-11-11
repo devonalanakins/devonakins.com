@@ -119,8 +119,8 @@ try:
                 })""")
                 assert dimensions["doc"] <= height+2,(engine,width,height,dimensions,"no vertical document scroll")
                 assert dimensions["width"] <= width+2,(engine,width,height,dimensions,"no horizontal document scroll")
-                expected_home = 1 if (width<=400 and height<=700) or (width>760 and height<=470) else 2 if width<=760 else 4
-                expected_activity = 2 if (width<=400 and height<=700) or (width>760 and height<=470) else 4 if width<=760 else 6
+                expected_home = 1 if (width<=400 and height<=700) or (width>760 and height<=470) else 2 if width<=760 or (width>760 and height<=800) else 4
+                expected_activity = 2 if (width<=400 and height<=700) or (width>760 and height<=470) else 4 if width<=760 or (width>760 and height<=800) else 6
                 assert page.locator("#one-home-github").get_attribute("data-limit")==str(expected_home),(engine,width,height,"home capacity")
                 assert page.locator("#one-activity-github").get_attribute("data-limit")==str(expected_activity),(engine,width,height,"activity capacity")
                 # In compact view the public playback title and GPT value must
