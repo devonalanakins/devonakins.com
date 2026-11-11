@@ -32,6 +32,17 @@ for(const project of approvedPublicProjects){
   assert.match(body,/What is not claimed/);
   assert.ok(body.includes('rel="canonical" href="https://devonakins.com'+url+'"'));
 }
+// Retained legacy pages must not point to V4-only homepage fragments. A
+// professional visitor should reach existing real routes, not a dead anchor.
+for(const legacyPath of ["/source/","/studio/","/404/"]){
+  const response=await get(legacyPath);
+  assert.equal(response.status,200,legacyPath);
+  const legacyHtml=await response.text();
+  for(const match of legacyHtml.matchAll(/href="\/#([^"]+)"/g)){
+    assert.fail(legacyPath+" retained obsolete homepage fragment #"+match[1]);
+  }
+  assert.ok(legacyHtml.includes('href="/"'),legacyPath+" must link to professional home");
+}
 const root=await (await get("/")).text();
 assert.match(root,/I build the systems/);
 assert.match(root,/Automatic public feed/);
