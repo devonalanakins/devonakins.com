@@ -62,6 +62,20 @@ try:
                     tabs.get_by_role("tab",name=label).click()
                     assert page.locator('[data-one-view="'+key+'"]').is_visible(),(engine,width,height,key)
                     assert page.locator('[data-one-view]:visible').count()==1,(engine,width,height,key)
+                    # Each primary heading and case-card must stay inside the
+                    # viewport across ALL six sections, not only the homepage.
+                    outliers=page.evaluate("""name => {
+                      const root=document.querySelector('[data-one-view="'+name+'"]');
+                      const bounds=root.getBoundingClientRect();
+                      return [...root.querySelectorAll('h1,.one-fact-stack article,.one-project,.one-activity-feed')]
+                        .filter(el => {
+                          const r=el.getBoundingClientRect();
+                          return r.top<bounds.top-3 || r.bottom>bounds.bottom+3 ||
+                            r.left<bounds.left-3 || r.right>bounds.right+3;
+                        })
+                        .map(el=>el.tagName+" "+el.className);
+                    }""",key)
+                    assert not outliers,(engine,width,height,key,"off-canvas content",outliers)
                     if key in ("work","experience","contact"):
                         page.screenshot(path=str(OUT/f"{engine}-{width}x{height}-{key}.png"))
                 tabs.get_by_role("tab",name="Activity").click()
