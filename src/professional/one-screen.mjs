@@ -81,7 +81,7 @@ const activity = view("activity",
   '<div class="one-activity-gpt">'+gptSignalCard()+'</div></div>'+
   '<section class="one-activity-feed one-panel"><header class="one-panel-head">'+brandIcon("github")+
   '<span><strong>PUBLIC EVENTS</strong><small>GitHub · source-qualified</small></span></header>'+
-  <div class="one-activity-tools" role="group" aria-label="Filter GitHub history"><button type="button" data-github-filter="all" aria-pressed="true">All</button><button type="button" data-github-filter="push" aria-pressed="false">Pushes</button><button type="button" data-github-filter="pull_request" aria-pressed="false">PRs</button><button type="button" data-github-filter="issue" aria-pressed="false">Issues</button><button type="button" data-github-filter="release" aria-pressed="false">Releases</button><button type="button" data-github-refresh aria-label="Check GitHub for new public events">Refresh</button></div>'+
+  '<div class="one-activity-tools" role="group" aria-label="Filter GitHub history"><button type="button" data-github-filter="all" aria-pressed="true">All</button><button type="button" data-github-filter="push" aria-pressed="false">Pushes</button><button type="button" data-github-filter="pull_request" aria-pressed="false">PRs</button><button type="button" data-github-filter="issue" aria-pressed="false">Issues</button><button type="button" data-github-filter="release" aria-pressed="false">Releases</button><button type="button" data-github-refresh aria-label="Check GitHub for new public events">Refresh</button></div>'+
   publicFeed("one-activity-github",6)+
   '<p class="one-activity-note">GitHub events are timestamped history. Playback and editor status use separate sources.</p></section></div>');
 
