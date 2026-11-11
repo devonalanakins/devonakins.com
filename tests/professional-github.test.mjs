@@ -120,6 +120,8 @@ test("GitHub official public Atom fallback is safely projected and attributed",(
     atomEntry({repo:"any-public-repository"}),
     atomEntry({repo:"knowledge",event:"pull_request",
       href:"https://github.com/devonalanakins/knowledge/pull/123"}),
+    atomEntry({repo:"other-project",event:"star",
+      href:"https://github.com/devonalanakins/other-project"}),
     atomEntry({repo:"someone-elses-repo",actor:"not-the-owner"}),
     atomEntry({repo:"bad",href:"https://attacker.invalid/devonalanakins/bad"}),
   ),date);
@@ -128,7 +130,9 @@ test("GitHub official public Atom fallback is safely projected and attributed",(
   assert.deepEqual(projected.events.map(x=>({kind:x.kind,repo:x.repo})),[
     {kind:"push",repo:"devonalanakins/any-public-repository"},
     {kind:"pull_request",repo:"devonalanakins/knowledge"},
+    {kind:"other",repo:"devonalanakins/other-project"},
   ]);
+  assert.equal(projected.events[2].label,"Public GitHub activity");
   assert.equal(validProfessionalGithub(projected,date),true);
   assert.doesNotMatch(JSON.stringify(projected),/Untrusted raw|never-publish|<script>|attacker/);
 });
