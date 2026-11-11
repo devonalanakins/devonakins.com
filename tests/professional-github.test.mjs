@@ -177,7 +177,7 @@ test("malformed fallback never leaks feed fields and respects original API coold
       // never an invented project or an unavailable credential.
       assert.equal(value.status,"empty");
     }
-    assert.doesNotMatch(JSON.stringify(value),/evil.example|another-user|limited/);
+    assert.doesNotMatch(JSON.stringify(value),/evil\.example|another-user|provider denied|<script>/);
     assert.equal(validProfessionalGithub(value,date),true);
   }
 });
