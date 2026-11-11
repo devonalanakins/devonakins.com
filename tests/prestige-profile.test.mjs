@@ -51,7 +51,7 @@ test('compact Spotify HUD reserves space for the real song, and the note lives o
 test('mission artwork uses independent resolution-free assets, never a scaled 2x3 bitmap atlas',async()=>{
   const css=await readFile(new URL('../src/professional/prestige-profile.css',import.meta.url),'utf8');
   for(const name of ['operations','systems','site']){
-    assert.match(css,new RegExp('mission-'+name+'\\\\.svg'.replace('\\\\','\\')));
+    assert.ok(css.includes('mission-'+name+'.svg'));
     const svg=await readFile(new URL('../public/professional/mission-'+name+'.svg',import.meta.url),'utf8');
     assert.match(svg,/<svg\b/);
     assert.match(svg,/viewBox="0 0 1200 640"/);
