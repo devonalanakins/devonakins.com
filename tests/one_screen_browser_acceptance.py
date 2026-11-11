@@ -174,6 +174,26 @@ try:
                         .map(el=>el.tagName+" "+el.className);
                     }""",key)
                     assert not outliers,(engine,width,height,key,"off-canvas content",outliers)
+                    if key=="work":
+                        # The source-only screenshot must actually show the new
+                        # vector illustrations, not a transient blank placeholder.
+                        art=page.evaluate("""async () => {
+                          const names=['operations','systems','site'];
+                          const checked=await Promise.all(names.map(async name => {
+                            const path='/professional/mission-'+name+'.svg';
+                            const response=await fetch(path,{cache:'force-cache'});
+                            if(!response.ok) return false;
+                            const svg=await response.text();
+                            if(!svg.includes('<svg'))return false;
+                            const image=new Image();image.src=path;
+                            try { await image.decode(); } catch { return false; }
+                            const node=document.querySelector('.one-project-'+name+' .one-project-art');
+                            const background=getComputedStyle(node).backgroundImage;
+                            return image.naturalWidth>=1200 && background.includes(path);
+                          }));
+                          return checked.every(Boolean);
+                        }""")
+                        assert art,(engine,width,height,"mission SVG loaded and rendered")
                     if key in ("work","experience","contact"):
                         page.screenshot(path=str(OUT/f"{engine}-{width}x{height}-{key}.png"))
                 tabs.get_by_role("tab",name="Activity").click()
