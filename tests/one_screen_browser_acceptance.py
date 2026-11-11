@@ -107,7 +107,7 @@ try:
                         page.screenshot(path=str(OUT/f"{engine}-{width}x{height}-{key}.png"))
                 tabs.get_by_role("tab",name="Activity").click()
                 page.screenshot(path=str(OUT/f"{engine}-{width}x{height}-activity.png"))
-                tabs.get_by_role("tab",name="Home").click()
+                tabs.get_by_role("tab",name="Profile").click()
                 page.screenshot(path=str(OUT/f"{engine}-{width}x{height}-home.png"))
                 assert not errors,(engine,width,height,errors)
                 context.close()
