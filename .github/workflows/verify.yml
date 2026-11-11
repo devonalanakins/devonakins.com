@@ -188,9 +188,10 @@ jobs:
           retention-days: 14
 
   professional_candidate:
-    # Independent full-site preview, never the default protected V4 release.
+    # Source-only preview runs in parallel with the long baseline suite to
+    # produce timely desktop/mobile evidence. Baseline verify remains a separate
+    # required gate for review and protected release, never bypassed here.
     if: github.head_ref == 'feat/professional-github-portfolio-20261110' || github.ref == 'refs/heads/feat/professional-github-portfolio-20261110'
-    needs: verify
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     permissions:
