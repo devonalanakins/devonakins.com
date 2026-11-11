@@ -28,6 +28,7 @@ const KINDS = Object.freeze({
   ForkEvent: ["other", "Forked a repository"],
   WatchEvent: ["other", "Starred a repository"],
   PublicEvent: ["other", "Made a repository public"],
+  AtomEvent: ["other", "Public GitHub activity"],
 });
 const LIMIT = 32;
 const SUCCESS_TTL = 5 * 60_000;
@@ -113,7 +114,7 @@ export function projectProfessionalGithubAtom(xml, now = new Date()) {
       /\/issues\/[0-9]+(?:[/?#]|$)/.test(href) ? "IssuesEvent" :
       /\/releases\//.test(href) ? "ReleaseEvent" :
       /:push\/|\/compare\/|\/commit\//.test(id + " " + href) ? "PushEvent" :
-      "CreateEvent";
+      "AtomEvent";
     events.push({
       public: true, actor: {login: USER}, repo: {name: USER + "/" + match[1]},
       created_at: at, type, payload: {},
