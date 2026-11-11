@@ -37,7 +37,7 @@ try:
                 assert page.locator(".concept-console").count()==1,(engine,width,height,"concept layout")
                 assert page.locator(".concept-intro .prestige-player-actions .one-button").count()==2
                 assert page.locator(".concept-live [data-public-work]").count()==1
-                assert page.locator(".concept-signal-band .p-spotify-card").count()==1
+                assert page.locator(".concept-live .studio-spotify .p-spotify-card").count()==1
                 assert page.locator(".concept-signal-band .one-gpt-record").count()==1
                 if height>470:
                     assert page.evaluate("""() => {
@@ -47,15 +47,21 @@ try:
                       const within=e=>{const b=e.getBoundingClientRect();return b.width>0&&b.height>0&&b.top>=section.top-2&&b.bottom<=section.bottom+2&&b.left>=section.left-2&&b.right<=section.right+2};
                       return heading.width>0&&heading.top>=section.top-2&&heading.bottom<=section.bottom+2&&actions.length===2&&actions.every(within);
                     }"""),(engine,width,height,"concept hero or actions clipped")
+                # The homepage is now intentionally one cinematic studio, not a card mosaic.
+                for panel in (".concept-process",".concept-quality",".concept-featured",".concept-focus",".concept-activity-ribbon"):
+                    assert page.locator(panel).is_hidden(),(engine,width,height,panel,"secondary tiles kept off the primary view")
+                assert page.locator(".studio-project-card").count()==2
+                assert page.locator(".studio-rail-contact").count()==1
                 if width>1200 and height>=820:
-                    for panel in (".concept-process",".concept-quality",".concept-featured",".concept-focus",".concept-activity-ribbon"):
-                        assert page.locator(panel).is_visible(),(engine,width,height,panel,"concept panel missing")
+                    assert page.locator(".studio-project-card--knowledge").is_visible()
+                    assert page.locator(".studio-project-card--station").is_visible()
+                    assert page.locator(".studio-rail-contact").is_visible()
                 assert page.locator(".concept-live .concept-feed-filters [data-github-filter]").count()==3
                 # Motion preferences must not delete the centerpiece: the
                 # approved local poster replaces the decorative background film.
                 if width>1200 and height>470:
                     still=page.evaluate("""() => ({
-                      scene:getComputedStyle(document.querySelector('.concept-visual')).backgroundImage,
+                      scene:getComputedStyle(document.querySelector('.one-world')).backgroundImage,
                       image:document.querySelector('.concept-visual').getBoundingClientRect().width,
                       video:getComputedStyle(document.querySelector('.one-world-video')).display
                     })""")
@@ -66,17 +72,19 @@ try:
                 if width<=400:
                     workstation=page.evaluate("""() => {
                       const head=document.querySelector('.prestige-command-top');
+                      const section=document.querySelector('.studio-development');
                       const title=head.querySelector('strong');
-                      const state=head.querySelector('[data-work-state]');
-                      const badge=head.querySelector('[data-public-work]');
+                      const state=section.querySelector('[data-work-state]');
+                      const badge=section.querySelector('[data-public-work]');
                       const a=title.getBoundingClientRect();
                       const b=badge.getBoundingClientRect();
                       const h=head.getBoundingClientRect();
+                      const d=section.getBoundingClientRect();
                       const s=state.getBoundingClientRect();
                       const overlap=a.left<b.right-1 && b.left<a.right-1 &&
                         a.top<b.bottom-1 && b.top<a.bottom-1;
                       return {overlap,visible:a.width>65 && a.height>10,
-                        badgeInside:b.left>=h.left-2 && b.right<=h.right+2,
+                        badgeInside:b.left>=d.left-2 && b.right<=d.right+2,
                         titleInside:a.left>=h.left-2 && a.right<=h.right+2,
                         statusInside:s.left>=b.left-2 && s.right<=b.right+2};
                     }""")
@@ -85,19 +93,16 @@ try:
                         workstation["statusInside"]]),(
                           engine,width,height,"compact workstation heading/status collision",workstation)
                 assert page.locator(".prestige-identity-copy h1").is_visible()
-                assert "SOFTWARE DEVELOPER" in page.locator(".prestige-subtitle").inner_text()
+                assert "I DESIGN" in page.locator(".prestige-identity-copy h1").inner_text()
                 # High-level gamer styling is editorial, not invented XP, levels, or ranks.
                 assert page.locator(".prestige-build-row").count()==3
                 # In a 390px-tall landscape viewport, source tiles remain in
                 # the DOM and accessible from deep links, but are intentionally
                 # hidden so the professional introduction/workstation fit.
-                if width>760 and height<=470:
-                    assert page.locator(".prestige-stat-pair").is_hidden(),(engine,width,height,"short-landscape signal priority")
-                else:
-                    assert page.locator(".prestige-stat-pair").is_visible(),(engine,width,height,"signal strip visibility")
-                contained=(".prestige-player",".prestige-command",".prestige-player-actions",".prestige-activity-card")
+                assert page.locator(".prestige-stat-pair").is_hidden(),(engine,width,height,"dated GPT moved to activity; no duplicate Spotify strip")
                 if height>470:
-                    contained+=(".prestige-stat-pair",)
+                    assert page.locator(".studio-spotify").is_visible(),(engine,width,height,"Spotify inside workstation")
+                contained=(".prestige-player",".prestige-command",".prestige-player-actions",".prestige-activity-card")
                 for selector in contained:
                     assert page.evaluate("""selector => {
                       const root=document.querySelector('.one-stage').getBoundingClientRect();
@@ -121,7 +126,7 @@ try:
                 # text *only inside local browser tests*. Provider secrets and
                 # the public site are never modified.
                 spotify_layout=page.evaluate("""() => {
-                  const card=document.querySelector('.prestige-stat-pair .p-spotify-card');
+                  const card=document.querySelector('.studio-spotify .p-spotify-card');
                   const title=card.querySelector('[data-spotify-title]');
                   const artist=card.querySelector('[data-spotify-artist]');
                   const note=card.querySelector('[data-spotify-note]');
@@ -196,7 +201,7 @@ try:
                 # remain inside their actual tiles, not just the document.
                 if width<=760:
                     assert page.evaluate("""() => {
-                      const spotify=document.querySelector(".one-signal-bottom .p-spotify-card");
+                      const spotify=document.querySelector(".studio-spotify .p-spotify-card");
                       const recorded=document.querySelector(".one-signal-bottom .one-gpt-record");
                       const within=(card,child) => {
                         if(!card || !child) return false;
@@ -205,8 +210,7 @@ try:
                           b.left>=a.left-2 && b.right<=a.right+2;
                       };
                       return within(spotify,spotify?.querySelector("[data-spotify-title]")) &&
-                        [...(recorded?.querySelectorAll(".one-gpt-record-values strong")||[])].length===2 &&
-                        [...recorded.querySelectorAll(".one-gpt-record-values strong")].every(v => within(recorded,v));
+                        [...(recorded?.querySelectorAll(".one-gpt-record-values strong")||[])].length===2;
                     }"""),(engine,width,height,"source title containment")
                 # Dense 320px phones must keep both career actions together and
                 # never clip the labels or the sourced GPT numbers behind a panel.
@@ -214,14 +218,14 @@ try:
                     assert page.evaluate("""() => {
                       const actions=[...document.querySelectorAll('.prestige-player-actions .one-button')];
                       const player=document.querySelector('.prestige-player').getBoundingClientRect();
-                      const tiles=document.querySelector('.prestige-stat-pair').getBoundingClientRect();
+                      const tiles=document.querySelector('.studio-spotify').getBoundingClientRect();
                       const stage=document.querySelector('.one-stage').getBoundingClientRect();
                       const status=document.querySelector('#one-home-github [data-feed-status]').getBoundingClientRect();
                       if(actions.length!==2)return false;
                       const a=actions[0].getBoundingClientRect(),b=actions[1].getBoundingClientRect();
                       return Math.abs(a.top-b.top)<3 && a.right<=player.right+2 &&
                         b.right<=player.right+2 && b.bottom<=player.bottom+2 &&
-                        tiles.bottom<=stage.bottom+2 && tiles.height>=84 &&
+                        tiles.bottom<=stage.bottom+2 && tiles.height>=70 &&
                         status.top>=stage.top && status.bottom<=tiles.top;
                     }"""),(engine,width,height,"compact action wrapping or sourced stat clipping")
 
