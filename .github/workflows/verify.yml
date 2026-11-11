@@ -230,3 +230,44 @@ jobs:
             browser-qa/professional/
           if-no-files-found: warn
           retention-days: 14
+
+  one_screen_candidate:
+    # Isolated design candidate: does not change the verified production
+    # release variant or publish a new public endpoint.
+    if: github.head_ref == 'feat/viewport-one-screen-20261110' || github.ref == 'refs/heads/feat/viewport-one-screen-20261110'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - run: npm ci
+      - name: Build single-viewport professional candidate
+        run: PROFESSIONAL_SITE_CANDIDATE=1 ONE_SCREEN_SITE_CANDIDATE=1 npm run build
+      - name: Check candidate route and generated assets
+        run: node scripts/verify-one-screen-candidate.mjs
+      - name: Install pinned cross-browser verifier
+        run: |
+          python3 -m pip install --disable-pip-version-check playwright==1.57.0
+          python3 -m playwright install --with-deps chromium webkit
+      - name: Verify no-scroll desktop, mobile and keyboard-ready sections
+        run: python3 tests/one_screen_browser_acceptance.py
+      - name: Attach viewport design preview
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: one-screen-site-candidate
+          path: |
+            dist/
+            browser-qa/one-screen/
+          if-no-files-found: warn
+          retention-days: 14

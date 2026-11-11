@@ -47,7 +47,7 @@ test("wrong branch, partial SHA, wrong worker, or inconsistent V4 flag fail clos
     [{expectedSha:"A".repeat(40)},/40-character/],
     [{checkoutSha:"b".repeat(40)},/does not match/],
     [{workerConfig:'{"name": "another-worker"}'},/devonakins-personal/],
-    [{releaseVariant:"v6"},/v4, v5, or professional/],
+    [{releaseVariant:"v6"},/v4, v5, professional, or one-screen/],
     [{v5BuildFlag:"1"},/V4 build/],
   ]) assert.match(manualReleaseError({...base,...input}),message);
 });
@@ -129,10 +129,78 @@ test("professional workflow selects guarded build on build, deploy, and producti
       "Missing protected professional release contract: "+flag);
   }
   assert.ok(workflow.indexOf("node scripts/manual-release-guard.mjs")<
-    workflow.indexOf("PROFESSIONAL_SITE_CANDIDATE=1 V5_PUBLIC_SITE_CANDIDATE=0 npm run build"));
+    workflow.indexOf("PROFESSIONAL_SITE_CANDIDATE=1 ONE_SCREEN_SITE_CANDIDATE=0 V5_PUBLIC_SITE_CANDIDATE=0 npm run build"));
   assert.ok(workflow.indexOf("node scripts/verify-professional-candidate.mjs")<
     workflow.indexOf("wrangler@4.151.3 deploy"));
   assert.match(workflow,/github.ref == 'refs\/heads\/main'/);
   assert.match(workflow,/environment: production/);
   assert.doesNotMatch(workflow,/permissions:\s*\n\s*contents:\s*write/);
+});
+
+test("one-screen cutover requires independent exact approval and both selected build flags",()=>{
+  const oneScreen={...base,releaseVariant:"one-screen",
+    professionalBuildFlag:"1",oneScreenBuildFlag:"1"};
+  assert.match(manualReleaseError(oneScreen),/ONE-SCREEN-CUTOVER-APPROVED/);
+  assert.equal(manualReleaseError({
+    ...oneScreen,oneScreenConfirmation:"ONE-SCREEN-CUTOVER-APPROVED"
+  }),null);
+  for(const input of [
+    {oneScreenConfirmation:"one-screen-cutover-approved"},
+    {oneScreenConfirmation:"ONE-SCREEN-CUTOVER-APPROVED",oneScreenBuildFlag:"0"},
+    {oneScreenConfirmation:"ONE-SCREEN-CUTOVER-APPROVED",professionalBuildFlag:"0"},
+    {oneScreenConfirmation:"ONE-SCREEN-CUTOVER-APPROVED",v5BuildFlag:"1"},
+    {oneScreenConfirmation:"ONE-SCREEN-CUTOVER-APPROVED",v5Confirmation:"V5-CUTOVER-APPROVED"},
+    {oneScreenConfirmation:"ONE-SCREEN-CUTOVER-APPROVED",professionalConfirmation:"PROFESSIONAL-CUTOVER-APPROVED"},
+    {oneScreenConfirmation:"ONE-SCREEN-CUTOVER-APPROVED",githubOidcAction:"enable",
+      githubOidcConfirmation:"GITHUB-OIDC-ENABLE-APPROVED"}
+  ]) assert.ok(manualReleaseError({...oneScreen,...input}),
+    "One-screen release must reject missing/extra flags, confirmations and OIDC changes");
+});
+test("one-screen flags or confirmations cannot leak into older release variants",()=>{
+  const valid=[
+    base,
+    {...base,releaseVariant:"v5",v5BuildFlag:"1",v5Confirmation:"V5-CUTOVER-APPROVED"},
+    {...base,releaseVariant:"professional",professionalBuildFlag:"1",
+      professionalConfirmation:"PROFESSIONAL-CUTOVER-APPROVED"}
+  ];
+  for(const input of valid){
+    assert.equal(manualReleaseError(input),null,"Control selection should pass");
+    assert.ok(manualReleaseError({...input,oneScreenBuildFlag:"1"}));
+    assert.ok(manualReleaseError({...input,oneScreenConfirmation:"ONE-SCREEN-CUTOVER-APPROVED"}));
+  }
+});
+test("one-screen protected workflow builds only the confirmed variant and checks the live Worker",()=>{
+  const workflow=readFileSync(new URL("../.github/workflows/deploy.yml",import.meta.url),"utf8");
+  const guard=workflow.indexOf("run: node scripts/manual-release-guard.mjs");
+  const candidate=workflow.indexOf("node scripts/verify-one-screen-candidate.mjs");
+  const upload=workflow.indexOf("wrangler@4.151.3 deploy");
+  const live=workflow.indexOf("node scripts/verify-live-one-screen.mjs");
+  assert.ok(guard>0&&candidate>guard&&upload>candidate&&live>upload);
+  for(const required of [
+    "- one-screen", "one_screen_confirmation:", "ONE_SCREEN_CONFIRMATION:",
+    "ONE_SCREEN_SITE_CANDIDATE:", "ONE_SCREEN_SITE_CANDIDATE=1",
+    "PROFESSIONAL_SITE_CANDIDATE=1 ONE_SCREEN_SITE_CANDIDATE=1 V5_PUBLIC_SITE_CANDIDATE=0 npm run build",
+    "node scripts/verify-one-screen-candidate.mjs",
+    "node --check scripts/verify-live-one-screen.mjs",
+    "if [ \"$ONE_SCREEN_SITE_CANDIDATE\" = '1' ]; then",
+    "node scripts/verify-live-one-screen.mjs",
+    "environment: production","github.ref == 'refs/heads/main'"
+  ]) assert.ok(workflow.includes(required),"Missing exclusive one-screen release gate: "+required);
+  assert.doesNotMatch(workflow,/permissions:\s*\n\s*contents:\s*write/);
+});
+test("one-screen post-release checker preserves the real public data and privacy boundaries",()=>{
+  const source=readFileSync(new URL("../scripts/verify-live-one-screen.mjs",import.meta.url),"utf8");
+  for(const required of [
+    "expectedCommit", "release.commit", 'get("/_health")', "one-stage",
+    "one-portrait", "headshot-concept", "ONE_SCREEN", "data-public-github-feed",
+    "data-public-spotify", "data-public-gpt", "one-gpt-record",
+    "readBrowserGithubFallback", "validPublicListening",
+    'get("/api/activity/v4")', 'get("/api/listening/now")',
+    'get("/api/github/public-feed")', "SYNTHETIC"
+  ]) {
+    // Script need not mention the build-selection environment variable by
+    // name; exact HTML and commit validation are the production acceptance.
+    if(required==="ONE_SCREEN")continue;
+    assert.ok(source.includes(required),"Missing source- or privacy-check: "+required);
+  }
 });

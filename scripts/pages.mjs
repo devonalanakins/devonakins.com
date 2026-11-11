@@ -1,5 +1,6 @@
-import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { mkdir, readFile, readdir, writeFile } from "node:fs/promises";
 import {renderProfessionalPage, renderProfessionalProjectPage, PROFESSIONAL_ROUTES} from "../src/professional/site.mjs";
+import {renderOneScreenHome} from "../src/professional/one-screen.mjs";
 import { pages } from "../src/content.mjs";
 import { approvedPublicProjects as projects } from "../src/publication-manifest.mjs";
 import { promotePortraitHome } from "../src/portrait-home.mjs";
@@ -8,17 +9,29 @@ import { V5_PUBLIC_ROUTES } from "../src/v5/public-routes.mjs";
 import { publicNotes } from "../src/v5/public-notes.mjs";
 import { renderImmersiveRoute } from "../src/immersive-routes.mjs";
 import { validatePublicGptSnapshot } from "../src/gpt-profile.mjs";
+import { validateDatedGptCapture } from "../src/professional/gpt-capture.mjs";
 
 // All public routes use one independently audited cinematic shell. No legacy
 // homepage, navbar or old global CSS is generated for deep-linked pages.
 const home = promotePortraitHome(await readFile("v2/index.html", "utf8"));
 const gptSnapshot = validatePublicGptSnapshot(JSON.parse(await readFile("public/v2/usage-snapshot.json", "utf8")));
+const datedGptFiles=(await readdir("public/gpt/snapshots")).filter(name=>/^\d{4}-\d{2}-\d{2}\.json$/.test(name)).sort();
+const datedGptCaptures=await Promise.all(datedGptFiles.map(async name=>{
+  const capture=validateDatedGptCapture(JSON.parse(await readFile("public/gpt/snapshots/"+name,"utf8")));
+  if (name!==capture.captureDate+".json") throw new Error("Dated GPT capture filename mismatch: "+name);
+  return capture;
+}));
+if (!datedGptCaptures.length) throw new Error("Dated GPT capture history missing");
+const datedGptCapture=datedGptCaptures.at(-1);
+const publicGptContext={datedCapture:datedGptCapture,historicalSnapshot:gptSnapshot,previousCaptures:datedGptCaptures.slice(0,-1)};
 // Explicit build-time candidate only. Ordinary builds keep the verified V4
 // document, including on production's existing deploy workflow. No URL/env
 // runtime parameter can switch a deployed site without a reviewed rebuild.
 const fullV5Candidate = process.env.V5_PUBLIC_SITE_CANDIDATE === "1";
 const v5Candidate = process.env.V5_PUBLIC_HOME_CANDIDATE === "1";
 const professionalCandidate = process.env.PROFESSIONAL_SITE_CANDIDATE === "1";
+// Explicit preview-only homepage design. Protected production defaults remain unchanged.
+const oneScreenCandidate = process.env.ONE_SCREEN_SITE_CANDIDATE === "1";
 const professionalPaths = new Map(Object.entries(PROFESSIONAL_ROUTES).map(([key,path]) => [path,key]));
 const professionalLegacyDestinations = Object.freeze({
   home: "/", work: "/work/", research: "/work/", contact: "/contact/",
@@ -36,7 +49,7 @@ function repairProfessionalLegacyNavigation(html) {
   });
 }
 
-await writeFile("index.html", professionalCandidate ? renderProfessionalPage("home") : fullV5Candidate ? renderV5PublicPage("home") : v5Candidate ? renderV5PublicHomepage() : home);
+await writeFile("index.html", oneScreenCandidate ? renderOneScreenHome({datedCapture:datedGptCapture}) : professionalCandidate ? renderProfessionalPage("home",publicGptContext) : fullV5Candidate ? renderV5PublicPage("home") : v5Candidate ? renderV5PublicHomepage() : home);
 const all = [...new Set([
   ...pages.map(({ path }) => path),
   ...(professionalCandidate ? [...professionalPaths.keys()] : []),
@@ -51,7 +64,7 @@ for (const path of all) {
   const routeKey=Object.keys(V5_PUBLIC_ROUTES).find(key=>V5_PUBLIC_ROUTES[key]===path);
   const topic=publicNotes.find(n=>path==="/knowledge/"+n.slug+"/");
   const project=projects.find(p=>path==="/work/"+p.slug+"/");
-  const html=professionalCandidate && professionalPaths.has(path) ? renderProfessionalPage(professionalPaths.get(path)) :
+  const html=professionalCandidate && professionalPaths.has(path) ? renderProfessionalPage(professionalPaths.get(path),publicGptContext) :
     fullV5Candidate && routeKey ? renderV5PublicPage(routeKey) :
     fullV5Candidate && topic ? renderV5PublicPage("knowledge",{topic:topic.slug,publicPath:path}) :
     professionalCandidate && project ? renderProfessionalProjectPage(project.slug) :

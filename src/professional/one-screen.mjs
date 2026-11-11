@@ -1,0 +1,155 @@
+import {spotifyCard,gptSignalCard} from "./signal-cards.mjs";
+import {brandIcon} from "./brand-icons.mjs";
+import {renderOneScreenGptSummary} from "./gpt-capture.mjs";
+
+/**
+ * Opt-in one-viewport design candidate. Existing routes and consent-filtered
+ * APIs remain the authority for deeper content and public activity.
+ * This is a layout, not a new telemetry source.
+ */
+const navItems = Object.freeze([
+  ["home","Home"],["experience","Experience"],["work","Work"],
+  ["activity","Activity"],["writing","Writing"],["contact","Contact"],
+]);
+const esc = value => String(value ?? "").replace(/[&<>"']/g,
+  c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+
+function tabs(kind) {
+  return '<nav class="one-tabs one-tabs-'+kind+'" aria-label="'+(kind==="desktop"?"Explore":"Mobile sections")+'">'+
+    '<div class="one-tablist" role="tablist" aria-label="Website sections">'+
+    navItems.map(([key,label]) => '<button type="button" role="tab" id="one-'+kind+'-'+key+
+      '" aria-controls="one-panel-'+key+'" aria-selected="'+(key==="home"?"true":"false")+
+      '" tabindex="'+(key==="home"?"0":"-1")+'" data-one-target="'+key+'">'+
+      '<span class="one-tab-label">'+esc(label)+'</span></button>').join("")+
+    '</div></nav>';
+}
+function view(key,markup) {
+  return '<section class="one-view one-view-'+key+'" data-one-view="'+key+
+    '" id="one-panel-'+key+'" aria-labelledby="one-desktop-'+key+
+    '" role="tabpanel" tabindex="-1"'+(key==="home"?"":" hidden")+'>'+markup+'</section>';
+}
+function eyebrow(index,topic) {
+  return '<p class="one-eyebrow"><span>'+index+'</span> '+topic+'</p>';
+}
+function button(key,label,primary=false) {
+  return '<button type="button" data-one-go="'+key+'" class="one-button'+(primary?' one-button-primary':'')+'">'+
+    esc(label)+' <span aria-hidden="true">↗</span></button>';
+}
+function publicFeed(id,limit) {
+  return '<div class="one-feed" data-public-github-feed data-limit="'+limit+'" id="'+id+'">'+
+    '<p role="status" aria-live="polite" data-feed-status>Checking public GitHub events…</p>'+
+    '<ol data-feed-list></ol>'+
+    '<p class="one-feed-disclosure">Public GitHub events only · timestamped; not a claim of coding now.</p></div>';
+}
+function project(tag,name,text,link,art) {
+  return '<article class="one-project one-project-'+art+'">'+
+    '<div class="one-project-art" aria-hidden="true"></div>'+
+    '<div class="one-project-copy"><p class="one-project-tag">'+esc(tag)+'</p>'+
+    '<h2>'+esc(name)+'</h2><p>'+esc(text)+'</p>'+
+    '<a href="'+esc(link)+'" aria-label="Read more about '+esc(name)+'">Explore the work ↗</a></div></article>';
+}
+const home = view("home",
+  '<div class="one-home-layout"><div class="one-hero-copy">'+
+  eyebrow("001 / IDENTITY","DEVON ALAN AKINS")+
+  '<p class="one-kicker">BUSINESS OPERATIONS · TECHNOLOGY · SOFTWARE</p>'+
+  '<h1>Better systems.<br><em>Better work.</em></h1>'+
+  '<p class="one-lede">I help complex work run better through practical operations, thoughtful technology, and independently engineered systems.</p>'+
+  '<div class="one-actions">'+button("experience","Experience",true)+button("work","Selected work")+'</div>'+
+  '<p class="one-understatement">BUILT TO BE USEFUL. DESIGNED TO LAST.</p></div>'+
+  '<aside class="one-signals" aria-label="Qualified public signals">'+
+  '<section class="one-github one-panel"><header class="one-panel-head">'+brandIcon("github")+
+  '<span><strong>PUBLIC WORK RECORD</strong><small>Recent GitHub activity</small></span>'+
+  '<button type="button" data-one-go="activity" aria-label="Open full activity panel">View ↗</button></header>'+
+  publicFeed("one-home-github",4)+'</section>'+
+  '<div class="one-signal-bottom"><div class="one-spotify">'+spotifyCard()+'</div>'+
+  '<div class="one-gpt"><!--ONE_SCREEN_GPT_SLOT--></div></div>'+
+  '</aside></div>');
+
+const experience = view("experience",
+  '<div class="one-inner-layout"><div class="one-inner-intro">'+
+  eyebrow("002 / EXPERIENCE","PROFESSIONAL PRACTICE")+
+  '<h1>Operations with<br><em>technical depth.</em></h1>'+
+  '<p class="one-lede">I bridge business operations and software engineering: organizing workflows, building infrastructure, and turning decisions into dependable systems.</p>'+
+  '<p class="one-quiet">Nonclinical business responsibilities. Private client and patient work are never showcased.</p>'+
+  '<a class="one-detail-link" href="/experience/">Full résumé and academic background ↗</a></div>'+
+  '<div class="one-fact-stack">'+
+  '<article><span>01 / CURRENT FOCUS</span><h2>Business operations</h2><p>Process reliability, administration, systems and practical follow-through.</p></article>'+
+  '<article><span>02 / INDEPENDENT WORK</span><h2>Software engineering</h2><p>First-party applications, integrations, automation, verification and delivery.</p></article>'+
+  '<article><span>03 / FOUNDATION</span><h2>Research and writing</h2><p>Mathematics, physics, technical inquiry, authorship and communication.</p></article>'+
+  '</div></div>');
+
+const work = view("work",
+  '<div class="one-view-frame">'+
+  '<div class="one-view-top">'+eyebrow("003 / WORK","SELECTED CASE STUDIES")+
+  '<h1>Work with <em>purpose.</em></h1>'+
+  '<p>Only a focused selection appears here. GitHub activity is discovered separately across public repositories.</p></div>'+
+  '<div class="one-projects">'+
+  project("NONCLINICAL OPERATIONS · CURRENT","Professional operations","Supporting workflows and technology for real professional businesses; measured results will be published only when verified.","/work/operations/","operations")+
+  project("INDEPENDENT SYSTEMS · IN DEVELOPMENT","DevonStation + Knowledge","Owner-controlled personal operating and knowledge infrastructure. Protected records remain private.","/work/devonstation/","systems")+
+  project("PUBLIC ENGINEERING · LIVE WEBSITE","DevonAkins.com","An inspectable website with source-controlled delivery and public signals qualified by provider and date.","/work/","site")+
+  '</div></div>');
+
+const activity = view("activity",
+  '<div class="one-inner-layout one-activity-layout"><div class="one-inner-intro">'+
+  eyebrow("004 / ACTIVITY","THE PUBLIC WORK RECORD")+
+  '<h1>Proof over<br><em>performance.</em></h1>'+
+  '<p class="one-lede">A timestamped window into public repository activity, without hand-selecting every featured project. No private work, invented updates or claims of constant coding.</p>'+
+  '<a href="https://github.com/devonalanakins" target="_blank" rel="noopener noreferrer" class="one-detail-link">Inspect the public GitHub profile ↗</a>'+
+  '<div class="one-activity-gpt">'+gptSignalCard()+'</div></div>'+
+  '<section class="one-activity-feed one-panel"><header class="one-panel-head">'+brandIcon("github")+
+  '<span><strong>PUBLIC EVENTS</strong><small>GitHub · source-qualified</small></span></header>'+
+  publicFeed("one-activity-github",6)+
+  '<p class="one-activity-note">A provider outage means unavailable, never zero activity. Spotify listening is Devon’s owner-defined coding mode, not proof of a GitHub session.</p></section></div>');
+
+const writing = view("writing",
+  '<div class="one-inner-layout"><div class="one-inner-intro">'+
+  eyebrow("005 / WRITING","IDEAS AND ORIGINAL WORLDS")+
+  '<h1>Curiosity,<br><em>in practice.</em></h1>'+
+  '<p class="one-lede">Writing, mathematics, physics, and careful systems thinking inform the way I build. Original books and creative work develop alongside professional responsibilities.</p>'+
+  '<a href="/writing/" class="one-detail-link">More about writing and research ↗</a></div>'+
+  '<div class="one-fact-stack one-writing-stack">'+
+  '<article><span>BOOKS · REVISION</span><h2>Long-form fiction</h2><p>Revisiting published writing and developing manuscripts.</p></article>'+
+  '<article><span>CREATIVE UNIVERSE</span><h2>ANEVUM</h2><p>Original fictional worlds, mythology and storytelling.</p></article>'+
+  '<article><span>ONGOING INQUIRY</span><h2>Research notes</h2><p>Engineering, cognition, mathematics and the study of systems.</p></article>'+
+  '</div></div>');
+
+const contact = view("contact",
+  '<div class="one-contact-layout"><div class="one-inner-intro">'+
+  eyebrow("006 / CONTACT","START A CONVERSATION")+
+  '<h1>Let’s make<br><em>things work.</em></h1>'+
+  '<p class="one-lede">For professional operations, technical systems, engineering or writing inquiries, email is the direct contact route.</p>'+
+  '<a class="one-email" href="mailto:devon@anevum.com">devon@anevum.com <span aria-hidden="true">↗</span></a>'+
+  '<div class="one-contact-links"><a href="https://github.com/devonalanakins" target="_blank" rel="noopener noreferrer">GitHub ↗</a>'+
+  '<a href="https://www.instagram.com/devonalanakins/" target="_blank" rel="noopener noreferrer">Instagram ↗</a>'+
+  '<a href="/contact/">Full contact page ↗</a></div></div>'+
+  '<div class="one-contact-art" aria-hidden="true"><span></span><span></span><span></span></div></div>');
+
+export function renderOneScreenHome({datedCapture=null}={}) {
+  const homeGpt=datedCapture ? renderOneScreenGptSummary(datedCapture) : gptSignalCard();
+  const description="Devon Alan Akins — business operations, technology and software engineering. An independent professional work observatory.";
+  return '<!doctype html><html lang="en" class="one-html"><head>'+
+    '<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">'+
+    '<meta name="theme-color" content="#080d14"><meta name="color-scheme" content="dark">'+
+    '<meta name="description" content="'+esc(description)+'">'+
+    '<link rel="canonical" href="https://devonakins.com/">'+
+    '<meta property="og:type" content="website"><meta property="og:title" content="Devon Akins — Systems that work">'+
+    '<meta property="og:description" content="'+esc(description)+'">'+
+    '<link rel="icon" href="/favicon-32.png"><title>Devon Akins — Operations & Technology</title>'+
+    '<link rel="stylesheet" href="/src/professional/site.css">'+
+    '<link rel="stylesheet" href="/src/professional/one-screen.css">'+
+    '<script type="module" src="/src/professional/client.ts"></script>'+
+    '<script type="module" src="/src/professional/one-screen.ts"></script>'+
+    '</head><body class="p-body one-body">'+
+    '<a class="one-skip" href="#one-stage">Skip to the content</a>'+
+    '<div class="one-world" aria-hidden="true"><div class="one-world-glow"></div><div class="one-world-grid"></div></div>'+
+    '<header class="one-header"><a class="one-brand" href="/" aria-label="Devon Akins home">'+
+    '<span class="one-brand-mark">DA</span><span class="one-brand-type">DEVON<span>AKINS</span><small>.COM</small></span></a>'+
+    '<p class="one-header-descriptor">INDEPENDENT SYSTEMS <span>—</span> FLORIDA / REMOTE</p>'+
+    tabs("desktop")+
+    '<a class="one-header-email" href="mailto:devon@anevum.com">CONTACT <span aria-hidden="true">↗</span></a></header>'+
+    '<main id="one-stage" class="one-stage" tabindex="-1">'+home.replace('<!--ONE_SCREEN_GPT_SLOT-->',homeGpt)+experience+work+activity+writing+contact+'</main>'+
+    tabs("mobile")+
+    '<footer class="one-footer"><span>© 2026 DEVON ALAN AKINS</span><span class="one-footer-current">ONE MIND. REAL WORK. SOURCE-QUALIFIED SIGNALS.</span>'+
+    '<a href="/experience/">EXTENDED PROFILE ↗</a></footer>'+
+    '</body></html>';
+}

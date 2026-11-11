@@ -1,0 +1,28 @@
+{
+  "version": 1,
+  "capturedAt": "2026-11-11T03:05:55Z",
+  "captureDate": "2026-11-10",
+  "source": "Owner-provided ChatGPT public profile and Usage Analytics recording",
+  "attestation": "owner-recorded",
+  "profile": {
+    "lifetimeTokensApprox": 3300000000,
+    "peakTokensApprox": 314200000,
+    "longestTaskHours": 23,
+    "longestStreakDays": 31,
+    "currentStreakDays": 31,
+    "skillsExplored": 93,
+    "totalSkillUses": 6795,
+    "fastModePercent": 2,
+    "mostUsedReasoning": "Light",
+    "mostUsedReasoningPercent": 36
+  },
+  "usage7d": {
+    "selection": "7d",
+    "tokens": 526339878,
+    "messages": 308,
+    "pluginCalls": 190,
+    "skillUses": 126,
+    "tokensUpdatedAt": "2026-11-11T01:00:00Z",
+    "toolsUpdatedAt": "2026-11-10T17:54:00Z"
+  }
+}
