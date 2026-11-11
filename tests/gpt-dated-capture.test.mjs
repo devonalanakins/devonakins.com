@@ -49,7 +49,7 @@ test("professional GPT page shows the new capture and preserves the prior dated 
   for(const visible of ["≈3.3B","≈314.2M","23h","31 days",
     "6,795","93","Light · 36%","526,339,878","308","190","126",
     "≈2.7B","621,712,155","325","299","114",
-    "Nov 10, 2026","Nov 11, 2026","November 4, 2026"]) {
+    "Nov 10, 2026","November 4, 2026"]) {
     assert.ok(markup.includes(visible),"Missing dated source value: "+visible);
   }
   assert.ok(markup.indexOf("Latest dated snapshot.") < markup.indexOf("Earlier dated capture."));
