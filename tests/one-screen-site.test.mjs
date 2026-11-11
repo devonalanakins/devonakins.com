@@ -42,7 +42,7 @@ test("one-screen presentation remains first-party, motion-aware and viewport con
   assert.match(js,/ArrowRight/);
   assert.match(js,/hashchange/);
   assert.match(page,/ONE_SCREEN_SITE_CANDIDATE/);
-  assert.match(page,/oneScreenCandidate \? renderOneScreenHome\(\{datedCapture:datedGptCapture\}\) : professionalCandidate/);
+  assert.match(page,/oneScreenCandidate \? renderOneScreenHome\(\{datedCapture:datedGptCapture,motionAssetAvailable\}\) : professionalCandidate/);
 });
 
 const datedCapture=JSON.parse(await readFile(new URL("../public/gpt/snapshots/2026-11-10.json",import.meta.url),"utf8"));
