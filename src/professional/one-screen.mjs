@@ -1,5 +1,6 @@
 import {spotifyCard,gptSignalCard} from "./signal-cards.mjs";
 import {brandIcon} from "./brand-icons.mjs";
+import {renderOneScreenGptSummary} from "./gpt-capture.mjs";
 
 /**
  * Opt-in one-viewport design candidate. Existing routes and consent-filtered
@@ -65,7 +66,7 @@ const home = view("home",
   '<button type="button" data-one-go="activity" aria-label="Open full activity panel">View ↗</button></header>'+
   publicFeed("one-home-github",4)+'</section>'+
   '<div class="one-signal-bottom"><div class="one-spotify">'+spotifyCard()+'</div>'+
-  '<div class="one-gpt">'+gptSignalCard()+'</div></div>'+
+  '<div class="one-gpt"><!--ONE_SCREEN_GPT_SLOT--></div></div>'+
   '</aside></div>');
 
 const experience = view("experience",
@@ -127,7 +128,8 @@ const contact = view("contact",
   '<a href="/contact/">Full contact page ↗</a></div></div>'+
   '<div class="one-contact-art" aria-hidden="true"><span></span><span></span><span></span></div></div>');
 
-export function renderOneScreenHome() {
+export function renderOneScreenHome({datedCapture=null}={}) {
+  const homeGpt=datedCapture ? renderOneScreenGptSummary(datedCapture) : gptSignalCard();
   const description="Devon Alan Akins — business operations, technology and software engineering. An independent professional work observatory.";
   return '<!doctype html><html lang="en" class="one-html"><head>'+
     '<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">'+
@@ -149,7 +151,7 @@ export function renderOneScreenHome() {
     '<p class="one-header-descriptor">INDEPENDENT SYSTEMS <span>—</span> FLORIDA / REMOTE</p>'+
     tabs("desktop")+
     '<a class="one-header-email" href="mailto:devon@anevum.com">CONTACT <span aria-hidden="true">↗</span></a></header>'+
-    '<main id="one-stage" class="one-stage" tabindex="-1">'+home+experience+work+activity+writing+contact+'</main>'+
+    '<main id="one-stage" class="one-stage" tabindex="-1">'+home.replace('<!--ONE_SCREEN_GPT_SLOT-->',homeGpt)+experience+work+activity+writing+contact+'</main>'+
     tabs("mobile")+
     '<footer class="one-footer"><span>© 2026 DEVON ALAN AKINS</span><span class="one-footer-current">ONE MIND. REAL WORK. SOURCE-QUALIFIED SIGNALS.</span>'+
     '<a href="/experience/">EXTENDED PROFILE ↗</a></footer>'+

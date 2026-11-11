@@ -40,5 +40,20 @@ test("one-screen presentation remains first-party, motion-aware and viewport con
   assert.match(js,/ArrowRight/);
   assert.match(js,/hashchange/);
   assert.match(page,/ONE_SCREEN_SITE_CANDIDATE/);
-  assert.match(page,/oneScreenCandidate \? renderOneScreenHome\(\) : professionalCandidate/);
+  assert.match(page,/oneScreenCandidate \? renderOneScreenHome\(\{datedCapture:datedGptCapture\}\) : professionalCandidate/);
+});
+
+const datedCapture=JSON.parse(await readFile(new URL("../public/gpt/snapshots/2026-11-10.json",import.meta.url),"utf8"));
+test("redesigned home presents new dated GPT metrics without erasing the older profile",()=>{
+  const output=renderOneScreenHome({datedCapture});
+  for(const value of ["≈3.3B","526.3M","308 MESSAGES","190 PLUGINS","126 SKILLS","Nov 10, 2026"]){
+    assert.ok(output.includes(value),"Missing November 10 metric "+value);
+  }
+  assert.match(output,/PROFILE LIFETIME/);
+  assert.match(output,/LAST 7 DAYS/);
+  assert.match(output,/Owner recording · dated, not live/);
+  assert.match(output,/href="\/gpt\/"/);
+  assert.doesNotMatch(output,/Showcase Sites|Sites by you|estimated daily activity/i);
+  assert.match(output,/data-public-spotify/);
+  assert.match(output,/data-public-github-feed/);
 });
