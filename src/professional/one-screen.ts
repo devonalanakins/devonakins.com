@@ -8,6 +8,20 @@ const names:TabName[]=["home","experience","work","activity","writing","contact"
 const tabs=[...document.querySelectorAll<HTMLButtonElement>("[data-one-target]")];
 const buttons=[...document.querySelectorAll<HTMLButtonElement>("[data-one-go]")];
 const panels=[...document.querySelectorAll<HTMLElement>("[data-one-view]")];
+// A fixed viewport cannot show an unbounded list. Match the public event
+// summary to the number of rows the visible panel can actually accommodate.
+// The full recent public history remains accessible from the GitHub profile.
+const width=window.innerWidth;
+const height=window.innerHeight;
+const narrowShort=width<=400&&height<=700;
+const mobile=width<=760;
+const shortWide=width>760&&height<=470;
+const homeLimit=narrowShort||shortWide?1:mobile?2:4;
+const activityLimit=narrowShort||shortWide?2:mobile?4:6;
+const homeFeed=document.getElementById("one-home-github");
+const activityFeed=document.getElementById("one-activity-github");
+if(homeFeed)homeFeed.dataset.limit=String(homeLimit);
+if(activityFeed)activityFeed.dataset.limit=String(activityLimit);
 const known=(value:string|null):value is TabName=>!!value&&names.includes(value as TabName);
 const currentHash=():TabName=>{
   const raw=location.hash.slice(1).toLowerCase();
