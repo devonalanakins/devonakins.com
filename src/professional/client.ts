@@ -253,6 +253,9 @@ async function refresh(){
   }
 }
 if(panels.length){
+  // A phone rotation changes how many event rows fit on the single-screen HUD.
+  // Reuse the last validated public response immediately, without re-fetching.
+  window.addEventListener("devon:feed-layout-changed",()=>{if(!document.hidden)paint()});
   void refresh();
   window.setInterval(()=>{if(!document.hidden)void refresh()},5*60000);
   window.setInterval(()=>{if(!document.hidden&&latest)paint()},60000);
