@@ -10,6 +10,8 @@ test('concept fidelity: hero, sourced workstation, quality, process, projects an
   assert.equal((html.match(/data-process-step=/g)||[]).length,6);
   assert.equal((html.match(/data-concept-gate=/g)||[]).length,4);
   assert.match(html,/data-github-highlights/);
+  assert.match(html,/concept-feed-filters/);
+  for(const filter of ['all','push','pull_request']) assert.match(html,new RegExp('data-github-filter="'+filter+'"')); 
   assert.match(html,/data-github-count="push"/);
   assert.match(html,/data-public-github-feed/);
   assert.match(html,/data-public-spotify/);
@@ -30,4 +32,11 @@ test('new navigation stays a six-view viewport, with no external dependencies',a
   assert.match(ts,/ArrowRight/);
   assert.match(ts,/Home/);
   assert.doesNotMatch(ts,/fetch\(|localStorage|sessionStorage|Date\.now/);
+});
+test('public event filters remain synchronized in homepage and the Activity panel',async()=>{
+  const client=await readFile(new URL('../src/professional/client.ts',import.meta.url),'utf8');
+  assert.match(client,/item\.dataset\.githubFilter===kind/);
+  assert.doesNotMatch(client,/item===filter/);
+  assert.match(html,/data-github-refresh/);
+  assert.match(html,/data-github-highlights/);
 });

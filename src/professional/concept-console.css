@@ -358,9 +358,8 @@
  .one-body .concept-step-ornament{font-size:15px}
  .one-body .concept-step-number,.one-body .concept-process-step:not(:last-child)::after{display:none}
 }
-
-/* Fidelity correction: short laptop viewports retain complete introductory
-   information and actions, rather than clipping them under signal cards. */
+/* Fidelity correction: a short laptop must show the identity and primary actions
+   in full rather than hiding the call to action underneath the signal strip. */
 @media (min-width:1201px) and (max-height:810px){
   .one-body .concept-console{grid-template-rows:minmax(0,2.75fr) minmax(0,.88fr) minmax(0,1.48fr) minmax(0,.65fr)}
   .one-body .concept-featured,.one-body .concept-focus{display:none}
@@ -383,7 +382,8 @@
   .one-body .concept-intro .prestige-player-top{display:none}
   .one-body .concept-intro .prestige-identity-main{margin:0}
 }
-/* Shared, genuine source-qualified GitHub filters are available on Home. */
+
+/* Public feed controls remain keyboard-operated and mirror the Activity view. */
 .one-body .concept-feed-filters{display:flex;align-items:center;gap:5px;flex:none;min-height:23px;padding-top:3px}
 .one-body .concept-feed-filters button{border:1px solid #75a8b44a;background:#0a2530b0;border-radius:5px;padding:4px 8px;color:#aacdd7;font:700 9px/1 ui-monospace,monospace;letter-spacing:.06em;transition:background .15s,border-color .15s}
 .one-body .concept-feed-filters button[aria-pressed="true"]{color:#182027;background:#f4c88c;border-color:#f4c88c}
