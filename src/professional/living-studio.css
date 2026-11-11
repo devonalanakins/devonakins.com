@@ -235,3 +235,9 @@
   .one-body .concept-live .one-feed>[data-feed-status]{font-size:8px;line-height:1.2}
   .one-body .concept-live .concept-feed-empty{display:none}
 }
+
+/* Header contact stays on one line with the arrow at every desktop width. */
+@media(min-width:761px){
+  .one-body .one-header-email{display:inline-flex;align-items:center;justify-content:center;gap:13px;white-space:nowrap}
+  .one-body .one-header-email span{font-size:18px;line-height:1}
+}
