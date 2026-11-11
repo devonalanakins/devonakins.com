@@ -41,12 +41,29 @@ try:
                 })""")
                 assert dimensions["doc"] <= height+2,(engine,width,height,dimensions,"no vertical document scroll")
                 assert dimensions["width"] <= width+2,(engine,width,height,dimensions,"no horizontal document scroll")
+                expected_home = 1 if (width<=400 and height<=700) or (width>760 and height<=470) else 2 if width<=760 else 4
+                expected_activity = 2 if (width<=400 and height<=700) or (width>760 and height<=470) else 4 if width<=760 else 6
+                assert page.locator("#one-home-github").get_attribute("data-limit")==str(expected_home),(engine,width,height,"home capacity")
+                assert page.locator("#one-activity-github").get_attribute("data-limit")==str(expected_activity),(engine,width,height,"activity capacity")
+                # In compact view the public playback title and GPT value must
+                # remain inside their actual tiles, not just the document.
+                if width<=760 or height<=470:
+                    assert page.evaluate("""() => {
+                      return [...document.querySelectorAll(".one-signal-bottom .p-signal-card")].every(card => {
+                        const child=card.querySelector("[data-spotify-title], [data-gpt-value]");
+                        if(!child)return false;
+                        const a=card.getBoundingClientRect(),b=child.getBoundingClientRect();
+                        return b.top>=a.top-2 && b.bottom<=a.bottom+2;
+                      });
+                    }"""),(engine,width,height,"source title containment")
                 # The page includes two differently sized tablists: choose visible tab.
                 tabs=page.locator('.one-tabs-mobile [role="tablist"]' if width<=760 else '.one-tabs-desktop [role="tablist"]')
                 for label,key in (("Experience","experience"),("Work","work"),("Activity","activity"),("Writing","writing"),("Contact","contact"),("Home","home")):
                     tabs.get_by_role("tab",name=label).click()
                     assert page.locator('[data-one-view="'+key+'"]').is_visible(),(engine,width,height,key)
                     assert page.locator('[data-one-view]:visible').count()==1,(engine,width,height,key)
+                    if key in ("work","experience","contact"):
+                        page.screenshot(path=str(OUT/f"{engine}-{width}x{height}-{key}.png"))
                 tabs.get_by_role("tab",name="Activity").click()
                 page.screenshot(path=str(OUT/f"{engine}-{width}x{height}-activity.png"))
                 tabs.get_by_role("tab",name="Home").click()
