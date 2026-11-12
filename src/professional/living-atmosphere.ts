@@ -265,7 +265,7 @@ function resize(){
   const rect=canvas.getBoundingClientRect();
   width=Math.max(1,rect.width);height=Math.max(1,rect.height);
   // Limit physical pixels instead of allowing a 4K canvas on every Retina screen.
-  dpr=Math.max(1,Math.min(window.devicePixelRatio||1,2,Math.sqrt(2600000/(width*height))));
+  dpr=Math.min(window.devicePixelRatio||1,2,Math.sqrt(2600000/(width*height)));
   canvas.width=Math.max(1,Math.round(width*dpr));
   canvas.height=Math.max(1,Math.round(height*dpr));
   context.setTransform(dpr,0,0,dpr,0,0);
