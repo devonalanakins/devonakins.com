@@ -86,3 +86,12 @@
     background-repeat:no-repeat;
   }
 }
+
+/* The original Living Atmosphere stylesheet hides the canvas whenever the
+ * motion flag is off. A user pause now freezes the real native frame instead;
+ * device-requested reduced motion still uses the vector fallback above. */
+@media(prefers-reduced-motion:no-preference){
+  .one-body .one-world[data-motion="off"][data-renderer="native-canvas"] .one-world-canvas{
+    display:block!important;
+  }
+}
