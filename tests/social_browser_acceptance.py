@@ -39,20 +39,21 @@ try:
                 page = context.new_page()
                 errors = []
                 page.on("pageerror", lambda exc: errors.append(str(exc)))
-                mode = {"published": True}
+                mode = {"published": True, "text": "Public proof <script>alert(\'x\')</script> stays plain text.", "media": False}
+                first_observation = datetime.now(timezone.utc)
 
                 def activity_response(route):
                     now = datetime.now(timezone.utc)
                     iso = lambda dt: dt.isoformat(timespec="milliseconds").replace("+00:00", "Z")
                     post = {
                         "href": "https://www.threads.com/@verified/post/ABCd1234",
-                        "text": "Public proof <script>alert('x')</script> stays plain text.",
-                        "publishedAt": iso(now - timedelta(minutes=12)),
-                        "media": False,
+                        "text": mode["text"],
+                        "publishedAt": iso(first_observation - timedelta(minutes=12)),
+                        "media": mode["media"],
                     }
                     feed = {"version": 4, "asOf": iso(now), "threads": {
                         "version": 1, "state": "connected" if mode["published"] else "hidden",
-                        "checkedAt": iso(now), "posts": [post] if mode["published"] else [],
+                        "checkedAt": iso(first_observation), "posts": [post] if mode["published"] else [],
                     }}
                     route.fulfill(
                         status=200, content_type="application/json",
@@ -106,6 +107,16 @@ try:
                 assert bounds["inStage"] and bounds["summaryVisible"] and bounds["panelHeight"]>75, (
                     engine,width,height,"Threads panel clipping",bounds,
                 )
+                # Edit content and media with an unchanged source timestamp and URL.
+                # Refresh through the existing visibility path without reloading.
+                mode["text"] = "Same source timestamp; updated public message."
+                mode["media"] = True
+                page.evaluate('document.dispatchEvent(new Event("visibilitychange"))')
+                page.wait_for_function('''() =>
+                    document.querySelector(".one-threads-posts a")?.textContent===
+                    "Same source timestamp; updated public message."
+                ''', timeout=10000)
+                assert panel.locator(".one-threads-media").inner_text() == "Includes media"
                 page.screenshot(path=str(OUT/f"{engine}-{width}x{height}-connected.png"), animations="disabled")
                 # Remove sharing and reload. Previously approved content must vanish,
                 # without leaving a dead external Threads link or fabricated profile.
