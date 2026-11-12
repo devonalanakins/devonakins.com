@@ -9,7 +9,7 @@ const world=document.querySelector<HTMLElement>("[data-living-scene]");
 const canvas=world?.querySelector<HTMLCanvasElement>("[data-living-canvas]");
 const toggle=document.querySelector<HTMLButtonElement>("[data-motion-toggle]");
 const label=toggle?.querySelector<HTMLElement>("[data-motion-label]");
-const context=canvas?.getContext("2d",{alpha:true,desynchronized:true});
+const context=canvas?.getContext("2d",{alpha:true});
 const reduced=matchMedia("(prefers-reduced-motion: reduce)");
 type NetworkNavigator=Navigator&{connection?:{saveData?:boolean}};
 const saver=Boolean((navigator as NetworkNavigator).connection?.saveData);
@@ -17,9 +17,9 @@ type NodePoint={x:number;y:number;z:number;phase:number;tone:number;scale:number
 type Edge={from:number;to:number;curve:number;tone:number};
 let state=0x1a2b3c4d;
 function random(){state=(Math.imul(state,1664525)+1013904223)>>>0;return state/4294967296;}
-const nodes:NodePoint[]=Array.from({length:142},(_,i)=>{
+const nodes:NodePoint[]=Array.from({length:120},(_,i)=>{
   const angle=i*2.399963229728653+random()*.17;
-  const radius=Math.sqrt((i+.65)/142);
+  const radius=Math.sqrt((i+.65)/120);
   return {
     x:.535+Math.cos(angle)*radius*(.257+random()*.025),
     y:.48+Math.sin(angle)*radius*(.36+random()*.027),
@@ -71,7 +71,7 @@ function draw(t:number){
   if(!context)return;
   context.clearRect(0,0,width,height);
   const mobile=width<761;
-  const nodeCount=mobile?62:nodes.length;
+  const nodeCount=mobile?50:nodes.length;
   const intensity=document.querySelector<HTMLElement>("[data-public-work]")?.dataset.workMode==="active"?1.18:
     document.querySelector<HTMLElement>("[data-public-spotify]")?.dataset.spotifyMode==="playing"?1.1:1;
   pointerX+=(targetX-pointerX)*.075;
@@ -90,7 +90,7 @@ function draw(t:number){
 
   // A continuous point-cloud landscape replaces flat graphic waves.
   // Physical pixel count stays bounded; mobile uses less than half as many dots.
-  const meshRows=mobile?13:25,meshCols=mobile?29:53;
+  const meshRows=mobile?11:18,meshCols=mobile?25:39;
   const stepX=(mobile?.79:.63)*width/meshCols;
   for(let row=0;row<meshRows;row++){
     const z=row/(meshRows-1);
@@ -134,7 +134,7 @@ function draw(t:number){
 
   // Fine curved axonal ribbons turn the field into a living medium, not
   // a planar graph. Slowly shifting bends are bounded and decorative.
-  const ribbonCount=mobile?15:34;
+  const ribbonCount=mobile?12:26;
   for(let j=0;j<ribbonCount;j++){
     const depth=j/(ribbonCount-1);
     const row=.69+.16*depth;
@@ -148,8 +148,8 @@ function draw(t:number){
       };
     };
     context.beginPath();
-    for(let k=0;k<=38;k++){
-      const point=ribbonPoint(k/38);
+    for(let k=0;k<=28;k++){
+      const point=ribbonPoint(k/28);
       if(k===0)context.moveTo(point.x,point.y);
       else context.lineTo(point.x,point.y);
     }
@@ -275,7 +275,7 @@ function frame(timestamp:number){
   raf=0;
   if(!isMoving())return;
   raf=requestAnimationFrame(frame);
-  if(timestamp-lastFrame<(width<761?50:33))return;
+  if(timestamp-lastFrame<(width<761?66:50))return;
   lastFrame=timestamp;
   clock=timestamp*.001;
   draw(clock);
