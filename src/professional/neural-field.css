@@ -16,7 +16,7 @@
   display:block;
   opacity:.96;
   filter:none;
-  mix-blend-mode:screen;
+  mix-blend-mode:normal; /* Native 2D compositor already handles luminous strokes. */
 }
 .one-body .one-world-glow {
   opacity:.13;
