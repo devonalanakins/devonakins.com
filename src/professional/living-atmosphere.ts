@@ -295,7 +295,9 @@ function sync(){
   if(label)label.textContent=running?"Motion on":"Motion off";
   if(raf){cancelAnimationFrame(raf);raf=0;}
   if(running)raf=requestAnimationFrame(frame);
-  else draw(0);
+  // Pausing freezes the most recently rendered native frame instead of
+  // unexpectedly replacing the scene with a different illustration.
+  else if(reduced.matches||saver||!context)draw(0);
 }
 toggle?.addEventListener("click",()=>{requested=!requested;sync();});
 window.addEventListener("resize",resize,{passive:true});
