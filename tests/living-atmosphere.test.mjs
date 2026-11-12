@@ -68,6 +68,20 @@ test("vector fallback and native renderer remain local and respect user motion p
   assert.match(svg,/viewBox="0 0 1600 900"/);
   assert.doesNotMatch(svg,/<script\b|<image\b|(?:href|src)="https?:|data:image\//);
 });
+test("static neural atmosphere layers add bounded desktop depth without video or external resources",async()=>{
+  const css=await readFile(new URL("../src/professional/neural-field.css",import.meta.url),"utf8");
+  const svg=await readFile(new URL("../public/professional/neural-atmosphere.svg",import.meta.url),"utf8");
+  assert.match(css,/url\('\/professional\/neural-atmosphere\.svg'\)/);
+  assert.match(css,/@media\s*\(max-width:760px\)/);
+  assert.match(css,/@media\s*\(prefers-contrast:more\)/);
+  assert.match(svg,/<svg\s/);
+  assert.match(svg,/viewBox="0 0 1600 900"/);
+  assert.match(svg,/<radialGradient\s/);
+  assert.match(svg,/<path\s/);
+  assert.ok(Buffer.byteLength(svg)<60000,"atmospheric SVG should remain lightweight");
+  assert.doesNotMatch(svg,/<script\b|<foreignObject\b|<filter\b|<image\b|<animate\b|(?:href|src)="https?:|data:image\//i);
+  assert.doesNotMatch(svg,/GitHub activity|Spotify now playing|source observed|live coding/i);
+});
 test("Cloudflare Worker supports same-origin MP4 range and HEAD requests",async()=>{
   const original=Buffer.from(Array.from({length:40},(_,i)=>i));
   const asset={type:"video/mp4",gzip:gzipSync(original).toString("base64"),etag:'"media-test"'};
