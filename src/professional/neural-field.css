@@ -4,7 +4,7 @@
   isolation:isolate;
   background:#070c15 url('/professional/neural-field.svg') 52% 47%/cover no-repeat;
 }
-.one-body .one-world[data-motion="on"][data-renderer="native-canvas"] {
+.one-body .one-world[data-renderer="native-canvas"] {
   background:
     radial-gradient(ellipse 41% 54% at 53% 48%,#17374370,transparent 79%),
     radial-gradient(ellipse 28% 35% at 54% 46%,#734a6760,transparent 78%),
@@ -33,7 +33,6 @@
   filter:none!important;
 }
 .one-body .concept-visual::before {display:none!important}
-.one-body .one-world[data-motion="off"] .one-world-canvas,
 .one-body .one-world[data-renderer="static"] .one-world-canvas {
   display:none!important;
 }
@@ -63,7 +62,6 @@
 }
 
 /* Still mode is an editorial illustration, not a dimmed video frame. */
-.one-body .one-world[data-motion="off"],
 .one-body .one-world[data-renderer="static"] {
   background-color:#070c15;
   background-image:
