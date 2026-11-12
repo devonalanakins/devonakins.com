@@ -366,6 +366,18 @@ try:
             button.click()
             assert button.get_attribute("aria-pressed")=="true"
             assert motion_page.locator('[data-living-scene]').get_attribute("data-motion")=="on"
+            # Ultra-wide/high-DPI displays must not silently allocate a
+            # full-resolution multi-megapixel animation surface.
+            motion_page.set_viewport_size({"width":3200,"height":1800})
+            motion_page.wait_for_timeout(180)
+            pixel_budget=motion_page.evaluate("""() => {
+              const field=document.querySelector('[data-living-canvas]');
+              return {pixels:field.width*field.height,
+                cssW:Math.round(field.getBoundingClientRect().width),
+                cssH:Math.round(field.getBoundingClientRect().height)};
+            }""")
+            assert pixel_budget["cssW"]>=3190 and pixel_budget["cssH"]>=1790 and pixel_budget["pixels"]<=2605000,(
+                engine,"canvas physical pixel budget exceeded on large screens",pixel_budget)
             motion_context.close()
             browser.close()
 finally:
