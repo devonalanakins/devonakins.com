@@ -164,9 +164,15 @@ function renderThreads(snapshot:unknown){
   for(const card of threadsCards){
     card.dataset.threadsConnected=String(feed.connected);
     update(card,"[data-threads-state]",feed.connected?"CONNECTED":"SOURCE UNAVAILABLE");
-    update(card,"[data-threads-summary]",first?first.text:
-      feed.connected?"Connected source · no recent approved public posts.":
-      "Approved public Threads posts appear here only while sharing and the source are available.");
+    const preview=!!card.querySelector("[data-threads-posts]");
+    update(card,"[data-threads-summary]",preview
+      ?feed.connected
+        ?feed.posts.length+" approved public "+(feed.posts.length===1?"update":"updates")+
+          " from Threads. Each post links to its original."
+        :"Approved Threads posts appear here only while sharing and the source are available."
+      :first?first.text:
+        feed.connected?"No recent approved public posts.":
+        "Approved Threads posts appear only when that source is publicly connected.");
     const a=card.querySelector<HTMLAnchorElement>("[data-threads-link]");
     if(a){
       a.href=first?first.href:"https://www.instagram.com/devonalanakins/";
