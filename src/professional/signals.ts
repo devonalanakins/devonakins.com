@@ -181,7 +181,7 @@ function renderThreads(snapshot:unknown){
     const list=card.querySelector<HTMLOListElement>("[data-threads-posts]");
     if(list){
       const signature=feed.connected
-        ?feed.checkedAt+"|"+feed.posts.map(post=>
+        ?feed.posts.map(post=>
             post.href+"|"+post.publishedAt+"|"+post.text+"|"+(post.media?"media":"text")
           ).join(";")
         :"unavailable";
