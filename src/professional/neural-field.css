@@ -61,3 +61,30 @@
 @media (prefers-contrast:more){
   .one-body .one-world:after {background:linear-gradient(90deg,#04070cf7 0%,#05080ddd 35%,#05080ddd 68%,#04070cfa 100%)}
 }
+
+/* Still mode is an editorial illustration, not a dimmed video frame. */
+.one-body .one-world[data-motion="off"],
+.one-body .one-world[data-renderer="static"] {
+  background-color:#070c15;
+  background-image:
+    radial-gradient(ellipse 18% 24% at 53% 48%,#e5a27b26,transparent 87%),
+    radial-gradient(ellipse 26% 39% at 63% 44%,#6fc5ce20,transparent 90%),
+    radial-gradient(ellipse 29% 34% at 42% 62%,#aa83d221,transparent 90%),
+    url('/professional/neural-field.svg');
+  background-position:center,center,center,52% 47%;
+  background-size:100% 100%,100% 100%,100% 100%,cover;
+  background-repeat:no-repeat;
+}
+@media(prefers-reduced-motion:reduce){
+  .one-body .one-world {
+    background-color:#070c15!important;
+    background-image:
+      radial-gradient(ellipse 18% 24% at 53% 48%,#e5a27b26,transparent 87%),
+      radial-gradient(ellipse 26% 39% at 63% 44%,#6fc5ce20,transparent 90%),
+      radial-gradient(ellipse 29% 34% at 42% 62%,#aa83d221,transparent 90%),
+      url('/professional/neural-field.svg')!important;
+    background-position:center,center,center,52% 47%;
+    background-size:100% 100%,100% 100%,100% 100%,cover;
+    background-repeat:no-repeat;
+  }
+}
