@@ -79,6 +79,9 @@ try:
                 )
                 post = panel.locator('.one-threads-posts li')
                 assert post.count() == 1, (engine, width, height, "public approved post")
+                summary = panel.locator(".one-threads-description").inner_text()
+                assert "1 approved public update" in summary, (engine, width, height, summary)
+                assert "<script>" not in summary, "A full post must not duplicate in the preview summary"
                 link = post.locator("a")
                 assert link.get_attribute("href") == "https://www.threads.com/@verified/post/ABCd1234"
                 assert link.get_attribute("rel") == "noopener noreferrer"
