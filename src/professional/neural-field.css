@@ -33,6 +33,11 @@
   filter:none!important;
 }
 .one-body .concept-visual::before {display:none!important}
+/* Keep a manually paused native scene visible as a frozen frame.
+   The earlier animation stylesheet otherwise hides it on data-motion="off". */
+.one-body .one-world[data-renderer="native-canvas"][data-motion="off"] .one-world-canvas {
+  display:block!important;
+}
 .one-body .one-world[data-renderer="static"] .one-world-canvas {
   display:none!important;
 }
@@ -53,7 +58,10 @@
   .one-body .one-world {
     background:#070c15 url('/professional/neural-field.svg') 52% 47%/cover no-repeat!important;
   }
-  .one-body .one-world-canvas {display:none!important}
+  .one-body .one-world-canvas,
+  .one-body .one-world[data-renderer="native-canvas"][data-motion="off"] .one-world-canvas {
+    display:none!important;
+  }
   .one-body .one-world-glow,.one-body .one-world-grid {animation:none!important}
   .one-body .concept-visual {background:transparent!important}
 }
