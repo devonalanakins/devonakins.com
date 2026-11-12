@@ -6,26 +6,26 @@
 }
 .one-body .one-world[data-motion="on"][data-renderer="native-canvas"] {
   background:
-    radial-gradient(ellipse 41% 54% at 53% 48%,#17374370,transparent 79%),
-    radial-gradient(ellipse 28% 35% at 54% 46%,#734a6760,transparent 78%),
-    radial-gradient(ellipse 34% 40% at 66% 67%,#154b5040,transparent 85%),
+    radial-gradient(ellipse 41% 54% at 53% 48%,#1e4963a3,transparent 79%),
+    radial-gradient(ellipse 28% 35% at 54% 46%,#77446d86,transparent 78%),
+    radial-gradient(ellipse 34% 40% at 66% 67%,#1558646b,transparent 85%),
     linear-gradient(130deg,#070b14,#0b1421 48%,#060b13);
 }
 .one-body .one-world-video {display:none!important}
 .one-body .one-world-canvas {
   display:block;
-  opacity:.96;
-  filter:none;
+  opacity:1;
+  filter:saturate(1.19) brightness(1.13);
   mix-blend-mode:screen;
 }
 .one-body .one-world-glow {
-  opacity:.13;
+  opacity:.19;
   filter:none;
 }
 .one-body .one-world-grid {opacity:.025!important}
 .one-body .one-world:after {
   background:
-    linear-gradient(90deg,#060a12f5 0%,#070b14e8 23%,#070b1460 41%,#080d1685 66%,#080d16ef 82%,#060a13f5 100%),
+    linear-gradient(90deg,#060a12f5 0%,#070b14e8 23%,#070b143b 41%,#080d1667 66%,#080d16ef 82%,#060a13f5 100%),
     linear-gradient(0deg,#050912e7,transparent 24%,transparent 81%,#060a13b1);
 }
 .one-body .concept-visual {
