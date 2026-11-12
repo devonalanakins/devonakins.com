@@ -132,6 +132,7 @@ export function renderOneScreenHome({datedCapture=null,motionAssetAvailable=fals
     '<link rel="stylesheet" href="/src/professional/living-atmosphere.css">'+
     '<link rel="stylesheet" href="/src/professional/concept-console.css">'+
     '<link rel="stylesheet" href="/src/professional/living-studio.css">'+
+    '<link rel="stylesheet" href="/src/professional/neural-field.css">'+
     '<link rel="preload" as="image" type="image/svg+xml" href="/professional/mission-operations.svg">'+
     '<link rel="preload" as="image" type="image/svg+xml" href="/professional/mission-systems.svg">'+
     '<link rel="preload" as="image" type="image/svg+xml" href="/professional/mission-site.svg">'+
@@ -141,7 +142,7 @@ export function renderOneScreenHome({datedCapture=null,motionAssetAvailable=fals
     '<script type="module" src="/src/professional/concept-console.ts"></script>'+
     '</head><body class="p-body one-body">'+
     '<a class="one-skip" href="#one-stage">Skip to the content</a>'+
-    '<div class="one-world" data-living-scene aria-hidden="true">'+(motionAssetAvailable?'<video class="one-world-video" data-living-video muted autoplay loop playsinline preload="metadata" poster="/professional/living-atmosphere.png"><source src="/professional/living-atmosphere.mp4" type="video/mp4"></video>':'')+'<canvas class="one-world-canvas" data-living-canvas></canvas><div class="one-world-glow"></div><div class="one-world-grid"></div></div>'+
+    '<div class="one-world" data-living-scene aria-hidden="true"><canvas class="one-world-canvas" data-living-canvas></canvas><div class="one-world-glow"></div><div class="one-world-grid"></div></div>'+
     '<header class="one-header"><a class="one-brand" href="/" aria-label="Devon Akins home">'+
     '<span class="one-brand-mark">DA</span><span class="one-brand-type">DEVON<span>AKINS</span><small>.COM</small></span></a>'+
     '<p class="one-header-descriptor">INDEPENDENT DEVELOPER <span>—</span> FLORIDA / REMOTE</p>'+

@@ -1,0 +1,113 @@
+/* Native neural field: no film playback, original vector fallback, source-safe motion.
+   Loaded after every historical aesthetic layer. */
+.one-body .one-world {
+  isolation:isolate;
+  background:#070c15 url('/professional/neural-field.svg') 52% 47%/cover no-repeat;
+}
+.one-body .one-world[data-renderer="native-canvas"] {
+  background:
+    url('/professional/neural-atmosphere.svg') 52% 49%/cover no-repeat,
+    radial-gradient(ellipse 41% 54% at 53% 48%,#17374370,transparent 79%),
+    radial-gradient(ellipse 28% 35% at 54% 46%,#734a6760,transparent 78%),
+    radial-gradient(ellipse 34% 40% at 66% 67%,#154b5040,transparent 85%),
+    linear-gradient(130deg,#070b14,#0b1421 48%,#060b13);
+}
+.one-body .one-world-video {display:none!important}
+.one-body .one-world-canvas {
+  display:block;
+  opacity:.96;
+  filter:none;
+  mix-blend-mode:normal; /* Native 2D compositor already handles luminous strokes. */
+}
+.one-body .one-world-glow {
+  opacity:.13;
+  filter:none;
+}
+.one-body .one-world-grid {opacity:.025!important}
+.one-body .one-world:after {
+  background:
+    linear-gradient(90deg,#060a12f5 0%,#070b14e8 23%,#070b1460 41%,#080d1685 66%,#080d16ef 82%,#060a13f5 100%),
+    linear-gradient(0deg,#050912e7,transparent 24%,transparent 81%,#060a13b1);
+}
+.one-body .concept-visual {
+  background:transparent!important;
+  filter:none!important;
+}
+.one-body .concept-visual::before {display:none!important}
+/* Keep a manually paused native scene visible as a frozen frame.
+   The earlier animation stylesheet otherwise hides it on data-motion="off". */
+.one-body .one-world[data-renderer="native-canvas"][data-motion="off"] .one-world-canvas {
+  display:block!important;
+}
+.one-body .one-world[data-renderer="static"] .one-world-canvas {
+  display:none!important;
+}
+@media (max-width:760px){
+  /* Mobile has less empty space: retain the lighter native gradient treatment. */
+  .one-body .one-world[data-renderer="native-canvas"] {
+    background:
+      radial-gradient(ellipse 40% 45% at 58% 48%,#17374370,transparent 85%),
+      linear-gradient(135deg,#070b14,#0b1421 48%,#060b13);
+  }
+  .one-body .one-world {
+    background-position:55% 46%;
+  }
+  .one-body .one-world:after {
+    background:linear-gradient(180deg,#080c16ec 0%,#080e19ab 35%,#080d18d5 68%,#070c14f5 100%);
+  }
+  .one-body .concept-intro {
+    background:
+      linear-gradient(100deg,#07101ce9,#07111bc9 65%,#07111ca5),
+      url('/professional/neural-field.svg') 69% 45%/cover no-repeat!important;
+  }
+}
+@media (prefers-reduced-motion:reduce){
+  .one-body .one-world {
+    background:#070c15 url('/professional/neural-field.svg') 52% 47%/cover no-repeat!important;
+  }
+  .one-body .one-world-canvas{display:none!important}
+  .one-body .one-world[data-renderer="native-canvas"][data-motion="off"] .one-world-canvas{display:none!important}
+  .one-body .one-world-glow,.one-body .one-world-grid {animation:none!important}
+  .one-body .concept-visual {background:transparent!important}
+}
+@media (prefers-contrast:more){
+  .one-body .one-world[data-renderer="native-canvas"] {
+    background:linear-gradient(130deg,#070b14,#0b1421 48%,#060b13);
+  }
+  .one-body .one-world:after {background:linear-gradient(90deg,#04070cf7 0%,#05080ddd 35%,#05080ddd 68%,#04070cfa 100%)}
+}
+
+/* Still mode is an editorial illustration, not a dimmed video frame. */
+.one-body .one-world[data-renderer="static"] {
+  background-color:#070c15;
+  background-image:
+    radial-gradient(ellipse 18% 24% at 53% 48%,#e5a27b26,transparent 87%),
+    radial-gradient(ellipse 26% 39% at 63% 44%,#6fc5ce20,transparent 90%),
+    radial-gradient(ellipse 29% 34% at 42% 62%,#aa83d221,transparent 90%),
+    url('/professional/neural-field.svg');
+  background-position:center,center,center,52% 47%;
+  background-size:100% 100%,100% 100%,100% 100%,cover;
+  background-repeat:no-repeat;
+}
+@media(prefers-reduced-motion:reduce){
+  .one-body .one-world {
+    background-color:#070c15!important;
+    background-image:
+      radial-gradient(ellipse 18% 24% at 53% 48%,#e5a27b26,transparent 87%),
+      radial-gradient(ellipse 26% 39% at 63% 44%,#6fc5ce20,transparent 90%),
+      radial-gradient(ellipse 29% 34% at 42% 62%,#aa83d221,transparent 90%),
+      url('/professional/neural-field.svg')!important;
+    background-position:center,center,center,52% 47%;
+    background-size:100% 100%,100% 100%,100% 100%,cover;
+    background-repeat:no-repeat;
+  }
+}
+
+/* The original Living Atmosphere stylesheet hides the canvas whenever the
+ * motion flag is off. A user pause now freezes the real native frame instead;
+ * device-requested reduced motion still uses the vector fallback above. */
+@media(prefers-reduced-motion:no-preference){
+  .one-body .one-world[data-motion="off"][data-renderer="native-canvas"] .one-world-canvas{
+    display:block!important;
+  }
+}

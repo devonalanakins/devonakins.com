@@ -57,16 +57,16 @@ try:
                     assert page.locator(".studio-project-card--station").is_visible()
                     assert page.locator(".studio-rail-contact").is_visible()
                 assert page.locator(".concept-live .concept-feed-filters [data-github-filter]").count()==3
-                # Motion preferences must not delete the centerpiece: the
-                # approved local poster replaces the decorative background film.
+                # Reduced motion uses a first-party crisp SVG rather than a movie.
                 if width>1200 and height>470:
                     still=page.evaluate("""() => ({
                       scene:getComputedStyle(document.querySelector('.one-world')).backgroundImage,
                       image:document.querySelector('.concept-visual').getBoundingClientRect().width,
-                      video:getComputedStyle(document.querySelector('.one-world-video')).display
+                      canvas:getComputedStyle(document.querySelector('.one-world-canvas')).display,
+                      video:document.querySelector('.one-world-video')===null
                     })""")
-                    assert "living-atmosphere.png" in still["scene"] and still["image"]>50 and still["video"]=="none",(
-                        engine,width,height,"missing reduced-motion neural image",still)
+                    assert "neural-field.svg" in still["scene"] and still["image"]>50 and still["video"] and still["canvas"]=="none",(
+                        engine,width,height,"missing reduced-motion vector fallback",still)
                 # Compact work badge must never cover the workstation heading.
                 # A full-viewport screenshot will not reveal intra-card overlap.
                 if width<=400:
@@ -340,15 +340,63 @@ try:
             })""")
             assert "prestige-nebula" in animation["backdrop"],(engine,"ambient animation",animation)
             assert "prestige-reveal" in animation["intro"],(engine,"identity entrance",animation)
+            # The new atmospheric filaments are an actual local SVG layer,
+            # not an external image, MP4, or synthetic source-status feed.
+            atmosphere=motion_page.evaluate("""() => ({
+                background:getComputedStyle(document.querySelector('.one-world')).backgroundImage,
+                videoCount:document.querySelectorAll('.one-world-video').length
+            })""")
+            assert "neural-atmosphere.svg" in atmosphere["background"] and atmosphere["videoCount"]==0,(
+                engine,"native desktop atmosphere not rendered",atmosphere)
+            atmosphere_asset=motion_context.request.get(BASE+"/professional/neural-atmosphere.svg")
+            assert atmosphere_asset.status==200 and "viewBox=\"0 0 1600 900\"" in atmosphere_asset.text(),(
+                engine,"local atmospheric SVG missing from build",atmosphere_asset.status)
+            # The native scene must actually draw pixels without the film asset.
+            motion_page.wait_for_timeout(550)
+            field=motion_page.evaluate("""() => {
+                const world=document.querySelector('[data-living-scene]');
+                const canvas=document.querySelector('[data-living-canvas]');
+                const ctx=canvas.getContext('2d');
+                if(!ctx)return {renderer:world.dataset.renderer,lit:0};
+                const pixels=ctx.getImageData(0,0,canvas.width,canvas.height).data;
+                let lit=0;
+                for(let i=3;i<pixels.length;i+=256)if(pixels[i]>8)lit++;
+                return {renderer:world.dataset.renderer,
+                    lit,canvasW:canvas.width,canvasH:canvas.height,
+                    videoCount:document.querySelectorAll('.one-world-video').length};
+            }""")
+            assert field["renderer"]=="native-canvas" and field["lit"]>35 and field["videoCount"]==0,(
+                engine,"native scene must draw real pixels without MP4 playback",field)
             button=motion_page.locator('[data-motion-toggle]')
             assert button.is_enabled(),(engine,"motion control enabled")
             assert button.get_attribute("aria-pressed")=="true"
+            # Source and pixel checks above establish the native animation.
+            # A user-triggered pause must retain its last native frame; capture
+            # only after RAF has stopped, avoiding GPU readback contention.
             button.click()
             assert button.get_attribute("aria-pressed")=="false"
             assert motion_page.locator('[data-living-scene]').get_attribute("data-motion")=="off"
+            visible=motion_page.locator('.one-world-canvas').evaluate(
+                "(canvas) => getComputedStyle(canvas).display !== 'none'")
+            assert visible,(engine,"paused native frame should remain visible")
+            motion_page.screenshot(
+                path=str(OUT/f"{engine}-1440x900-native-motion.png"),
+                animations="disabled",timeout=30000)
             button.click()
             assert button.get_attribute("aria-pressed")=="true"
             assert motion_page.locator('[data-living-scene]').get_attribute("data-motion")=="on"
+            # Ultra-wide/high-DPI displays must not silently allocate a
+            # full-resolution multi-megapixel animation surface.
+            motion_page.set_viewport_size({"width":3200,"height":1800})
+            motion_page.wait_for_timeout(180)
+            pixel_budget=motion_page.evaluate("""() => {
+              const field=document.querySelector('[data-living-canvas]');
+              return {pixels:field.width*field.height,
+                cssW:Math.round(field.getBoundingClientRect().width),
+                cssH:Math.round(field.getBoundingClientRect().height)};
+            }""")
+            assert pixel_budget["cssW"]>=3190 and pixel_budget["cssH"]>=1790 and pixel_budget["pixels"]<=2605000,(
+                engine,"canvas physical pixel budget exceeded on large screens",pixel_budget)
             motion_context.close()
             browser.close()
 finally:

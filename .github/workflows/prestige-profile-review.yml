@@ -6,6 +6,7 @@ on:
       - fix/prestige-spotify-crisp-art-20261111
       - feat/proof-of-work-profile-20261111
       - feat/living-studio-reference-20261111
+      - feat/native-neural-field-20261111
 permissions:
   contents: read
 concurrency:

@@ -11,14 +11,12 @@ import {existsSync} from "node:fs";
 import {renderOneScreenHome} from "../src/professional/one-screen.mjs";
 import {createHandler} from "../src/worker.mjs";
 
-test("the optional 1080p video and reactive canvas are separate from real public content",()=>{
+test("native neural field is first-party and independent of source-qualified public content",()=>{
   const noVideo=renderOneScreenHome();
   const withVideo=renderOneScreenHome({motionAssetAvailable:true});
   assert.doesNotMatch(noVideo,/<video /);
-  assert.match(withVideo,/<video class="one-world-video"/);
-  assert.match(withVideo,/muted autoplay loop playsinline/);
-  assert.match(withVideo,/src="\/professional\/living-atmosphere\.mp4"/);
-  assert.match(withVideo,/poster="\/professional\/living-atmosphere\.png"/);
+  assert.doesNotMatch(withVideo,/<video\b|living-atmosphere\.mp4/);
+  assert.match(withVideo,/href="\/src\/professional\/neural-field\.css"/);
   assert.match(withVideo,/data-living-canvas/);
   assert.match(withVideo,/data-motion-toggle/);
   assert.match(withVideo,/src="\/src\/professional\/living-atmosphere\.ts"/);
@@ -49,12 +47,40 @@ test("motion respects preferences, page visibility and an explicit pause button"
   const css=await readFile(new URL("../src/professional/living-atmosphere.css",import.meta.url),"utf8");
   for(const term of ["prefers-reduced-motion","saveData","visibilitychange","requestAnimationFrame","data-motion-toggle"])
     assert.ok(js.includes(term),"Missing motion control: "+term);
-  assert.match(js,/video\.play\(\)\.catch/);
-  assert.match(js,/video\?\.pause\(\)/);
-  assert.doesNotMatch(js,/createRadialGradient|context\.arc\(/);
+  assert.match(js,/createRadialGradient/);
+  assert.match(js,/context\.arc\(/);
+  assert.match(js,/data-public-work/);
+  assert.match(js,/data-public-spotify/);
+  assert.match(js,/data-motion-toggle/);
+  assert.doesNotMatch(js,/video\.play\(|HTMLVideoElement|Math\.random|fetch\(/);
   assert.match(css,/prefers-reduced-motion:reduce/);
   assert.match(css,/\.one-world-video/);
   assert.doesNotMatch(css,/@import|https?:\/\//);
+});
+test("vector fallback and native renderer remain local and respect user motion preferences",async()=>{
+  const css=await readFile(new URL("../src/professional/neural-field.css",import.meta.url),"utf8");
+  const svg=await readFile(new URL("../public/professional/neural-field.svg",import.meta.url),"utf8");
+  assert.match(css,/neural-field\.svg/);
+  assert.match(css,/prefers-reduced-motion:reduce/);
+  assert.match(css,/data-renderer="native-canvas"/);
+  assert.match(css,/one-world-video\s*\{display:none!important/);
+  assert.match(svg,/<svg\s/);
+  assert.match(svg,/viewBox="0 0 1600 900"/);
+  assert.doesNotMatch(svg,/<script\b|<image\b|(?:href|src)="https?:|data:image\//);
+});
+test("static neural atmosphere layers add bounded desktop depth without video or external resources",async()=>{
+  const css=await readFile(new URL("../src/professional/neural-field.css",import.meta.url),"utf8");
+  const svg=await readFile(new URL("../public/professional/neural-atmosphere.svg",import.meta.url),"utf8");
+  assert.match(css,/url\('\/professional\/neural-atmosphere\.svg'\)/);
+  assert.match(css,/@media\s*\(max-width:760px\)/);
+  assert.match(css,/@media\s*\(prefers-contrast:more\)/);
+  assert.match(svg,/<svg\s/);
+  assert.match(svg,/viewBox="0 0 1600 900"/);
+  assert.match(svg,/<radialGradient\s/);
+  assert.match(svg,/<path\s/);
+  assert.ok(Buffer.byteLength(svg)<60000,"atmospheric SVG should remain lightweight");
+  assert.doesNotMatch(svg,/<script\b|<foreignObject\b|<filter\b|<image\b|<animate\b|(?:href|src)="https?:|data:image\//i);
+  assert.doesNotMatch(svg,/GitHub activity|Spotify now playing|source observed|live coding/i);
 });
 test("Cloudflare Worker supports same-origin MP4 range and HEAD requests",async()=>{
   const original=Buffer.from(Array.from({length:40},(_,i)=>i));
