@@ -2,6 +2,22 @@
 const vscode = require("vscode");
 const ORIGIN = "https://devonakins.com";
 const SECRET = "devon-presence-pairing-v1";
+// Codex/terminal writes may change files without changing an open VS Code text
+// document. Restrict these real filesystem observations to source-like files.
+// All filenames and repository identities stay local; never read file content.
+function reportableExternalFile(uri) {
+  if (!uri || !["file", "vscode-remote"].includes(uri.scheme) ||
+      typeof uri.fsPath !== "string" || !uri.fsPath.length ||
+      uri.fsPath.length > 4096) return false;
+  const file = uri.fsPath.replace(/\\/g, "/").toLowerCase();
+  if (/(^|\/)(?:\.git|node_modules|dist|build|coverage|target|out|vendor|__pycache__|\.venv|venv|\.wrangler|\.next|\.cache|\.turbo)(?:\/|$)/.test(file))
+    return false;
+  const basename = file.slice(file.lastIndexOf("/") + 1);
+  if (basename.startsWith(".env") || basename.includes("secret") ||
+      basename.includes("credential") || basename.endsWith(".min.js") ||
+      basename.endsWith(".map")) return false;
+  return /\.(?:ts|tsx|js|jsx|mjs|cjs|py|rs|go|css|scss|html|md|json|yaml|yml|toml|vue|svelte)$/.test(basename);
+}
 let cleanup;
 function createCompanion(
   api,
@@ -379,20 +395,41 @@ function createCompanion(
   const subscriptions = Object.entries(actions).map(([name, fn]) =>
     api.commands.registerCommand("devonPresence." + name, fn),
   );
+  const observedChange = (uri) => {
+    if (!enabled || !api.window.state.focused || disposed) return;
+    // This is a real editor or filesystem observation, never inferred from
+    // opening Codex, moving the cursor, activating a window or running a timer.
+    const detected = automaticProject ? detectedProject({ document: { uri } }) : null;
+    if (!detected) {
+      suspendUnknownProject();
+      return;
+    }
+    project = detected;
+    lastEdit = clock();
+    if (clock() - lastSent >= 60000) void send(true);
+  };
   subscriptions.push(
     api.workspace.onDidChangeTextDocument((event) => {
-      // Metadata stays local: map the edited document to an approved remote. Never inspect text or send paths.
-      if (!enabled || !api.window.state.focused || !event.contentChanges.length) return;
-      const detected = automaticProject ? detectedProject(event) : null;
-      if (!detected) {
-        suspendUnknownProject();
-        return;
-      }
-      project = detected;
-      lastEdit = clock();
-      if (clock() - lastSent >= 60000) void send(true);
+      // Open-document edits remain supported independently of file watchers.
+      if (!enabled || disposed || !api.window.state.focused ||
+          !event.contentChanges?.length) return;
+      observedChange(event.document?.uri);
     }),
   );
+  // Observe files actually modified by Codex, CLI tools or other local agents.
+  // Only approved Git remotes can be reported; generated and sensitive paths are
+  // rejected before checking repository identity. No path leaves this extension.
+  const watcher = api.workspace.createFileSystemWatcher?.(
+    "**/*.{ts,tsx,js,jsx,mjs,cjs,py,rs,go,css,scss,html,md,json,yaml,yml,toml,vue,svelte}",
+  );
+  if (watcher) {
+    subscriptions.push(watcher);
+    const fileObserved = (uri) => {
+      if (reportableExternalFile(uri)) observedChange(uri);
+    };
+    subscriptions.push(watcher.onDidChange(fileObserved));
+    subscriptions.push(watcher.onDidCreate(fileObserved));
+  }
   const timer = setTimer(() => {
     if (!enabled) return;
     if (expires <= clock()) {
@@ -464,10 +501,15 @@ function createCompanion(
   context.subscriptions.push({ dispose });
   return { actions, ready: Promise.all([restore(), initializeGit()]), dispose };
 }
+exports.reportableExternalFile = reportableExternalFile;
 exports.createCompanion = createCompanion;
 exports.activate = (context) => {
   const companion = createCompanion(vscode, context);
-  cleanup = companion.dispose;
+  const codex = require("./codex-workspace.cjs").registerCodexWorkspace(vscode, context);
+  cleanup = () => {
+    codex.dispose();
+    companion.dispose();
+  };
   return companion.ready;
 };
 exports.deactivate = () => {
