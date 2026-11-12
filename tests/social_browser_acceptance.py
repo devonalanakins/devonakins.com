@@ -41,6 +41,7 @@ try:
                 page.on("pageerror", lambda exc: errors.append(str(exc)))
                 mode = {"published": True, "text": "Public proof <script>alert(\'x\')</script> stays plain text.", "media": False}
                 first_observation = datetime.now(timezone.utc)
+                mode["checked_at"] = first_observation
 
                 def activity_response(route):
                     now = datetime.now(timezone.utc)
@@ -53,7 +54,7 @@ try:
                     }
                     feed = {"version": 4, "asOf": iso(now), "threads": {
                         "version": 1, "state": "connected" if mode["published"] else "hidden",
-                        "checkedAt": iso(first_observation), "posts": [post] if mode["published"] else [],
+                        "checkedAt": iso(mode["checked_at"]), "posts": [post] if mode["published"] else [],
                     }}
                     route.fulfill(
                         status=200, content_type="application/json",
@@ -117,12 +118,29 @@ try:
                     "Same source timestamp; updated public message."
                 ''', timeout=10000)
                 assert panel.locator(".one-threads-media").inner_text() == "Includes media"
+                # A source heartbeat with unchanged posts must preserve the anchor
+                # and keyboard focus, even though checkedAt has advanced.
+                focused = page.evaluate("""() => {
+                  const anchor = document.querySelector(".one-threads-posts a");
+                  anchor.focus();
+                  window.__threadFocus = anchor;
+                  return document.activeElement === anchor;
+                }""")
+                assert focused, (engine, width, height, "post link could not focus")
+                mode["checked_at"] = datetime.now(timezone.utc)
+                with page.expect_response("**/api/activity/v4"):
+                    page.evaluate('document.dispatchEvent(new Event("visibilitychange"))')
+                page.wait_for_timeout(250)
+                assert page.evaluate("""() => {
+                  const anchor = document.querySelector(".one-threads-posts a");
+                  return anchor === window.__threadFocus && document.activeElement === anchor;
+                }"""), (engine, width, height, "source heartbeat replaced focused link")
                 page.screenshot(path=str(OUT/f"{engine}-{width}x{height}-connected.png"), animations="disabled")
-                # Remove sharing and reload. Previously approved content must vanish,
-                # without leaving a dead external Threads link or fabricated profile.
+                # Revoke sharing while the panel is open. The old post must
+                # disappear on the next public refresh without a page reload.
                 mode["published"] = False
-                page.reload(wait_until="domcontentloaded")
-                page.locator('footer [data-one-go="contact"]').click()
+                with page.expect_response("**/api/activity/v4"):
+                    page.evaluate('document.dispatchEvent(new Event("visibilitychange"))')
                 page.wait_for_function(
                     'document.querySelector(".one-threads-panel").dataset.threadsConnected==="false"',
                     timeout=10000,
