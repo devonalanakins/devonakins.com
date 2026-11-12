@@ -181,7 +181,9 @@ function renderThreads(snapshot:unknown){
     const list=card.querySelector<HTMLOListElement>("[data-threads-posts]");
     if(list){
       const signature=feed.connected
-        ?feed.checkedAt+"|"+feed.posts.map(post=>post.href+"|"+post.publishedAt).join(";")
+        ?feed.checkedAt+"|"+feed.posts.map(post=>
+            post.href+"|"+post.publishedAt+"|"+post.text+"|"+(post.media?"media":"text")
+          ).join(";")
         :"unavailable";
       // Do not replace focused links at every timer tick; do clear revoked or
       // expired snapshots immediately. There are at most three vetted posts.
