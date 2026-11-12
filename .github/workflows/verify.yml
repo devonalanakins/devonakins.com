@@ -234,7 +234,7 @@ jobs:
   one_screen_candidate:
     # Isolated design candidate: does not change the verified production
     # release variant or publish a new public endpoint.
-    if: github.head_ref == 'feat/viewport-one-screen-20261110' || github.ref == 'refs/heads/feat/viewport-one-screen-20261110'
+    if: github.head_ref == 'feat/viewport-one-screen-20261110' || github.ref == 'refs/heads/feat/viewport-one-screen-20261110' || github.head_ref == 'feat/social-presence-threads-preview-20261112' || github.ref == 'refs/heads/feat/social-presence-threads-preview-20261112'
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     permissions:
@@ -261,6 +261,8 @@ jobs:
           python3 -m playwright install --with-deps chromium webkit
       - name: Verify no-scroll desktop, mobile and keyboard-ready sections
         run: python3 tests/one_screen_browser_acceptance.py
+      - name: Verify verified-social navigation, consented Threads and mobile fit
+        run: python3 tests/social_browser_acceptance.py
       - name: Attach viewport design preview
         if: always()
         uses: actions/upload-artifact@v4
