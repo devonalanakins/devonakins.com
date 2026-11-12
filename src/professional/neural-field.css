@@ -6,6 +6,7 @@
 }
 .one-body .one-world[data-renderer="native-canvas"] {
   background:
+    url('/professional/neural-atmosphere.svg') 52% 49%/cover no-repeat,
     radial-gradient(ellipse 41% 54% at 53% 48%,#17374370,transparent 79%),
     radial-gradient(ellipse 28% 35% at 54% 46%,#734a6760,transparent 78%),
     radial-gradient(ellipse 34% 40% at 66% 67%,#154b5040,transparent 85%),
@@ -42,6 +43,12 @@
   display:none!important;
 }
 @media (max-width:760px){
+  /* Mobile has less empty space: retain the lighter native gradient treatment. */
+  .one-body .one-world[data-renderer="native-canvas"] {
+    background:
+      radial-gradient(ellipse 40% 45% at 58% 48%,#17374370,transparent 85%),
+      linear-gradient(135deg,#070b14,#0b1421 48%,#060b13);
+  }
   .one-body .one-world {
     background-position:55% 46%;
   }
@@ -64,6 +71,9 @@
   .one-body .concept-visual {background:transparent!important}
 }
 @media (prefers-contrast:more){
+  .one-body .one-world[data-renderer="native-canvas"] {
+    background:linear-gradient(130deg,#070b14,#0b1421 48%,#060b13);
+  }
   .one-body .one-world:after {background:linear-gradient(90deg,#04070cf7 0%,#05080ddd 35%,#05080ddd 68%,#04070cfa 100%)}
 }
 
