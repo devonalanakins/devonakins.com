@@ -359,33 +359,18 @@ try:
             button=motion_page.locator('[data-motion-toggle]')
             assert button.is_enabled(),(engine,"motion control enabled")
             assert button.get_attribute("aria-pressed")=="true"
-            # Record one genuine moving frame. Continuous Canvas 2D repaint
-            # can starve Playwright's Chromium screenshot capture on CI.
-            # Snapshot only the visual QA frame, never alter production motion.
-            motion_page.evaluate("""() => {
-                const canvas=document.querySelector('[data-living-canvas]');
-                const frozen=document.createElement('canvas');
-                frozen.width=canvas.width;frozen.height=canvas.height;
-                frozen.getContext('2d').drawImage(canvas,0,0);
-                window.__qaNativeFrame=frozen;
-            }""")
+            # Source and pixel checks above establish the native animation.
+            # A user-triggered pause must retain its last native frame; capture
+            # only after RAF has stopped, avoiding GPU readback contention.
             button.click()
             assert button.get_attribute("aria-pressed")=="false"
             assert motion_page.locator('[data-living-scene]').get_attribute("data-motion")=="off"
-            frozen_state=motion_page.evaluate("""() => {
-                const canvas=document.querySelector('[data-living-canvas]');
-                const world=document.querySelector('[data-living-scene]');
-                const ctx=canvas.getContext('2d');
-                ctx.clearRect(0,0,canvas.width,canvas.height);
-                ctx.drawImage(window.__qaNativeFrame,0,0);
-                world.dataset.motion='on';
-                world.dataset.renderer='native-canvas';
-                return {pixels:canvas.width*canvas.height,paused:document.querySelector('[data-motion-toggle]').getAttribute('aria-pressed')};
-            }""")
-            assert frozen_state["pixels"]>0 and frozen_state["paused"]=="false",(
-                engine,"could not freeze genuine live canvas frame for review",frozen_state)
-            motion_page.screenshot(path=str(OUT/f"{engine}-1440x900-native-motion.png"),
-                animations="disabled",timeout=15000)
+            visible=motion_page.locator('.one-world-canvas').evaluate(
+                "(canvas) => getComputedStyle(canvas).display !== 'none'")
+            assert visible,(engine,"paused native frame should remain visible")
+            motion_page.screenshot(
+                path=str(OUT/f"{engine}-1440x900-native-motion.png"),
+                animations="disabled",timeout=30000)
             button.click()
             assert button.get_attribute("aria-pressed")=="true"
             assert motion_page.locator('[data-living-scene]').get_attribute("data-motion")=="on"
