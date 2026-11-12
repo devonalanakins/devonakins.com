@@ -5,19 +5,19 @@
  * is loaded separately from the consent-filtered existing activity endpoint.
  */
 const verified = Object.freeze([
-  ["GitHub", "GH", "https://github.com/devonalanakins"],
-  ["Instagram", "IG", "https://www.instagram.com/devonalanakins/"],
+  ["GitHub", "https://github.com/devonalanakins"],
+  ["Instagram", "https://www.instagram.com/devonalanakins/"],
 ]);
-function anchor([label,mark,url],compact) {
+function anchor([label,url]) {
   return '<a href="'+url+'" target="_blank" rel="noopener noreferrer" aria-label="Open '+label+' profile in a new tab">'+
-    '<span aria-hidden="true">'+(compact?mark:label)+'</span></a>';
+    '<span aria-hidden="true">'+label+'</span></a>';
 }
 export function renderSocialChannels(compact=false) {
   return '<nav class="one-social-channels'+(compact?' one-social-channels--compact':'')+
     '" aria-label="Social profiles and updates">'+
-    verified.map(profile=>anchor(profile,compact)).join("")+
+    verified.map(anchor).join("")+
     (compact
-      ? '<button type="button" data-one-go="contact" aria-label="View public Threads updates and connection status">TH</button>'
+      ? '<button type="button" data-one-go="contact" aria-label="View public Threads updates and connection status">Threads</button>'
       : '<span class="one-social-unverified" title="Facebook profile address has not been verified">Facebook · link pending</span>'+
         '<span class="one-social-unverified" title="Threads profile address has not been verified">Threads · feed status at right</span>')+
     '</nav>';
