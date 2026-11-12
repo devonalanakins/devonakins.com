@@ -340,6 +340,17 @@ try:
             })""")
             assert "prestige-nebula" in animation["backdrop"],(engine,"ambient animation",animation)
             assert "prestige-reveal" in animation["intro"],(engine,"identity entrance",animation)
+            # The new atmospheric filaments are an actual local SVG layer,
+            # not an external image, MP4, or synthetic source-status feed.
+            atmosphere=motion_page.evaluate("""() => ({
+                background:getComputedStyle(document.querySelector('.one-world')).backgroundImage,
+                videoCount:document.querySelectorAll('.one-world-video').length
+            })""")
+            assert "neural-atmosphere.svg" in atmosphere["background"] and atmosphere["videoCount"]==0,(
+                engine,"native desktop atmosphere not rendered",atmosphere)
+            atmosphere_asset=motion_context.request.get(BASE+"/professional/neural-atmosphere.svg")
+            assert atmosphere_asset.status==200 and "viewBox=\"0 0 1600 900\"" in atmosphere_asset.text(),(
+                engine,"local atmospheric SVG missing from build",atmosphere_asset.status)
             # The native scene must actually draw pixels without the film asset.
             motion_page.wait_for_timeout(550)
             field=motion_page.evaluate("""() => {
