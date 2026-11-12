@@ -356,13 +356,36 @@ try:
             }""")
             assert field["renderer"]=="native-canvas" and field["lit"]>35 and field["videoCount"]==0,(
                 engine,"native scene must draw real pixels without MP4 playback",field)
-            motion_page.screenshot(path=str(OUT/f"{engine}-1440x900-native-motion.png"))
             button=motion_page.locator('[data-motion-toggle]')
             assert button.is_enabled(),(engine,"motion control enabled")
             assert button.get_attribute("aria-pressed")=="true"
+            # Record one genuine moving frame. Continuous Canvas 2D repaint
+            # can starve Playwright's Chromium screenshot capture on CI.
+            # Snapshot only the visual QA frame, never alter production motion.
+            motion_page.evaluate("""() => {
+                const canvas=document.querySelector('[data-living-canvas]');
+                const frozen=document.createElement('canvas');
+                frozen.width=canvas.width;frozen.height=canvas.height;
+                frozen.getContext('2d').drawImage(canvas,0,0);
+                window.__qaNativeFrame=frozen;
+            }""")
             button.click()
             assert button.get_attribute("aria-pressed")=="false"
             assert motion_page.locator('[data-living-scene]').get_attribute("data-motion")=="off"
+            frozen_state=motion_page.evaluate("""() => {
+                const canvas=document.querySelector('[data-living-canvas]');
+                const world=document.querySelector('[data-living-scene]');
+                const ctx=canvas.getContext('2d');
+                ctx.clearRect(0,0,canvas.width,canvas.height);
+                ctx.drawImage(window.__qaNativeFrame,0,0);
+                world.dataset.motion='on';
+                world.dataset.renderer='native-canvas';
+                return {pixels:canvas.width*canvas.height,paused:document.querySelector('[data-motion-toggle]').getAttribute('aria-pressed')};
+            }""")
+            assert frozen_state["pixels"]>0 and frozen_state["paused"]=="false",(
+                engine,"could not freeze genuine live canvas frame for review",frozen_state)
+            motion_page.screenshot(path=str(OUT/f"{engine}-1440x900-native-motion.png"),
+                animations="disabled",timeout=15000)
             button.click()
             assert button.get_attribute("aria-pressed")=="true"
             assert motion_page.locator('[data-living-scene]').get_attribute("data-motion")=="on"
