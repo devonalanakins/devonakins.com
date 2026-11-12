@@ -15,7 +15,7 @@
 .one-body .one-world-canvas {
   display:block;
   opacity:1;
-  filter:saturate(1.19) brightness(1.13);
+  filter:none; /* avoid offscreen GPU filter/readback on continuously drawn canvas */
   mix-blend-mode:screen;
 }
 .one-body .one-world-glow {
