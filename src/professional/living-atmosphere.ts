@@ -132,6 +132,49 @@ function draw(t:number){
     }
   }
 
+  // Fine curved axonal ribbons turn the field into a living medium, not
+  // a planar graph. Slowly shifting bends are bounded and decorative.
+  const ribbonCount=mobile?15:34;
+  for(let j=0;j<ribbonCount;j++){
+    const depth=j/(ribbonCount-1);
+    const row=.69+.16*depth;
+    const crest=.15+.043*Math.sin(j*.28);
+    const ribbonPoint=(u:number)=>{
+      const envelope=Math.exp(-Math.pow((u-.53)/.31,2));
+      const wave=Math.sin(u*10.5+j*.25+t*.17)*Math.sin(Math.PI*u)*.013;
+      return {
+        x:(.29+u*.54)*width+pointerX*3*depth,
+        y:(row-crest*envelope+wave)*height,
+      };
+    };
+    context.beginPath();
+    for(let k=0;k<=38;k++){
+      const point=ribbonPoint(k/38);
+      if(k===0)context.moveTo(point.x,point.y);
+      else context.lineTo(point.x,point.y);
+    }
+    const luminance=.45+.55*Math.sin(Math.PI*depth);
+    const tone=tones[j%5===0?1:j%7===0?2:0];
+    const alpha=(.025+luminance*(j%6===0?.14:.065))*intensity;
+    context.lineWidth=j%6===0?1.08:.48;
+    context.strokeStyle="rgba("+tone+","+Math.min(.24,alpha).toFixed(3)+")";
+    if(j%6===0&&!mobile){
+      context.save();
+      context.shadowBlur=8;
+      context.shadowColor="rgba("+tone+",.38)";
+      context.stroke();
+      context.restore();
+    }else context.stroke();
+    if(t>0&&j%4===0){
+      const progress=(j*.13+t*.024)%1;
+      const point=ribbonPoint(progress);
+      context.beginPath();
+      context.arc(point.x,point.y,mobile?.9:1.3,0,Math.PI*2);
+      context.fillStyle="rgba("+tone+","+
+        (Math.sin(Math.PI*progress)*.56*intensity).toFixed(3)+")";
+      context.fill();
+    }
+  }
   for(let i=0;i<edges.length;i++){
     const link=edges[i];
     if(link.from>=nodeCount||link.to>=nodeCount)continue;
