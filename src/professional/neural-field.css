@@ -88,3 +88,15 @@
     background-repeat:no-repeat;
   }
 }
+
+/* Light escapes into the actual scene; keep hero and signal edges dark enough
+ * for reading. Do not brighten the content overlays or alter mobile contrast. */
+@media(min-width:761px){
+  .one-body .one-world:after{
+    background:
+      linear-gradient(90deg,
+        #060a12f7 0%,#070b14eb 19%,#070b1452 35%,#070c161e 53%,
+        #070c1648 67%,#080c15df 80%,#060a13fa 100%),
+      linear-gradient(0deg,#050912b6,transparent 26%,transparent 82%,#060a13b6);
+  }
+}
