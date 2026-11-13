@@ -83,6 +83,21 @@ test("valid deauthorization removes pending OAuth attempts and only matching cre
  assert.equal(f.row().token_cipher,null);
  assert.equal(f.sql.prepare("SELECT COUNT(*) AS n FROM threads_oauth_attempt").get().n,0);
 });
+test("signed callback revokes a connection saved within the same issued-at second",async()=>{
+ const f=fixture();
+ // Graph signed_request timestamps have seconds precision; D1 uses milliseconds.
+ f.sql.prepare("UPDATE threads_connection SET connected_at=? WHERE id=1").run(now+450);
+ const r=await f.send(await sign(),"/api/threads/lifecycle/deauthorize");
+ assert.equal(r.status,200);
+ assert.equal(f.row().token_cipher,null);
+});
+
+test("safe numeric Meta user IDs are supported without losing precision",async()=>{
+ const f=fixture();
+ const r=await f.send(await sign(123456789));
+ assert.equal(r.status,200);
+ assert.equal(f.row().token_cipher,null);
+});
 test("replayed callbacks cannot revoke new grants, and pre-grant callbacks never remove new tokens",async()=>{
  const f=fixture(), signed=await sign();
  assert.equal((await f.send(signed)).status,200);
