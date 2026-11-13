@@ -359,7 +359,7 @@ try:
                     document.querySelector("#one-activity-github").dataset.limit===String(expected[1]) &&
                     count("#one-home-github")===expected[0] &&
                     count("#one-activity-github")===expected[1];
-                }""",[home,activity])
+                }""",arg=[home,activity])
                 assert resize_page.locator("#one-home-github [data-feed-list] li").count()==home
                 assert resize_page.locator("#one-activity-github [data-feed-list] li").count()==activity
             assert_capacity(2,4)
