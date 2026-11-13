@@ -5,6 +5,7 @@
  * source components. No simulated counters, activity or project outcomes.
  */
 import {renderStudioOrbitalTree} from "./orbital-tree.mjs";
+import {renderHomeSocialHub,renderHomeThreadsSignal} from "./social-presence.mjs";
 
 const processStages = [
   ['01','Understand','Reality','Observe people, constraints, and what already works.'],
@@ -39,7 +40,7 @@ export function renderPrestigeHome({publicFeed,button,spotifyCard}) {
           '<h1>Independent thinking.<br><em>Living systems.</em></h1>'+
           '<p class="prestige-subtitle">SOFTWARE DEVELOPER <span aria-hidden="true">//</span> SYSTEMS DESIGNER</p></div></div>'+
       '<p class="one-lede prestige-statement">Software engineering · Product design · Operations.<br>A personal studio built around real work and verified signals.</p>'+
-      '<div class="prestige-player-actions">'+button('work','Explore my work',true)+button('contact','Get in touch')+'</div>'+
+      '<div class="prestige-player-actions">'+button('work','Explore my work',true)+button('contact','Get in touch')+'</div>'+renderHomeSocialHub()+
       '<div class="prestige-build" aria-label="My areas of practice">'+
         '<div class="prestige-build-row"><span class="prestige-build-index">01</span><div><strong>SOFTWARE & PRODUCTS</strong><small>End-to-end products, tools & platforms.</small></div><span class="prestige-build-end">BUILD</span></div>'+
         '<div class="prestige-build-row"><span class="prestige-build-index">02</span><div><strong>SYSTEM DESIGN</strong><small>Scalable, reliable & maintainable systems.</small></div><span class="prestige-build-end">OPERATE</span></div>'+
@@ -57,7 +58,7 @@ export function renderPrestigeHome({publicFeed,button,spotifyCard}) {
       '<div class="concept-feed-filters" role="group" aria-label="Filter recent GitHub events"><button type="button" data-github-filter="all" aria-pressed="true">All</button><button type="button" data-github-filter="push" aria-pressed="false">Pushes</button><button type="button" data-github-filter="pull_request" aria-pressed="false">PRs</button></div>'+
       publicFeed('one-home-github',4)+'<div class="concept-feed-empty"><span aria-hidden="true">⌁</span><p>Public development events appear here when GitHub responds.</p><a href="https://github.com/devonalanakins" target="_blank" rel="noopener noreferrer">Inspect public GitHub ↗</a></div></section>'+
       '<section class="studio-development" aria-label="Development presence"><div class="studio-development__head">DEVELOPMENT PRESENCE</div>'+studioWorkPresence+'</section>'+ 
-       '<div class="one-spotify studio-spotify">'+spotifyCard()+'</div>'+ 
+       '<div class="one-spotify studio-spotify">'+spotifyCard()+'</div>'+renderHomeThreadsSignal()+ 
        '<div class="concept-live-foot"><span>PROVENANCE FIRST</span><button type="button" data-github-refresh aria-label="Refresh GitHub events now">↻ Refresh</button></div>'+
     '</aside>'+
     '<section class="concept-signal-band" aria-label="Publicly sourced signals">'+
