@@ -100,10 +100,11 @@ test("owner callback binds Meta account identity and encrypts long token at rest
   assert.equal(body.get("grant_type"),"authorization_code");
   assert.equal(body.get("redirect_uri"),entry.target.searchParams.get("redirect_uri"));
   assert.equal(body.get("client_secret"),f.env.THREADS_APP_SECRET);
-  assert.equal(short[1].redirect,"error");
+  assert.equal(short[1].redirect,"manual");
   assert.equal(new URL(long[0]).origin,"https://graph.threads.com");
   assert.equal(new URL(long[0]).searchParams.get("grant_type"),"th_exchange_token");
-  assert.equal(long[1].redirect,"error");
+  assert.equal(long[1].redirect,"manual");
+  assert.equal(profile[1].redirect,"manual");
   assert.equal(new URL(profile[0]).searchParams.get("fields"),"id,username");
   assert.equal(profile[1].headers.Authorization,"Bearer "+"l".repeat(96));
   const row=f.sql.prepare("SELECT * FROM threads_connection WHERE id=1").get();
@@ -150,6 +151,58 @@ test("OAuth refuses wrong accounts, invalid provider payload and preexisting con
   assert.equal(f.sql.prepare("SELECT token_cipher FROM threads_connection").get().token_cipher,null);
 });
 
+
+test("Workers-compatible manual redirect policy permits same-host OAuth success without auto-follow",async()=>{
+  const observed=[];
+  const f=fixture(true,async (url,init)=>{
+    observed.push({url,init});
+    if(init.redirect!=="manual")
+      throw new TypeError("Workerd does not implement redirect error");
+    const path=new URL(url).pathname;
+    if(path==="/oauth/access_token")
+      return Response.json({access_token:"s".repeat(96),user_id:"123456789012345"});
+    if(path==="/access_token")
+      return Response.json({access_token:"l".repeat(96),token_type:"bearer",expires_in:5184000});
+    if(path==="/v1.0/me")
+      return Response.json({id:"123456789012345",username:"DevonFixture"});
+    throw Error("Unexpected provider destination");
+  });
+  const result=await f.callback(await f.auth());
+  assert.equal(result.headers.get("Location"),"/owner/presence/?threads=connected");
+  assert.equal(observed.length,3);
+  assert.ok(observed.every(item=>item.init.redirect==="manual"));
+  assert.ok(observed.every(item=>new URL(item.url).origin==="https://graph.threads.com"));
+  assert.equal((await storedThreadsStatus(f.env,now)).connected,true);
+});
+
+test("manual Meta redirects are rejected at every OAuth stage without forwarding credentials",async()=>{
+  for(const stage of ["exchange","extend","profile"]){
+    let count=0;
+    const sensitiveLocation="https://untrusted.example/steal?secret=SENSITIVE_REDIRECT_LOCATION";
+    const f=fixture(true,async (url,init)=>{
+      count++;
+      assert.equal(init.redirect,"manual","no Meta redirect may be followed");
+      const path=new URL(url).pathname;
+      if((stage==="exchange"&&path==="/oauth/access_token")||
+         (stage==="extend"&&path==="/access_token")||
+         (stage==="profile"&&path==="/v1.0/me"))
+        return new Response(null,{status:302,headers:{Location:sensitiveLocation}});
+      if(path==="/oauth/access_token")
+        return Response.json({access_token:"s".repeat(96),user_id:"123456789012345"});
+      if(path==="/access_token")
+        return Response.json({access_token:"l".repeat(96),token_type:"bearer",expires_in:5184000});
+      return Response.json({id:"123456789012345",username:"DevonFixture"});
+    });
+    const result=await f.callback(await f.auth());
+    assert.equal(result.status,303);
+    assert.equal(result.headers.get("Location"),
+      "/owner/presence/?threads="+stage+(stage==="exchange"?"&detail=redirect":""));
+    assert.equal(count,stage==="exchange"?1:stage==="extend"?2:3);
+    assert.doesNotMatch(result.headers.get("Location"),/SENSITIVE_REDIRECT_LOCATION|untrusted\.example|client_secret|access_token/);
+    assert.equal(f.sql.prepare("SELECT token_cipher FROM threads_connection").get().token_cipher,null);
+    assert.equal((await storedThreadsStatus(f.env,now)).connected,false);
+  }
+});
 
 test("OAuth safely identifies a provider exchange failure without reflecting provider secrets",async()=>{
   const f=fixture(true,async()=>new Response('SENSITIVE_META_PROVIDER_ERROR',{status:400}));
@@ -323,7 +376,8 @@ test("owner renews a mature unexpired private Threads token without public shari
   assert.equal(endpoint.pathname,"/refresh_access_token");
   assert.equal(endpoint.searchParams.get("grant_type"),"th_refresh_token");
   assert.equal(endpoint.searchParams.get("access_token"),"l".repeat(96));
-  assert.equal(calls[0][1].redirect,"error");
+  assert.equal(calls[0][1].redirect,"manual");
+  assert.equal(calls[1][1].redirect,"manual");
   assert.equal(new URL(calls[1][0]).pathname,"/v1.0/me");
   assert.equal(calls[1][1].headers.Authorization,"Bearer "+"r".repeat(96));
   const row=f.sql.prepare("SELECT revision,token_cipher,verified_at,token_expires_at FROM threads_connection").get();

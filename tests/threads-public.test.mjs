@@ -77,6 +77,7 @@ test("official fetch is read-only, token stays server-side and 5-minute cache do
   assert.match(request.url,/^https:\/\/graph\.threads\.net\/v1\.0\/me\/threads\?/);
   assert.equal(new URL(request.url).searchParams.get("limit"),"5");
   assert.equal(request.init.method,"GET");
+  assert.equal(request.init.redirect,"manual");
   assert.equal(request.init.headers.Authorization,"Bearer "+env.THREADS_USER_ACCESS_TOKEN);
   assert.ok(!JSON.stringify(first).includes("x".repeat(40)));
   at+=180000;
@@ -155,9 +156,35 @@ test("private Threads probe verifies server-side token without public opt-in or 
   assert.equal(new URL(req.url).searchParams.has("access_token"),false);
   assert.equal(req.init.headers.Authorization,"Bearer "+privateEnv.THREADS_USER_ACCESS_TOKEN);
   assert.equal(req.init.method,"GET");
-  assert.equal(req.init.redirect,"error");
+  assert.equal(req.init.redirect,"manual");
   assert.doesNotMatch(JSON.stringify(result),/fixtureDevon|NEVER_EXPOSE_THIS|2786950|access_token/);
 });
+test("Threads private verification and public reader reject provider redirects without disclosure",async()=>{
+  const unexpected="https://untrusted.example/?credential=SENSITIVE_REDIRECT_LOCATION";
+  let calls=0;
+  const response=()=>new Response(null,{status:302,headers:{Location:unexpected}});
+  const checked=await probeThreadsAuthorization(env,{
+    clock:()=>now,
+    fetchImpl:async(url,init)=>{
+      calls++;
+      assert.equal(init.redirect,"manual");
+      assert.equal(new URL(url).origin,"https://graph.threads.net");
+      return response();
+    },
+  });
+  assert.equal(checked.connection,"unavailable");
+  assert.equal(calls,1);
+  const reader=createPublicThreadsReader({clock:()=>now,fetchImpl:async(url,init)=>{
+    calls++;
+    assert.equal(init.redirect,"manual");
+    assert.equal(new URL(url).origin,"https://graph.threads.net");
+    return response();
+  }});
+  assert.deepEqual(await reader(env),disconnectedThreads());
+  assert.equal(calls,2);
+  assert.doesNotMatch(JSON.stringify([checked,await reader(env)]),/SENSITIVE_REDIRECT_LOCATION|untrusted\.example/);
+});
+
 test("private Threads probe fails closed without credentials or with wrong owner identity",async()=>{
   const never=async()=>{throw Error("must not contact provider")};
   for(const missing of [

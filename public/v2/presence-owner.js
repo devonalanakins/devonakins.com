@@ -388,6 +388,7 @@ function safeExchangeDetail(value){
     (http[2]?", error code "+http[2]:"")+
     (http[3]?", subcode "+http[3]:"")+".";
   const known={
+    redirect:"Diagnostic: Meta redirected the token request; the redirect was blocked and no token was stored.",
     timeout:"Diagnostic: the Meta request timed out.",
     network:"Diagnostic: no usable Meta HTTP response was received.",
     "malformed-json":"Diagnostic: Meta's response was not valid JSON.",

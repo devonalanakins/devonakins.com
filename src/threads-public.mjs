@@ -88,7 +88,7 @@ export async function probeThreadsAuthorization(env={},{
     const response=await fetchImpl(endpoint.toString(),{
       method:"GET",
       headers:{Authorization:"Bearer "+token,Accept:"application/json"},
-      redirect:"error",
+      redirect:"manual",
       signal:AbortSignal.timeout(3500),
     });
     // Authentication and network failures are distinct, but neither exposes
@@ -167,7 +167,7 @@ export function createPublicThreadsReader({
           method:"GET",
           headers:{Authorization:"Bearer "+token,Accept:"application/json"},
           signal:AbortSignal.timeout(3500),
-          redirect:"error",
+          redirect:"manual",
         });
         if(!response?.ok)return disconnectedThreads();
         const contentLength=Number(response.headers?.get?.("Content-Length") || 0);

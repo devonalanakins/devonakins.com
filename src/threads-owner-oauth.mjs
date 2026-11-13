@@ -32,7 +32,7 @@ const clearCookie=COOKIE+"=; Path=/; Max-Age=0; Secure; HttpOnly; SameSite=Lax";
 const makeCookie=value=>COOKIE+"="+value+"; Path=/; Max-Age=300; Secure; HttpOnly; SameSite=Lax";
 const cookieValue=header=>(header||"").split(";").map(p=>p.trim())
   .find(p=>p.startsWith(COOKIE+"="))?.slice(COOKIE.length+1)||"";
-const SAFE_EXCHANGE_DETAIL=/^(?:http-[45][0-9]{2}(?:-meta-[0-9]{1,9}(?:-sub-[0-9]{1,9})?)?|timeout|network|malformed-json|invalid-payload|unreadable-response|configuration|other)$/;
+const SAFE_EXCHANGE_DETAIL=/^(?:http-[45][0-9]{2}(?:-meta-[0-9]{1,9}(?:-sub-[0-9]{1,9})?)?|timeout|network|malformed-json|invalid-payload|unreadable-response|configuration|redirect|other)$/;
 const failed=(code,detail=null)=>{
   const suffix=code==="exchange" && SAFE_EXCHANGE_DETAIL.test(detail||"")?
     "&detail="+encodeURIComponent(detail):"";
@@ -46,6 +46,8 @@ const metaErrorNumber=value=>
 // or log the raw provider response (which may contain tokens or user details).
 async function metaExchangeHttpDetail(response){
   const status=Number(response?.status);
+  // Manual redirects must fail closed before any Location is followed.
+  if(Number.isInteger(status)&&status>=300&&status<400)return "redirect";
   if(!Number.isInteger(status)||status<400||status>599)return "other";
   let detail="http-"+status;
   try {
@@ -172,11 +174,13 @@ async function finish(request,env,now,fetcher){
   let stage="exchange";
   try {
     if(!threadsAppConfigured(env))throw Error("Configuration changed");
+    // Workers rejects redirect:"error" before sending any request. Manual
+    // mode preserves our no-follow policy: every 3xx is rejected below.
     const shortResponse=await fetcher("https://graph.threads.com/oauth/access_token",{
       method:"POST",headers:{"Content-Type":"application/x-www-form-urlencoded",Accept:"application/json"},
       body:new URLSearchParams({client_id:env.THREADS_APP_ID,
         client_secret:env.THREADS_APP_SECRET,code,grant_type:"authorization_code",
-        redirect_uri:CALLBACK}).toString(),redirect:"error",cache:"no-store",
+        redirect_uri:CALLBACK}).toString(),redirect:"manual",cache:"no-store",
       signal:AbortSignal.timeout(8000),
     });
     if(!shortResponse?.ok){
@@ -198,7 +202,7 @@ async function finish(request,env,now,fetcher){
       client_secret:env.THREADS_APP_SECRET,access_token:short.access_token}).toString();
     const long=await providerJson(await fetcher(exchange.href,{
       method:"GET",headers:{Accept:"application/json"},cache:"no-store",
-      redirect:"error",signal:AbortSignal.timeout(8000),
+      redirect:"manual",signal:AbortSignal.timeout(8000),
     }));
     if(typeof long.access_token!=="string"||long.access_token.length<20||
        long.access_token.length>4096||String(long.token_type||"").toLowerCase()!=="bearer"||
@@ -209,7 +213,7 @@ async function finish(request,env,now,fetcher){
     const identity=await providerJson(await fetcher(
       "https://graph.threads.com/v1.0/me?fields=id%2Cusername",{
       method:"GET",headers:{Authorization:"Bearer "+long.access_token,
-        Accept:"application/json"},cache:"no-store",redirect:"error",
+        Accept:"application/json"},cache:"no-store",redirect:"manual",
       signal:AbortSignal.timeout(8000),
     }));
     if(!metaId(identity.id) ||
@@ -261,7 +265,7 @@ async function renew(env,now,fetcher){
   }).toString();
   const result=await providerJson(await fetcher(endpoint.href,{
     method:"GET",headers:{Accept:"application/json"},cache:"no-store",
-    redirect:"error",signal:AbortSignal.timeout(8000),
+    redirect:"manual",signal:AbortSignal.timeout(8000),
   }));
   if(typeof result.access_token!=="string" || result.access_token.length<20 ||
      result.access_token.length>4096 ||
@@ -274,7 +278,7 @@ async function renew(env,now,fetcher){
     "https://graph.threads.com/v1.0/me?fields=id%2Cusername",{
       method:"GET",
       headers:{Authorization:"Bearer "+result.access_token,Accept:"application/json"},
-      cache:"no-store",redirect:"error",signal:AbortSignal.timeout(8000),
+      cache:"no-store",redirect:"manual",signal:AbortSignal.timeout(8000),
     }));
   if(!metaId(profile.id) ||
      typeof profile.username!=="string" ||
