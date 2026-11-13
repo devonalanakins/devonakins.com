@@ -150,6 +150,21 @@ test("OAuth refuses wrong accounts, invalid provider payload and preexisting con
   assert.equal(f.sql.prepare("SELECT token_cipher FROM threads_connection").get().token_cipher,null);
 });
 
+
+test("Meta numeric IDs outside JavaScript safe integer range cannot create an OAuth grant",async()=>{
+  const f=fixture(true,async(url)=>{
+    const pathname=new URL(url).pathname;
+    if(pathname==="/oauth/access_token")
+      return Response.json({access_token:"s".repeat(96),user_id:Number.MAX_SAFE_INTEGER+1});
+    if(pathname==="/access_token")
+      return Response.json({access_token:"l".repeat(96),token_type:"bearer",expires_in:5184000});
+    return Response.json({id:"123456789012345",username:"DevonFixture"});
+  });
+  const result=await f.callback(await f.auth());
+  assert.equal(result.headers.get("Location"),"/owner/presence/?threads=authorization");
+  assert.equal(f.sql.prepare("SELECT token_cipher FROM threads_connection").get().token_cipher,null);
+});
+
 test("owner disconnect revokes pending grants and stored tokens, including delayed in-flight callbacks",async()=>{
   let release;let entered;
   const atProvider=new Promise(resolve=>{entered=resolve;});
