@@ -137,7 +137,7 @@ async function finish(request,env,now,fetcher){
   let stage="exchange";
   try {
     if(!threadsAppConfigured(env))throw Error("Configuration changed");
-    const short=await providerJson(await fetcher("https://graph.threads.net/oauth/access_token",{
+    const short=await providerJson(await fetcher("https://graph.threads.com/oauth/access_token",{
       method:"POST",headers:{"Content-Type":"application/x-www-form-urlencoded",Accept:"application/json"},
       body:new URLSearchParams({client_id:env.THREADS_APP_ID,
         client_secret:env.THREADS_APP_SECRET,code,grant_type:"authorization_code",
@@ -151,7 +151,7 @@ async function finish(request,env,now,fetcher){
     // for the long-lived exchange. Both go ONLY to Meta's fixed HTTPS origin,
     // never to the browser, application URL, logs or any redirect target.
     stage="extend";
-    const exchange=new URL("https://graph.threads.net/access_token");
+    const exchange=new URL("https://graph.threads.com/access_token");
     exchange.search=new URLSearchParams({grant_type:"th_exchange_token",
       client_secret:env.THREADS_APP_SECRET,access_token:short.access_token}).toString();
     const long=await providerJson(await fetcher(exchange.href,{
@@ -165,7 +165,7 @@ async function finish(request,env,now,fetcher){
       throw Error("Invalid token lifetime");
     stage="profile";
     const identity=await providerJson(await fetcher(
-      "https://graph.threads.net/v1.0/me?fields=id%2Cusername",{
+      "https://graph.threads.com/v1.0/me?fields=id%2Cusername",{
       method:"GET",headers:{Authorization:"Bearer "+long.access_token,
         Accept:"application/json"},cache:"no-store",redirect:"error",
       signal:AbortSignal.timeout(8000),
@@ -211,7 +211,7 @@ async function renew(env,now,fetcher){
     return ownerError("Threads authorization is not ready for renewal",429);
   // Meta requires the current unexpired long-lived credential in a query.
   // Fixed HTTPS host, no redirect or logging; never return it to owner JS.
-  const endpoint=new URL("https://graph.threads.net/refresh_access_token");
+  const endpoint=new URL("https://graph.threads.com/refresh_access_token");
   endpoint.search=new URLSearchParams({
     grant_type:"th_refresh_token",access_token:current.token,
   }).toString();
@@ -227,7 +227,7 @@ async function renew(env,now,fetcher){
      Number(result.expires_in)>90*86400)
     return ownerError("Threads provider did not renew authorization",503);
   const profile=await providerJson(await fetcher(
-    "https://graph.threads.net/v1.0/me?fields=id%2Cusername",{
+    "https://graph.threads.com/v1.0/me?fields=id%2Cusername",{
       method:"GET",
       headers:{Authorization:"Bearer "+result.access_token,Accept:"application/json"},
       cache:"no-store",redirect:"error",signal:AbortSignal.timeout(8000),
