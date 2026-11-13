@@ -156,3 +156,11 @@
   .one-body .concept-live .concept-live-foot{display:none}
   .one-body .studio-threads-inline{min-height:42px;max-height:52px;margin:2px 0 0}
 }
+
+/* On normal-height phones the redundant source-footer consumes the last
+ * GitHub event row. Keep the checked timestamp next to the GitHub source;
+ * Activity retains refresh and full history. */
+@media(max-width:760px) and (min-height:701px){
+  .one-body .concept-live .concept-live-foot{display:none}
+  .one-body .concept-live .prestige-activity-card{padding-bottom:0}
+}
