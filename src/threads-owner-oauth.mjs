@@ -90,7 +90,9 @@ async function begin(env,now) {
   await env.LISTENING_DB.prepare(
     "INSERT INTO threads_oauth_attempt(state_hash,nonce_hash,expires_at) VALUES(?,?,?)"
   ).bind(stateHash,nonceHash,now+300_000).run();
-  const url=new URL("https://threads.net/oauth/authorize");
+  // Open Meta's current canonical Threads host directly; avoid a legacy
+  // threads.net -> threads.com redirect dropping OAuth query parameters.
+  const url=new URL("https://threads.com/oauth/authorize");
   url.search=new URLSearchParams({client_id:env.THREADS_APP_ID,
     redirect_uri:CALLBACK,scope:SCOPE,response_type:"code",state}).toString();
   return ownerJson({authorizeUrl:url.href},200,{"Set-Cookie":makeCookie(nonce)});
