@@ -271,7 +271,7 @@ test("renewal rejects expired credentials, malformed provider results and wrong 
   assert.equal((await expired.post("/api/threads/auth/renew")).status,409);
   assert.equal(expired.requests.length,start,"must not contact Meta for expired token");
 
-  for(const errorCase of ["wrong-account","malformed","provider-error"]){
+  for(const errorCase of ["wrong-account","wrong-id","malformed","provider-error"]){
     let refreshing=false;
     const f=fixture(true,async(url)=>{
       const pathname=new URL(url).pathname;
@@ -286,8 +286,8 @@ test("renewal rejects expired credentials, malformed provider results and wrong 
         return Response.json({access_token:"r".repeat(96),token_type:"bearer",expires_in:5184000});
       }
       if(pathname==="/v1.0/me")
-        return Response.json({id:"123456789012345",
-          username:refreshing?"DifferentOwner":"DevonFixture"});
+        return Response.json({id:refreshing&&errorCase==="wrong-id"?"999999999999999":"123456789012345",
+          username:refreshing&&errorCase==="wrong-account"?"DifferentOwner":"DevonFixture"});
       throw Error("Unexpected provider request");
     });
     await f.callback(await f.auth());
