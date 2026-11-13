@@ -54,14 +54,15 @@ export function createThreadsMetaLifecycle({clock=Date.now}={}){
     catch{return ownerError("Invalid signed request",403);}
     try{
       const db=env.LISTENING_DB;
+      const receipt=await db.prepare("INSERT OR IGNORE INTO threads_lifecycle_receipt(request_hash,received_at,kind) VALUES(?,?,?)")
+        .bind(signed.hash,clock(),kind).run();
+      if(receipt.meta?.changes!==1)return ownerJson({received:true});
       // Conditional update is atomic: a callback for another account cannot revoke ours.
       const update=await db.prepare(
         "UPDATE threads_connection SET revision=revision+1,token_cipher=NULL,username=NULL,"+
         "threads_user_id=NULL,connected_at=0,token_expires_at=0,verified_at=0 "+
         "WHERE id=1 AND threads_user_id=?"
       ).bind(signed.id).run();
-      await db.prepare("INSERT OR IGNORE INTO threads_lifecycle_receipt(request_hash,received_at,kind) VALUES(?,?,?)")
-        .bind(signed.hash,clock(),kind).run();
       if(update.meta?.changes===1)
         await db.prepare("DELETE FROM threads_oauth_attempt").run();
       // Do not disclose whether a user ID matched the private owner account.
