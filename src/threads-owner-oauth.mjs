@@ -25,19 +25,20 @@ export const threadsAppConfigured=env=>
   env.THREADS_APP_SECRET.length>=20 && env.THREADS_APP_SECRET.length<=512;
 const validTimestamp=x=>Number.isSafeInteger(x)&&x>0;
 async function accountRow(db) {
-  return db.prepare("SELECT revision,token_cipher,username,connected_at,token_expires_at,verified_at FROM threads_connection WHERE id=1").first();
+  return db.prepare("SELECT revision,token_cipher,username,threads_user_id,connected_at,token_expires_at,verified_at FROM threads_connection WHERE id=1").first();
 }
 export async function storedThreadsCredential(env={},at=Date.now()) {
   if(!boundDatabase(env)||typeof env.LISTENING_TOKEN_KEY!=="string")return null;
   try {
     const row=await accountRow(env.LISTENING_DB);
     if(!row || typeof row.token_cipher!=="string" ||
-       !HANDLE.test(row.username||"") || !validTimestamp(row.token_expires_at) ||
+       !HANDLE.test(row.username||"") || !NUMBER.test(row.threads_user_id||"") ||
+       !validTimestamp(row.token_expires_at) ||
        row.token_expires_at<=at+GRACE_MS)return null;
     const key=await importEncryptionKey(env.LISTENING_TOKEN_KEY);
     const token=await unseal(row.token_cipher,key,"threads-long-lived-access");
     if(typeof token!=="string"||token.length<20||token.length>4096)return null;
-    return {token,username:row.username,revision:row.revision,
+    return {token,username:row.username,userId:row.threads_user_id,revision:row.revision,
       expiresAt:row.token_expires_at,cipher:row.token_cipher,
       verifiedAt:row.verified_at};
   } catch {return null;}
@@ -50,7 +51,8 @@ export async function storedThreadsStatus(env={},at=Date.now()) {
     const row=await accountRow(env.LISTENING_DB);
     if(!row)return unavailable;
     const valid=typeof row.token_cipher==="string" &&
-      HANDLE.test(row.username||"") && validTimestamp(row.token_expires_at) &&
+      HANDLE.test(row.username||"") && NUMBER.test(row.threads_user_id||"") &&
+      validTimestamp(row.token_expires_at) &&
       row.token_expires_at>at+GRACE_MS;
     return {version:1,appConfigured:threadsAppConfigured(env),storageReady:true,
       connected:valid,expiresAt:valid?new Date(row.token_expires_at).toISOString():null,
@@ -163,10 +165,10 @@ async function finish(request,env,now,fetcher){
     // A Stop/disconnect or newer attempt deletes this marker; a delayed
     // provider response can never reestablish a revoked connection.
     const saved=await db.prepare(
-      "UPDATE threads_connection SET revision=revision+1,token_cipher=?,username=?,"+
+      "UPDATE threads_connection SET revision=revision+1,token_cipher=?,username=?,threads_user_id=?,"+
       "connected_at=?,token_expires_at=?,verified_at=? WHERE id=1 AND EXISTS "+
       "(SELECT 1 FROM threads_oauth_attempt WHERE state_hash=? AND nonce_hash=? AND expires_at=0)"
-    ).bind(cipher,identity.username,now,until,now,stateHash,attempt.nonce_hash).run();
+    ).bind(cipher,identity.username,String(identity.id),now,until,now,stateHash,attempt.nonce_hash).run();
     if(saved.meta?.changes!==1)return failed("expired");
     return ownerRedirect("/owner/presence/?threads=connected",{"Set-Cookie":clearCookie});
   } catch {
@@ -214,6 +216,7 @@ async function renew(env,now,fetcher){
   if(!NUMBER.test(String(profile.id||"")) ||
      typeof profile.username!=="string" ||
      !HANDLE.test(profile.username) ||
+     String(profile.id)!==current.userId ||
      profile.username.toLowerCase()!==current.username.toLowerCase())
     return ownerError("Renewed Threads account did not match",409);
   const key=await importEncryptionKey(env.LISTENING_TOKEN_KEY);
@@ -234,7 +237,7 @@ async function disconnect(env){
   const db=env.LISTENING_DB;
   await db.prepare("DELETE FROM threads_oauth_attempt").run();
   const row=await db.prepare(
-    "UPDATE threads_connection SET revision=revision+1,token_cipher=NULL,username=NULL,"+
+    "UPDATE threads_connection SET revision=revision+1,token_cipher=NULL,username=NULL,threads_user_id=NULL,"+
     "connected_at=0,token_expires_at=0,verified_at=0 WHERE id=1"
   ).run();
   if(row.meta?.changes!==1)return ownerError("Private Threads migration missing",409);
