@@ -25,7 +25,7 @@ test("Living Studio hero integrates the orbital visual without duplicating provi
   assert.equal((page.match(/class="studio-orbital-art"/g)||[]).length,1);
   assert.equal((page.match(/data-public-spotify/g)||[]).length,1);
   assert.equal((page.match(/data-public-github-feed/g)||[]).length,2);
-  assert.equal((page.match(/data-public-threads/g)||[]).length,1);
+  assert.equal((page.match(/data-public-threads/g)||[]).length,2);
   assert.equal((page.match(/role="tabpanel"/g)||[]).length,6);
 });
 test("motion respects OS reduced-motion and site pause, with no remote visual dependency",async()=>{
