@@ -12,8 +12,10 @@ const owner={access:{aud:"owner-test",getIdentity:async()=>({email:"owner@exampl
 const root="https://devonakins.com";
 function fixture(migrated=true,providerOverride=null){
   const sql=new DatabaseSync(":memory:");
-  if(migrated)sql.exec(readFileSync(
-    new URL("../migrations/0011_threads_private_oauth.sql",import.meta.url),"utf8"));
+  if(migrated){
+    sql.exec(readFileSync(new URL("../migrations/0011_threads_private_oauth.sql",import.meta.url),"utf8"));
+    sql.exec(readFileSync(new URL("../migrations/0012_threads_meta_lifecycle.sql",import.meta.url),"utf8"));
+  }
   const db={prepare(text){
     const query=sql.prepare(text);let values=[];
     return {bind(...v){values=v;return this;},
@@ -108,6 +110,7 @@ test("owner callback binds Meta account identity and encrypts long token at rest
   assert.notEqual(row.token_cipher,"l".repeat(96));
   assert.doesNotMatch(JSON.stringify(row),/"l{96}"/);
   assert.equal(row.username,"DevonFixture");
+  assert.equal(row.threads_user_id,"123456789012345");
   assert.equal(row.token_expires_at,now+5184000*1000);
   const stored=await storedThreadsCredential(f.env,now);
   assert.equal(stored.token,"l".repeat(96));
