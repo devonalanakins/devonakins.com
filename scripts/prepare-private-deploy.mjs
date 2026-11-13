@@ -231,6 +231,51 @@ export async function verifyGithubOidcOwnerConsent({
   return true;
 }
 
+/** Exact schema gate for the lifecycle handler shipping in this release.
+ * Query only schema metadata from the reviewed private D1; never touch token rows.
+ * A missing/unapplied migration must stop the protected release before upload.
+ */
+export async function verifyThreadsLifecycleSchema({
+  account, token, databaseId, fetcher=fetch,
+} = {}) {
+  const sql = [
+    "SELECT",
+    "(SELECT COUNT(*) FROM pragma_table_info('threads_connection')",
+    "WHERE name='threads_user_id' AND type='TEXT') AS identity_column,",
+    "(SELECT COUNT(*) FROM pragma_table_info('threads_lifecycle_receipt')",
+    "WHERE name IN ('request_hash','received_at','kind','confirmation_code')) AS receipt_columns,",
+    "(SELECT COUNT(*) FROM sqlite_master WHERE type='table'",
+    "AND name='threads_oauth_attempt') AS attempt_table",
+  ].join(" ");
+  let response;
+  try {
+    response=await fetcher(
+      "https://api.cloudflare.com/client/v4/accounts/"+account+
+      "/d1/database/"+databaseId+"/query", {
+        method:"POST",
+        headers:{Authorization:"Bearer "+token,Accept:"application/json",
+          "Content-Type":"application/json"},
+        body:JSON.stringify({sql}),redirect:"error",
+        signal:AbortSignal.timeout(10000),
+      });
+  } catch {
+    throw new PrivatePreflightFailure("THREADS_SCHEMA_READ","NETWORK_OR_TIMEOUT");
+  }
+  if(!response.ok)
+    throw new PrivatePreflightFailure("THREADS_SCHEMA_READ","HTTP_"+response.status);
+  let data;
+  try { data=await response.json(); }
+  catch { throw new PrivatePreflightFailure("THREADS_SCHEMA_READ","INVALID_JSON"); }
+  const result=data?.result?.[0];
+  if(data?.success!==true||result?.success!==true||
+      !Array.isArray(result.results)||result.results.length!==1)
+    throw new PrivatePreflightFailure("THREADS_SCHEMA_READ","API_REJECTED");
+  const row=result.results[0];
+  if(row?.identity_column!==1||row?.receipt_columns!==4||row?.attempt_table!==1)
+    throw new PrivatePreflightFailure("THREADS_SCHEMA_VALIDATE","MIGRATION_0012_REQUIRED");
+  return true;
+}
+
 export async function preparePrivateDeployment({
   env = process.env,
   fetcher = fetch,
@@ -305,6 +350,9 @@ export async function preparePrivateDeployment({
   if (!/^[a-f0-9-]{36}$/.test(binding?.id || ""))
     throw new PrivatePreflightFailure("ACTIVE_BINDINGS_VALIDATE", "DEDICATED_D1_MISSING");
   const database = await get("/d1/database/" + binding.id, "D1_METADATA_READ");
+  // The lifecycle module reads threads_user_id on all private connection paths.
+  // Do not release it while migration 0012 is still absent from the live D1.
+  await verifyThreadsLifecycleSchema({account,token,databaseId:binding.id,fetcher});
   const base = await read("wrangler.jsonc", "utf8");
   // A dedicated read-only SQL query verifies owner source consent. No
   // activity is inserted and no public sharing state is altered here.
