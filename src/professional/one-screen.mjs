@@ -133,6 +133,7 @@ export function renderOneScreenHome({datedCapture=null,motionAssetAvailable=fals
     '<link rel="stylesheet" href="/src/professional/concept-console.css">'+
     '<link rel="stylesheet" href="/src/professional/living-studio.css">'+
     '<link rel="stylesheet" href="/src/professional/neural-field.css">'+
+    '<link rel="stylesheet" href="/src/professional/orbital-studio.css">'+
     '<link rel="stylesheet" href="/src/professional/social-presence.css">'+
     '<link rel="preload" as="image" type="image/svg+xml" href="/professional/mission-operations.svg">'+
     '<link rel="preload" as="image" type="image/svg+xml" href="/professional/mission-systems.svg">'+
