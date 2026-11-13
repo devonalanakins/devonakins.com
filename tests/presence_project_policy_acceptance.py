@@ -39,7 +39,7 @@ with sync_playwright() as p:
 
             def route(req):
                 path = req.request.url.split("example.test", 1)[-1]
-                if path == "/owner/presence/":
+                if path.split("?", 1)[0] == "/owner/presence/":
                     return req.fulfill(body=HTML, content_type="text/html")
                 if path.startswith("/v2/"):
                     # Cache-busting query parameters never belong in a local path.
@@ -112,6 +112,28 @@ with sync_playwright() as p:
             assert page.locator("#task-project").input_value() == "devonakins-com"
             assert page.evaluate("document.documentElement.scrollWidth <= innerWidth"), (
                 engine.name, width, "post-save horizontal overflow")
+            # OAuth return status must be discoverable at the top of the
+            # private mobile dashboard, not buried below other controls.
+            page.goto("https://example.test/owner/presence/?threads=exchange")
+            banner = page.locator("#threads-oauth-return")
+            banner.wait_for(state="visible")
+            assert "first authorization-code exchange" in banner.inner_text(), (
+                engine.name, width, "OAuth error missing from top banner")
+            assert "first authorization-code exchange" in page.locator(
+                "#threads-connection-status").inner_text()
+            # Never claim an account is connected from a query parameter alone.
+            page.goto("https://example.test/owner/presence/?threads=connected")
+            page.locator("#threads-oauth-return").wait_for(state="visible")
+            assert "did not verify a stored connection" in page.locator(
+                "#threads-oauth-return").inner_text(), (engine.name, width)
+            # A return intercepted by an Access sign-in can lose the callback
+            # query; the session marker still gives the owner a safe clue.
+            page.evaluate("sessionStorage.setItem('threadsPrivateOAuthStartedAt', String(Date.now()))")
+            page.goto("https://example.test/owner/presence/")
+            page.locator("#threads-oauth-return").wait_for(state="visible")
+            assert "without a recognized authorization result" in page.locator(
+                "#threads-oauth-return").inner_text(), (engine.name, width)
+            assert not page.evaluate("sessionStorage.getItem('threadsPrivateOAuthStartedAt')")
             context.close()
         browser.close()
 print("Owner project policy: warning, explicit approved save, privacy and responsive Chromium/WebKit at 320/390/1440 passed.")

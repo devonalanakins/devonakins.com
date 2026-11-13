@@ -26,3 +26,11 @@
 .source-readiness-list .source-readiness-action:hover{background:#15303d;border-color:#82c9d4}
 .source-readiness-list .source-readiness-action:focus-visible{outline:3px solid #91e1ed;outline-offset:3px}
 @media(prefers-contrast:more){.source-readiness-list .source-readiness-action{border-color:currentColor}}
+
+/* Owner-only OAuth result: visible near the top even on narrow Safari screens. */
+#threads-oauth-return{margin:0 0 24px;padding:18px 20px;border:1px solid #d1a98b65;border-left:3px solid #d7ae8e;border-radius:12px;background:linear-gradient(120deg,#3c2c2b99,#18222cbb);color:#f1e5d9;line-height:1.6;overflow-wrap:anywhere}
+#threads-oauth-return[hidden]{display:none}
+#threads-oauth-return strong{display:block;font-size:14px;letter-spacing:.01em}
+#threads-oauth-return p{font-size:13px;margin:7px 0 10px}
+#threads-oauth-return a{color:#f0c8a9;font-size:12px;text-underline-offset:3px}
+#threads-oauth-return:focus-visible{outline:2px solid #9dddcf;outline-offset:4px}

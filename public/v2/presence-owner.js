@@ -371,7 +371,50 @@ function renderThreadsAuthorization(data) {
   el("threads-connection-status").textContent=message;
   lock(busy || threadsAuthBusy || !state);
 }
+// A short-lived, nonsensitive marker distinguishes a lost callback from a
+// completed OAuth return. It never contains a code, token, account ID or state.
+const THREADS_RETURN_MARKER="threadsPrivateOAuthStartedAt";
+function consumeThreadsReturnMarker() {
+  try {
+    const started=Number(sessionStorage.getItem(THREADS_RETURN_MARKER));
+    sessionStorage.removeItem(THREADS_RETURN_MARKER);
+    return Number.isFinite(started) && started>0 && Date.now()>=started &&
+      Date.now()-started<=10*60*1000;
+  } catch {return false;}
+}
+function displayThreadsReturn(result,connection,started) {
+  const failures={
+    callback:"Meta did not return a usable authorization response. Try again in a single Safari tab.",
+    expired:"The OAuth session expired or its private browser cookie was lost. Sign in through Cloudflare Access and retry in the same Safari tab.",
+    reused:"That authorization response was already used. Start a new private connection.",
+    exchange:"Meta rejected or failed the first authorization-code exchange. No token was stored. App ID, app secret, provider host and callback are the next diagnostics.",
+    extend:"Meta rejected the long-lived-token exchange. No authorization was saved.",
+    profile:"Meta returned an account that could not be verified. No authorization was saved.",
+    storage:"Meta authorization succeeded, but private encrypted storage failed.",
+    authorization:"Meta authorization was not completed. No sharing was changed.",
+  };
+  let message=null;
+  if(result==="connected"){
+    message=connection?.connected
+      ? "Threads is privately connected and verified. Public sharing remains disabled."
+      : "Meta returned a success indication, but the private database did not verify a stored connection.";
+  } else if(result && Object.hasOwn(failures,result)){
+    message=failures[result];
+  } else if(started && !connection?.connected){
+    message="Returned to Presence without a recognized authorization result. The callback may have been interrupted by the private login session. No Threads connection was saved.";
+  }
+  if(!message)return;
+  el("threads-oauth-return-message").textContent=message;
+  const banner=el("threads-oauth-return");
+  banner.hidden=false;
+  // The result appears near the top of this long control room, not buried in
+  // the Integrations section where a mobile user could miss it.
+  banner.focus({preventScroll:true});
+  el("threads-connection-status").textContent=message;
+}
 async function loadThreadsAuthorization() {
+  const result=new URLSearchParams(location.search).get("threads");
+  const started=consumeThreadsReturnMarker();
   try {
     const response=await fetch("/api/threads/auth/status",{
       credentials:"same-origin",cache:"no-store",
@@ -379,30 +422,14 @@ async function loadThreadsAuthorization() {
     });
     if(!response.ok || !response.headers.get("Content-Type")?.includes("application/json"))
       throw Error("Private connection status unavailable.");
-    renderThreadsAuthorization(await response.json());
-    // The OAuth callback never returns tokens in a query string.
-    const result=new URLSearchParams(location.search).get("threads");
-    if(result==="connected")
-      el("threads-connection-status").textContent=
-        "Meta account authorized privately. Posts remain disconnected.";
-    else if(result){
-      const errors={
-        callback:"Meta did not return a usable authorization response. Start a new connection in this browser.",
-        expired:"Your authorization session expired or its browser cookie was lost. Retry in the same browser tab.",
-        reused:"The authorization request was already used. Start a new private connection.",
-        exchange:"Meta rejected or failed the initial authorization-code exchange. Check the Threads app tester role and redirect registration.",
-        extend:"Meta rejected the long-lived-token exchange. Verify the Threads-specific app secret and app status.",
-        profile:"Meta did not return a matching account profile. Verify the signed-in Threads account and API permissions.",
-        storage:"The account was authorized, but secure private storage did not complete. No sharing was enabled.",
-        authorization:"Meta authorization was not completed. No sharing was changed.",
-      };
-      if(Object.hasOwn(errors,result))
-        el("threads-connection-status").textContent=errors[result];
-    }
+    const data=await response.json();
+    renderThreadsAuthorization(data);
+    displayThreadsReturn(result,data,started);
   } catch(error) {
     threadsAuthState=null;
     el("threads-connection-status").textContent=
       error?.message || "Private Threads connection unavailable.";
+    displayThreadsReturn(result,null,started);
     lock(busy || !state);
   }
 }
@@ -442,6 +469,8 @@ async function changeThreadsAuthorization(action) {
          target.searchParams.getAll("state").length!==1 ||
          !/^[A-Za-z0-9_-]{43}$/.test(target.searchParams.get("state")||""))
         throw Error("Meta authorization destination was rejected.");
+      try {sessionStorage.setItem(THREADS_RETURN_MARKER,String(Date.now()));}
+      catch { /* Safari may disable storage; the callback URL still carries a result. */ }
       window.location.assign(target.href);
     } else {
       await Promise.all([loadThreadsAuthorization(),load()]);
