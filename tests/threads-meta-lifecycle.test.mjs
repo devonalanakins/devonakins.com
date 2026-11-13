@@ -9,12 +9,15 @@ const now=Date.parse("2026-11-13T10:00:00Z");
 const root="https://devonakins.com";
 const secret="synthetic-meta-secret-long-enough";
 const encode=s=>Buffer.from(s).toString("base64url");
-async function sign(id="123456789",time=Math.floor(now/1000)){
- const payload=encode(JSON.stringify({algorithm:"HMAC-SHA256",issued_at:time,user_id:id}));
+async function signPayload(json){
+ const payload=encode(json);
  const key=await crypto.subtle.importKey("raw",new TextEncoder().encode(secret),
    {name:"HMAC",hash:"SHA-256"},false,["sign"]);
  const mac=await crypto.subtle.sign("HMAC",key,new TextEncoder().encode(payload));
  return encode(Buffer.from(mac))+"."+payload;
+}
+async function sign(id="123456789",time=Math.floor(now/1000)){
+ return signPayload(JSON.stringify({algorithm:"HMAC-SHA256",issued_at:time,user_id:id}));
 }
 function fixture(){
  const sql=new DatabaseSync(":memory:");
@@ -98,6 +101,16 @@ test("safe numeric Meta user IDs are supported without losing precision",async()
  assert.equal(r.status,200);
  assert.equal(f.row().token_cipher,null);
 });
+test("signed 17-digit decimal numeric account ID revokes only exact stored ID",async()=>{
+ const id="17841400000001235";
+ const f=fixture();
+ f.sql.prepare("UPDATE threads_connection SET threads_user_id=? WHERE id=1").run(id);
+ const signed=await signPayload('{"algorithm":"HMAC-SHA256","issued_at":'+Math.floor(now/1000)+
+   ',"user_id":'+id+'}');
+ assert.equal((await f.send(signed,"/api/threads/lifecycle/deauthorize")).status,200);
+ assert.equal(f.row().token_cipher,null);
+});
+
 test("replayed callbacks cannot revoke new grants, and pre-grant callbacks never remove new tokens",async()=>{
  const f=fixture(), signed=await sign();
  assert.equal((await f.send(signed)).status,200);
@@ -129,7 +142,8 @@ test("forged, expired, oversized and malformed requests fail closed",async()=>{
  for(const value of [
    (good[0]==="A"?"B":"A")+good.slice(1),
    await sign("123456789",Math.floor(now/1000)-7200),
-   await sign(Number.MAX_SAFE_INTEGER+1), // unsafe numeric account ID must not round
+   await signPayload('{"algorithm":"HMAC-SHA256","issued_at":'+Math.floor(now/1000)+
+     ',"user_id":1.78414e16}'), // noncanonical numeric notation fails closed
    "malformed",
    "z".repeat(20000),
  ]){
