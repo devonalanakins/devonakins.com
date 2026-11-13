@@ -154,9 +154,41 @@ test("OAuth refuses wrong accounts, invalid provider payload and preexisting con
 test("OAuth safely identifies a provider exchange failure without reflecting provider secrets",async()=>{
   const f=fixture(true,async()=>new Response('SENSITIVE_META_PROVIDER_ERROR',{status:400}));
   const result=await f.callback(await f.auth());
-  assert.equal(result.headers.get("Location"),"/owner/presence/?threads=exchange");
+  assert.equal(result.headers.get("Location"),"/owner/presence/?threads=exchange&detail=http-400");
   assert.doesNotMatch(await result.text(),/SENSITIVE_META_PROVIDER_ERROR/);
   assert.equal(f.sql.prepare("SELECT token_cipher FROM threads_connection").get().token_cipher,null);
+});
+
+test("OAuth privately reports only bounded numeric Meta HTTP errors, never provider messages",async()=>{
+  const f=fixture(true,async()=>Response.json({
+    error:{code:100,error_subcode:1349245,message:"SENSITIVE_PROVIDER_RESPONSE_TOKEN"},
+    fbtrace_id:"SENSITIVE_PROVIDER_TRACE_ID",
+  },{status:400}));
+  const result=await f.callback(await f.auth());
+  assert.equal(result.status,303);
+  assert.equal(result.headers.get("Location"),
+    "/owner/presence/?threads=exchange&detail=http-400-meta-100-sub-1349245");
+  assert.doesNotMatch(result.headers.get("Location"),
+    /SENSITIVE_PROVIDER|fbtrace_id|access_token|client_secret|code=/);
+  assert.equal(f.sql.prepare("SELECT token_cipher FROM threads_connection").get().token_cipher,null);
+});
+
+test("OAuth categorizes transport, malformed JSON and invalid token responses without leaks",async()=>{
+  const cases=[
+    {provider:async()=>{throw new TypeError("SENSITIVE_NETWORK_BODY");},detail:"network"},
+    {provider:async()=>{const error=new Error("SENSITIVE_TIMEOUT_BODY");error.name="TimeoutError";throw error;},detail:"timeout"},
+    {provider:async()=>new Response("SENSITIVE_MALFORMED_JSON",{status:200}),detail:"malformed-json"},
+    {provider:async()=>Response.json({access_token:"short",user_id:"12345"}),detail:"invalid-payload"},
+  ];
+  for(const entry of cases){
+    const f=fixture(true,entry.provider);
+    const result=await f.callback(await f.auth());
+    assert.equal(result.status,303);
+    assert.equal(result.headers.get("Location"),
+      "/owner/presence/?threads=exchange&detail="+entry.detail);
+    assert.doesNotMatch(result.headers.get("Location"),/SENSITIVE|token|client_secret|code=/);
+    assert.equal(f.sql.prepare("SELECT token_cipher FROM threads_connection").get().token_cipher,null);
+  }
 });
 
 test("Meta long numeric account IDs retain exact decimal digits through OAuth and encrypted D1",async()=>{
@@ -188,7 +220,7 @@ test("Meta numeric account IDs in exponent notation fail closed rather than roun
     return Response.json({id:"17841400000001235",username:"DevonFixture"});
   });
   const result=await f.callback(await f.auth());
-  assert.equal(result.headers.get("Location"),"/owner/presence/?threads=exchange");
+  assert.equal(result.headers.get("Location"),"/owner/presence/?threads=exchange&detail=invalid-payload");
   assert.equal(f.sql.prepare("SELECT token_cipher FROM threads_connection").get().token_cipher,null);
 });
 
