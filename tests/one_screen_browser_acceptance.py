@@ -328,6 +328,49 @@ try:
                 page.screenshot(path=str(OUT/f"{engine}-{width}x{height}-home.png"))
                 assert not errors,(engine,width,height,errors)
                 context.close()
+            # Rotate the same open document without refreshing the page.
+            # The source is a synthetic, validated public GitHub snapshot; resizing
+            # may change presentation but must neither invent events nor refetch.
+            import json
+            from datetime import datetime, timezone
+            checked=datetime.now(timezone.utc).isoformat().replace("+00:00","Z")
+            fixture={"version":1,"source":"GitHub public events API",
+                     "status":"available","checkedAt":checked,
+                     "reason":None,"retryAt":None,
+                     "events":[{"kind":"push","label":"Pushed commits",
+                                "repo":"devonalanakins/devonakins.com",
+                                "at":checked,
+                                "url":"https://github.com/devonalanakins/devonakins.com"}
+                               for _ in range(6)]}
+            resize_context=browser.new_context(viewport={"width":390,"height":844},
+                device_scale_factor=1,reduced_motion="reduce")
+            resize_page=resize_context.new_page()
+            feed_fetches=[]
+            def supply_feed(route):
+                feed_fetches.append(1)
+                route.fulfill(status=200,content_type="application/json",
+                    body=json.dumps(fixture))
+            resize_page.route("**/api/github/public-feed",supply_feed)
+            resize_page.goto(BASE+"/",wait_until="domcontentloaded")
+            def assert_capacity(home,activity):
+                resize_page.wait_for_function("""(expected) => {
+                  const count=id=>document.querySelectorAll(id+" [data-feed-list] li").length;
+                  return document.querySelector("#one-home-github").dataset.limit===String(expected[0]) &&
+                    document.querySelector("#one-activity-github").dataset.limit===String(expected[1]) &&
+                    count("#one-home-github")===expected[0] &&
+                    count("#one-activity-github")===expected[1];
+                }""",arg=[home,activity])
+                assert resize_page.locator("#one-home-github [data-feed-list] li").count()==home
+                assert resize_page.locator("#one-activity-github [data-feed-list] li").count()==activity
+            assert_capacity(2,4)
+            original_fetches=len(feed_fetches)
+            assert original_fetches==1,(engine,"fixture should be fetched once")
+            for width,height,home,activity in ((844,390,1,2),(1440,900,4,6),(390,844,2,4)):
+                resize_page.set_viewport_size({"width":width,"height":height})
+                assert_capacity(home,activity)
+                assert len(feed_fetches)==original_fetches,(
+                    engine,width,height,"viewport change triggered provider request")
+            resize_context.close()
             # Normal motion is intentional; motion-reduced checks above verify
             # every panel stays usable without animation.
             motion_context=browser.new_context(viewport={"width":1440,"height":900},
