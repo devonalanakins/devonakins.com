@@ -18,7 +18,7 @@ export function renderSocialChannels(compact=false){
   return '<nav class="one-social-channels'+(compact?' one-social-channels--compact':'')+
     '" aria-label="Social profiles and updates">'+verified.map(anchor).join("")+
     '<span class="one-social-unverified" title="Exact Facebook profile address has not been confirmed"'+
-      ' aria-label="Facebook profile link not yet verified">Facebook · pending</span></nav>';
+      ' aria-label="Facebook profile link not yet verified">'+(compact?'FB · pending':'Facebook · pending')+'</span></nav>';
 }
 export function renderHomeSocialHub(){
   return '<div class="studio-social-dock"><span class="studio-social-dock-label">FIND ME / VERIFIED CHANNELS</span>'+
