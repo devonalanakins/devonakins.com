@@ -16,6 +16,15 @@ const NUMBER=/^[0-9]{4,32}$/;
 const metaId=value=>typeof value==="string"&&NUMBER.test(value)?value:
   typeof value==="number"&&Number.isSafeInteger(value)&&NUMBER.test(String(value))?
     String(value):null;
+// Meta may represent an opaque, 17+ digit account ID as a JSON number.
+// Preserve its exact lexical digits BEFORE JavaScript rounds the Number.
+// If the reviver source context is unavailable, unsafe IDs still fail closed.
+function preserveProviderId(key,value,context){
+  if((key==="id"||key==="user_id") && typeof value==="number" &&
+     typeof context?.source==="string" && NUMBER.test(context.source))
+    return context.source;
+  return value;
+}
 const STR=/^[A-Za-z0-9_-]{43}$/;
 const GRACE_MS=60_000;
 const REFRESH_MIN_AGE_MS=24*60*60_000;
@@ -83,7 +92,7 @@ async function providerJson(response,max=4096) {
   } finally {reader.releaseLock();}
   const bytes=new Uint8Array(size);let offset=0;
   for(const part of parts){bytes.set(part,offset);offset+=part.length;}
-  return JSON.parse(new TextDecoder().decode(bytes));
+  return JSON.parse(new TextDecoder("utf-8",{fatal:true}).decode(bytes),preserveProviderId);
 }
 async function begin(env,now) {
   if(!threadsAppConfigured(env))return ownerError("Meta Threads app is not configured",409);
@@ -125,6 +134,7 @@ async function finish(request,env,now,fetcher){
     "UPDATE threads_oauth_attempt SET expires_at=0 WHERE state_hash=? AND nonce_hash=? AND expires_at>? RETURNING state_hash"
   ).bind(stateHash,attempt.nonce_hash,now).first();
   if(!claimed)return failed("reused");
+  let stage="exchange";
   try {
     if(!threadsAppConfigured(env))throw Error("Configuration changed");
     const short=await providerJson(await fetcher("https://graph.threads.net/oauth/access_token",{
@@ -140,6 +150,7 @@ async function finish(request,env,now,fetcher){
     // Meta requires the short-lived token and app secret as query parameters
     // for the long-lived exchange. Both go ONLY to Meta's fixed HTTPS origin,
     // never to the browser, application URL, logs or any redirect target.
+    stage="extend";
     const exchange=new URL("https://graph.threads.net/access_token");
     exchange.search=new URLSearchParams({grant_type:"th_exchange_token",
       client_secret:env.THREADS_APP_SECRET,access_token:short.access_token}).toString();
@@ -152,6 +163,7 @@ async function finish(request,env,now,fetcher){
        !Number.isSafeInteger(Number(long.expires_in)) ||
        Number(long.expires_in)<3600 || Number(long.expires_in)>90*86400)
       throw Error("Invalid token lifetime");
+    stage="profile";
     const identity=await providerJson(await fetcher(
       "https://graph.threads.net/v1.0/me?fields=id%2Cusername",{
       method:"GET",headers:{Authorization:"Bearer "+long.access_token,
@@ -165,6 +177,7 @@ async function finish(request,env,now,fetcher){
         identity.username.toLowerCase()!==env.THREADS_PUBLIC_USERNAME.toLowerCase()))
       throw Error("Wrong account");
     const key=await importEncryptionKey(env.LISTENING_TOKEN_KEY);
+    stage="storage";
     const cipher=await seal(long.access_token,key,"threads-long-lived-access");
     const until=now+Number(long.expires_in)*1000;
     // A Stop/disconnect or newer attempt deletes this marker; a delayed
@@ -177,7 +190,8 @@ async function finish(request,env,now,fetcher){
     if(saved.meta?.changes!==1)return failed("expired");
     return ownerRedirect("/owner/presence/?threads=connected",{"Set-Cookie":clearCookie});
   } catch {
-    return failed("authorization");
+    // Stage-only owner diagnostic: never include provider body, token or code.
+    return failed(stage);
   } finally {
     await db.prepare(
       "DELETE FROM threads_oauth_attempt WHERE state_hash=? AND nonce_hash=? AND expires_at=0"
