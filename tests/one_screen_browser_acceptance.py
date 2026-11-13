@@ -109,6 +109,26 @@ try:
                 assert "Independent thinking." in page.locator(".prestige-identity-copy h1").inner_text()
                 assert "Living systems." in page.locator(".prestige-identity-copy h1").inner_text()
                 assert page.locator(".studio-orbital-art svg").count()==1,(engine,width,height,"first-party orbital artwork")
+                if width<=760 and height>470:
+                    # Desktop artwork originally inherited grid-column:2; in
+                    # one-column mobile grid that implicit column has zero width.
+                    # Count-in-DOM is insufficient: insist on a rendered orbit.
+                    orbital = page.evaluate("""() => {
+                      const panel=document.querySelector('.concept-visual');
+                      const scene=panel.querySelector('.studio-orbital-art');
+                      const svg=scene.querySelector('svg');
+                      const r=panel.getBoundingClientRect();
+                      const s=svg.getBoundingClientRect();
+                      return {width:r.width,svgWidth:s.width,visible:
+                        getComputedStyle(panel).display!=='none',
+                        column:getComputedStyle(panel).gridColumn,
+                        inViewport:r.right<=innerWidth+2 && r.left>=0};
+                    }""")
+                    assert orbital["visible"] and orbital["width"] >= min(140,width*.42) and (
+                      orbital["svgWidth"]>=150 and orbital["inViewport"]
+                      and orbital["column"]=="1"
+                    ),(engine,width,height,"mobile orbital zero-width regression",orbital)
+
                 # High-level gamer styling is editorial, not invented XP, levels, or ranks.
                 assert page.locator(".prestige-build-row").count()==3
                 # In a 390px-tall landscape viewport, source tiles remain in
