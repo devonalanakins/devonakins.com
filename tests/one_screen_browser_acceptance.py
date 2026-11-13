@@ -38,6 +38,27 @@ try:
                 assert page.locator(".concept-intro .prestige-player-actions .one-button").count()==2
                 assert page.locator(".concept-live [data-public-work]").count()==1
                 assert page.locator(".concept-live .studio-spotify .p-spotify-card").count()==1
+                assert page.locator('[data-public-threads]').count()==2,(
+                    engine,width,height,"two first-party social surfaces")
+                assert page.locator('.one-social-channels a[href="https://www.threads.com/@devonalanakins"]').count()>=2
+                assert page.locator('.one-social-channels a[href*="facebook."]').count()==0
+                if height>470:
+                    visible_social=page.evaluate("""() => {
+                      const hero=document.querySelector('.concept-intro').getBoundingClientRect();
+                      const studio=document.querySelector('.concept-live').getBoundingClientRect();
+                      const dock=document.querySelector('.studio-social-dock').getBoundingClientRect();
+                      const feed=document.querySelector('.studio-threads-inline').getBoundingClientRect();
+                      return {dockWidth:dock.width,feedWidth:feed.width,
+                        dockInside:dock.top>=hero.top-2&&dock.bottom<=hero.bottom+2,
+                        feedInside:feed.top>=studio.top-2&&feed.bottom<=studio.bottom+2,
+                        documentOverflow:document.documentElement.scrollWidth>innerWidth+2||
+                          document.documentElement.scrollHeight>innerHeight+2};
+                    }""")
+                    assert all([visible_social["dockWidth"]>70,visible_social["feedWidth"]>100,
+                      visible_social["dockInside"],visible_social["feedInside"],
+                      not visible_social["documentOverflow"]]),(
+                        engine,width,height,"social dock or Threads panel clipped",visible_social)
+
                 assert page.locator(".concept-signal-band .one-gpt-record").count()==1
                 if height>470:
                     assert page.evaluate("""() => {
