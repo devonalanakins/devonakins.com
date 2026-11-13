@@ -15,6 +15,7 @@ import {createLiveSignal} from './live-signal.mjs';
 import {createD1PublicThreadsReader} from "./threads-public-d1.mjs";
 import {createThreadsOwnerProbe} from "./threads-owner-probe.mjs";
 import {createThreadsOwnerOAuth} from "./threads-owner-oauth.mjs";
+import {createThreadsMetaLifecycle} from "./threads-meta-lifecycle.mjs";
 import {createGptSnapshotOwnerApi} from './gpt-snapshots.mjs';
 import {createGithubIntegration,createGithubEditorCatalog} from './github-integration.mjs';
 import {projectActivityHistory,validActivityHistory} from './activity-history.mjs';
@@ -160,6 +161,7 @@ export function createHandler(assets, release, options = {}) {
     fetcher:options.threadsAuthFetch || fetch,
     clock:()=>now().getTime(),
   });
+  const threadsMetaLifecycle=createThreadsMetaLifecycle({clock:()=>now().getTime()});
   const threadsOwnerProbe=createThreadsOwnerProbe({
     fetchImpl:options.threadsFetch || fetch,
     clock:()=>now().getTime(),
@@ -223,6 +225,8 @@ export function createHandler(assets, release, options = {}) {
       if(url.pathname.startsWith('/api/presence/cloud/') || (url.pathname === '/api/presence/owner' && url.search === '?channel=cloud'))
         return secured(await cloudApi(request,env,ctx));
       if(url.pathname==='/api/listening/admin/collections')return secured(await collectionsApi.owner(request,env,ctx));
+      if(url.pathname.startsWith('/api/threads/lifecycle/'))
+        return secured(await threadsMetaLifecycle(request,env));
       if(url.pathname.startsWith('/api/threads/auth/'))
         return secured(await threadsOwnerOAuth(request,env,ctx));
       if(url.pathname==='/api/presence/owner' && url.search==='?channel=threads')
