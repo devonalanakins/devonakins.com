@@ -121,6 +121,11 @@ with sync_playwright() as p:
                 engine.name, width, "OAuth error missing from top banner")
             assert "first authorization-code exchange" in page.locator(
                 "#threads-connection-status").inner_text()
+            # Never claim an account is connected from a query parameter alone.
+            page.goto("https://example.test/owner/presence/?threads=connected")
+            page.locator("#threads-oauth-return").wait_for(state="visible")
+            assert "did not verify a stored connection" in page.locator(
+                "#threads-oauth-return").inner_text(), (engine.name, width)
             # A return intercepted by an Access sign-in can lose the callback
             # query; the session marker still gives the owner a safe clue.
             page.evaluate("sessionStorage.setItem('threadsPrivateOAuthStartedAt', String(Date.now()))")
