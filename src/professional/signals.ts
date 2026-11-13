@@ -1,6 +1,7 @@
 import { publicV5Playback } from "../v5/public-playback.mjs";
 import { publicV5GptCapture, formatPublicGptValue, publicGptCapturedAt } from "../v5/public-gpt-capture.mjs";
 import { publicV5Threads, threadsPublicDate } from "../v5/public-threads.mjs";
+import { THREADS_PROFILE_URL } from "./social-presence.mjs";
 
 /**
  * Presentation-only clients of existing privacy-consented public projections.
@@ -170,13 +171,13 @@ function renderThreads(snapshot:unknown){
         ?feed.posts.length+" approved public "+(feed.posts.length===1?"update":"updates")+
           " from Threads. Each post links to its original."
         :"Approved Threads posts appear here only while sharing and the source are available."
-      :first?first.text:
+      :first?(first.text.length>152?first.text.slice(0,149).trimEnd()+"…":first.text):
         feed.connected?"No recent approved public posts.":
-        "Approved Threads posts appear only when that source is publicly connected.");
+        "Posts are not shared on this site yet. View my Threads profile directly.");
     const a=card.querySelector<HTMLAnchorElement>("[data-threads-link]");
     if(a){
-      a.href=first?first.href:"https://www.instagram.com/devonalanakins/";
-      a.textContent=first?"View source post ↗":"Instagram profile ↗";
+      a.href=first?first.href:THREADS_PROFILE_URL;
+      a.textContent=first?"View original post ↗":"Open Threads profile ↗";
     }
     const list=card.querySelector<HTMLOListElement>("[data-threads-posts]");
     if(list){
