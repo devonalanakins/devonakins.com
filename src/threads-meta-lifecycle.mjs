@@ -60,7 +60,12 @@ async function verify(value,secret,now,kind){
   const mac=new Uint8Array(await crypto.subtle.sign("HMAC",key,encoder.encode(parts[1])));
   const expected=btoa(String.fromCharCode(...mac)).replaceAll("+","-").replaceAll("/","_").replace(/=+$/,"");
   if(!constantEqual(expected,parts[0]))throw Error("Invalid signature");
-  const obj=JSON.parse(new TextDecoder("utf-8",{fatal:true}).decode(payload));
+  // Signed account IDs must retain exact decimal digits, including values
+  // above Number.MAX_SAFE_INTEGER. The HMAC was verified before parsing.
+  const obj=JSON.parse(new TextDecoder("utf-8",{fatal:true}).decode(payload),
+    (key,value,context)=>key==="user_id"&&typeof value==="number"&&
+      typeof context?.source==="string"&&scopedId.test(context.source)
+      ?context.source:value);
   if(!obj||obj.algorithm!=="HMAC-SHA256"||!metaId(obj.user_id)||
      !Number.isSafeInteger(obj.issued_at)||Math.abs(Math.floor(now/1000)-obj.issued_at)>3600)
     throw Error("Invalid signed request");

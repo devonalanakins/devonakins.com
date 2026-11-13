@@ -385,9 +385,20 @@ async function loadThreadsAuthorization() {
     if(result==="connected")
       el("threads-connection-status").textContent=
         "Meta account authorized privately. Posts remain disconnected.";
-    else if(result && ["callback","expired","reused","authorization"].includes(result))
-      el("threads-connection-status").textContent=
-        "Meta authorization was not completed. No sharing was changed.";
+    else if(result){
+      const errors={
+        callback:"Meta did not return a usable authorization response. Start a new connection in this browser.",
+        expired:"Your authorization session expired or its browser cookie was lost. Retry in the same browser tab.",
+        reused:"The authorization request was already used. Start a new private connection.",
+        exchange:"Meta rejected or failed the initial authorization-code exchange. Check the Threads app tester role and redirect registration.",
+        extend:"Meta rejected the long-lived-token exchange. Verify the Threads-specific app secret and app status.",
+        profile:"Meta did not return a matching account profile. Verify the signed-in Threads account and API permissions.",
+        storage:"The account was authorized, but secure private storage did not complete. No sharing was enabled.",
+        authorization:"Meta authorization was not completed. No sharing was changed.",
+      };
+      if(Object.hasOwn(errors,result))
+        el("threads-connection-status").textContent=errors[result];
+    }
   } catch(error) {
     threadsAuthState=null;
     el("threads-connection-status").textContent=

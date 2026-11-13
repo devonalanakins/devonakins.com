@@ -42,7 +42,9 @@ with sync_playwright() as p:
                 if path == "/owner/presence/":
                     return req.fulfill(body=HTML, content_type="text/html")
                 if path.startswith("/v2/"):
-                    file = ROOT / "public" / path.lstrip("/")
+                    # Cache-busting query parameters never belong in a local path.
+                    asset_path = path.split("?", 1)[0]
+                    file = ROOT / "public" / asset_path.lstrip("/")
                     return req.fulfill(
                         body=file.read_text(),
                         content_type="text/css" if file.suffix == ".css"

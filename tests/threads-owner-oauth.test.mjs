@@ -127,9 +127,9 @@ test("owner callback binds Meta account identity and encrypts long token at rest
 
 test("OAuth refuses wrong accounts, invalid provider payload and preexisting conflicting handle",async()=>{
   for(const value of [
-    {short:{access_token:"s".repeat(80),user_id:"9999999999"}},
-    {profile:{id:"123456789012345",username:"not valid @handle"}},
-    {long:{access_token:"l".repeat(80),token_type:"bearer",expires_in:0}},
+    {short:{access_token:"s".repeat(80),user_id:"9999999999"},stage:"profile"},
+    {profile:{id:"123456789012345",username:"not valid @handle"},stage:"profile"},
+    {long:{access_token:"l".repeat(80),token_type:"bearer",expires_in:0},stage:"extend"},
   ]){
     const f=fixture(true,async(url)=>{
       const path=new URL(url).pathname;
@@ -140,28 +140,55 @@ test("OAuth refuses wrong accounts, invalid provider payload and preexisting con
       return Response.json(value.profile||{id:"123456789012345",username:"DevonFixture"});
     });
     const out=await f.callback(await f.auth());
-    assert.equal(out.headers.get("Location"),"/owner/presence/?threads=authorization");
+    assert.equal(out.headers.get("Location"),"/owner/presence/?threads="+value.stage);
     assert.equal(f.sql.prepare("SELECT token_cipher FROM threads_connection").get().token_cipher,null);
   }
   const f=fixture();
   f.env.THREADS_PUBLIC_USERNAME="AnotherAccount";
   const out=await f.callback(await f.auth());
-  assert.equal(out.headers.get("Location"),"/owner/presence/?threads=authorization");
+  assert.equal(out.headers.get("Location"),"/owner/presence/?threads=profile");
   assert.equal(f.sql.prepare("SELECT token_cipher FROM threads_connection").get().token_cipher,null);
 });
 
 
-test("Meta numeric IDs outside JavaScript safe integer range cannot create an OAuth grant",async()=>{
+test("OAuth safely identifies a provider exchange failure without reflecting provider secrets",async()=>{
+  const f=fixture(true,async()=>new Response('SENSITIVE_META_PROVIDER_ERROR',{status:400}));
+  const result=await f.callback(await f.auth());
+  assert.equal(result.headers.get("Location"),"/owner/presence/?threads=exchange");
+  assert.doesNotMatch(await result.text(),/SENSITIVE_META_PROVIDER_ERROR/);
+  assert.equal(f.sql.prepare("SELECT token_cipher FROM threads_connection").get().token_cipher,null);
+});
+
+test("Meta long numeric account IDs retain exact decimal digits through OAuth and encrypted D1",async()=>{
+  const id="17841400000001235";
   const f=fixture(true,async(url)=>{
     const pathname=new URL(url).pathname;
+    const json=value=>new Response(value,{headers:{"Content-Type":"application/json"}});
     if(pathname==="/oauth/access_token")
-      return Response.json({access_token:"s".repeat(96),user_id:Number.MAX_SAFE_INTEGER+1});
+      return json('{"access_token":"'+ "s".repeat(96) +'","user_id":'+id+'}');
     if(pathname==="/access_token")
       return Response.json({access_token:"l".repeat(96),token_type:"bearer",expires_in:5184000});
-    return Response.json({id:"123456789012345",username:"DevonFixture"});
+    return json('{"id":'+id+',"username":"DevonFixture"}');
   });
   const result=await f.callback(await f.auth());
-  assert.equal(result.headers.get("Location"),"/owner/presence/?threads=authorization");
+  assert.equal(result.headers.get("Location"),"/owner/presence/?threads=connected");
+  assert.equal(f.sql.prepare("SELECT threads_user_id FROM threads_connection").get().threads_user_id,id);
+  assert.equal((await storedThreadsStatus(f.env,now)).connected,true);
+  assert.equal((await storedThreadsCredential(f.env,now)).userId,id);
+});
+
+test("Meta numeric account IDs in exponent notation fail closed rather than rounding",async()=>{
+  const f=fixture(true,async(url)=>{
+    const pathname=new URL(url).pathname;
+    const json=value=>new Response(value,{headers:{"Content-Type":"application/json"}});
+    if(pathname==="/oauth/access_token")
+      return json('{"access_token":"'+ "s".repeat(96) +'","user_id":1.78414e16}');
+    if(pathname==="/access_token")
+      return Response.json({access_token:"l".repeat(96),token_type:"bearer",expires_in:5184000});
+    return Response.json({id:"17841400000001235",username:"DevonFixture"});
+  });
+  const result=await f.callback(await f.auth());
+  assert.equal(result.headers.get("Location"),"/owner/presence/?threads=exchange");
   assert.equal(f.sql.prepare("SELECT token_cipher FROM threads_connection").get().token_cipher,null);
 });
 
