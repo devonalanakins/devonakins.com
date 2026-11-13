@@ -106,7 +106,9 @@ try:
                         rect.top>=panel.top && rect.bottom<=panel.bottom+2;
                     }"""),(engine,width,height,"short phone GitHub feed must not clip a row")
                 assert page.locator(".prestige-identity-copy h1").is_visible()
-                assert "I DESIGN" in page.locator(".prestige-identity-copy h1").inner_text()
+                assert "Independent thinking." in page.locator(".prestige-identity-copy h1").inner_text()
+                assert "Living systems." in page.locator(".prestige-identity-copy h1").inner_text()
+                assert page.locator(".studio-orbital-art svg").count()==1,(engine,width,height,"first-party orbital artwork")
                 # High-level gamer styling is editorial, not invented XP, levels, or ranks.
                 assert page.locator(".prestige-build-row").count()==3
                 # In a 390px-tall landscape viewport, source tiles remain in
