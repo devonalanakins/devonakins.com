@@ -382,7 +382,23 @@ function consumeThreadsReturnMarker() {
       Date.now()-started<=10*60*1000;
   } catch {return false;}
 }
-function displayThreadsReturn(result,connection,started) {
+function safeExchangeDetail(value){
+  const http=/^http-([45][0-9]{2})(?:-meta-([0-9]{1,9})(?:-sub-([0-9]{1,9}))?)?$/.exec(value||"");
+  if(http)return "Diagnostic: Meta HTTP "+http[1]+
+    (http[2]?", error code "+http[2]:"")+
+    (http[3]?", subcode "+http[3]:"")+".";
+  const known={
+    timeout:"Diagnostic: the Meta request timed out.",
+    network:"Diagnostic: no usable Meta HTTP response was received.",
+    "malformed-json":"Diagnostic: Meta's response was not valid JSON.",
+    "invalid-payload":"Diagnostic: Meta returned a response, but its token or user ID failed validation.",
+    "unreadable-response":"Diagnostic: Meta's response could not be read safely.",
+    configuration:"Diagnostic: the Worker app configuration was incomplete at exchange time.",
+    other:"Diagnostic: the exchange failed before a token was validated.",
+  };
+  return Object.hasOwn(known,value)?known[value]:null;
+}
+function displayThreadsReturn(result,connection,started,detail=null) {
   const failures={
     callback:"Meta did not return a usable authorization response. Try again in a single Safari tab.",
     expired:"The OAuth session expired or its private browser cookie was lost. Sign in through Cloudflare Access and retry in the same Safari tab.",
@@ -404,6 +420,10 @@ function displayThreadsReturn(result,connection,started) {
     message="Returned to Presence without a recognized authorization result. The callback may have been interrupted by the private login session. No Threads connection was saved.";
   }
   if(!message)return;
+  if(result==="exchange"){
+    const diagnostic=safeExchangeDetail(detail);
+    if(diagnostic)message+=" "+diagnostic;
+  }
   el("threads-oauth-return-message").textContent=message;
   const banner=el("threads-oauth-return");
   banner.hidden=false;
@@ -413,7 +433,8 @@ function displayThreadsReturn(result,connection,started) {
   el("threads-connection-status").textContent=message;
 }
 async function loadThreadsAuthorization() {
-  const result=new URLSearchParams(location.search).get("threads");
+  const params=new URLSearchParams(location.search);
+  const result=params.get("threads"),detail=params.get("detail");
   const started=consumeThreadsReturnMarker();
   try {
     const response=await fetch("/api/threads/auth/status",{
@@ -424,12 +445,12 @@ async function loadThreadsAuthorization() {
       throw Error("Private connection status unavailable.");
     const data=await response.json();
     renderThreadsAuthorization(data);
-    displayThreadsReturn(result,data,started);
+    displayThreadsReturn(result,data,started,detail);
   } catch(error) {
     threadsAuthState=null;
     el("threads-connection-status").textContent=
       error?.message || "Private Threads connection unavailable.";
-    displayThreadsReturn(result,null,started);
+    displayThreadsReturn(result,null,started,detail);
     lock(busy || !state);
   }
 }

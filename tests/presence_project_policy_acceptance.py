@@ -121,6 +121,15 @@ with sync_playwright() as p:
                 engine.name, width, "OAuth error missing from top banner")
             assert "first authorization-code exchange" in page.locator(
                 "#threads-connection-status").inner_text()
+            # Numeric Meta diagnostics are displayed without reflecting raw
+            # untrusted provider message or arbitrary URL query values.
+            page.goto("https://example.test/owner/presence/?threads=exchange&detail=http-400-meta-100-sub-1349245")
+            page.locator("#threads-oauth-return").wait_for(state="visible")
+            assert "HTTP 400, error code 100, subcode 1349245" in page.locator(
+                "#threads-oauth-return").inner_text(), (engine.name,width)
+            page.goto("https://example.test/owner/presence/?threads=exchange&detail=SECRET_KEY")
+            page.locator("#threads-oauth-return").wait_for(state="visible")
+            assert "SECRET_KEY" not in page.locator("#threads-oauth-return").inner_text()
             # Never claim an account is connected from a query parameter alone.
             page.goto("https://example.test/owner/presence/?threads=connected")
             page.locator("#threads-oauth-return").wait_for(state="visible")
