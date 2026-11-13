@@ -67,12 +67,16 @@ test("owner-only OAuth start uses read-only scope and one-time state without lea
   assert.equal((await f.get("/api/threads/auth/start")).status,405);
   assert.equal((await f.post("/api/threads/auth/start","https://untrusted.example")).status,403);
   const {target,cookie}=await f.auth();
-  assert.equal(target.origin,"https://threads.net");
+  assert.equal(target.origin,"https://threads.com");
+  assert.equal(target.searchParams.getAll("client_id").length,1);
+  assert.equal(target.searchParams.get("client_id"),f.env.THREADS_APP_ID);
   assert.equal(target.pathname,"/oauth/authorize");
   assert.equal(target.searchParams.get("scope"),"threads_basic");
   assert.equal(target.searchParams.get("response_type"),"code");
   assert.equal(target.searchParams.get("redirect_uri"),
     "https://devonakins.com/api/threads/auth/callback");
+  assert.equal(target.searchParams.getAll("state").length,1);
+  assert.match(target.searchParams.get("state"),/^[A-Za-z0-9_-]{43}$/);
   assert.match(cookie,/^__Host-threads_oauth=[A-Za-z0-9_-]{43}$/);
   assert.equal(f.requests.length,0,"no Meta request before user authorization");
   assert.doesNotMatch(target.href,/meta-app-secret|access_token|threads_content_publish/);
