@@ -68,9 +68,29 @@ try:
                 assert footer.is_visible(), (engine, width, height, "social footer missing")
                 assert footer.locator('a[href="https://github.com/devonalanakins"]').count() == 1
                 assert footer.locator('a[href="https://www.instagram.com/devonalanakins/"]').count() == 1
-                assert footer.locator('a[href*="threads."]').count() == 0
+                assert footer.locator('a[href="https://www.threads.com/@devonalanakins"]').count() == 1
                 assert footer.locator('a[href*="facebook."]').count() == 0
-                footer.locator('button[data-one-go="contact"]').click()
+                home = page.locator(".studio-threads-inline")
+                assert home.is_visible(), (engine,width,height,"homepage Threads preview absent")
+                page.wait_for_function(
+                    'document.querySelector(".studio-threads-inline").dataset.threadsConnected==="true"',
+                    timeout=10000,
+                )
+                assert "<script>" in home.locator('[data-threads-summary]').inner_text()
+                assert home.locator('[data-threads-link]').get_attribute("href") == (
+                    "https://www.threads.com/@verified/post/ABCd1234"
+                )
+                dock=page.locator(".studio-social-dock")
+                if height>470:
+                    assert dock.is_visible(),(engine,width,height,"social profiles absent from home")
+                assert dock.locator('a[href="https://www.threads.com/@devonalanakins"]').count()==1
+                assert page.locator(".one-social-unverified").count()==3
+                # Use the explicit full-feed action, or mobile Contact tab on
+                # very short phones where the compact action is hidden by CSS.
+                if width<=400 and height<=700:
+                    page.locator('.one-tabs-mobile [data-one-target="contact"]').click()
+                else:
+                    home.locator('button[data-one-go="contact"]').click()
                 assert page.locator('[data-one-view="contact"]').is_visible()
                 assert page.locator('[data-one-view="home"]').is_hidden()
                 panel = page.locator('.one-threads-panel')
@@ -91,7 +111,8 @@ try:
                 assert "<script>" in link.inner_text(), "Post is text, never interpreted as HTML"
                 assert panel.locator("script").count() == 0
                 assert post.locator("time").get_attribute("datetime")
-                assert page.locator(".one-social-unverified").count() == 2
+                assert page.locator(".one-social-unverified").count() == 3
+                assert page.locator('.one-threads-profile[href="https://www.threads.com/@devonalanakins"]').count()==1
                 bounds = page.evaluate("""() => {
                   const stage=document.querySelector('.one-stage').getBoundingClientRect();
                   const panel=document.querySelector('.one-threads-panel').getBoundingClientRect();
@@ -147,6 +168,11 @@ try:
                 )
                 assert page.locator(".one-threads-posts li").count() == 0
                 assert "SOURCE UNAVAILABLE" in page.locator(".one-threads-status").inner_text()
+                assert home.get_attribute("data-threads-connected")=="false"
+                assert home.locator('[data-threads-link]').get_attribute("href")==(
+                    "https://www.threads.com/@devonalanakins"
+                )
+                assert "<script>" not in home.locator('[data-threads-summary]').inner_text()
                 assert page.locator('a[href*="threads.com/@verified"]').count() == 0
                 assert not errors, (engine,width,height,"JavaScript errors",errors)
                 page.screenshot(path=str(OUT/f"{engine}-{width}x{height}-unavailable.png"), animations="disabled")
