@@ -32,7 +32,42 @@ const clearCookie=COOKIE+"=; Path=/; Max-Age=0; Secure; HttpOnly; SameSite=Lax";
 const makeCookie=value=>COOKIE+"="+value+"; Path=/; Max-Age=300; Secure; HttpOnly; SameSite=Lax";
 const cookieValue=header=>(header||"").split(";").map(p=>p.trim())
   .find(p=>p.startsWith(COOKIE+"="))?.slice(COOKIE.length+1)||"";
-const failed=code=>ownerRedirect("/owner/presence/?threads="+code,{"Set-Cookie":clearCookie});
+const SAFE_EXCHANGE_DETAIL=/^(?:http-[45][0-9]{2}(?:-meta-[0-9]{1,9}(?:-sub-[0-9]{1,9})?)?|timeout|network|malformed-json|invalid-payload|unreadable-response|configuration|other)$/;
+const failed=(code,detail=null)=>{
+  const suffix=code==="exchange" && SAFE_EXCHANGE_DETAIL.test(detail||"")?
+    "&detail="+encodeURIComponent(detail):"";
+  return ownerRedirect("/owner/presence/?threads="+code+suffix,{"Set-Cookie":clearCookie});
+};
+const metaErrorNumber=value=>
+  typeof value==="number"&&Number.isSafeInteger(value)&&value>=0&&value<=999999999?
+    String(value):
+    typeof value==="string"&&/^[0-9]{1,9}$/.test(value)?value:null;
+// Extract ONLY Meta's bounded numeric error identifiers. Never return, persist
+// or log the raw provider response (which may contain tokens or user details).
+async function metaExchangeHttpDetail(response){
+  const status=Number(response?.status);
+  if(!Number.isInteger(status)||status<400||status>599)return "other";
+  let detail="http-"+status;
+  try {
+    const body=await providerJson({
+      ok:true,headers:response.headers,body:response.body,
+    },2048);
+    const code=metaErrorNumber(body?.error?.code);
+    const sub=metaErrorNumber(body?.error?.error_subcode);
+    if(code)detail+="-meta-"+code+(sub?"-sub-"+sub:"");
+  }catch { /* Keep only the safe HTTP status if Meta's error body is unreadable. */ }
+  return detail;
+}
+function exchangeFailureDetail(error){
+  if(SAFE_EXCHANGE_DETAIL.test(error?.exchangeDetail||""))return error.exchangeDetail;
+  if(error?.name==="TimeoutError"||error?.name==="AbortError")return "timeout";
+  if(error?.name==="SyntaxError")return "malformed-json";
+  if(error?.message==="Invalid authorization")return "invalid-payload";
+  if(error?.message==="Provider unavailable")return "unreadable-response";
+  if(error?.message==="Configuration changed")return "configuration";
+  if(error instanceof TypeError)return "network";
+  return "other";
+}
 export const threadsAppConfigured=env=>
   typeof env?.THREADS_APP_ID==="string" && /^[0-9]{10,32}$/.test(env.THREADS_APP_ID) &&
   typeof env?.THREADS_APP_SECRET==="string" &&
@@ -137,14 +172,21 @@ async function finish(request,env,now,fetcher){
   let stage="exchange";
   try {
     if(!threadsAppConfigured(env))throw Error("Configuration changed");
-    const short=await providerJson(await fetcher("https://graph.threads.com/oauth/access_token",{
+    const shortResponse=await fetcher("https://graph.threads.com/oauth/access_token",{
       method:"POST",headers:{"Content-Type":"application/x-www-form-urlencoded",Accept:"application/json"},
       body:new URLSearchParams({client_id:env.THREADS_APP_ID,
         client_secret:env.THREADS_APP_SECRET,code,grant_type:"authorization_code",
         redirect_uri:CALLBACK}).toString(),redirect:"error",cache:"no-store",
       signal:AbortSignal.timeout(8000),
-    }));
-    if(typeof short.access_token!=="string"||short.access_token.length<20||
+    });
+    if(!shortResponse?.ok){
+      const error=new Error("Meta exchange rejected");
+      error.exchangeDetail=await metaExchangeHttpDetail(shortResponse);
+      throw error;
+    }
+    const short=await providerJson(shortResponse);
+    if(!short||typeof short!=="object"||Array.isArray(short) ||
+       typeof short.access_token!=="string"||short.access_token.length<20||
        short.access_token.length>4096||!metaId(short.user_id))
       throw Error("Invalid authorization");
     // Meta requires the short-lived token and app secret as query parameters
@@ -189,9 +231,11 @@ async function finish(request,env,now,fetcher){
     ).bind(cipher,identity.username,metaId(identity.id),now,until,now,stateHash,attempt.nonce_hash).run();
     if(saved.meta?.changes!==1)return failed("expired");
     return ownerRedirect("/owner/presence/?threads=connected",{"Set-Cookie":clearCookie});
-  } catch {
-    // Stage-only owner diagnostic: never include provider body, token or code.
-    return failed(stage);
+  } catch(error) {
+    // An allowlisted, non-sensitive diagnostic is shown only in the private
+    // owner redirect. Never expose authorization codes, access tokens or raw
+    // Meta errors in a browser URL, logs, or public configuration.
+    return failed(stage,stage==="exchange"?exchangeFailureDetail(error):null);
   } finally {
     await db.prepare(
       "DELETE FROM threads_oauth_attempt WHERE state_hash=? AND nonce_hash=? AND expires_at=0"
