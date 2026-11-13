@@ -420,11 +420,26 @@ try:
                 assert resize_page.locator("#one-home-github [data-feed-list] li").count()==home
                 assert resize_page.locator("#one-activity-github [data-feed-list] li").count()==activity
             assert_capacity(2,4)
+            def assert_unclipped_mobile_rows():
+                metrics=resize_page.evaluate("""() => {
+                  const card=document.querySelector('.prestige-activity-card').getBoundingClientRect();
+                  const next=document.querySelector('.studio-development').getBoundingClientRect();
+                  const items=[...document.querySelectorAll('#one-home-github [data-feed-list] li')];
+                  const boxes=items.map(e=>e.getBoundingClientRect());
+                  return {count:boxes.length,cardBottom:card.bottom,nextTop:next.top,
+                    lastBottom:boxes.at(-1)?.bottom||0,
+                    visible:boxes.length===2 && boxes.every(r=>r.width>0&&r.height>0&&
+                      r.top>=card.top-2&&r.bottom<=card.bottom+2&&r.bottom<=next.top+1)};
+                }""")
+                assert metrics["visible"],(engine,"mobile GitHub rows obscured by subsequent signal",metrics)
+            assert_unclipped_mobile_rows()
             original_fetches=len(feed_fetches)
             assert original_fetches==1,(engine,"fixture should be fetched once")
             for width,height,home,activity in ((844,390,1,2),(1440,900,4,6),(390,844,2,4)):
                 resize_page.set_viewport_size({"width":width,"height":height})
                 assert_capacity(home,activity)
+                if width==390 and height==844:
+                    assert_unclipped_mobile_rows()
                 assert len(feed_fetches)==original_fetches,(
                     engine,width,height,"viewport change triggered provider request")
             resize_context.close()
