@@ -271,6 +271,11 @@ function paint(){
       : "Public GitHub source unavailable; no activity inferred.";
   }
 }
+// A viewport resize changes row capacity, not provider truth. Repaint the
+// already validated snapshot synchronously; do not initiate another request.
+window.addEventListener("one-screen-feed-layout",()=>{
+  if(latest)paint();
+});
 filters.forEach(filter=>filter.addEventListener("click",()=>{
   const next=filter.dataset.githubFilter;
   if(!next || (next!=="all" && !eventKinds.includes(next)))return;
