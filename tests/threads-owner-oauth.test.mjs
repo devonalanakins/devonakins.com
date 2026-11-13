@@ -140,28 +140,48 @@ test("OAuth refuses wrong accounts, invalid provider payload and preexisting con
       return Response.json(value.profile||{id:"123456789012345",username:"DevonFixture"});
     });
     const out=await f.callback(await f.auth());
-    assert.equal(out.headers.get("Location"),"/owner/presence/?threads=authorization");
+    assert.ok(["/owner/presence/?threads=exchange","/owner/presence/?threads=extend",
+      "/owner/presence/?threads=profile"].includes(out.headers.get("Location")));
     assert.equal(f.sql.prepare("SELECT token_cipher FROM threads_connection").get().token_cipher,null);
   }
   const f=fixture();
   f.env.THREADS_PUBLIC_USERNAME="AnotherAccount";
   const out=await f.callback(await f.auth());
-  assert.equal(out.headers.get("Location"),"/owner/presence/?threads=authorization");
+  assert.equal(out.headers.get("Location"),"/owner/presence/?threads=profile");
   assert.equal(f.sql.prepare("SELECT token_cipher FROM threads_connection").get().token_cipher,null);
 });
 
 
-test("Meta numeric IDs outside JavaScript safe integer range cannot create an OAuth grant",async()=>{
+test("Meta long numeric account IDs retain exact decimal digits through OAuth and encrypted D1",async()=>{
+  const id="17841400000001235";
   const f=fixture(true,async(url)=>{
     const pathname=new URL(url).pathname;
+    const json=value=>new Response(value,{headers:{"Content-Type":"application/json"}});
     if(pathname==="/oauth/access_token")
-      return Response.json({access_token:"s".repeat(96),user_id:Number.MAX_SAFE_INTEGER+1});
+      return json('{"access_token":"'+ "s".repeat(96) +'","user_id":'+id+'}');
     if(pathname==="/access_token")
       return Response.json({access_token:"l".repeat(96),token_type:"bearer",expires_in:5184000});
-    return Response.json({id:"123456789012345",username:"DevonFixture"});
+    return json('{"id":'+id+',"username":"DevonFixture"}');
   });
   const result=await f.callback(await f.auth());
-  assert.equal(result.headers.get("Location"),"/owner/presence/?threads=authorization");
+  assert.equal(result.headers.get("Location"),"/owner/presence/?threads=connected");
+  assert.equal(f.sql.prepare("SELECT threads_user_id FROM threads_connection").get().threads_user_id,id);
+  assert.equal((await storedThreadsStatus(f.env,now)).connected,true);
+  assert.equal((await storedThreadsCredential(f.env,now)).userId,id);
+});
+
+test("Meta numeric account IDs in exponent notation fail closed rather than rounding",async()=>{
+  const f=fixture(true,async(url)=>{
+    const pathname=new URL(url).pathname;
+    const json=value=>new Response(value,{headers:{"Content-Type":"application/json"}});
+    if(pathname==="/oauth/access_token")
+      return json('{"access_token":"'+ "s".repeat(96) +'","user_id":1.78414e16}');
+    if(pathname==="/access_token")
+      return Response.json({access_token:"l".repeat(96),token_type:"bearer",expires_in:5184000});
+    return Response.json({id:"17841400000001235",username:"DevonFixture"});
+  });
+  const result=await f.callback(await f.auth());
+  assert.equal(result.headers.get("Location"),"/owner/presence/?threads=exchange");
   assert.equal(f.sql.prepare("SELECT token_cipher FROM threads_connection").get().token_cipher,null);
 });
 
