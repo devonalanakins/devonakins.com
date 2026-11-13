@@ -198,7 +198,7 @@ test("manual Meta redirects are rejected at every OAuth stage without forwarding
     assert.equal(result.headers.get("Location"),
       "/owner/presence/?threads="+stage+(stage==="exchange"?"&detail=redirect":""));
     assert.equal(count,stage==="exchange"?1:stage==="extend"?2:3);
-    assert.doesNotMatch(result.headers.get("Location"),/SENSITIVE_REDIRECT_LOCATION|untrusted\\.example|client_secret|access_token/);
+    assert.doesNotMatch(result.headers.get("Location"),/SENSITIVE_REDIRECT_LOCATION|untrusted\.example|client_secret|access_token/);
     assert.equal(f.sql.prepare("SELECT token_cipher FROM threads_connection").get().token_cipher,null);
     assert.equal((await storedThreadsStatus(f.env,now)).connected,false);
   }
