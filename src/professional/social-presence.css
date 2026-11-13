@@ -137,3 +137,21 @@
 @media(prefers-reduced-motion:reduce){
   .one-body .studio-social-dock a,.one-body .studio-threads-inline a{transition:none}
 }
+
+/* 320x640: four genuine source surfaces must coexist in a single no-scroll
+ * workstation. Tighten existing chrome rather than letting the GitHub status
+ * row fall below its card; all data remains readable on Activity/Contact. */
+@media(max-width:400px) and (max-height:700px){
+  .one-body .concept-live .prestige-command-top{min-height:26px;padding-bottom:3px}
+  .one-body .concept-live .prestige-activity-card{flex:0 1 58px;min-height:0;padding:2px 0 0}
+  .one-body .concept-live .one-panel-head{padding-bottom:2px}
+  .one-body .studio-development{padding:1px 0}
+  .one-body .studio-development .prestige-command-corner.prestige-presence{min-height:27px;padding:3px 7px 3px 23px}
+  .one-body .studio-development .prestige-presence-dot{top:10px;left:9px;width:6px;height:6px}
+  .one-body .studio-spotify{min-height:62px;padding:2px 0 0}
+  .one-body .studio-spotify .p-signal-head{min-height:15px}
+  .one-body .studio-spotify .p-spotify-body{grid-template-columns:29px minmax(0,1fr)!important;min-height:37px!important;gap:4px;padding:3px}
+  .one-body .studio-spotify .p-spotify-art{width:29px;height:29px;min-width:29px;min-height:29px}
+  .one-body .concept-live .concept-live-foot{display:none}
+  .one-body .studio-threads-inline{min-height:45px;max-height:54px;margin:2px 0 0}
+}
