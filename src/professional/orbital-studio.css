@@ -250,3 +250,15 @@
   .one-body .concept-visual{width:51%;height:31%;opacity:.7}
   .one-body .studio-orbital-art{opacity:.72}
 }
+
+/* Mobile grid has a single explicit column. Without remapping this art
+ * panel from desktop grid-column:2, its implicit column measures zero width.
+ * Keep the decorative media in the first (and only) grid column. */
+@media(max-width:760px){
+  .one-body .concept-visual{
+    grid-column:1!important;
+    grid-row:1!important;
+    width:57vw!important;
+    min-width:160px!important;
+  }
+}
