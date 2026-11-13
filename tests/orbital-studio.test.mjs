@@ -14,7 +14,7 @@ test("orbital-tree is a deterministic first-party visual, never a telemetry sour
   assert.match(one,/studio-orbit--cross/);
   assert.ok((one.match(/<path /g)||[]).length>=35);
   assert.ok((one.match(/<circle /g)||[]).length>=180);
-  assert.doesNotMatch(one,/https?:\/\/|<script|<iframe|access_token|github|spotify|gpt|analytics/i);
+  assert.doesNotMatch(one.replace('xmlns="http://www.w3.org/2000/svg"',""),/https?:\/\/|<script|<iframe|access_token|github|spotify|gpt|analytics/i);
 });
 test("Living Studio hero integrates the orbital visual without duplicating provider cards",()=>{
   const page=renderOneScreenHome();
