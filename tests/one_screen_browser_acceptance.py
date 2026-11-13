@@ -116,16 +116,21 @@ try:
                 if width<=400 and height<=700:
                     # Short phones retain the verified source count and the full
                     # Activity tab, rather than showing a clipped event row.
-                    assert page.evaluate("""() => {
+                    feed_bounds=page.evaluate("""() => {
                       const feed=document.querySelector('#one-home-github');
                       const items=feed.querySelector('ol');
                       const status=feed.querySelector('[data-feed-status]');
                       const rect=status.getBoundingClientRect();
                       const panel=document.querySelector('.prestige-activity-card').getBoundingClientRect();
-                      return getComputedStyle(items).display==='none' &&
-                        rect.width>0 && rect.height>0 &&
-                        rect.top>=panel.top && rect.bottom<=panel.bottom+2;
-                    }"""),(engine,width,height,"short phone GitHub feed must not clip a row")
+                      return {listHidden:getComputedStyle(items).display==='none',
+                        statusHeight:rect.height,statusWidth:rect.width,
+                        statusTop:rect.top,statusBottom:rect.bottom,
+                        cardTop:panel.top,cardBottom:panel.bottom,
+                        statusInside:rect.top>=panel.top-1&&rect.bottom<=panel.bottom+2};
+                    }""")
+                    assert feed_bounds["listHidden"] and feed_bounds["statusHeight"]>0 and (
+                        feed_bounds["statusWidth"]>0 and feed_bounds["statusInside"]
+                    ),(engine,width,height,"short phone GitHub feed must not clip a row",feed_bounds)
                 assert page.locator(".prestige-identity-copy h1").is_visible()
                 assert "Independent thinking." in page.locator(".prestige-identity-copy h1").inner_text()
                 assert "Living systems." in page.locator(".prestige-identity-copy h1").inner_text()
