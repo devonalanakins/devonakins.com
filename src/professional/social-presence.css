@@ -164,3 +164,20 @@
   .one-body .concept-live .concept-live-foot{display:none}
   .one-body .concept-live .prestige-activity-card{padding-bottom:0}
 }
+
+/* Normal-height iPhones: the inline Threads rail has the verified profile
+ * action even when sharing is off. A single-line summary restores space for
+ * both complete GitHub rows; the full three-post view stays in Contact. */
+@media(min-width:361px) and (max-width:760px) and (min-height:701px){
+  .one-body .studio-threads-inline{
+    min-height:49px;
+    max-height:66px;
+    margin-top:2px;
+    padding:4px 8px;
+    gap:2px;
+  }
+  .one-body .studio-threads-inline [data-threads-summary]{
+    -webkit-line-clamp:1;
+    line-height:1.2;
+  }
+}
