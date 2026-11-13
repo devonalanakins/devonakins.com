@@ -114,6 +114,7 @@ test("forged, expired, oversized and malformed requests fail closed",async()=>{
  for(const value of [
    (good[0]==="A"?"B":"A")+good.slice(1),
    await sign("123456789",Math.floor(now/1000)-7200),
+   await sign(Number.MAX_SAFE_INTEGER+1), // unsafe numeric account ID must not round
    "malformed",
    "z".repeat(20000),
  ]){
