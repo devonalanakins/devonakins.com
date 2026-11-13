@@ -13,6 +13,9 @@ const callbacks=new Map([
 ]);
 const statusPrefix="/api/threads/lifecycle/status/";
 const scopedId=/^[0-9]{4,32}$/;
+const metaId=value=>typeof value==="string"&&scopedId.test(value)?value:
+  typeof value==="number"&&Number.isSafeInteger(value)&&scopedId.test(String(value))?
+    String(value):null;
 const base64url=/^[A-Za-z0-9_-]+$/;
 const signature=/^[A-Za-z0-9_-]{43}$/;
 const confirmation=/^[a-f0-9]{40}$/;
@@ -58,10 +61,10 @@ async function verify(value,secret,now,kind){
   const expected=btoa(String.fromCharCode(...mac)).replaceAll("+","-").replaceAll("/","_").replace(/=+$/,"");
   if(!constantEqual(expected,parts[0]))throw Error("Invalid signature");
   const obj=JSON.parse(new TextDecoder("utf-8",{fatal:true}).decode(payload));
-  if(!obj||obj.algorithm!=="HMAC-SHA256"||!scopedId.test(String(obj.user_id||""))||
+  if(!obj||obj.algorithm!=="HMAC-SHA256"||!metaId(obj.user_id)||
      !Number.isSafeInteger(obj.issued_at)||Math.abs(Math.floor(now/1000)-obj.issued_at)>3600)
     throw Error("Invalid signed request");
-  return {id:String(obj.user_id),issuedAt:obj.issued_at,
+  return {id:metaId(obj.user_id),issuedAt:obj.issued_at,
     hash:await digest(kind+":"+value)};
 }
 const newCode=()=>Array.from(crypto.getRandomValues(new Uint8Array(20)),
