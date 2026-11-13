@@ -2,41 +2,54 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {readFile} from "node:fs/promises";
 import {renderOneScreenHome} from "../src/professional/one-screen.mjs";
-import {renderSocialChannels,renderThreadsPreview} from "../src/professional/social-presence.mjs";
+import {renderSocialChannels,renderThreadsPreview,renderHomeSocialHub,renderHomeThreadsSignal,THREADS_PROFILE_URL} from "../src/professional/social-presence.mjs";
 import {publicV5Threads} from "../src/v5/public-threads.mjs";
 
-test("one-screen social rail uses only established addresses and a working in-page Threads destination",()=>{
+test("verified social profiles and Threads signal appear on the initial Living Studio viewport",()=>{
   const html=renderOneScreenHome();
   assert.match(html,/aria-label="Social profiles and updates"/);
   assert.match(html,/href="https:\/\/github\.com\/devonalanakins"/);
   assert.match(html,/href="https:\/\/www\.instagram\.com\/devonalanakins\/"/);
-  assert.match(html,/data-one-go="contact" aria-label="View public Threads updates/);
-  assert.match(html,/Facebook · link pending/);
-  assert.match(html,/Threads · feed status at right/);
-  assert.doesNotMatch(html,/href="https:\/\/(?:www\.)?(?:threads\.com|threads\.net|facebook\.com)\//);
+  assert.match(html,/href="https:\/\/www\.threads\.com\/@devonalanakins"/);
+  assert.match(html,/Facebook · pending/);
+  assert.doesNotMatch(html,/href="https:\/\/(?:www\.)?facebook\.com\//);
   assert.equal((html.match(/role="tabpanel"/g)||[]).length,6);
-  assert.equal((html.match(/data-public-threads/g)||[]).length,1);
+  assert.equal((html.match(/data-public-threads/g)||[]).length,2);
+  assert.match(html,/class="studio-social-dock"/);
+  assert.match(html,/class="studio-threads-inline"/);
+  assert.match(html,/data-one-go="contact" aria-label="View all approved Threads updates"/);
   assert.match(html,/data-threads-posts/);
   assert.match(html,/href="\/src\/professional\/social-presence\.css"/);
   assert.doesNotMatch(html,/<iframe|<script[^>]+(?:threads|facebook)\.com/);
+  assert.ok(html.indexOf('class="studio-social-dock"') < html.indexOf('id="one-panel-experience"'));
+  assert.ok(html.indexOf('class="studio-threads-inline"') < html.indexOf('id="one-panel-experience"'));
 });
-test("social channels never create guessed profile links",()=>{
+test("public social profiles are separate from approved post display",()=>{
   const full=renderSocialChannels();
   const compact=renderSocialChannels(true);
-  assert.match(full,/Facebook · link pending/);
-  assert.match(full,/Threads · feed status at right/);
-  assert.match(compact,/data-one-go="contact"/);
-  assert.match(renderThreadsPreview(),/Public source not yet verified/);
-  for(const markup of [full,compact]){
-    assert.doesNotMatch(markup,/https:\/\/(?:www\.)?(?:threads|facebook)\./);
-    assert.match(markup,/rel="noopener noreferrer"/);
+  const home=renderHomeSocialHub();
+  const signal=renderHomeThreadsSignal();
+  assert.equal(THREADS_PROFILE_URL,"https://www.threads.com/@devonalanakins");
+  for(const markup of [full,compact,home,signal,renderThreadsPreview()]){
+    assert.match(markup,/https:\/\/www\.threads\.com\/@devonalanakins/);
+    assert.doesNotMatch(markup,/href="https:\/\/(?:www\.)?facebook\.com\//);
+    assert.doesNotMatch(markup,/access_token|client_secret|private grant|bearer/i);
   }
+  assert.match(full,/Facebook · pending/);
+  assert.match(compact,/Facebook · pending/);
+  assert.match(signal,/Public post sharing has not been enabled/);
+  assert.match(signal,/CHECKING SOURCE/);
+  assert.match(signal,/data-public-threads/);
+  assert.match(signal,/data-threads-summary/);
+  assert.match(signal,/data-threads-link/);
+  assert.match(renderThreadsPreview(),/Public source not yet verified/);
 });
 test("Threads preview consumes the existing fail-closed public projection, not scraped content",async()=>{
   const src=await readFile(new URL("../src/professional/signals.ts",import.meta.url),"utf8");
   assert.match(src,/publicV5Threads\(snapshot,Date\.now\(\)\)/);
   assert.match(src,/card\.querySelector<HTMLOListElement>\("\[data-threads-posts\]"\)/);
   assert.match(src,/link\.textContent=post\.text/);
+  assert.match(src,/a\.href=first\?first\.href:THREADS_PROFILE_URL/);
   assert.match(src,/link\.rel="noopener noreferrer"/);
   assert.match(src,/list\.replaceChildren\(\)/);
   assert.match(src,/\/api\/activity\/v4/);
