@@ -182,7 +182,7 @@ test("Threads private verification and public reader reject provider redirects w
   }});
   assert.deepEqual(await reader(env),disconnectedThreads());
   assert.equal(calls,2);
-  assert.doesNotMatch(JSON.stringify([checked,await reader(env)]),/SENSITIVE_REDIRECT_LOCATION|untrusted\\.example/);
+  assert.doesNotMatch(JSON.stringify([checked,await reader(env)]),/SENSITIVE_REDIRECT_LOCATION|untrusted\.example/);
 });
 
 test("private Threads probe fails closed without credentials or with wrong owner identity",async()=>{
