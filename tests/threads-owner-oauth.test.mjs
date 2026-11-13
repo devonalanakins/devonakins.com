@@ -127,9 +127,9 @@ test("owner callback binds Meta account identity and encrypts long token at rest
 
 test("OAuth refuses wrong accounts, invalid provider payload and preexisting conflicting handle",async()=>{
   for(const value of [
-    {short:{access_token:"s".repeat(80),user_id:"9999999999"}},
-    {profile:{id:"123456789012345",username:"not valid @handle"}},
-    {long:{access_token:"l".repeat(80),token_type:"bearer",expires_in:0}},
+    {short:{access_token:"s".repeat(80),user_id:"9999999999"},stage:"profile"},
+    {profile:{id:"123456789012345",username:"not valid @handle"},stage:"profile"},
+    {long:{access_token:"l".repeat(80),token_type:"bearer",expires_in:0},stage:"extend"},
   ]){
     const f=fixture(true,async(url)=>{
       const path=new URL(url).pathname;
@@ -140,8 +140,7 @@ test("OAuth refuses wrong accounts, invalid provider payload and preexisting con
       return Response.json(value.profile||{id:"123456789012345",username:"DevonFixture"});
     });
     const out=await f.callback(await f.auth());
-    assert.ok(["/owner/presence/?threads=exchange","/owner/presence/?threads=extend",
-      "/owner/presence/?threads=profile"].includes(out.headers.get("Location")));
+    assert.equal(out.headers.get("Location"),"/owner/presence/?threads="+value.stage);
     assert.equal(f.sql.prepare("SELECT token_cipher FROM threads_connection").get().token_cipher,null);
   }
   const f=fixture();
@@ -151,6 +150,14 @@ test("OAuth refuses wrong accounts, invalid provider payload and preexisting con
   assert.equal(f.sql.prepare("SELECT token_cipher FROM threads_connection").get().token_cipher,null);
 });
 
+
+test("OAuth safely identifies a provider exchange failure without reflecting provider secrets",async()=>{
+  const f=fixture(true,async()=>new Response('SENSITIVE_META_PROVIDER_ERROR',{status:400}));
+  const result=await f.callback(await f.auth());
+  assert.equal(result.headers.get("Location"),"/owner/presence/?threads=exchange");
+  assert.doesNotMatch(await result.text(),/SENSITIVE_META_PROVIDER_ERROR/);
+  assert.equal(f.sql.prepare("SELECT token_cipher FROM threads_connection").get().token_cipher,null);
+});
 
 test("Meta long numeric account IDs retain exact decimal digits through OAuth and encrypted D1",async()=>{
   const id="17841400000001235";
