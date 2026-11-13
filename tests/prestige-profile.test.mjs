@@ -8,7 +8,9 @@ test('prestige profile preserves the six existing sections and truth-qualified t
   assert.match(html,/prestige-home/);
   assert.match(html,/THE LIVING STUDIO/);
   assert.match(html,/SOFTWARE DEVELOPER/);
-  assert.match(html,/Independent software developer, product builder/);
+  assert.match(html,/Independent thinking/);
+  assert.match(html,/Living systems/);
+  assert.match(html,/Software engineering · Product design · Operations/);
   for(const n of ['home','experience','work','activity','writing','contact'])
     assert.match(html,new RegExp('one-panel-'+n));
   assert.match(html,/data-public-github-feed/);
