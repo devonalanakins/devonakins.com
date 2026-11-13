@@ -32,7 +32,7 @@ function fixture(migrated=true,providerOverride=null){
   const requests=[];
   const provider=providerOverride || (async (url,options)=>{
     requests.push([url,options]);
-    if(url==="https://graph.threads.net/oauth/access_token")
+    if(url==="https://graph.threads.com/oauth/access_token")
       return Response.json({access_token:"s".repeat(96),user_id:"123456789012345"});
     if(new URL(url).pathname==="/refresh_access_token")
       return Response.json({access_token:"r".repeat(96),token_type:"bearer",expires_in:5184000});
@@ -95,13 +95,13 @@ test("owner callback binds Meta account identity and encrypts long token at rest
   assert.match(callback.headers.get("Set-Cookie"),/Max-Age=0/);
   assert.equal(f.requests.length,3);
   const [short,long,profile]=f.requests;
-  assert.equal(short[0],"https://graph.threads.net/oauth/access_token");
+  assert.equal(short[0],"https://graph.threads.com/oauth/access_token");
   const body=new URLSearchParams(short[1].body);
   assert.equal(body.get("grant_type"),"authorization_code");
   assert.equal(body.get("redirect_uri"),entry.target.searchParams.get("redirect_uri"));
   assert.equal(body.get("client_secret"),f.env.THREADS_APP_SECRET);
   assert.equal(short[1].redirect,"error");
-  assert.equal(new URL(long[0]).origin,"https://graph.threads.net");
+  assert.equal(new URL(long[0]).origin,"https://graph.threads.com");
   assert.equal(new URL(long[0]).searchParams.get("grant_type"),"th_exchange_token");
   assert.equal(long[1].redirect,"error");
   assert.equal(new URL(profile[0]).searchParams.get("fields"),"id,username");
@@ -287,7 +287,7 @@ test("owner renews a mature unexpired private Threads token without public shari
   const calls=f.requests.slice(before);
   assert.equal(calls.length,2);
   const endpoint=new URL(calls[0][0]);
-  assert.equal(endpoint.origin,"https://graph.threads.net");
+  assert.equal(endpoint.origin,"https://graph.threads.com");
   assert.equal(endpoint.pathname,"/refresh_access_token");
   assert.equal(endpoint.searchParams.get("grant_type"),"th_refresh_token");
   assert.equal(endpoint.searchParams.get("access_token"),"l".repeat(96));
