@@ -111,7 +111,9 @@ export function createThreadsMetaLifecycle({clock=Date.now}={}){
     try{
       const db=env.LISTENING_DB;
       const code=kind==="delete"?newCode():null;
-      const maxConnectedAt=signed.issuedAt*1000;
+      // Meta's issued_at is in whole seconds. Cover the entire signed second
+      // so a callback immediately following an OAuth grant can revoke it.
+      const maxConnectedAt=signed.issuedAt*1000+999;
       // D1 batch is one SQLite transaction: any statement error rolls back all.
       // Receipt guard makes replay harmless even after a later re-authorization.
       await db.batch([
