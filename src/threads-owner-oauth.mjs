@@ -11,6 +11,11 @@ const COOKIE="__Host-threads_oauth";
 const SCOPE="threads_basic";
 const HANDLE=/^[A-Za-z0-9._]{1,30}$/;
 const NUMBER=/^[0-9]{4,32}$/;
+// Reject unsafe JSON number IDs; converting a rounded 64-bit Meta ID to text
+// could associate a callback or stored grant with the wrong account.
+const metaId=value=>typeof value==="string"&&NUMBER.test(value)?value:
+  typeof value==="number"&&Number.isSafeInteger(value)&&NUMBER.test(String(value))?
+    String(value):null;
 const STR=/^[A-Za-z0-9_-]{43}$/;
 const GRACE_MS=60_000;
 const REFRESH_MIN_AGE_MS=24*60*60_000;
@@ -130,7 +135,7 @@ async function finish(request,env,now,fetcher){
       signal:AbortSignal.timeout(8000),
     }));
     if(typeof short.access_token!=="string"||short.access_token.length<20||
-       short.access_token.length>4096||!NUMBER.test(String(short.user_id||"")))
+       short.access_token.length>4096||!metaId(short.user_id))
       throw Error("Invalid authorization");
     // Meta requires the short-lived token and app secret as query parameters
     // for the long-lived exchange. Both go ONLY to Meta's fixed HTTPS origin,
@@ -153,8 +158,8 @@ async function finish(request,env,now,fetcher){
         Accept:"application/json"},cache:"no-store",redirect:"error",
       signal:AbortSignal.timeout(8000),
     }));
-    if(!NUMBER.test(String(identity.id||"")) ||
-       String(identity.id)!==String(short.user_id) ||
+    if(!metaId(identity.id) ||
+       metaId(identity.id)!==metaId(short.user_id) ||
        typeof identity.username!=="string"||!HANDLE.test(identity.username) ||
        (typeof env.THREADS_PUBLIC_USERNAME==="string" &&
         identity.username.toLowerCase()!==env.THREADS_PUBLIC_USERNAME.toLowerCase()))
@@ -168,7 +173,7 @@ async function finish(request,env,now,fetcher){
       "UPDATE threads_connection SET revision=revision+1,token_cipher=?,username=?,threads_user_id=?,"+
       "connected_at=?,token_expires_at=?,verified_at=? WHERE id=1 AND EXISTS "+
       "(SELECT 1 FROM threads_oauth_attempt WHERE state_hash=? AND nonce_hash=? AND expires_at=0)"
-    ).bind(cipher,identity.username,String(identity.id),now,until,now,stateHash,attempt.nonce_hash).run();
+    ).bind(cipher,identity.username,metaId(identity.id),now,until,now,stateHash,attempt.nonce_hash).run();
     if(saved.meta?.changes!==1)return failed("expired");
     return ownerRedirect("/owner/presence/?threads=connected",{"Set-Cookie":clearCookie});
   } catch {
@@ -213,10 +218,10 @@ async function renew(env,now,fetcher){
       headers:{Authorization:"Bearer "+result.access_token,Accept:"application/json"},
       cache:"no-store",redirect:"error",signal:AbortSignal.timeout(8000),
     }));
-  if(!NUMBER.test(String(profile.id||"")) ||
+  if(!metaId(profile.id) ||
      typeof profile.username!=="string" ||
      !HANDLE.test(profile.username) ||
-     String(profile.id)!==current.userId ||
+     metaId(profile.id)!==current.userId ||
      profile.username.toLowerCase()!==current.username.toLowerCase())
     return ownerError("Renewed Threads account did not match",409);
   const key=await importEncryptionKey(env.LISTENING_TOKEN_KEY);
