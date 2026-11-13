@@ -12,8 +12,10 @@ const owner={access:{aud:"owner-test",getIdentity:async()=>({email:"owner@exampl
 const root="https://devonakins.com";
 function fixture(migrated=true,providerOverride=null){
   const sql=new DatabaseSync(":memory:");
-  if(migrated)sql.exec(readFileSync(
-    new URL("../migrations/0011_threads_private_oauth.sql",import.meta.url),"utf8"));
+  if(migrated){
+    sql.exec(readFileSync(new URL("../migrations/0011_threads_private_oauth.sql",import.meta.url),"utf8"));
+    sql.exec(readFileSync(new URL("../migrations/0012_threads_meta_lifecycle.sql",import.meta.url),"utf8"));
+  }
   const db={prepare(text){
     const query=sql.prepare(text);let values=[];
     return {bind(...v){values=v;return this;},
@@ -67,12 +69,16 @@ test("owner-only OAuth start uses read-only scope and one-time state without lea
   assert.equal((await f.get("/api/threads/auth/start")).status,405);
   assert.equal((await f.post("/api/threads/auth/start","https://untrusted.example")).status,403);
   const {target,cookie}=await f.auth();
-  assert.equal(target.origin,"https://threads.net");
+  assert.equal(target.origin,"https://threads.com");
+  assert.equal(target.searchParams.getAll("client_id").length,1);
+  assert.equal(target.searchParams.get("client_id"),f.env.THREADS_APP_ID);
   assert.equal(target.pathname,"/oauth/authorize");
   assert.equal(target.searchParams.get("scope"),"threads_basic");
   assert.equal(target.searchParams.get("response_type"),"code");
   assert.equal(target.searchParams.get("redirect_uri"),
     "https://devonakins.com/api/threads/auth/callback");
+  assert.equal(target.searchParams.getAll("state").length,1);
+  assert.match(target.searchParams.get("state"),/^[A-Za-z0-9_-]{43}$/);
   assert.match(cookie,/^__Host-threads_oauth=[A-Za-z0-9_-]{43}$/);
   assert.equal(f.requests.length,0,"no Meta request before user authorization");
   assert.doesNotMatch(target.href,/meta-app-secret|access_token|threads_content_publish/);
@@ -104,6 +110,7 @@ test("owner callback binds Meta account identity and encrypts long token at rest
   assert.notEqual(row.token_cipher,"l".repeat(96));
   assert.doesNotMatch(JSON.stringify(row),/"l{96}"/);
   assert.equal(row.username,"DevonFixture");
+  assert.equal(row.threads_user_id,"123456789012345");
   assert.equal(row.token_expires_at,now+5184000*1000);
   const stored=await storedThreadsCredential(f.env,now);
   assert.equal(stored.token,"l".repeat(96));
@@ -140,6 +147,21 @@ test("OAuth refuses wrong accounts, invalid provider payload and preexisting con
   f.env.THREADS_PUBLIC_USERNAME="AnotherAccount";
   const out=await f.callback(await f.auth());
   assert.equal(out.headers.get("Location"),"/owner/presence/?threads=authorization");
+  assert.equal(f.sql.prepare("SELECT token_cipher FROM threads_connection").get().token_cipher,null);
+});
+
+
+test("Meta numeric IDs outside JavaScript safe integer range cannot create an OAuth grant",async()=>{
+  const f=fixture(true,async(url)=>{
+    const pathname=new URL(url).pathname;
+    if(pathname==="/oauth/access_token")
+      return Response.json({access_token:"s".repeat(96),user_id:Number.MAX_SAFE_INTEGER+1});
+    if(pathname==="/access_token")
+      return Response.json({access_token:"l".repeat(96),token_type:"bearer",expires_in:5184000});
+    return Response.json({id:"123456789012345",username:"DevonFixture"});
+  });
+  const result=await f.callback(await f.auth());
+  assert.equal(result.headers.get("Location"),"/owner/presence/?threads=authorization");
   assert.equal(f.sql.prepare("SELECT token_cipher FROM threads_connection").get().token_cipher,null);
 });
 
@@ -264,7 +286,7 @@ test("renewal rejects expired credentials, malformed provider results and wrong 
   assert.equal((await expired.post("/api/threads/auth/renew")).status,409);
   assert.equal(expired.requests.length,start,"must not contact Meta for expired token");
 
-  for(const errorCase of ["wrong-account","malformed","provider-error"]){
+  for(const errorCase of ["wrong-account","wrong-id","malformed","provider-error"]){
     let refreshing=false;
     const f=fixture(true,async(url)=>{
       const pathname=new URL(url).pathname;
@@ -279,8 +301,8 @@ test("renewal rejects expired credentials, malformed provider results and wrong 
         return Response.json({access_token:"r".repeat(96),token_type:"bearer",expires_in:5184000});
       }
       if(pathname==="/v1.0/me")
-        return Response.json({id:"123456789012345",
-          username:refreshing?"DifferentOwner":"DevonFixture"});
+        return Response.json({id:refreshing&&errorCase==="wrong-id"?"999999999999999":"123456789012345",
+          username:refreshing&&errorCase==="wrong-account"?"DifferentOwner":"DevonFixture"});
       throw Error("Unexpected provider request");
     });
     await f.callback(await f.auth());

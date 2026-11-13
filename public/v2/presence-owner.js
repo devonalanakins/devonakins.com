@@ -420,10 +420,16 @@ async function changeThreadsAuthorization(action) {
     if(!response.ok)throw Error(data?.error || "Private Threads request unavailable.");
     if(action==="start"){
       const target=new URL(data.authorizeUrl);
-      if(!["threads.net","www.threads.net"].includes(target.hostname) ||
-         target.protocol!=="https:" || target.pathname!=="/oauth/authorize" ||
+      if(target.origin!=="https://threads.com" ||
+         target.pathname!=="/oauth/authorize" ||
+         target.searchParams.getAll("client_id").length!==1 ||
+         !/^[0-9]{10,32}$/.test(target.searchParams.get("client_id")||"") ||
+         target.searchParams.get("redirect_uri")!==
+           "https://devonakins.com/api/threads/auth/callback" ||
+         target.searchParams.get("response_type")!=="code" ||
          target.searchParams.get("scope")!=="threads_basic" ||
-         !target.searchParams.get("state"))
+         target.searchParams.getAll("state").length!==1 ||
+         !/^[A-Za-z0-9_-]{43}$/.test(target.searchParams.get("state")||""))
         throw Error("Meta authorization destination was rejected.");
       window.location.assign(target.href);
     } else {

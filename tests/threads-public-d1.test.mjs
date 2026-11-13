@@ -19,6 +19,7 @@ const post=at=>({data:[{
 function fixture(){
   const sql=new DatabaseSync(":memory:");
   sql.exec(readFileSync(new URL("../migrations/0011_threads_private_oauth.sql",import.meta.url),"utf8"));
+  sql.exec(readFileSync(new URL("../migrations/0012_threads_meta_lifecycle.sql",import.meta.url),"utf8"));
   const db={
     prepare(q){
       const stmt=sql.prepare(q);
@@ -40,8 +41,8 @@ function fixture(){
     const key=await importEncryptionKey(env.LISTENING_TOKEN_KEY);
     const cipher=await seal(value,key,"threads-long-lived-access");
     sql.prepare("UPDATE threads_connection SET revision=revision+1, token_cipher=?,"+
-      "username=?,connected_at=?,token_expires_at=?,verified_at=? WHERE id=1")
-      .run(cipher,handle,at,at+60*24*60*60_000,at);
+      "username=?,threads_user_id=?,connected_at=?,token_expires_at=?,verified_at=? WHERE id=1")
+      .run(cipher,handle,"123456789",at,at+60*24*60*60_000,at);
   }
   const disconnect=()=>sql.prepare(
     "UPDATE threads_connection SET revision=revision+1,token_cipher=NULL,"+

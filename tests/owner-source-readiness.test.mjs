@@ -140,9 +140,10 @@ test("expired or mismatched pairing and missing D1 cannot impersonate activity",
 test("encrypted Threads authorization appears in private readiness without enabling public posts",async()=>{
   const sql=new DatabaseSync(":memory:");
   sql.exec(readFileSync(new URL("../migrations/0011_threads_private_oauth.sql",import.meta.url),"utf8"));
+  sql.exec(readFileSync(new URL("../migrations/0012_threads_meta_lifecycle.sql",import.meta.url),"utf8"));
   const now=Date.parse("2026-11-09T20:00:00.000Z");
-  sql.prepare("UPDATE threads_connection SET token_cipher=?,username=?,token_expires_at=?,verified_at=? WHERE id=1")
-    .run("encrypted-private-fixture","privateFixture",now+86400000,now);
+  sql.prepare("UPDATE threads_connection SET token_cipher=?,username=?,threads_user_id=?,token_expires_at=?,verified_at=? WHERE id=1")
+    .run("encrypted-private-fixture","privateFixture","123456789",now+86400000,now);
   const privateEnv={...env,LISTENING_TOKEN_KEY:"not-exposed",
     THREADS_USER_ACCESS_TOKEN:undefined,THREADS_PUBLIC_USERNAME:undefined,
     THREADS_PUBLIC_RELEASE_APPROVED:"false",THREADS_PUBLIC_FEED_ENABLED:"false",

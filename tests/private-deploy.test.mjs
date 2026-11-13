@@ -8,6 +8,7 @@ import {
   preparePrivateDeployment,
   PrivatePreflightFailure,
   verifyGithubOidcOwnerConsent,
+  verifyThreadsLifecycleSchema,
 } from "../scripts/prepare-private-deploy.mjs";
 
 const base = readFileSync(
@@ -48,7 +49,9 @@ const settings = () => ({
 const installed = ({ percent = 100, versions = [{
   version_id: activeVersion, percentage: percent,
 }] } = {}) => ({ deployments: [{ versions }] });
+const lifecycleSchema = () => [{success:true,results:[{identity_column:1,receipt_columns:4,attempt_table:1}]}];
 const provider = (url) => {
+  if (url.endsWith("/query")) return lifecycleSchema();
   if (url.endsWith("/deployments")) return installed();
   if (url.endsWith("/versions/" + activeVersion))
     return { resources: settings() };
@@ -181,10 +184,12 @@ test("preflight uses the deployed version, not an unbound latest upload, and wri
       return Response.json({ success: true, result: provider(url) });
     },
   });
-  assert.equal(calls.length, 3);
+  assert.equal(calls.length, 4);
   assert.ok(calls[0].url.endsWith("/deployments"));
   assert.ok(calls[1].url.endsWith("/versions/" + activeVersion));
   assert.ok(calls[2].url.endsWith("/d1/database/" + id));
+  assert.ok(calls[3].url.endsWith("/query"));
+  assert.match(JSON.parse(calls[3].options.body).sql,/threads_lifecycle_receipt/);
   assert.ok(calls.every(c => !c.url.endsWith("/settings")));
   assert.ok(calls.every(c => c.options.redirect === "error" && c.options.signal));
   assert.equal(written[0], "wrangler.deploy.jsonc");
@@ -456,6 +461,8 @@ test("activation preflight needs exact protected-main confirmation plus approved
   const queries=[];
   const fetcher = async (url,opts) => {
     if(url.endsWith("/query")) {
+      const sql=JSON.parse(opts.body).sql;
+      if(sql.includes("pragma_table_info"))return Response.json({success:true,result:lifecycleSchema()});
       queries.push(opts);
       return Response.json({success:true,result:[{success:true,
         results:[{configured:1,eligible:1}]}]});
@@ -490,7 +497,8 @@ test("activation preflight needs exact protected-main confirmation plus approved
   let writes=0;
   await assert.rejects(preparePrivateDeployment({
     env,read:async()=>base,write:async()=>{writes++;},
-    fetcher:async(url,opts)=>url.endsWith("/query")
+    fetcher:async(url,opts)=>url.endsWith("/query") &&
+      !JSON.parse(opts.body).sql.includes("pragma_table_info")
       ? Response.json({success:true,result:[{success:true,
           results:[{configured:1,eligible:0}]}]})
       : fetcher(url,opts),
@@ -565,5 +573,45 @@ test("real SQLite/D1 migration schema matches the exact owner publication policy
       e.reason==="SOURCE_NOT_APPROVED","ambiguous approved sources");
   } finally {
     sqlite.close();
+  }
+});
+
+test("Threads lifecycle deployment gate matches real SQLite schema and rejects unmigrated D1", async () => {
+  const db=new DatabaseSync(":memory:");
+  try {
+    db.exec(readFileSync(new URL("../migrations/0011_threads_private_oauth.sql",import.meta.url),"utf8"));
+    const calls=[];
+    const fetcher=async (url,opts)=>{
+      calls.push({url,opts});
+      const sql=JSON.parse(opts.body).sql;
+      return Response.json({success:true,result:[{success:true,results:db.prepare(sql).all()}]});
+    };
+    const args={account:"a".repeat(32),token:"synthetic-ci",databaseId:id,fetcher};
+    await assert.rejects(verifyThreadsLifecycleSchema(args),error=>
+      error instanceof PrivatePreflightFailure &&
+      error.stage==="THREADS_SCHEMA_VALIDATE" &&
+      error.reason==="MIGRATION_0012_REQUIRED");
+    db.exec(readFileSync(new URL("../migrations/0012_threads_meta_lifecycle.sql",import.meta.url),"utf8"));
+    assert.equal(await verifyThreadsLifecycleSchema(args),true);
+    assert.equal(calls.length,2);
+    assert.ok(calls.every(({url,opts})=>url.endsWith("/query") &&
+      opts.method==="POST" && opts.redirect==="error" &&
+      !opts.body.includes("token_cipher") &&
+      !opts.body.includes("SELECT *")));
+  } finally {db.close();}
+});
+
+test("Threads schema gate rejects bad D1 API responses before preparing private deployment", async () => {
+  const args={account:"a".repeat(32),token:"synthetic-ci",databaseId:id};
+  for(const [response,stage,reason] of [
+    [new Response("provider-secret",{status:403}),"THREADS_SCHEMA_READ","HTTP_403"],
+    [new Response("provider-secret",{status:200}),"THREADS_SCHEMA_READ","INVALID_JSON"],
+    [Response.json({success:false,result:[]}),"THREADS_SCHEMA_READ","API_REJECTED"],
+    [Response.json({success:true,result:[{success:true,results:[{identity_column:1,receipt_columns:3,attempt_table:1}]}]}),
+      "THREADS_SCHEMA_VALIDATE","MIGRATION_0012_REQUIRED"],
+  ]){
+    await assert.rejects(verifyThreadsLifecycleSchema({...args,fetcher:async()=>response}),
+      e=>e instanceof PrivatePreflightFailure&&e.stage===stage&&e.reason===reason&&
+      !JSON.stringify(e).includes("provider-secret"));
   }
 });

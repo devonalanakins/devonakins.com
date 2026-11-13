@@ -71,7 +71,7 @@ for (const module of [
   "github-integration", "github-integration-auth", "github-integration-page",
   "presence-preferences", "presence-editor-api",
   "cloud-presence-model", "cloud-presence-api", "activity-tasks", "github-actions-oidc", "live-signal", "activity-history",
-  "listening-collections", "threads-public", "threads-public-d1", "threads-owner-probe", "threads-owner-oauth",
+  "listening-collections", "threads-public", "threads-public-d1", "threads-owner-probe", "threads-owner-oauth", "threads-meta-lifecycle",
   "professional/github-public",
 ]) {
   if (module.includes("/")) await mkdir(".release/" + module.split("/")[0], {recursive:true});
