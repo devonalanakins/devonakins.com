@@ -51,7 +51,7 @@ test("deauthorization is accepted only when signature, time and method are valid
  const good=await sign();
  assert.equal((await f.send(good,"/api/threads/lifecycle/deauthorize")).status,200);
  const other=fixture();
- for(const value of [good.slice(0,-1)+"x",await sign("123456789",Math.floor(now/1000)-7200),"malformed"]){
+ for(const value of [(good[0]==="A"?"B":"A")+good.slice(1),await sign("123456789",Math.floor(now/1000)-7200),"malformed"]){
    assert.equal((await other.send(value)).status,403);
  }
  assert.equal(other.row().token_cipher,"encrypted");
