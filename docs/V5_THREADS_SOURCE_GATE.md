@@ -70,3 +70,31 @@ The proposed private `GET /api/threads/auth/status` returns only configuration, 
 Source reference: Meta official [Threads API Postman collection](https://www.postman.com/meta/threads/collection/dht3nzz/threads-api) and [official documentation](https://www.postman.com/meta/threads/documentation/dht3nzz/threads-api). These are implementation references, not proof that the owner's account is connected.
 
 The approved screenshot's sample Threads content is **design-only**, not current user data.
+
+## November 13, 2026 — Meta callbacks and private release handoff (draft PR #111)
+
+**Authority and state:** The owner reports that the callback settings were saved in Meta, but no real provider delivery has been observed or verified. PR #111 includes the OAuth canonical-host fix from PR #110, as well as the lifecycle callbacks; resolve the overlapping PRs before merge. CI **run #2672** passed at source commit `f790cc40952a76eb924465232d5f6263511817a6`. That is source/isolated-runtime evidence only, not a deployed or provider-accepted connection.
+
+The exact URLs in this source candidate are:
+
+- OAuth redirect: `https://devonakins.com/api/threads/auth/callback` (owner's Access-protected OAuth flow)
+- Deauthorize callback: `https://devonakins.com/api/threads/lifecycle/deauthorize` (Meta signed POST)
+- Data deletion request: `https://devonakins.com/api/threads/lifecycle/delete` (Meta signed POST)
+- Data deletion status: `https://devonakins.com/api/threads/lifecycle/status/<opaque-confirmation-code>` (generated dynamically, not manually configured in Meta)
+
+Meta-to-server callbacks must be publicly reachable **without** an owner Access session; the Worker verifies the form-encoded `signed_request` HMAC using the **Threads-specific app secret**, not a personal or Facebook app secret. The owner OAuth endpoints remain Access protected. Data deletion returns `{url,confirmation_code}` and the opaque status URL reports completion only after the matching encrypted connection is removed or determined absent. The callback stores only bounded opaque replay/confirmation receipts, no Threads posts. Real Meta acceptance, correct user-ID mapping and test delivery are **not yet verified**.
+
+### Gate to first private connection
+
+1. Verify the Meta app's **Threads-specific** ID/secret, registered URLs, app role/tester and available callback test-delivery mechanism. Do not claim acceptance solely from a saved form.
+2. Pin PR #111's **exact final HEAD**, rerun the full GitHub verification and review changed security code, tests, and release bundle. Reconcile PR #110 without double-merging it.
+3. Independently back up `devonakins-listening-private` before any migration and confirm the recovery procedure. D1 Time Travel bookmark availability is useful but **not** proof that an independently restorable backup exists; bookmarks have provider retention limits. Keep any export private and outside public GitHub/CI artifacts.
+4. Review and manually apply additive `migrations/0012_threads_meta_lifecycle.sql` to that exact D1 after explicit production migration approval. The current code's protected preflight uses a read-only D1 query and must **fail closed** until `threads_connection.threads_user_id`, four receipt fields and `threads_oauth_attempt` are present. Check actual schema and existing rows after migration; never run the migration in an ordinary site deployment.
+5. Confirm Cloudflare Access protects `/api/threads/auth/*` and owner pages, while the two `/api/threads/lifecycle/*` callbacks remain reachable and reject unsigned requests. Review the private production binding allowlist, custom-domain mapping and rollback version. No changes to Access policies are implied by PR #111.
+6. Merge only through the established protected workflow, deploy an exact, reviewed commit, then confirm `/_health`, anonymous owner-route denial, lifecycle bad-signature denial, nonexistent-status 404 and authenticated owner status. Keep `THREADS_PUBLIC_FEED_ENABLED=false` and `THREADS_PUBLIC_RELEASE_APPROVED=false` throughout.
+7. The owner explicitly starts OAuth from `/owner/presence/`, authorizes `threads_basic`, and confirms the private verified identity, encrypted token storage and disconnect/renew safeguards. Use a real Meta signed delivery or supported provider verification to validate callback semantics without accidentally deleting a live grant.
+8. Public Threads posts are a **separate** owner approval and release. Test correct post dates/permalinks, privacy/Stop All and revocation before independently enabling either publication flag.
+
+**Rollback:** Return the Worker to the independently recorded prior production version if a release regresses. The new migration is additive; do not automatically roll back D1 to a historical state, because Time Travel restoration can discard unrelated writes. A database restore requires an explicit recovery decision and review of any intervening data.
+
+As of this checkpoint, Cloudflare's live Worker is still on its prior version, the private Threads connection has no stored token, both public Threads flags are false, and migration `0012` is absent. These are observed production checks, not proof of Meta callback acceptance.
