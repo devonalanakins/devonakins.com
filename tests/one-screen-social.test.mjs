@@ -36,7 +36,7 @@ test("public social profiles are separate from approved post display",()=>{
     assert.doesNotMatch(markup,/access_token|client_secret|private grant|bearer/i);
   }
   assert.match(full,/Facebook · pending/);
-  assert.match(compact,/Facebook · pending/);
+  assert.match(compact,/FB · pending/);
   assert.match(signal,/Public post sharing has not been enabled/);
   assert.match(signal,/CHECKING SOURCE/);
   assert.match(signal,/data-public-threads/);
