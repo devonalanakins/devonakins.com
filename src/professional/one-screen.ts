@@ -11,18 +11,30 @@ const panels=[...document.querySelectorAll<HTMLElement>("[data-one-view]")];
 // A fixed viewport cannot show an unbounded list. Match the public event
 // summary to the number of rows the visible panel can actually accommodate.
 // The full recent public history remains accessible from the GitHub profile.
-const width=window.innerWidth;
-const height=window.innerHeight;
-const narrowShort=width<=400&&height<=700;
-const mobile=width<=760;
-const shortWide=width>760&&height<=470;
-const compactDesktop=width>760&&height>470&&height<=800;
-const homeLimit=narrowShort||shortWide?1:mobile||compactDesktop?2:4;
-const activityLimit=narrowShort||shortWide?2:mobile||compactDesktop?4:6;
 const homeFeed=document.getElementById("one-home-github");
 const activityFeed=document.getElementById("one-activity-github");
-if(homeFeed)homeFeed.dataset.limit=String(homeLimit);
-if(activityFeed)activityFeed.dataset.limit=String(activityLimit);
+/** Refit the same verified public event snapshot when a phone rotates.
+ * Never fetch new events or infer ongoing work solely from viewport changes. */
+function fitGitHubFeedToViewport(){
+  const width=window.innerWidth;
+  const height=window.innerHeight;
+  const narrowShort=width<=400&&height<=700;
+  const mobile=width<=760;
+  const shortWide=width>760&&height<=470;
+  const compactDesktop=width>760&&height>470&&height<=800;
+  const homeLimit=narrowShort||shortWide?1:mobile||compactDesktop?2:4;
+  const activityLimit=narrowShort||shortWide?2:mobile||compactDesktop?4:6;
+  let changed=false;
+  for(const [node,limit] of [[homeFeed,homeLimit],[activityFeed,activityLimit]] as const){
+    if(node && node.dataset.limit!==String(limit)){
+      node.dataset.limit=String(limit);
+      changed=true;
+    }
+  }
+  if(changed)window.dispatchEvent(new Event("one-screen-feed-layout"));
+}
+fitGitHubFeedToViewport();
+window.addEventListener("resize",fitGitHubFeedToViewport);
 const known=(value:string|null):value is TabName=>!!value&&names.includes(value as TabName);
 const currentHash=():TabName=>{
   const raw=location.hash.slice(1).toLowerCase();

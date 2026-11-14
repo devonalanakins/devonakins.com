@@ -1,6 +1,7 @@
 import { publicV5Playback } from "../v5/public-playback.mjs";
 import { publicV5GptCapture, formatPublicGptValue, publicGptCapturedAt } from "../v5/public-gpt-capture.mjs";
-import { publicV5Threads } from "../v5/public-threads.mjs";
+import { publicV5Threads, threadsPublicDate } from "../v5/public-threads.mjs";
+import { THREADS_PROFILE_URL } from "./social-presence.mjs";
 
 /**
  * Presentation-only clients of existing privacy-consented public projections.
@@ -162,14 +163,59 @@ function renderThreads(snapshot:unknown){
   const feed=publicV5Threads(snapshot,Date.now());
   const first=feed.connected?feed.posts[0]:null;
   for(const card of threadsCards){
-    update(card,"[data-threads-state]",feed.connected?"CONNECTED":"NOT CONNECTED");
-    update(card,"[data-threads-summary]",first?first.text:
-      feed.connected?"No recent approved public posts.":
-      "Approved Threads posts appear only when that source is publicly connected.");
+    card.dataset.threadsConnected=String(feed.connected);
+    update(card,"[data-threads-state]",feed.connected?"CONNECTED":"SOURCE UNAVAILABLE");
+    const preview=!!card.querySelector("[data-threads-posts]");
+    update(card,"[data-threads-summary]",preview
+      ?feed.connected
+        ?feed.posts.length+" approved public "+(feed.posts.length===1?"update":"updates")+
+          " from Threads. Each post links to its original."
+        :"Approved Threads posts appear here only while sharing and the source are available."
+      :first?(first.text.length>152?first.text.slice(0,149).trimEnd()+"…":first.text):
+        feed.connected?"No recent approved public posts.":
+        "Posts are not shared on this site yet. View my Threads profile directly.");
     const a=card.querySelector<HTMLAnchorElement>("[data-threads-link]");
     if(a){
-      a.href=first?first.href:"https://www.instagram.com/devonalanakins/";
-      a.textContent=first?"View source post ↗":"Instagram profile ↗";
+      a.href=first?first.href:THREADS_PROFILE_URL;
+      a.textContent=first?"View original post ↗":"Open Threads profile ↗";
+    }
+    const list=card.querySelector<HTMLOListElement>("[data-threads-posts]");
+    if(list){
+      const signature=feed.connected
+        ?feed.posts.map(post=>
+            post.href+"|"+post.publishedAt+"|"+post.text+"|"+(post.media?"media":"text")
+          ).join(";")
+        :"unavailable";
+      // Do not replace focused links at every timer tick; do clear revoked or
+      // expired snapshots immediately. There are at most three vetted posts.
+      if(card.dataset.threadsRenderId!==signature){
+        list.replaceChildren();
+        for(const post of feed.posts){
+          const item=document.createElement("li");
+          const link=document.createElement("a");
+          link.href=post.href;
+          link.target="_blank";
+          link.rel="noopener noreferrer";
+          link.referrerPolicy="no-referrer";
+          link.textContent=post.text;
+          link.setAttribute("aria-label","Read public Threads post published "+threadsPublicDate(post.publishedAt));
+          const published=document.createElement("time");
+          published.dateTime=post.publishedAt;
+          published.textContent=threadsPublicDate(post.publishedAt);
+          item.append(link,published);
+          if(post.media){
+            const media=document.createElement("span");
+            media.className="one-threads-media";
+            media.textContent="Includes media";
+            item.append(media);
+          }
+          list.append(item);
+        }
+        card.dataset.threadsRenderId=signature;
+      }
+      update(card,"[data-threads-checked]",feed.connected&&feed.checkedAt
+        ?"Provider checked "+threadsPublicDate(feed.checkedAt)+" · Posts are dated history."
+        :"Source unavailable or sharing disabled · no account or posts inferred.");
     }
   }
 }

@@ -41,6 +41,11 @@ test("one-screen presentation remains first-party, motion-aware and viewport con
   assert.match(js,/aria-selected/);
   assert.match(js,/ArrowRight/);
   assert.match(js,/hashchange/);
+  assert.match(js,/addEventListener\("resize",fitGitHubFeedToViewport\)/);
+  assert.match(js,/one-screen-feed-layout/);
+  const client=await readFile(new URL("../src/professional/client.ts",import.meta.url),"utf8");
+  assert.match(client,/addEventListener\("one-screen-feed-layout"/);
+  assert.match(client,/if\(latest\)paint\(\)/);
   assert.match(page,/ONE_SCREEN_SITE_CANDIDATE/);
   assert.match(page,/oneScreenCandidate \? renderOneScreenHome\(\{datedCapture:datedGptCapture,motionAssetAvailable\}\) : professionalCandidate/);
 });

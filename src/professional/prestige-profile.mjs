@@ -4,6 +4,9 @@
  * and GPT captures continue to come from the existing independently validated
  * source components. No simulated counters, activity or project outcomes.
  */
+import {renderStudioOrbitalTree} from "./orbital-tree.mjs";
+import {renderHomeSocialHub,renderHomeThreadsSignal} from "./social-presence.mjs";
+
 const processStages = [
   ['01','Understand','Reality','Observe people, constraints, and what already works.'],
   ['02','Define','Excellence','Decide what useful and exceptional should mean.'],
@@ -34,10 +37,10 @@ export function renderPrestigeHome({publicFeed,button,spotifyCard}) {
       '<div class="prestige-player-top"><span class="prestige-player-id"><i aria-hidden="true"></i> THE LIVING STUDIO</span><span class="prestige-player-edition">INDEPENDENT · FLORIDA</span></div>'+
       '<div class="prestige-identity-main"><div class="prestige-emblem" aria-hidden="true"><span>D<span>A</span></span><b>INDEPENDENT / 001</b></div>'+
         '<div class="prestige-identity-copy"><p class="prestige-eyebrow">ENGINEERING / DESIGN / OPERATIONS / CREATIVE</p>'+
-          '<h1>I DESIGN,<br>BUILD &amp; RUN<br>DIGITAL<br>SYSTEMS.</h1>'+
+          '<h1>Independent thinking.<br><em>Living systems.</em></h1>'+
           '<p class="prestige-subtitle">SOFTWARE DEVELOPER <span aria-hidden="true">//</span> SYSTEMS DESIGNER</p></div></div>'+
-      '<p class="one-lede prestige-statement">Independent software developer, product builder &amp; operations lead.</p>'+
-      '<div class="prestige-player-actions">'+button('work','Explore my work',true)+button('contact','Get in touch')+'</div>'+
+      '<p class="one-lede prestige-statement">Software engineering · Product design · Operations.<br>A personal studio built around real work and verified signals.</p>'+
+      '<div class="prestige-player-actions">'+button('work','Explore my work',true)+button('contact','Get in touch')+'</div>'+renderHomeSocialHub()+
       '<div class="prestige-build" aria-label="My areas of practice">'+
         '<div class="prestige-build-row"><span class="prestige-build-index">01</span><div><strong>SOFTWARE & PRODUCTS</strong><small>End-to-end products, tools & platforms.</small></div><span class="prestige-build-end">BUILD</span></div>'+
         '<div class="prestige-build-row"><span class="prestige-build-index">02</span><div><strong>SYSTEM DESIGN</strong><small>Scalable, reliable & maintainable systems.</small></div><span class="prestige-build-end">OPERATE</span></div>'+
@@ -45,7 +48,7 @@ export function renderPrestigeHome({publicFeed,button,spotifyCard}) {
        '<button type="button" data-one-go="contact" class="studio-rail-contact">LET’S WORK TOGETHER <span aria-hidden="true">→</span></button>'+
       '</div>'+
     '</section>'+
-    '<div class="concept-visual">'+
+    '<div class="concept-visual">'+renderStudioOrbitalTree()+
        '<a href="/work/" class="studio-project-card studio-project-card--knowledge" aria-label="Knowledge, in development, explore project"><span class="studio-project-card__icon" aria-hidden="true"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linejoin="round"><path d="m16 3 12 7-12 7L4 10 16 3Z"/><path d="m4 16 12 7 12-7"/><path d="m4 22 12 7 12-7"/></svg></span><span class="studio-project-card__body"><strong>KNOWLEDGE</strong><small>A private-first knowledge &amp; files workspace.</small></span><span class="studio-project-card__status">IN DEVELOPMENT</span></a>'+
        '<a href="/work/devonstation/" class="studio-project-card studio-project-card--station" aria-label="DevonStation, in development, explore project"><span class="studio-project-card__icon" aria-hidden="true"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linejoin="round"><path d="M5 25V7h10c9 0 12 6 8 12-3 5-8 6-18 6Z"/><path d="m7 23 14-14"/></svg></span><span class="studio-project-card__body"><strong>DEVONSTATION</strong><small>An integrated environment for systems &amp; work.</small></span><span class="studio-project-card__status">IN DEVELOPMENT</span></a></div>'+
     '<aside class="one-signals prestige-command concept-live" aria-label="Source-qualified public work activity">'+
@@ -55,7 +58,7 @@ export function renderPrestigeHome({publicFeed,button,spotifyCard}) {
       '<div class="concept-feed-filters" role="group" aria-label="Filter recent GitHub events"><button type="button" data-github-filter="all" aria-pressed="true">All</button><button type="button" data-github-filter="push" aria-pressed="false">Pushes</button><button type="button" data-github-filter="pull_request" aria-pressed="false">PRs</button></div>'+
       publicFeed('one-home-github',4)+'<div class="concept-feed-empty"><span aria-hidden="true">⌁</span><p>Public development events appear here when GitHub responds.</p><a href="https://github.com/devonalanakins" target="_blank" rel="noopener noreferrer">Inspect public GitHub ↗</a></div></section>'+
       '<section class="studio-development" aria-label="Development presence"><div class="studio-development__head">DEVELOPMENT PRESENCE</div>'+studioWorkPresence+'</section>'+ 
-       '<div class="one-spotify studio-spotify">'+spotifyCard()+'</div>'+ 
+       '<div class="one-spotify studio-spotify">'+spotifyCard()+'</div>'+renderHomeThreadsSignal()+ 
        '<div class="concept-live-foot"><span>PROVENANCE FIRST</span><button type="button" data-github-refresh aria-label="Refresh GitHub events now">↻ Refresh</button></div>'+
     '</aside>'+
     '<section class="concept-signal-band" aria-label="Publicly sourced signals">'+

@@ -38,6 +38,27 @@ try:
                 assert page.locator(".concept-intro .prestige-player-actions .one-button").count()==2
                 assert page.locator(".concept-live [data-public-work]").count()==1
                 assert page.locator(".concept-live .studio-spotify .p-spotify-card").count()==1
+                assert page.locator('[data-public-threads]').count()==2,(
+                    engine,width,height,"two first-party social surfaces")
+                assert page.locator('.one-social-channels a[href="https://www.threads.com/@devonalanakins"]').count()>=2
+                assert page.locator('.one-social-channels a[href*="facebook."]').count()==0
+                if height>470:
+                    visible_social=page.evaluate("""() => {
+                      const hero=document.querySelector('.concept-intro').getBoundingClientRect();
+                      const studio=document.querySelector('.concept-live').getBoundingClientRect();
+                      const dock=document.querySelector('.studio-social-dock').getBoundingClientRect();
+                      const feed=document.querySelector('.studio-threads-inline').getBoundingClientRect();
+                      return {dockWidth:dock.width,feedWidth:feed.width,
+                        dockInside:dock.top>=hero.top-2&&dock.bottom<=hero.bottom+2,
+                        feedInside:feed.top>=studio.top-2&&feed.bottom<=studio.bottom+2,
+                        documentOverflow:document.documentElement.scrollWidth>innerWidth+2||
+                          document.documentElement.scrollHeight>innerHeight+2};
+                    }""")
+                    assert all([visible_social["dockWidth"]>70,visible_social["feedWidth"]>100,
+                      visible_social["dockInside"],visible_social["feedInside"],
+                      not visible_social["documentOverflow"]]),(
+                        engine,width,height,"social dock or Threads panel clipped",visible_social)
+
                 assert page.locator(".concept-signal-band .one-gpt-record").count()==1
                 if height>470:
                     assert page.evaluate("""() => {
@@ -95,18 +116,45 @@ try:
                 if width<=400 and height<=700:
                     # Short phones retain the verified source count and the full
                     # Activity tab, rather than showing a clipped event row.
-                    assert page.evaluate("""() => {
+                    feed_bounds=page.evaluate("""() => {
                       const feed=document.querySelector('#one-home-github');
                       const items=feed.querySelector('ol');
                       const status=feed.querySelector('[data-feed-status]');
                       const rect=status.getBoundingClientRect();
                       const panel=document.querySelector('.prestige-activity-card').getBoundingClientRect();
-                      return getComputedStyle(items).display==='none' &&
-                        rect.width>0 && rect.height>0 &&
-                        rect.top>=panel.top && rect.bottom<=panel.bottom+2;
-                    }"""),(engine,width,height,"short phone GitHub feed must not clip a row")
+                      return {listHidden:getComputedStyle(items).display==='none',
+                        statusHeight:rect.height,statusWidth:rect.width,
+                        statusTop:rect.top,statusBottom:rect.bottom,
+                        cardTop:panel.top,cardBottom:panel.bottom,
+                        statusInside:rect.top>=panel.top-1&&rect.bottom<=panel.bottom+2};
+                    }""")
+                    assert feed_bounds["listHidden"] and feed_bounds["statusHeight"]>0 and (
+                        feed_bounds["statusWidth"]>0 and feed_bounds["statusInside"]
+                    ),(engine,width,height,"short phone GitHub feed must not clip a row",feed_bounds)
                 assert page.locator(".prestige-identity-copy h1").is_visible()
-                assert "I DESIGN" in page.locator(".prestige-identity-copy h1").inner_text()
+                assert "Independent thinking." in page.locator(".prestige-identity-copy h1").inner_text()
+                assert "Living systems." in page.locator(".prestige-identity-copy h1").inner_text()
+                assert page.locator(".studio-orbital-art svg").count()==1,(engine,width,height,"first-party orbital artwork")
+                if width<=760 and height>470:
+                    # Desktop artwork originally inherited grid-column:2; in
+                    # one-column mobile grid that implicit column has zero width.
+                    # Count-in-DOM is insufficient: insist on a rendered orbit.
+                    orbital = page.evaluate("""() => {
+                      const panel=document.querySelector('.concept-visual');
+                      const scene=panel.querySelector('.studio-orbital-art');
+                      const svg=scene.querySelector('svg');
+                      const r=panel.getBoundingClientRect();
+                      const s=svg.getBoundingClientRect();
+                      return {width:r.width,svgWidth:s.width,visible:
+                        getComputedStyle(panel).display!=='none',
+                        column:getComputedStyle(panel).gridColumn,
+                        inViewport:r.right<=innerWidth+2 && r.left>=0};
+                    }""")
+                    assert orbital["visible"] and orbital["width"] >= min(140,width*.42) and (
+                      orbital["svgWidth"]>=150 and orbital["inViewport"]
+                      and orbital["column"]=="1"
+                    ),(engine,width,height,"mobile orbital zero-width regression",orbital)
+
                 # High-level gamer styling is editorial, not invented XP, levels, or ranks.
                 assert page.locator(".prestige-build-row").count()==3
                 # In a 390px-tall landscape viewport, source tiles remain in
@@ -228,19 +276,28 @@ try:
                 # Dense 320px phones must keep both career actions together and
                 # never clip the labels or the sourced GPT numbers behind a panel.
                 if width<=400 and height<=700:
-                    assert page.evaluate("""() => {
+                    compact=page.evaluate("""() => {
                       const actions=[...document.querySelectorAll('.prestige-player-actions .one-button')];
                       const player=document.querySelector('.prestige-player').getBoundingClientRect();
                       const tiles=document.querySelector('.studio-spotify').getBoundingClientRect();
                       const stage=document.querySelector('.one-stage').getBoundingClientRect();
                       const status=document.querySelector('#one-home-github [data-feed-status]').getBoundingClientRect();
-                      if(actions.length!==2)return false;
+                      if(actions.length!==2)return {actions:actions.length};
                       const a=actions[0].getBoundingClientRect(),b=actions[1].getBoundingClientRect();
-                      return Math.abs(a.top-b.top)<3 && a.right<=player.right+2 &&
-                        b.right<=player.right+2 && b.bottom<=player.bottom+2 &&
-                        tiles.bottom<=stage.bottom+2 && tiles.height>=70 &&
-                        status.top>=stage.top && status.bottom<=tiles.top;
-                    }"""),(engine,width,height,"compact action wrapping or sourced stat clipping")
+                      return {actionsSameRow:Math.abs(a.top-b.top)<3,
+                        actionsWithin:a.right<=player.right+2&&b.right<=player.right+2&&
+                          b.bottom<=player.bottom+2,
+                        spotifyWithin:tiles.bottom<=stage.bottom+2,
+                        spotifyHeight:tiles.height,
+                        statusWithin:status.top>=stage.top&&status.bottom<=tiles.top,
+                        actionBottom:b.bottom,heroBottom:player.bottom,
+                        spotifyBottom:tiles.bottom,stageBottom:stage.bottom,
+                        statusBottom:status.bottom,spotifyTop:tiles.top};
+                    }""")
+                    assert all([compact.get("actionsSameRow"),compact.get("actionsWithin"),
+                      compact.get("spotifyWithin"),compact.get("statusWithin"),
+                      compact.get("spotifyHeight",0)>=70]),(
+                        engine,width,height,"compact action wrapping or sourced stat clipping",compact)
 
                 # The page includes two differently sized tablists: choose visible tab.
                 tabs=page.locator('.one-tabs-mobile [role="tablist"]' if width<=760 else '.one-tabs-desktop [role="tablist"]')
@@ -328,6 +385,64 @@ try:
                 page.screenshot(path=str(OUT/f"{engine}-{width}x{height}-home.png"))
                 assert not errors,(engine,width,height,errors)
                 context.close()
+            # Rotate the same open document without refreshing the page.
+            # The source is a synthetic, validated public GitHub snapshot; resizing
+            # may change presentation but must neither invent events nor refetch.
+            import json
+            from datetime import datetime, timezone
+            checked=datetime.now(timezone.utc).isoformat().replace("+00:00","Z")
+            fixture={"version":1,"source":"GitHub public events API",
+                     "status":"available","checkedAt":checked,
+                     "reason":None,"retryAt":None,
+                     "events":[{"kind":"push","label":"Pushed commits",
+                                "repo":"devonalanakins/devonakins.com",
+                                "at":checked,
+                                "url":"https://github.com/devonalanakins/devonakins.com"}
+                               for _ in range(6)]}
+            resize_context=browser.new_context(viewport={"width":390,"height":844},
+                device_scale_factor=1,reduced_motion="reduce")
+            resize_page=resize_context.new_page()
+            feed_fetches=[]
+            def supply_feed(route):
+                feed_fetches.append(1)
+                route.fulfill(status=200,content_type="application/json",
+                    body=json.dumps(fixture))
+            resize_page.route("**/api/github/public-feed",supply_feed)
+            resize_page.goto(BASE+"/",wait_until="domcontentloaded")
+            def assert_capacity(home,activity):
+                resize_page.wait_for_function("""(expected) => {
+                  const count=id=>document.querySelectorAll(id+" [data-feed-list] li").length;
+                  return document.querySelector("#one-home-github").dataset.limit===String(expected[0]) &&
+                    document.querySelector("#one-activity-github").dataset.limit===String(expected[1]) &&
+                    count("#one-home-github")===expected[0] &&
+                    count("#one-activity-github")===expected[1];
+                }""",arg=[home,activity])
+                assert resize_page.locator("#one-home-github [data-feed-list] li").count()==home
+                assert resize_page.locator("#one-activity-github [data-feed-list] li").count()==activity
+            assert_capacity(2,4)
+            def assert_unclipped_mobile_rows():
+                metrics=resize_page.evaluate("""() => {
+                  const card=document.querySelector('.prestige-activity-card').getBoundingClientRect();
+                  const next=document.querySelector('.studio-development').getBoundingClientRect();
+                  const items=[...document.querySelectorAll('#one-home-github [data-feed-list] li')];
+                  const boxes=items.map(e=>e.getBoundingClientRect());
+                  return {count:boxes.length,cardBottom:card.bottom,nextTop:next.top,
+                    lastBottom:boxes.at(-1)?.bottom||0,
+                    visible:boxes.length===2 && boxes.every(r=>r.width>0&&r.height>0&&
+                      r.top>=card.top-2&&r.bottom<=card.bottom+2&&r.bottom<=next.top+1)};
+                }""")
+                assert metrics["visible"],(engine,"mobile GitHub rows obscured by subsequent signal",metrics)
+            assert_unclipped_mobile_rows()
+            original_fetches=len(feed_fetches)
+            assert original_fetches==1,(engine,"fixture should be fetched once")
+            for width,height,home,activity in ((844,390,1,2),(1440,900,4,6),(390,844,2,4)):
+                resize_page.set_viewport_size({"width":width,"height":height})
+                assert_capacity(home,activity)
+                if width==390 and height==844:
+                    assert_unclipped_mobile_rows()
+                assert len(feed_fetches)==original_fetches,(
+                    engine,width,height,"viewport change triggered provider request")
+            resize_context.close()
             # Normal motion is intentional; motion-reduced checks above verify
             # every panel stays usable without animation.
             motion_context=browser.new_context(viewport={"width":1440,"height":900},

@@ -1,0 +1,264 @@
+/* Living Studio — orbital artwork and concept typography.
+ * First-party, resolution-independent scene; no simulated provider signal.
+ * Loaded after original Studio and social styles to preserve the six views.
+ */
+.one-body .concept-intro h1 {
+  font-family:Georgia,"Iowan Old Style","Times New Roman",serif;
+  font-size:clamp(43px,4.15vw,72px);
+  font-weight:500;
+  line-height:.98;
+  letter-spacing:-.048em;
+  text-transform:none;
+  max-width:14ch;
+  text-wrap:balance;
+  color:#f7eee6;
+  filter:drop-shadow(0 4px 14px #0008);
+}
+.one-body .concept-intro h1 em {
+  display:inline;
+  font:inherit;
+  font-style:normal;
+  white-space:normal;
+  color:#eab18d;
+  text-shadow:0 1px 16px #d48c7566,0 8px 28px #0008;
+}
+.one-body .concept-intro .prestige-player-id {
+  color:#eec6aa;
+  letter-spacing:.23em;
+}
+.one-body .concept-intro .prestige-statement {
+  max-width:40ch;
+  font-size:clamp(12px,1.05vw,16px);
+  font-weight:420;
+  color:#e1dad4;
+  line-height:1.5;
+  letter-spacing:.005em;
+  text-wrap:pretty;
+}
+.one-body .one-world[data-renderer="native-canvas"] {
+  background:
+    radial-gradient(ellipse 32% 47% at 54% 45%,#bd7e6044,transparent 76%),
+    radial-gradient(ellipse 40% 50% at 62% 32%,#21747325,transparent 86%),
+    url('/professional/neural-atmosphere.svg') 52% 49%/cover no-repeat,
+    linear-gradient(135deg,#06090e,#101a27 54%,#05080f);
+}
+.one-body .one-world:after {
+  background:
+    linear-gradient(90deg,#05080fef 0%,#070b12d2 22%,#060a1235 46%,#070b1240 66%,#060a13e3 95%),
+    linear-gradient(0deg,#05080fbd,transparent 27%,transparent 78%,#05081280);
+}
+.one-body .concept-visual {
+  isolation:isolate;
+  overflow:visible;
+}
+.one-body .studio-orbital-art {
+  position:absolute;
+  inset:-4% -20% 2%;
+  z-index:0;
+  pointer-events:none;
+  display:grid;
+  place-items:center;
+  overflow:visible;
+  opacity:.94;
+  contain:layout style;
+}
+.one-body .studio-orbital-haze {
+  position:absolute;
+  width:98%;
+  aspect-ratio:1;
+  max-height:100%;
+  border-radius:50%;
+  background:
+    radial-gradient(ellipse at 50% 48%,#ecb08016 0%,#e7b48608 26%,transparent 65%),
+    radial-gradient(ellipse at 58% 36%,#75d1c329 0%,#12595712 33%,transparent 70%);
+  box-shadow:0 0 92px #f5a47814,inset 0 0 60px #73d2bc12;
+}
+.one-body .studio-orbital-tree {
+  display:block;
+  position:relative;
+  z-index:2;
+  width:min(126%,670px);
+  height:100%;
+  overflow:visible;
+  filter:drop-shadow(0 0 12px #f3b78c4b);
+  transform-origin:center;
+  animation:studio-tree-breathe 13s ease-in-out infinite alternate;
+}
+.one-body .studio-orbit {
+  position:absolute;
+  z-index:3;
+  top:22%;
+  left:1%;
+  width:99%;
+  height:54%;
+  border:1.4px solid #e0a98177;
+  border-radius:50%;
+  box-shadow:0 0 10px #f2b88e41,inset 0 0 10px #d7ac8740;
+  transform-origin:50% 50%;
+  backface-visibility:hidden;
+}
+.one-body .studio-orbit--outer {
+  transform:rotate(-29deg);
+  border-left-color:#ffdbad;
+  border-right-color:#6eddd5a1;
+  animation:studio-orbit-outer 34s ease-in-out infinite alternate;
+}
+.one-body .studio-orbit--inner {
+  width:91%;
+  left:4.5%;
+  top:26%;
+  height:48%;
+  transform:rotate(35deg);
+  border-color:#72c2be70;
+  border-top-color:#fce4c3c9;
+  animation:studio-orbit-inner 29s ease-in-out infinite alternate;
+}
+.one-body .studio-orbit--cross {
+  width:94%;
+  left:3%;
+  top:20%;
+  height:58%;
+  border-color:#e0a78d68;
+  border-left-color:#fae4bfdf;
+  transform:rotate(76deg) scaleY(.6);
+  animation:studio-orbit-cross 38s ease-in-out infinite alternate;
+}
+.one-body .studio-project-card {
+  z-index:4;
+  backdrop-filter:blur(18px);
+}
+.one-body .studio-project-card--knowledge{left:0;top:11%}
+.one-body .studio-project-card--station{left:1%;bottom:17%}
+.one-body .concept-intro .prestige-build {z-index:9}
+@keyframes studio-tree-breathe {
+  from {transform:translateY(0) scale(.99);opacity:.88}
+  to {transform:translateY(-6px) scale(1.015);opacity:1}
+}
+@keyframes studio-orbit-outer {
+  from {transform:rotate(-29deg) scale(1)}
+  to {transform:rotate(-21deg) scale(1.035)}
+}
+@keyframes studio-orbit-inner {
+  from {transform:rotate(35deg) scale(.995)}
+  to {transform:rotate(27deg) scale(1.02)}
+}
+@keyframes studio-orbit-cross {
+  from {transform:rotate(76deg) scaleY(.6)}
+  to {transform:rotate(88deg) scaleY(.64)}
+}
+.one-body:has(.one-world[data-motion="off"]) .studio-orbital-tree,
+.one-body:has(.one-world[data-motion="off"]) .studio-orbit {
+  animation-play-state:paused;
+}
+@media(min-width:761px) and (max-width:1199px) {
+  .one-body .concept-intro h1{font-size:clamp(37px,3.7vw,53px)}
+  .one-body .concept-intro .prestige-statement{font-size:12px}
+  .one-body .studio-orbital-art{inset:-4% -18% 2%}
+  .one-body .studio-project-card--knowledge{left:0;top:5%}
+  .one-body .studio-project-card--station{left:0;bottom:5%}
+}
+@media(min-width:761px) and (max-height:760px){
+  .one-body .concept-intro h1{font-size:clamp(32px,3.65vw,50px)}
+  .one-body .concept-intro .prestige-statement{font-size:11px;line-height:1.32}
+}
+@media(max-width:760px){
+  .one-body .concept-intro h1{
+    font-size:clamp(25px,7.25vw,39px);
+    line-height:.97;
+    max-width:18ch;
+    letter-spacing:-.045em;
+  }
+  .one-body .concept-intro h1 em{color:#eeb18d}
+  .one-body .concept-intro .prestige-statement{font-size:10px;line-height:1.28;max-width:37ch;position:relative;z-index:4}
+  .one-body .concept-visual{
+    display:block!important;
+    position:absolute;
+    inset:0 0 auto 29%;
+    width:71%;
+    height:48%;
+    pointer-events:none;
+    z-index:1;
+    overflow:hidden;
+  }
+  .one-body .studio-orbital-art{
+    inset:-18% -32% -8% -34%;
+    opacity:.44;
+  }
+  .one-body .studio-orbit{border-width:1px}
+  .one-body .studio-project-card{display:none!important}
+  .one-body .concept-intro{
+    z-index:2;
+    background:linear-gradient(90deg,#07101be9 0%,#0b1020b9 55%,#0b12215e 100%)!important;
+  }
+  .one-body .one-world:after{
+    background:linear-gradient(180deg,#080c16db,#080e19b2 36%,#080d18d8 72%,#070c14f2);
+  }
+}
+@media(max-width:400px) and (max-height:700px){
+  .one-body .concept-intro h1{font-size:clamp(22px,6.5vw,27px)}
+  .one-body .concept-intro .prestige-statement{font-size:9px;line-height:1.2}
+  .one-body .concept-visual{height:42%}
+}
+@media(max-height:470px){
+  .one-body .studio-orbital-art{opacity:.38}
+}
+@media(prefers-reduced-motion:reduce){
+  .one-body .studio-orbital-tree,.one-body .studio-orbit{animation:none!important}
+  .one-body .studio-orbital-art{opacity:.76}
+  .one-body .one-world{
+    background:#070c15 url('/professional/neural-field.svg') 52% 47%/cover no-repeat!important;
+  }
+}
+@media(prefers-contrast:more){
+  .one-body .studio-orbital-art{opacity:.34}
+  .one-body .concept-intro h1,.one-body .concept-intro h1 em{
+    color:#fff;background:#0609128c;text-shadow:none;
+  }
+}
+
+/* iPhone art direction: display a genuine fragment of the luminous orbit
+ * above the introduction, rather than losing the entire centerpiece behind
+ * the hero surface. The left-side readability mask protects the copy. */
+@media(max-width:760px){
+  .one-body .concept-visual{
+    display:block!important;
+    position:absolute;
+    top:0;
+    right:0;
+    bottom:auto;
+    left:auto;
+    width:57%;
+    height:34%;
+    z-index:4;
+    opacity:.85;
+    overflow:hidden;
+    pointer-events:none;
+    -webkit-mask-image:linear-gradient(90deg,transparent 0%,#000 38%,#000 100%);
+    mask-image:linear-gradient(90deg,transparent 0%,#000 38%,#000 100%);
+  }
+  .one-body .studio-orbital-art{
+    inset:-19% -39% -26% -44%;
+    opacity:.85;
+    mix-blend-mode:screen;
+  }
+  .one-body .studio-orbital-tree{
+    width:100%;
+    filter:drop-shadow(0 0 8px #f3b78c6b);
+  }
+}
+@media(max-width:400px) and (max-height:700px){
+  .one-body .concept-visual{width:51%;height:31%;opacity:.7}
+  .one-body .studio-orbital-art{opacity:.72}
+}
+
+/* Mobile grid has a single explicit column. Without remapping this art
+ * panel from desktop grid-column:2, its implicit column measures zero width.
+ * Keep the decorative media in the first (and only) grid column. */
+@media(max-width:760px){
+  .one-body .concept-visual{
+    grid-column:1!important;
+    grid-row:1!important;
+    width:57vw!important;
+    min-width:160px!important;
+  }
+}
