@@ -235,7 +235,7 @@ jobs:
   one_screen_candidate:
     # Isolated design candidate: does not change the verified production
     # release variant or publish a new public endpoint.
-    if: github.head_ref == 'feat/viewport-one-screen-20261110' || github.ref == 'refs/heads/feat/viewport-one-screen-20261110' || github.head_ref == 'feat/living-studio-orbital-social-20261113' || github.ref == 'refs/heads/feat/living-studio-orbital-social-20261113' || github.head_ref == 'fix/social-facebook-owner-profile-20261113' || github.ref == 'refs/heads/fix/social-facebook-owner-profile-20261113'
+    if: github.head_ref == 'feat/viewport-one-screen-20261110' || github.ref == 'refs/heads/feat/viewport-one-screen-20261110' || github.head_ref == 'feat/living-studio-orbital-social-20261113' || github.ref == 'refs/heads/feat/living-studio-orbital-social-20261113' || github.head_ref == 'fix/social-facebook-owner-profile-20261113' || github.ref == 'refs/heads/fix/social-facebook-owner-profile-20261113' || github.head_ref == 'feat/threads-visibility-and-social-icons-20261114' || github.ref == 'refs/heads/feat/threads-visibility-and-social-icons-20261114'
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     permissions:
