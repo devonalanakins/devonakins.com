@@ -36,7 +36,9 @@ function renderSourceReadiness(sources) {
   const lastTask=localObservation(tasks.lastAcceptedAt);
   const rows=[
     ["Threads",t.privateConnected
-      ? "Private Meta authorization stored. Public Threads posts remain a separate opt-in."
+      ? (t.publicFeedEnabled
+          ? "Your latest public Threads posts are selected for sharing. Use the visibility switch above to hide them."
+          : "Private Meta authorization stored. Public Threads posts are not selected for sharing.")
       : t.configured
       ? "Configured for public read; use the private test to verify the account."
       : !t.authorizationConfigured
@@ -142,6 +144,16 @@ function lock(value) {
       !Number.isFinite(expires) ||
       Date.now()-last < 24*60*60_000 ||
       expires<=Date.now()+60_000;
+  }
+  if (!value) {
+    const connected=threadsAuthState?.storageReady && threadsAuthState?.connected &&
+      !threadsAuthBusy;
+    const mayEnable=threadsAuthState?.releaseApproved && state?.publishingAllowed;
+    // Turning sharing OFF stays available even if release permission is revoked.
+    el("threads-public-enabled").disabled=!connected ||
+      (!mayEnable && !threadsAuthState?.publicFeedEnabled);
+    el("threads-sharing-save").disabled=!connected ||
+      (!mayEnable && !threadsAuthState?.publicFeedEnabled);
   }
   if (state) el("presence-off").disabled = false;
 }
@@ -356,13 +368,22 @@ el("threads-check").onclick=checkThreadsConnection;
 function renderThreadsAuthorization(data) {
   if(!data || data.version!==1)throw Error("Invalid Threads status.");
   threadsAuthState=data;
+  el("threads-public-enabled").checked=!!data.publicFeedEnabled;
+  el("threads-sharing-status").textContent=
+    !data.storageReady ? "Owner sharing controls require a private database migration." :
+    !data.connected ? "Connect and verify Threads privately before enabling its public feed." :
+    !data.releaseApproved ? "Threads release approval is off. The feed is not public." :
+    data.publicFeedEnabled ? "Sharing selected: up to three recent public Threads posts can appear on your website." :
+    "Threads posts hidden. Enable this setting and save to share only your public posts.";
   const nextRenewal=Date.parse(data.verifiedAt||"")+24*60*60_000;
   const message=data.connected
     ? "Official Threads authorization securely stored. Expires " +
       new Date(data.expiresAt).toLocaleDateString() +
       (Number.isFinite(nextRenewal) ? ". Renewal available after " +
         new Date(nextRenewal).toLocaleString() : "") +
-      ". Public posts are not enabled."
+      (data.publicFeedEnabled && data.releaseApproved
+        ? ". Public posts are selected for sharing."
+        : ". Public posts are not shared.")
     : !data.appConfigured
       ? "Meta Threads App ID and secret are not configured on the Worker."
       : !data.storageReady
@@ -413,7 +434,8 @@ function displayThreadsReturn(result,connection,started,detail=null) {
   let message=null;
   if(result==="connected"){
     message=connection?.connected
-      ? "Threads is privately connected and verified. Public sharing remains disabled."
+      ? "Threads is privately connected and verified. " +
+        (connection.publicFeedEnabled ? "Public sharing is selected." : "Public sharing is off.")
       : "Meta returned a success indication, but the private database did not verify a stored connection.";
   } else if(result && Object.hasOwn(failures,result)){
     message=failures[result];
@@ -508,6 +530,52 @@ async function changeThreadsAuthorization(action) {
     lock(busy || !state);
   }
 }
+/** Set the independent, revision-bound public feed preference. No Meta
+ * posting scope is requested and the private token never enters this page. */
+async function changeThreadsSharing(){
+  const previous=!!threadsAuthState?.publicFeedEnabled;
+  const requested=el("threads-public-enabled").checked;
+  if(!state || !threadsAuthState?.storageReady || !threadsAuthState?.connected ||
+      threadsAuthBusy || busy) return;
+  if(previous===requested){
+    el("threads-sharing-status").textContent="Threads sharing is already saved.";
+    return;
+  }
+  if(requested && !window.confirm(
+    "Share up to three of my most recent public Threads posts on DevonAkins.com? "+
+    "You can turn sharing off here without disconnecting your Meta account.")){
+    el("threads-public-enabled").checked=previous;
+    return;
+  }
+  threadsAuthBusy=true;
+  lock(true);
+  el("threads-sharing-status").textContent=requested?
+    "Enabling approved public Threads sharing…" : "Hiding public Threads posts…";
+  try{
+    const response=await fetch("/api/threads/auth/visibility",{
+      method:"POST",credentials:"same-origin",cache:"no-store",
+      headers:{"Content-Type":"application/json",Accept:"application/json"},
+      body:JSON.stringify({enabled:requested,revision:threadsAuthState.revision}),
+      signal:AbortSignal.timeout(10000),
+    });
+    if(!response.headers.get("Content-Type")?.includes("application/json"))
+      throw Error("Reload and sign in to manage Threads sharing.");
+    const data=await response.json();
+    if(!response.ok){
+      if(response.status===409) await loadThreadsAuthorization();
+      throw Error(data?.error || "Sharing preference was not saved.");
+    }
+    renderThreadsAuthorization(data);
+    await load(); // Refresh independently gated public readiness, not credentials.
+  }catch(error){
+    el("threads-public-enabled").checked=!!threadsAuthState?.publicFeedEnabled;
+    el("threads-sharing-status").textContent=error?.message || "Sharing preference was not saved.";
+  }finally{
+    threadsAuthBusy=false;
+    lock(busy || !state);
+  }
+}
+el("threads-sharing-save").onclick=()=>void changeThreadsSharing();
 el("threads-connect").onclick=()=>changeThreadsAuthorization("start");
 el("threads-disconnect").onclick=()=>changeThreadsAuthorization("disconnect");
 el("threads-renew").onclick=()=>changeThreadsAuthorization("renew");
