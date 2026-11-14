@@ -152,7 +152,5 @@ export function renderOneScreenHome({datedCapture=null,motionAssetAvailable=fals
     '<div class="one-header-actions"><button type="button" class="one-motion-toggle" data-motion-toggle aria-pressed="true" aria-label="Pause background motion" title="Pause background motion"><span class="one-motion-dot" aria-hidden="true"></span><span data-motion-label>Motion on</span></button><a class="one-header-email" href="mailto:devon@anevum.com">LET’S TALK <span aria-hidden="true">→</span></a></div></header>'+
     '<main id="one-stage" class="one-stage" tabindex="-1">'+home.replace('<!--ONE_SCREEN_GPT_SLOT-->',homeGpt)+experience+work+activity+writing+contact+'</main>'+
     tabs("mobile")+
-    '<footer class="one-footer"><span>© 2026 DEVON ALAN AKINS</span>'+
-    '<a href="/experience/">EXTENDED PROFILE ↗</a></footer>'+
     '</body></html>';
 }
