@@ -98,3 +98,53 @@ Meta-to-server callbacks must be publicly reachable **without** an owner Access 
 **Rollback:** Return the Worker to the independently recorded prior production version if a release regresses. The new migration is additive; do not automatically roll back D1 to a historical state, because Time Travel restoration can discard unrelated writes. A database restore requires an explicit recovery decision and review of any intervening data.
 
 As of this checkpoint, Cloudflare's live Worker is still on its prior version, the private Threads connection has no stored token, both public Threads flags are false, and migration `0012` is absent. These are observed production checks, not proof of Meta callback acceptance.
+
+## November 14 — owner-visible sharing controls (draft; separate from LIVE #120)
+
+This candidate adds a dedicated **Show public Threads posts** checkbox and save
+action in the authenticated `/owner/presence/` Public visibility panel. It
+does not grant Meta write permissions, change Threads/Spotify credentials, or
+alter the four protected release flags. The existing public feed and profile
+URLs remain untouched until a separate reviewed release.
+
+`migrations/0013_threads_public_visibility.sql` adds a private, integer
+`threads_connection.public_feed_enabled` flag. Its default is OFF. A one-time
+update preserves the **already approved** verified owner grant when the migration
+is first applied, avoiding a surprise outage during this particular cutover.
+Every new OAuth authorization and disconnect explicitly resets the flag OFF;
+refreshing the same verified account preserves it. The toggle requires Cloudflare
+Access owner identity, same-origin JSON, release approval, a still-valid
+verified grant, global public opt-in, and a current D1 revision for enabling.
+The OFF operation advances the revision regardless of previous state so that
+stale or in-flight enable requests cannot revive disclosure.
+
+The public reader checks the D1 flag before calling Meta and again afterward
+against the same revision, ciphertext, expiry, username and release flags.
+Cached and pending provider responses fail closed after OFF, disconnect or
+credential renewal. The owner status endpoint exposes only consent boolean,
+revision and release readiness; never a token, handle or account ID.
+
+**Release gate: migration + deploy are not authorized by this draft.**
+1. Independently verify the private database identity, currently serving Worker
+   version and owner-approved public feed status. Export/verify an actual
+   restorable private database backup; do not put it in public CI or GitHub.
+2. Review and separately approve applying only migration 0013 to that database.
+   The deployment preflight now rejects missing column with
+   `MIGRATION_0013_REQUIRED`; do not bypass it.
+3. Review the exact PR head, Node/TypeScript/build/Browser CI, source diff,
+   security boundaries and rollback candidate. Merge only through approved
+   branch protections, then deploy an exact reviewed main SHA using the existing
+   protected one-screen workflow with `threads_publication_action=preserve`.
+4. Verify the real production owner status on iPhone Safari and a live public
+   activity packet. Toggle OFF: the latest three posts disappear while the
+   private Threads connection remains available. Toggle ON with explicit owner
+   consent: only verified public posts reappear. Confirm the global Stop All
+   switch still hides the feed, and all owner APIs fail closed anonymously.
+5. For rollback, restore the previously serving Worker version only after
+   checking its binding compatibility. The additive schema change does not
+   require or justify destructive D1 restore.
+
+Social links in Home, Contact and Footer use first-party, CC0 Simple Icons SVG
+marks for GitHub, Instagram, Threads and Facebook with real hrefs and
+accessible link names. No remote icon provider, analytics, iframe or
+third-party social script is added.
