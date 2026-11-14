@@ -40,8 +40,12 @@ try:
                 assert page.locator(".concept-live .studio-spotify .p-spotify-card").count()==1
                 assert page.locator('[data-public-threads]').count()==2,(
                     engine,width,height,"two first-party social surfaces")
-                assert page.locator('.one-social-channels a[href="https://www.threads.com/@devonalanakins"]').count()>=2
-                assert page.locator('.one-social-channels a[href="https://fb.com/devonalanakins"]').count()>=2
+                assert page.locator('.one-social-channels a[href="https://www.threads.com/@devonalanakins"]').count()==1
+                assert page.locator('.one-social-channels a[href="https://fb.com/devonalanakins"]').count()==1
+                assert page.locator(".one-social-channels").count()==1,(
+                    engine,width,height,"one social navigation, no footer duplicates")
+                assert page.locator("footer").count()==0
+                assert page.locator(".one-social-channels a.one-social-icon svg path").count()==4
                 if height>470:
                     visible_social=page.evaluate("""() => {
                       const hero=document.querySelector('.concept-intro').getBoundingClientRect();

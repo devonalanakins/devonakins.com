@@ -64,12 +64,25 @@ try:
                 page.route("**/api/activity/v4", activity_response)
                 response = page.goto(BASE + "/", wait_until="domcontentloaded")
                 assert response.status == 200, (engine, width, height, response.status)
-                footer = page.locator("footer .one-social-channels--compact")
-                assert footer.is_visible(), (engine, width, height, "social footer missing")
-                assert footer.locator('a[href="https://github.com/devonalanakins"]').count() == 1
-                assert footer.locator('a[href="https://www.instagram.com/devonalanakins/"]').count() == 1
-                assert footer.locator('a[href="https://www.threads.com/@devonalanakins"]').count() == 1
-                assert footer.locator('a[href="https://fb.com/devonalanakins"]').count() == 1
+                # One icon-only social dock on Profile; never repeat the
+                # four profile links in Contact or the footer.
+                dock=page.locator(".studio-social-dock")
+                assert page.locator(".one-social-channels").count() == 1, (
+                    engine, width, height, "social navigation must not repeat"
+                )
+                assert page.locator("footer .one-social-channels").count() == 0
+                assert page.locator(".one-contact-socials").count() == 0
+                assert dock.locator('a[href="https://github.com/devonalanakins"]').count() == 1
+                assert dock.locator('a[href="https://www.instagram.com/devonalanakins/"]').count() == 1
+                assert dock.locator('a[href="https://www.threads.com/@devonalanakins"]').count() == 1
+                assert dock.locator('a[href="https://fb.com/devonalanakins"]').count() == 1
+                assert dock.locator("a.one-social-icon").count() == 4
+                for icon in dock.locator("a.one-social-icon").all():
+                    assert icon.locator("svg path").count() == 1
+                    assert icon.inner_text().strip() == ""
+                    assert icon.get_attribute("aria-label")
+                if height>470:
+                    assert dock.is_visible(),(engine,width,height,"social profiles absent from home")
                 home = page.locator(".studio-threads-inline")
                 assert home.is_visible(), (engine,width,height,"homepage Threads preview absent")
                 page.wait_for_function(
@@ -80,9 +93,7 @@ try:
                 assert home.locator('[data-threads-link]').get_attribute("href") == (
                     "https://www.threads.com/@verified/post/ABCd1234"
                 )
-                dock=page.locator(".studio-social-dock")
-                if height>470:
-                    assert dock.is_visible(),(engine,width,height,"social profiles absent from home")
+
                 assert dock.locator('a[href="https://www.threads.com/@devonalanakins"]').count()==1
                 assert page.locator(".one-social-unverified").count()==0
                 # Use the explicit full-feed action, or mobile Contact tab on
@@ -112,7 +123,7 @@ try:
                 assert panel.locator("script").count() == 0
                 assert post.locator("time").get_attribute("datetime")
                 assert page.locator(".one-social-unverified").count() == 0
-                assert page.locator('.one-threads-profile[href="https://www.threads.com/@devonalanakins"]').count()==1
+                assert page.locator(".one-threads-profile").count() == 0
                 bounds = page.evaluate("""() => {
                   const stage=document.querySelector('.one-stage').getBoundingClientRect();
                   const panel=document.querySelector('.one-threads-panel').getBoundingClientRect();

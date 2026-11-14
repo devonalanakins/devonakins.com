@@ -25,7 +25,7 @@ body.one-body{height:100%;height:100dvh;min-height:0;overflow:hidden;background:
 .one-tablist button[aria-selected=true]{color:#151a1e;background:linear-gradient(115deg,#f3d8b2,#cba075);box-shadow:0 4px 24px #d7a36c25}
 .one-header-email{justify-self:end;font-size:10px;letter-spacing:.15em;color:#f1c69a;border-bottom:1px solid #c29d7460;padding-bottom:5px;white-space:nowrap}
 .one-header-email span{font-size:15px}
-.one-stage{position:relative;height:calc(100dvh - 76px - 36px);min-height:0;width:min(1580px,100%);margin:0 auto;padding:clamp(18px,2vw,34px) clamp(20px,3.8vw,70px)}
+.one-stage{position:relative;height:calc(100dvh - 76px);min-height:0;width:min(1580px,100%);margin:0 auto;padding:clamp(18px,2vw,34px) clamp(20px,3.8vw,70px)}
 .one-view{height:100%;min-height:0;width:100%;animation:one-enter .35s ease-out both}
 .one-view:focus{outline:none}
 .one-home-layout{height:100%;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.07fr);align-items:center;gap:clamp(24px,4.5vw,85px)}
@@ -141,7 +141,7 @@ body.one-body{height:100%;height:100dvh;min-height:0;overflow:hidden;background:
 @media(max-width:1050px){
  .one-header{height:67px}
  .one-header-email{display:none}
- .one-stage{height:calc(100dvh - 67px - 36px)}
+ .one-stage{height:calc(100dvh - 67px)}
  .one-home-layout{grid-template-columns:minmax(0,.88fr) minmax(0,1.12fr);gap:18px}
  .one-signals{grid-column:2}
  .one-header{grid-template-columns:auto 1fr}
@@ -154,7 +154,7 @@ body.one-body{height:100%;height:100dvh;min-height:0;overflow:hidden;background:
  .one-brand-mark{width:37px;height:37px;font-size:14px}
  .one-brand-type{font-size:12px}
  .one-tabs-desktop{display:none}
- .one-stage{height:calc(100dvh - 61px - 59px - 27px);padding:12px 17px 8px}
+ .one-stage{height:calc(100dvh - 61px - 59px);padding:12px 17px 8px}
  .one-tabs-mobile{display:block;height:59px;border-top:1px solid var(--one-stroke);background:#0c141de8}
  .one-tabs-mobile .one-tablist{height:100%;display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:0}
  .one-tabs-mobile .one-tablist button{padding:0 2px;min-height:48px;font-size:10px;border-radius:0;position:relative}
