@@ -90,6 +90,27 @@ test("owner-only OAuth start uses read-only scope and one-time state without lea
 });
 
 
+test("owner may stage public-post consent while Threads release gates are off",async()=>{
+  const f=fixture();
+  f.sql.exec(readFileSync(new URL("../migrations/0002_presence.sql",import.meta.url),"utf8"));
+  f.sql.prepare("UPDATE presence_state SET public_enabled=1 WHERE id=1").run();
+  Object.assign(f.env,{PRESENCE_ENABLED:"true",PRESENCE_PUBLIC_RELEASE_APPROVED:"true",
+    THREADS_PUBLIC_RELEASE_APPROVED:"false",THREADS_PUBLIC_FEED_ENABLED:"false"});
+  assert.equal((await f.callback(await f.auth())).status,303);
+  const current=await storedThreadsStatus(f.env,now);
+  const request=new Request(root+"/api/threads/auth/visibility",{
+    method:"POST",headers:{Origin:root,"Content-Type":"application/json"},
+    body:JSON.stringify({enabled:true,revision:current.revision}),
+  });
+  const response=await f.api(request,f.env,owner);
+  assert.equal(response.status,200);
+  const state=await response.json();
+  assert.equal(state.publicFeedEnabled,true,"record owner opt-in");
+  assert.equal(state.releaseApproved,false,"no public publication without separate release");
+  assert.equal(f.env.THREADS_PUBLIC_FEED_ENABLED,"false");
+  assert.equal(f.env.THREADS_PUBLIC_RELEASE_APPROVED,"false");
+});
+
 test("owner Threads sharing requires explicit consent, current revision, release gates and same-origin login",async()=>{
   const f=fixture();
   f.sql.exec(readFileSync(new URL("../migrations/0002_presence.sql",import.meta.url),"utf8"));
