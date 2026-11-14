@@ -344,8 +344,12 @@ async function changePublicVisibility(request,env,at){
       return ownerError("Visibility update unavailable",503);
     return ownerJson(await storedThreadsStatus(env,at));
   }
-  if(!threadsReleaseApproved(env))
-    return ownerError("Threads public release is not approved",403);
+  // Owner consent may be saved before a separate protected release. Only
+  // the global presence approval is required here; the read-only public
+  // reader still needs BOTH independent Threads release flags to publish.
+  if(env.PRESENCE_ENABLED!=="true" ||
+     env.PRESENCE_PUBLIC_RELEASE_APPROVED!=="true")
+    return ownerError("Global public presence is not approved",403);
   if(payload.revision!==row.revision)
     return ownerError("Threads connection changed. Refresh before sharing.",409);
   if(typeof row.token_cipher!=="string" ||
