@@ -218,7 +218,7 @@ def check(browser, engine, html, css, script, axe_source, output, origin):
             page.locator("#tab-contact").click()
             assert page.locator("#panel-contact").is_visible()
             check_overflow("contact")
-            assert "devon@anevum.com" in page.locator("#panel-contact").inner_text()
+            assert "hello@devonakins.com" in page.locator("#panel-contact").inner_text()
 
             # New sixth view and site-wide presence signal: inspect real layout
             # and keyboard/touch behavior on all supported responsive sizes.
