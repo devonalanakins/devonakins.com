@@ -16,6 +16,8 @@ export function manualReleaseError({
   oneScreenConfirmation = "",
   githubOidcAction = "preserve",
   githubOidcConfirmation = "",
+  threadsPublishAction = "preserve",
+  threadsPublishConfirmation = "",
   workerConfig,
 } = {}) {
   if (typeof expectedSha !== "string" || !/^[a-f0-9]{40}$/.test(expectedSha))
@@ -36,6 +38,17 @@ export function manualReleaseError({
     return "GitHub OIDC confirmation must be empty except when enabling.";
   if (releaseVariant !== "v4" && githubOidcAction !== "preserve")
     return "GitHub OIDC activation and emergency disable are allowed on the protected V4 release only.";
+  if (!["preserve", "enable", "disable"].includes(threadsPublishAction))
+    return "Threads publication action must be preserve, enable, or disable.";
+  if (threadsPublishAction === "enable" &&
+      threadsPublishConfirmation !== "THREADS-PUBLIC-FEED-APPROVED")
+    return "Threads public feed requires exact THREADS-PUBLIC-FEED-APPROVED confirmation.";
+  if (threadsPublishAction !== "enable" && threadsPublishConfirmation)
+    return "Threads publication confirmation must be empty except when enabling.";
+  if (threadsPublishAction !== "preserve" && releaseVariant !== "one-screen")
+    return "Threads publication changes require the protected one-screen release.";
+  if (threadsPublishAction !== "preserve" && githubOidcAction !== "preserve")
+    return "Threads publication cannot be combined with GitHub OIDC source changes.";
   if (releaseVariant === "v4") {
     if (v5BuildFlag !== "0" || professionalBuildFlag !== "0" || oneScreenBuildFlag !== "0")
       return "The V4 release must use the V4 build. Do not enable V5, professional or one-screen during a V4 hotfix.";
@@ -95,6 +108,8 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === resolve(process.argv[1
       oneScreenConfirmation: process.env.ONE_SCREEN_CONFIRMATION,
       githubOidcAction: process.env.GITHUB_OIDC_ACTION || "preserve",
       githubOidcConfirmation: process.env.GITHUB_OIDC_CONFIRMATION || "",
+      threadsPublishAction: process.env.THREADS_PUBLICATION_ACTION || "preserve",
+      threadsPublishConfirmation: process.env.THREADS_PUBLICATION_CONFIRMATION || "",
       workerConfig,
     });
     if (error) {

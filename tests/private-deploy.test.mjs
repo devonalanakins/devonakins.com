@@ -9,6 +9,7 @@ import {
   PrivatePreflightFailure,
   verifyGithubOidcOwnerConsent,
   verifyThreadsLifecycleSchema,
+  verifyThreadsPublicOwnerConsent,
 } from "../scripts/prepare-private-deploy.mjs";
 
 const base = readFileSync(
@@ -614,4 +615,125 @@ test("Threads schema gate rejects bad D1 API responses before preparing private 
       e=>e instanceof PrivatePreflightFailure&&e.stage===stage&&e.reason===reason&&
       !JSON.stringify(e).includes("provider-secret"));
   }
+});
+
+
+test("Threads public release changes only two gates with verified consent and no tokens",()=>{
+  const configured=settings();
+  configured.bindings.find(b=>b.name==="PRESENCE_PUBLIC_RELEASE_APPROVED").text="true";
+  configured.bindings.push({name:"THREADS_APP_ID",type:"plain_text",text:"1713839290172872"});
+  configured.bindings.push({name:"THREADS_APP_SECRET",type:"secret_text"});
+  const previous=clean(privateDeploymentConfig(base,configured,database));
+  assert.equal(previous.vars.THREADS_PUBLIC_RELEASE_APPROVED,"false");
+  assert.equal(previous.vars.THREADS_PUBLIC_FEED_ENABLED,"false");
+  const activated=privateDeploymentConfig(base,configured,database,{
+    threadsPublishAction:"enable",threadsPublicConsentVerified:true,
+  });
+  const active=clean(activated);
+  const changed=Object.keys(active.vars).filter(name=>active.vars[name]!==previous.vars[name]);
+  assert.deepEqual(changed.sort(),["THREADS_PUBLIC_FEED_ENABLED","THREADS_PUBLIC_RELEASE_APPROVED"]);
+  assert.equal(active.keep_vars,true);
+  assert.equal(active.vars.LISTENING_OWNER_EMAIL,"owner@example.test");
+  assert.equal(active.vars.SPOTIFY_CLIENT_ID,"syntheticspotifyclientid0123456789");
+  assert.doesNotMatch(activated,/LISTENING_TOKEN_KEY|THREADS_APP_SECRET|token_cipher/);
+  assert.throws(()=>privateDeploymentConfig(base,configured,database,{
+    threadsPublishAction:"enable",threadsPublicConsentVerified:false,
+  }),/prerequisites/);
+  assert.throws(()=>privateDeploymentConfig(base,configured,database,{
+    threadsPublishAction:"invalid",threadsPublicConsentVerified:true,
+  }),/Unsupported/);
+  const muted=settings();
+  muted.bindings.find(b=>b.name==="THREADS_PUBLIC_FEED_ENABLED").text="true";
+  muted.bindings.find(b=>b.name==="THREADS_PUBLIC_RELEASE_APPROVED").text="true";
+  const disabled=clean(privateDeploymentConfig(base,muted,database,{
+    threadsPublishAction:"disable",
+  })).vars;
+  assert.equal(disabled.THREADS_PUBLIC_RELEASE_APPROVED,"false");
+  assert.equal(disabled.THREADS_PUBLIC_FEED_ENABLED,"false");
+});
+
+test("read-only Threads production consent proof requires active public owner scope and encrypted grant",async()=>{
+  const requests=[];
+  const args={account:"a".repeat(32),token:"synthetic-ci",databaseId:id,now:1_700_000_000_000};
+  const allowed=async(url,options)=>{
+    requests.push({url,options});
+    return Response.json({success:true,result:[{success:true,results:[{eligible:1}]}]});
+  };
+  assert.equal(await verifyThreadsPublicOwnerConsent({...args,fetcher:allowed}),true);
+  assert.equal(requests.length,1);
+  const request=JSON.parse(requests[0].options.body);
+  assert.deepEqual(request.params,["1700000000000"]);
+  for(const fragment of ["p.public_enabled=1","p.private_work=0","p.paused=0",
+    "t.token_cipher IS NOT NULL","t.threads_user_id IS NOT NULL",
+    "t.username IS NOT NULL","t.verified_at > 0","t.token_expires_at > ?"])
+    assert.ok(request.sql.includes(fragment),fragment);
+  assert.doesNotMatch(request.sql,/SELECT\s+\*/i);
+  assert.equal(requests[0].options.redirect,"error");
+  for(const rows of [[{eligible:0}],[{eligible:2}],[{eligible:"1"}]]){
+    await assert.rejects(verifyThreadsPublicOwnerConsent({...args,
+      fetcher:async()=>Response.json({success:true,result:[{success:true,results:rows}]})}),
+      e=>e instanceof PrivatePreflightFailure && e.reason==="OWNER_SOURCE_NOT_APPROVED");
+  }
+  await assert.rejects(verifyThreadsPublicOwnerConsent({...args,
+    fetcher:async()=>Response.json({success:true,result:[{success:true,results:[]}]})}),
+    e=>e instanceof PrivatePreflightFailure && e.reason==="API_REJECTED");
+  await assert.rejects(verifyThreadsPublicOwnerConsent({...args,
+    fetcher:async()=>new Response("provider private text",{status:403})}),
+    e=>e instanceof PrivatePreflightFailure && e.reason==="HTTP_403" &&
+      !JSON.stringify(e).includes("provider private text"));
+});
+
+test("protected one-screen CI publishes Threads only after exact approval and production D1 verification",async()=>{
+  const env={
+    CLOUDFLARE_ACCOUNT_ID:"a".repeat(32),CLOUDFLARE_API_TOKEN:"synthetic-ci",
+    GITHUB_ACTIONS:"true",GITHUB_REF:"refs/heads/main",
+    GITHUB_SHA:"a".repeat(40),EXPECTED_SHA:"a".repeat(40),
+    RELEASE_VARIANT:"one-screen",THREADS_PUBLICATION_ACTION:"enable",
+    THREADS_PUBLICATION_CONFIRMATION:"THREADS-PUBLIC-FEED-APPROVED",
+  };
+  const configured=settings();
+  configured.bindings.find(b=>b.name==="PRESENCE_PUBLIC_RELEASE_APPROVED").text="true";
+  configured.bindings.push({name:"THREADS_APP_ID",type:"plain_text",text:"1713839290172872"});
+  configured.bindings.push({name:"THREADS_APP_SECRET",type:"secret_text"});
+  let consentReads=0,written=null;
+  const fetcher=async(url,options)=>{
+    if(url.endsWith("/query")){
+      const sql=JSON.parse(options.body).sql;
+      if(sql.includes("pragma_table_info"))
+        return Response.json({success:true,result:lifecycleSchema()});
+      consentReads++;
+      return Response.json({success:true,result:[{success:true,results:[{eligible:1}]}]});
+    }
+    return Response.json({success:true,result:url.endsWith("/versions/"+activeVersion)
+      ? {resources:configured}:provider(url)});
+  };
+  await preparePrivateDeployment({env,fetcher,read:async()=>base,
+    write:async(...args)=>{written=args;},mask:()=>{}});
+  assert.equal(consentReads,1);
+  assert.equal(written[2].mode,0o600);
+  const vars=clean(written[1]).vars;
+  assert.equal(vars.THREADS_PUBLIC_FEED_ENABLED,"true");
+  assert.equal(vars.THREADS_PUBLIC_RELEASE_APPROVED,"true");
+  assert.equal(vars.PRESENCE_PUBLIC_RELEASE_APPROVED,"true");
+  for(const input of [
+    {THREADS_PUBLICATION_CONFIRMATION:"wrong"},
+    {THREADS_PUBLICATION_ACTION:"unknown"},
+    {GITHUB_REF:"refs/heads/other"},
+    {RELEASE_VARIANT:"v4"},
+    {GITHUB_SHA:"b".repeat(40)},
+    {GITHUB_ACTIONS:"false"},
+    {GITHUB_OIDC_ACTION:"enable"},
+  ]){
+    let writes=0;
+    await assert.rejects(preparePrivateDeployment({env:{...env,...input},fetcher,
+      read:async()=>base,write:async()=>{writes++;},mask:()=>{}}));
+    assert.equal(writes,0);
+  }
+  await assert.rejects(preparePrivateDeployment({env,read:async()=>base,
+    write:async()=>{throw Error("Should not publish on failed consent");},
+    fetcher:async(url,options)=>url.endsWith("/query") &&
+      !JSON.parse(options.body).sql.includes("pragma_table_info")
+      ?Response.json({success:true,result:[{success:true,results:[{eligible:0}]}]})
+      :fetcher(url,options),mask:()=>{}}),
+    e=>e instanceof PrivatePreflightFailure&&e.reason==="OWNER_SOURCE_NOT_APPROVED");
 });

@@ -42,6 +42,19 @@ on:
         description: Enable only - enter GITHUB-OIDC-ENABLE-APPROVED after privacy review
         required: false
         type: string
+      threads_publication_action:
+        description: Public read-only Threads feed - preserve by default
+        required: true
+        type: choice
+        options:
+          - preserve
+          - enable
+          - disable
+        default: preserve
+      threads_publication_confirmation:
+        description: Enable only - enter THREADS-PUBLIC-FEED-APPROVED after reviewing consent
+        required: false
+        type: string
 permissions:
   contents: read
 concurrency:
@@ -78,6 +91,8 @@ jobs:
           ONE_SCREEN_CONFIRMATION: ${{ inputs.one_screen_confirmation }}
           GITHUB_OIDC_ACTION: ${{ inputs.github_oidc_action }}
           GITHUB_OIDC_CONFIRMATION: ${{ inputs.github_oidc_confirmation }}
+          THREADS_PUBLICATION_ACTION: ${{ inputs.threads_publication_action }}
+          THREADS_PUBLICATION_CONFIRMATION: ${{ inputs.threads_publication_confirmation }}
         # The reviewed guard requires V5-CUTOVER-APPROVED for a V5 cutover.
         # Choosing v5 with the current v4 hotfix commit must fail visibly.
         run: node scripts/manual-release-guard.mjs
@@ -136,6 +151,8 @@ jobs:
           RELEASE_VARIANT: ${{ inputs.release_variant }}
           GITHUB_OIDC_ACTION: ${{ inputs.github_oidc_action }}
           GITHUB_OIDC_CONFIRMATION: ${{ inputs.github_oidc_confirmation }}
+          THREADS_PUBLICATION_ACTION: ${{ inputs.threads_publication_action }}
+          THREADS_PUBLICATION_CONFIRMATION: ${{ inputs.threads_publication_confirmation }}
         run: node scripts/prepare-private-deploy.mjs
       - name: Deploy only devonakins-personal Worker
         env:
@@ -155,6 +172,11 @@ jobs:
           else
             node scripts/verify-live.mjs
           fi
+      - name: Verify live read-only Threads feed or owner-triggered hiding
+        if: inputs.threads_publication_action != 'preserve'
+        env:
+          THREADS_PUBLICATION_ACTION: ${{ inputs.threads_publication_action }}
+        run: node scripts/verify-live-threads.mjs
       - name: Verify live signed receiver gate and reject unsigned requests
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}

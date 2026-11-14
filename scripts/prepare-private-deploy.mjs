@@ -44,9 +44,13 @@ const plainNames = new Set([
 export function privateDeploymentConfig(base, settings, database, {
   githubOidcAction = "preserve",
   githubOidcConsentVerified = false,
+  threadsPublishAction = "preserve",
+  threadsPublicConsentVerified = false,
 } = {}) {
   if (!["preserve", "enable", "disable"].includes(githubOidcAction))
     throw Error("Unsupported GitHub OIDC release action");
+  if (!["preserve", "enable", "disable"].includes(threadsPublishAction))
+    throw Error("Unsupported Threads publication action");
   const bindings = settings?.bindings;
   if (!Array.isArray(bindings) || !bindings.length)
     throw Error("Deployed private runtime settings unavailable");
@@ -147,6 +151,20 @@ export function privateDeploymentConfig(base, settings, database, {
   } else if (githubOidcAction === "disable") {
     vars.GITHUB_OIDC_ACTIVITY_ENABLED = "false";
   }
+  if (threadsPublishAction === "enable") {
+    if (threadsPublicConsentVerified !== true ||
+        vars.PRESENCE_ENABLED !== "true" ||
+        vars.PRESENCE_PUBLIC_RELEASE_APPROVED !== "true" ||
+        !bindings.some(b=>b.name==="THREADS_APP_SECRET" && b.type==="secret_text") ||
+        !bindings.some(b=>b.name==="THREADS_APP_ID" &&
+          b.type==="plain_text" && /^[0-9]{10,32}$/.test(b.text)))
+      throw Error("Threads publication prerequisites not approved");
+    vars.THREADS_PUBLIC_RELEASE_APPROVED = "true";
+    vars.THREADS_PUBLIC_FEED_ENABLED = "true";
+  } else if (threadsPublishAction === "disable") {
+    vars.THREADS_PUBLIC_RELEASE_APPROVED = "false";
+    vars.THREADS_PUBLIC_FEED_ENABLED = "false";
+  }
   const extra = {
     d1_databases: [
       {
@@ -231,6 +249,48 @@ export async function verifyGithubOidcOwnerConsent({
   return true;
 }
 
+/** Read-only, owner-only Threads publication preflight for protected release.
+ * Checks owner presence consent, nonpaused scope, verified encrypted grant
+ * and future expiry. Does not select usernames, IDs, tokens or post content.
+ */
+export async function verifyThreadsPublicOwnerConsent({
+  account,token,databaseId,fetcher=fetch,now=Date.now(),
+}={}){
+  if(!Number.isSafeInteger(now)||now<=0)
+    throw new PrivatePreflightFailure("THREADS_CONSENT_VALIDATE","INVALID_TIME");
+  const sql=[
+    "SELECT COUNT(*) AS eligible FROM presence_state p",
+    "JOIN threads_connection t ON t.id=p.id",
+    "WHERE p.id=1 AND p.public_enabled=1 AND p.private_work=0 AND p.paused=0",
+    "AND t.token_cipher IS NOT NULL AND t.threads_user_id IS NOT NULL",
+    "AND t.username IS NOT NULL AND t.verified_at > 0",
+    "AND t.token_expires_at > ?",
+  ].join(" ");
+  let response;
+  try{
+    response=await fetcher("https://api.cloudflare.com/client/v4/accounts/"+
+      account+"/d1/database/"+databaseId+"/query",{
+      method:"POST",headers:{Authorization:"Bearer "+token,Accept:"application/json",
+        "Content-Type":"application/json"},body:JSON.stringify({sql,params:[String(now)]}),
+      redirect:"error",signal:AbortSignal.timeout(10000),
+    });
+  }catch{
+    throw new PrivatePreflightFailure("THREADS_CONSENT_READ","NETWORK_OR_TIMEOUT");
+  }
+  if(!response.ok)
+    throw new PrivatePreflightFailure("THREADS_CONSENT_READ","HTTP_"+response.status);
+  let data;
+  try{data=await response.json();}
+  catch{throw new PrivatePreflightFailure("THREADS_CONSENT_READ","INVALID_JSON");}
+  const result=data?.result?.[0];
+  if(data?.success!==true || result?.success!==true ||
+      !Array.isArray(result.results) || result.results.length!==1)
+    throw new PrivatePreflightFailure("THREADS_CONSENT_READ","API_REJECTED");
+  if(result.results[0]?.eligible!==1)
+    throw new PrivatePreflightFailure("THREADS_CONSENT_VALIDATE","OWNER_SOURCE_NOT_APPROVED");
+  return true;
+}
+
 /** Exact schema gate for the lifecycle handler shipping in this release.
  * Query only schema metadata from the reviewed private D1; never touch token rows.
  * A missing/unapplied migration must stop the protected release before upload.
@@ -286,6 +346,7 @@ export async function preparePrivateDeployment({
   const account = env.CLOUDFLARE_ACCOUNT_ID;
   const token = env.CLOUDFLARE_API_TOKEN;
   const githubOidcAction = env.GITHUB_OIDC_ACTION || "preserve";
+  const threadsPublishAction=env.THREADS_PUBLICATION_ACTION || "preserve";
   if (!["preserve", "enable", "disable"].includes(githubOidcAction))
     throw new PrivatePreflightFailure("OIDC_ACTION_VALIDATE", "INVALID_ACTION");
   if (githubOidcAction !== "preserve" &&
@@ -299,6 +360,18 @@ export async function preparePrivateDeployment({
       ? env.GITHUB_OIDC_CONFIRMATION !== "GITHUB-OIDC-ENABLE-APPROVED"
       : Boolean(env.GITHUB_OIDC_CONFIRMATION))
     throw new PrivatePreflightFailure("OIDC_ACTION_VALIDATE", "CONFIRMATION_MISMATCH");
+  if (!["preserve","enable","disable"].includes(threadsPublishAction))
+    throw new PrivatePreflightFailure("THREADS_ACTION_VALIDATE","INVALID_ACTION");
+  if(threadsPublishAction!=="preserve" &&
+      (env.GITHUB_ACTIONS!=="true" || env.GITHUB_REF!=="refs/heads/main" ||
+       env.RELEASE_VARIANT!=="one-screen" ||
+       !/^[a-f0-9]{40}$/.test(env.EXPECTED_SHA||"") ||
+       env.EXPECTED_SHA!==env.GITHUB_SHA || githubOidcAction!=="preserve"))
+    throw new PrivatePreflightFailure("THREADS_ACTION_VALIDATE","UNTRUSTED_RELEASE");
+  if(threadsPublishAction==="enable"
+      ? env.THREADS_PUBLICATION_CONFIRMATION!=="THREADS-PUBLIC-FEED-APPROVED"
+      : Boolean(env.THREADS_PUBLICATION_CONFIRMATION))
+    throw new PrivatePreflightFailure("THREADS_ACTION_VALIDATE","CONFIRMATION_MISMATCH");
   if (!/^[a-f0-9]{32}$/.test(account || "") || !token)
     throw Error("Dedicated Cloudflare CI credentials required");
   async function get(path, stage) {
@@ -361,10 +434,14 @@ export async function preparePrivateDeployment({
         account, token, databaseId: binding.id, fetcher,
       })
     : false;
+  const threadsPublicConsentVerified=threadsPublishAction==="enable"
+    ?await verifyThreadsPublicOwnerConsent({account,token,databaseId:binding.id,fetcher})
+    :false;
   let config;
   try {
     config = privateDeploymentConfig(base, settings, database, {
       githubOidcAction, githubOidcConsentVerified,
+      threadsPublishAction,threadsPublicConsentVerified,
     });
   } catch {
     throw new PrivatePreflightFailure("PRIVATE_CONFIG_VALIDATE", "BINDING_OR_DB_MISMATCH");
