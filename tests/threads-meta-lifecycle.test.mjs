@@ -21,7 +21,7 @@ async function sign(id="123456789",time=Math.floor(now/1000)){
 }
 function fixture(){
  const sql=new DatabaseSync(":memory:");
- for(const path of ["0011_threads_private_oauth.sql","0012_threads_meta_lifecycle.sql"])
+ for(const path of ["0011_threads_private_oauth.sql","0012_threads_meta_lifecycle.sql","0013_threads_public_visibility.sql"])
    sql.exec(readFileSync(new URL("../migrations/"+path,import.meta.url),"utf8"));
  const db={
    prepare(q){
