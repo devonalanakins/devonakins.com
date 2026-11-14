@@ -21,7 +21,8 @@ with sync_playwright() as p:
                 reduced_motion="reduce",
             )
             page = context.new_page()
-            state = {"revision": 7, "projects": [], "needsReview": True, "posts": []}
+            state = {"revision": 7, "projects": [], "needsReview": True,
+                     "posts": [], "threads": None, "threads_posts": []}
 
             def owner_status():
                 return {
@@ -75,10 +76,18 @@ with sync_playwright() as p:
                                            "expiresAt": None},
                     })
                 if path == "/api/threads/auth/status":
-                    return req.fulfill(json={
+                    return req.fulfill(json=state["threads"] or {
                         "version": 1, "appConfigured": False,
                         "storageReady": False, "connected": False,
                     })
+                if path == "/api/threads/auth/visibility" and req.request.method == "POST":
+                    body = req.request.post_data_json
+                    state["threads_posts"].append(body)
+                    if body["enabled"] and body["revision"] != state["threads"]["revision"]:
+                        return req.fulfill(status=409,json={"error":"Stale connection"})
+                    state["threads"]["revision"] += 1
+                    state["threads"]["publicFeedEnabled"] = body["enabled"]
+                    return req.fulfill(json=state["threads"])
                 return req.abort()
 
             page.route("**/*", route)
@@ -143,6 +152,36 @@ with sync_playwright() as p:
             assert "without a recognized authorization result" in page.locator(
                 "#threads-oauth-return").inner_text(), (engine.name, width)
             assert not page.evaluate("sessionStorage.getItem('threadsPrivateOAuthStartedAt')")
+            # Independently controlled Threads disclosure: synthetic owner-only
+            # API, an explicit ON confirmation, then immediate OFF without
+            # disconnecting or granting any Meta posting permission.
+            state["threads"] = {
+                "version": 1, "appConfigured": True, "storageReady": True,
+                "connected": True, "revision": 4, "publicFeedEnabled": False,
+                "releaseApproved": True, "verifiedAt": "2026-11-14T04:00:00.000Z",
+                "expiresAt": "2027-01-12T04:00:00.000Z",
+            }
+            page.goto("https://example.test/owner/presence/")
+            page.wait_for_function(
+                "document.querySelector('#threads-sharing-save').disabled === false")
+            assert page.locator("#threads-public-enabled").is_enabled()
+            assert not page.locator("#threads-public-enabled").is_checked()
+            page.on("dialog",lambda dialog:dialog.accept())
+            page.locator("#threads-public-enabled").check()
+            page.locator("#threads-sharing-save").click()
+            page.wait_for_function(
+                "document.querySelector('#threads-sharing-status').textContent.includes('Sharing selected')")
+            assert page.locator("#threads-public-enabled").is_checked()
+            assert state["threads_posts"] == [{"enabled": True, "revision": 4}]
+            page.locator("#threads-public-enabled").uncheck()
+            page.locator("#threads-sharing-save").click()
+            page.wait_for_function(
+                "document.querySelector('#threads-sharing-status').textContent.includes('posts hidden')")
+            assert not page.locator("#threads-public-enabled").is_checked()
+            assert state["threads_posts"][-1] == {"enabled": False, "revision": 5}
+            assert state["threads"]["connected"], "Hiding posts must not disconnect Meta"
+            assert page.evaluate("document.documentElement.scrollWidth <= innerWidth"), (
+                engine.name, width, "Threads sharing controls horizontal overflow")
             context.close()
         browser.close()
 print("Owner project policy: warning, explicit approved save, privacy and responsive Chromium/WebKit at 320/390/1440 passed.")
