@@ -20,6 +20,7 @@ function fixture(){
   const sql=new DatabaseSync(":memory:");
   sql.exec(readFileSync(new URL("../migrations/0011_threads_private_oauth.sql",import.meta.url),"utf8"));
   sql.exec(readFileSync(new URL("../migrations/0012_threads_meta_lifecycle.sql",import.meta.url),"utf8"));
+  sql.exec(readFileSync(new URL("../migrations/0013_threads_public_visibility.sql",import.meta.url),"utf8"));
   const db={
     prepare(q){
       const stmt=sql.prepare(q);
@@ -41,13 +42,16 @@ function fixture(){
     const key=await importEncryptionKey(env.LISTENING_TOKEN_KEY);
     const cipher=await seal(value,key,"threads-long-lived-access");
     sql.prepare("UPDATE threads_connection SET revision=revision+1, token_cipher=?,"+
-      "username=?,threads_user_id=?,connected_at=?,token_expires_at=?,verified_at=? WHERE id=1")
+      "username=?,threads_user_id=?,connected_at=?,token_expires_at=?,verified_at=?,public_feed_enabled=1 WHERE id=1")
       .run(cipher,handle,"123456789",at,at+60*24*60*60_000,at);
   }
   const disconnect=()=>sql.prepare(
     "UPDATE threads_connection SET revision=revision+1,token_cipher=NULL,"+
-    "username=NULL,token_expires_at=0,verified_at=0 WHERE id=1").run();
-  return {sql,env,authorize,disconnect,clock:()=>at,advance:ms=>{at+=ms}};
+    "username=NULL,token_expires_at=0,verified_at=0,public_feed_enabled=0 WHERE id=1").run();
+  const toggle=enabled=>sql.prepare(
+    "UPDATE threads_connection SET public_feed_enabled=?,revision=revision+1 WHERE id=1")
+    .run(Number(enabled));
+  return {sql,env,authorize,disconnect,toggle,clock:()=>at,advance:ms=>{at+=ms}};
 }
 
 test("D1 public posts require every independent global and source release gate",async()=>{
@@ -77,6 +81,22 @@ test("D1 public posts require every independent global and source release gate",
   assert.doesNotMatch(JSON.stringify(response),/PRIVATE_SHOULD_NOT_LEAK|t{80}|123456789/);
 });
 
+test("owner-only publication state prevents new API calls and hides cached posts",async()=>{
+  const f=fixture();await f.authorize();
+  let calls=0;
+  const reader=createD1PublicThreadsReader({clock:f.clock,fetchImpl:async()=>{
+    calls++;return Response.json(post(f.clock()));
+  }});
+  assert.equal((await reader(f.env)).state,"connected");
+  f.toggle(false);
+  assert.deepEqual(await reader(f.env),disconnectedThreads());
+  assert.equal(calls,1,"revoke must not contact Meta or use a cached post");
+  f.toggle(true);
+  assert.equal((await reader(f.env)).state,"connected");
+  f.disconnect();
+  assert.deepEqual(await reader(f.env),disconnectedThreads());
+});
+
 test("D1 owner can disconnect immediately, invalidating cached responses without provider calls",async()=>{
   const f=fixture();await f.authorize();
   let calls=0;
@@ -97,7 +117,7 @@ test("D1 owner can disconnect immediately, invalidating cached responses without
 });
 
 test("D1 revision, token rotation and Stop All defeat in-flight public provider responses",async()=>{
-  for(const action of ["disconnect","rotate","stop-all","expire"]){
+  for(const action of ["disconnect","rotate","hide-public","stop-all","expire"]){
     const f=fixture();await f.authorize();
     let enter,release;
     const started=new Promise(resolve=>{enter=resolve;});
@@ -108,6 +128,7 @@ test("D1 revision, token rotation and Stop All defeat in-flight public provider 
     const request=reader(f.env);await started;
     if(action==="disconnect")f.disconnect();
     if(action==="rotate")await f.authorize("z".repeat(80));
+    if(action==="hide-public")f.toggle(false);
     if(action==="stop-all")f.env.PRESENCE_PUBLIC_RELEASE_APPROVED="false";
     if(action==="expire")f.advance(61*24*60*60_000);
     release(Response.json(post(start)));
