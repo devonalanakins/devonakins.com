@@ -335,10 +335,12 @@ async function changePublicVisibility(request,env,at){
   if(!row)return ownerError("Private Threads migration required",409);
   if(!payload.enabled){
     const change=await db.prepare(
+      // Always advance revision, even when already hidden. This fences
+      // a concurrent enable that read the old revision before OFF arrived.
       "UPDATE threads_connection SET public_feed_enabled=0,revision=revision+1 "+
-      "WHERE id=1 AND public_feed_enabled=1"
+      "WHERE id=1"
     ).run();
-    if(change.meta?.changes!==0 && change.meta?.changes!==1)
+    if(change.meta?.changes!==1)
       return ownerError("Visibility update unavailable",503);
     return ownerJson(await storedThreadsStatus(env,at));
   }
