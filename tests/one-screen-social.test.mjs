@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {readFile} from "node:fs/promises";
 import {renderOneScreenHome} from "../src/professional/one-screen.mjs";
-import {renderSocialChannels,renderThreadsPreview,renderHomeSocialHub,renderHomeThreadsSignal,THREADS_PROFILE_URL} from "../src/professional/social-presence.mjs";
+import {renderSocialChannels,renderThreadsPreview,renderHomeSocialHub,renderHomeThreadsSignal,THREADS_PROFILE_URL,FACEBOOK_PROFILE_URL} from "../src/professional/social-presence.mjs";
 import {publicV5Threads} from "../src/v5/public-threads.mjs";
 
 test("verified social profiles and Threads signal appear on the initial Living Studio viewport",()=>{
@@ -11,8 +11,8 @@ test("verified social profiles and Threads signal appear on the initial Living S
   assert.match(html,/href="https:\/\/github\.com\/devonalanakins"/);
   assert.match(html,/href="https:\/\/www\.instagram\.com\/devonalanakins\/"/);
   assert.match(html,/href="https:\/\/www\.threads\.com\/@devonalanakins"/);
-  assert.match(html,/Facebook · pending/);
-  assert.doesNotMatch(html,/href="https:\/\/(?:www\.)?facebook\.com\//);
+  assert.match(html,/href="https:\/\/fb\.com\/devonalanakins"/);
+  assert.doesNotMatch(html,/Facebook · pending/);
   assert.equal((html.match(/role="tabpanel"/g)||[]).length,6);
   assert.equal((html.match(/data-public-threads/g)||[]).length,2);
   assert.match(html,/class="studio-social-dock"/);
@@ -30,13 +30,15 @@ test("public social profiles are separate from approved post display",()=>{
   const home=renderHomeSocialHub();
   const signal=renderHomeThreadsSignal();
   assert.equal(THREADS_PROFILE_URL,"https://www.threads.com/@devonalanakins");
+  assert.equal(FACEBOOK_PROFILE_URL,"https://fb.com/devonalanakins");
   for(const markup of [full,compact,home,signal,renderThreadsPreview()]){
     assert.match(markup,/https:\/\/www\.threads\.com\/@devonalanakins/);
-    assert.doesNotMatch(markup,/href="https:\/\/(?:www\.)?facebook\.com\//);
+    if(markup!==signal && markup!==renderThreadsPreview()) assert.match(markup,/https:\/\/fb\.com\/devonalanakins/);
     assert.doesNotMatch(markup,/access_token|client_secret|private grant|bearer/i);
   }
-  assert.match(full,/Facebook · pending/);
-  assert.match(compact,/FB · pending/);
+  assert.doesNotMatch(full,/Facebook · pending/);
+  assert.doesNotMatch(compact,/FB · pending/);
+  assert.match(full,/aria-label="Open Facebook profile in a new tab"/);
   assert.match(signal,/Public post sharing has not been enabled/);
   assert.match(signal,/CHECKING SOURCE/);
   assert.match(signal,/data-public-threads/);
