@@ -50,7 +50,7 @@ const settings = () => ({
 const installed = ({ percent = 100, versions = [{
   version_id: activeVersion, percentage: percent,
 }] } = {}) => ({ deployments: [{ versions }] });
-const lifecycleSchema = () => [{success:true,results:[{identity_column:1,receipt_columns:4,attempt_table:1}]}];
+const lifecycleSchema = () => [{success:true,results:[{identity_column:1,receipt_columns:4,attempt_table:1,sharing_column:1}]}];
 const provider = (url) => {
   if (url.endsWith("/query")) return lifecycleSchema();
   if (url.endsWith("/deployments")) return installed();
@@ -593,8 +593,13 @@ test("Threads lifecycle deployment gate matches real SQLite schema and rejects u
       error.stage==="THREADS_SCHEMA_VALIDATE" &&
       error.reason==="MIGRATION_0012_REQUIRED");
     db.exec(readFileSync(new URL("../migrations/0012_threads_meta_lifecycle.sql",import.meta.url),"utf8"));
+    await assert.rejects(verifyThreadsLifecycleSchema(args),error=>
+      error instanceof PrivatePreflightFailure &&
+      error.stage==="THREADS_SCHEMA_VALIDATE" &&
+      error.reason==="MIGRATION_0013_REQUIRED");
+    db.exec(readFileSync(new URL("../migrations/0013_threads_public_visibility.sql",import.meta.url),"utf8"));
     assert.equal(await verifyThreadsLifecycleSchema(args),true);
-    assert.equal(calls.length,2);
+    assert.equal(calls.length,3);
     assert.ok(calls.every(({url,opts})=>url.endsWith("/query") &&
       opts.method==="POST" && opts.redirect==="error" &&
       !opts.body.includes("token_cipher") &&
