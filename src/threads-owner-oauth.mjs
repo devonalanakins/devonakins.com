@@ -3,7 +3,7 @@
  * the existing private D1. No automatic publication, token export or logging.
  */
 import {digest,importEncryptionKey,seal,unseal,secureRandom} from "./listening-crypto.mjs";
-import {constantEqual,ownerJson,ownerError,ownerRedirect,
+import {constantEqual,ownerJson,ownerError,ownerRedirect,readSmallJson,
   isListeningOwner,validOwnerOrigin,boundDatabase} from "./listening-owner-core.mjs";
 
 const CALLBACK="https://devonakins.com/api/threads/auth/callback";
@@ -76,7 +76,7 @@ export const threadsAppConfigured=env=>
   env.THREADS_APP_SECRET.length>=20 && env.THREADS_APP_SECRET.length<=512;
 const validTimestamp=x=>Number.isSafeInteger(x)&&x>0;
 async function accountRow(db) {
-  return db.prepare("SELECT revision,token_cipher,username,threads_user_id,connected_at,token_expires_at,verified_at FROM threads_connection WHERE id=1").first();
+  return db.prepare("SELECT revision,token_cipher,username,threads_user_id,connected_at,token_expires_at,verified_at,public_feed_enabled FROM threads_connection WHERE id=1").first();
 }
 export async function storedThreadsCredential(env={},at=Date.now()) {
   if(!boundDatabase(env)||typeof env.LISTENING_TOKEN_KEY!=="string")return null;
@@ -91,12 +91,18 @@ export async function storedThreadsCredential(env={},at=Date.now()) {
     if(typeof token!=="string"||token.length<20||token.length>4096)return null;
     return {token,username:row.username,userId:row.threads_user_id,revision:row.revision,
       expiresAt:row.token_expires_at,cipher:row.token_cipher,
-      verifiedAt:row.verified_at};
+      verifiedAt:row.verified_at,publicFeedEnabled:row.public_feed_enabled===1};
   } catch {return null;}
 }
+const threadsReleaseApproved=env=>env?.PRESENCE_ENABLED==="true" &&
+  env?.PRESENCE_PUBLIC_RELEASE_APPROVED==="true" &&
+  env?.THREADS_PUBLIC_RELEASE_APPROVED==="true" &&
+  env?.THREADS_PUBLIC_FEED_ENABLED==="true";
 export async function storedThreadsStatus(env={},at=Date.now()) {
+  const releaseApproved=threadsReleaseApproved(env);
   const unavailable={version:1,appConfigured:threadsAppConfigured(env),
-    storageReady:false,connected:false,expiresAt:null,verifiedAt:null};
+    storageReady:false,connected:false,expiresAt:null,verifiedAt:null,
+    revision:null,publicFeedEnabled:false,releaseApproved};
   if(!boundDatabase(env)||typeof env.LISTENING_TOKEN_KEY!=="string")return unavailable;
   try {
     const row=await accountRow(env.LISTENING_DB);
@@ -108,7 +114,9 @@ export async function storedThreadsStatus(env={},at=Date.now()) {
     return {version:1,appConfigured:threadsAppConfigured(env),storageReady:true,
       connected:valid,expiresAt:valid?new Date(row.token_expires_at).toISOString():null,
       verifiedAt:valid&&validTimestamp(row.verified_at)?
-        new Date(row.verified_at).toISOString():null};
+        new Date(row.verified_at).toISOString():null,
+      revision:row.revision,publicFeedEnabled:valid&&row.public_feed_enabled===1,
+      releaseApproved};
   } catch {return unavailable;}
 }
 async function providerJson(response,max=4096) {
@@ -230,7 +238,7 @@ async function finish(request,env,now,fetcher){
     // provider response can never reestablish a revoked connection.
     const saved=await db.prepare(
       "UPDATE threads_connection SET revision=revision+1,token_cipher=?,username=?,threads_user_id=?,"+
-      "connected_at=?,token_expires_at=?,verified_at=? WHERE id=1 AND EXISTS "+
+      "connected_at=?,token_expires_at=?,verified_at=?,public_feed_enabled=0 WHERE id=1 AND EXISTS "+
       "(SELECT 1 FROM threads_oauth_attempt WHERE state_hash=? AND nonce_hash=? AND expires_at=0)"
     ).bind(cipher,identity.username,metaId(identity.id),now,until,now,stateHash,attempt.nonce_hash).run();
     if(saved.meta?.changes!==1)return failed("expired");
@@ -305,10 +313,60 @@ async function disconnect(env){
   await db.prepare("DELETE FROM threads_oauth_attempt").run();
   const row=await db.prepare(
     "UPDATE threads_connection SET revision=revision+1,token_cipher=NULL,username=NULL,threads_user_id=NULL,"+
-    "connected_at=0,token_expires_at=0,verified_at=0 WHERE id=1"
+    "connected_at=0,token_expires_at=0,verified_at=0,public_feed_enabled=0 WHERE id=1"
   ).run();
   if(row.meta?.changes!==1)return ownerError("Private Threads migration missing",409);
   return ownerJson({version:1,connected:false});
+}
+/** Owner-only public-post visibility. A stale browser can never re-enable a
+ * revoked feed; OFF is idempotent and wins even if its revision is stale. */
+async function changePublicVisibility(request,env,at){
+  let payload;
+  try {payload=await readSmallJson(request);}
+  catch {return ownerError("Invalid Threads visibility request",400);}
+  if(!payload || typeof payload!=="object" || Array.isArray(payload) ||
+     Object.keys(payload).length!==2 ||
+     Object.keys(payload).some(k=>!["enabled","revision"].includes(k)) ||
+     typeof payload.enabled!=="boolean" ||
+     !Number.isSafeInteger(payload.revision) || payload.revision<0)
+    return ownerError("Invalid Threads visibility request",400);
+  const db=env.LISTENING_DB;
+  const row=await accountRow(db);
+  if(!row)return ownerError("Private Threads migration required",409);
+  if(!payload.enabled){
+    const change=await db.prepare(
+      "UPDATE threads_connection SET public_feed_enabled=0,revision=revision+1 "+
+      "WHERE id=1 AND public_feed_enabled=1"
+    ).run();
+    if(change.meta?.changes!==0 && change.meta?.changes!==1)
+      return ownerError("Visibility update unavailable",503);
+    return ownerJson(await storedThreadsStatus(env,at));
+  }
+  if(!threadsReleaseApproved(env))
+    return ownerError("Threads public release is not approved",403);
+  if(payload.revision!==row.revision)
+    return ownerError("Threads connection changed. Refresh before sharing.",409);
+  if(typeof row.token_cipher!=="string" ||
+     !HANDLE.test(row.username||"") || !NUMBER.test(row.threads_user_id||"") ||
+     !validTimestamp(row.verified_at) || row.token_expires_at<=at+GRACE_MS)
+    return ownerError("A verified Threads connection is required",409);
+  // Independent global presence opt-in. Read public flags without touching
+  // provider credentials or using the incoming browser identity as authority.
+  const presence=await db.prepare(
+    "SELECT public_enabled,private_work FROM presence_state WHERE id=1"
+  ).first();
+  if(presence?.public_enabled!==1 || presence?.private_work===1)
+    return ownerError("Enable global public presence first",409);
+  if(row.public_feed_enabled===1)
+    return ownerJson(await storedThreadsStatus(env,at));
+  const saved=await db.prepare(
+    "UPDATE threads_connection SET public_feed_enabled=1,revision=revision+1 "+
+    "WHERE id=1 AND revision=? AND public_feed_enabled=0 "+
+    "AND token_cipher=? AND token_expires_at=? AND verified_at=?"
+  ).bind(row.revision,row.token_cipher,row.token_expires_at,row.verified_at).run();
+  if(saved.meta?.changes!==1)
+    return ownerError("Threads connection changed. Refresh before sharing.",409);
+  return ownerJson(await storedThreadsStatus(env,at));
 }
 export function createThreadsOwnerOAuth({fetcher=fetch,clock=Date.now}={}){
   return async (request,env={},ctx={})=>{
@@ -317,7 +375,7 @@ export function createThreadsOwnerOAuth({fetcher=fetch,clock=Date.now}={}){
     const path=new URL(request.url).pathname;
     if(!["/api/threads/auth/status","/api/threads/auth/start",
          "/api/threads/auth/callback","/api/threads/auth/disconnect",
-         "/api/threads/auth/renew"].includes(path))
+         "/api/threads/auth/renew","/api/threads/auth/visibility"].includes(path))
       return ownerError("Not found",404);
     if(path==="/api/threads/auth/status"&&request.method==="GET")
       return ownerJson(await storedThreadsStatus(env,clock()));
@@ -332,6 +390,7 @@ export function createThreadsOwnerOAuth({fetcher=fetch,clock=Date.now}={}){
       if(path==="/api/threads/auth/start")return await begin(env,now);
       if(path==="/api/threads/auth/disconnect")return await disconnect(env);
       if(path==="/api/threads/auth/renew")return await renew(env,now,fetcher);
+      if(path==="/api/threads/auth/visibility")return await changePublicVisibility(request,env,now);
       return ownerError("Method not allowed",405);
     } catch {
       return ownerError("Private Threads connection unavailable");
