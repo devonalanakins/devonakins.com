@@ -24,7 +24,7 @@ test("existing consent-filtered public sources appear without invented live clai
   assert.match(html,/Public GitHub events only/);
   assert.match(html,/not a claim of coding now/);
   assert.doesNotMatch(html,/Pushed \d+ commits|Playing: .* by .*|LIVE NOW|Active editor session/i);
-  assert.match(html,/mailto:devon@anevum\.com/);
+  assert.match(html,/mailto:hello@devonakins\.com/);
   assert.doesNotMatch(html,/headshot-concept\.webp|one-portrait/,"No portrait imagery or placeholders in the one-screen homepage");
 });
 test("one-screen presentation remains first-party, motion-aware and viewport contained",async()=>{
