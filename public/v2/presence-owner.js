@@ -37,7 +37,9 @@ function renderSourceReadiness(sources) {
   const rows=[
     ["Threads",t.privateConnected
       ? (t.publicFeedEnabled
-          ? "Your latest public Threads posts are selected for sharing. Use the visibility switch above to hide them."
+          ? (t.publicationApproved && t.feedEnabled
+              ? "Your latest public Threads posts are selected for sharing. Use the visibility switch above to hide them."
+              : "Sharing preference saved, but protected Threads publication is off. Posts remain hidden.")
           : "Private Meta authorization stored. Public Threads posts are not selected for sharing.")
       : t.configured
       ? "Configured for public read; use the private test to verify the account."
