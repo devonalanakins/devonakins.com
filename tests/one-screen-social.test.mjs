@@ -33,7 +33,7 @@ test("public social profiles are separate from approved post display",()=>{
   assert.equal(FACEBOOK_PROFILE_URL,"https://fb.com/devonalanakins");
   for(const markup of [full,compact,home,signal,renderThreadsPreview()]){
     assert.match(markup,/https:\/\/www\.threads\.com\/@devonalanakins/);
-    if(markup!==signal && markup!==renderThreadsPreview()) assert.match(markup,/https:\/\/fb\.com\/devonalanakins/);
+    if([full,compact,home].includes(markup)) assert.match(markup,/https:\/\/fb\.com\/devonalanakins/);
     assert.doesNotMatch(markup,/access_token|client_secret|private grant|bearer/i);
   }
   assert.doesNotMatch(full,/Facebook · pending/);
