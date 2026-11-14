@@ -24,6 +24,25 @@ test("verified social profiles and Threads signal appear on the initial Living S
   assert.ok(html.indexOf('class="studio-social-dock"') < html.indexOf('id="one-panel-experience"'));
   assert.ok(html.indexOf('class="studio-threads-inline"') < html.indexOf('id="one-panel-experience"'));
 });
+test("recognizable, local SVG marks replace social text without removing link semantics",()=>{
+  const full=renderSocialChannels();
+  const compact=renderSocialChannels(true);
+  for(const markup of [full,compact]){
+    assert.equal((markup.match(/class="one-social-icon one-social-icon--/g)||[]).length,4);
+    assert.equal((markup.match(/<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" focusable="false">/g)||[]).length,4);
+    assert.equal((markup.match(/<path d="[^"]+"\/><\/svg><\/a>/g)||[]).length,4);
+    for(const brand of ["GitHub","Instagram","Threads","Facebook"]){
+      assert.match(markup,new RegExp('title="'+brand+'" aria-label="Open '+brand+' profile in a new tab"'));
+      assert.ok(markup.includes('one-social-icon--'+brand.toLowerCase()));
+    }
+    assert.doesNotMatch(markup,/<\/svg>(?:GitHub|Instagram|Threads|Facebook)<\/a>/);
+    assert.doesNotMatch(markup,/<img|<link|@import|https:\/\/cdn/);
+  }
+  const html=renderOneScreenHome();
+  assert.equal((html.match(/class="one-social-icon one-social-icon--threads"/g)||[]).length,3,
+    "home, contact and footer share the same icon treatment");
+});
+
 test("public social profiles are separate from approved post display",()=>{
   const full=renderSocialChannels();
   const compact=renderSocialChannels(true);
