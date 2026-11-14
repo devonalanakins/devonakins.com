@@ -41,14 +41,14 @@ function fixture(){
    }
  };
  const env={THREADS_APP_SECRET:secret,LISTENING_DB:db};
- sql.prepare("UPDATE threads_connection SET threads_user_id=?,username=?,token_cipher=?,revision=1,connected_at=? WHERE id=1")
+ sql.prepare("UPDATE threads_connection SET threads_user_id=?,username=?,token_cipher=?,revision=1,connected_at=?,public_feed_enabled=1 WHERE id=1")
    .run("123456789","fixture","encrypted",now-60000);
  const handler=createThreadsMetaLifecycle({clock:()=>now});
  const send=async(value,path="/api/threads/lifecycle/delete",method="POST")=>handler(
    new Request(root+path,{method,headers:{"Content-Type":"application/x-www-form-urlencoded"},
      body:method==="POST"?new URLSearchParams({signed_request:value}):undefined}),env);
  const get=async path=>handler(new Request(root+path),env);
- const row=()=>sql.prepare("SELECT revision,token_cipher,threads_user_id,connected_at FROM threads_connection").get();
+ const row=()=>sql.prepare("SELECT revision,token_cipher,threads_user_id,connected_at,public_feed_enabled FROM threads_connection").get();
  const receipts=()=>sql.prepare("SELECT COUNT(*) AS n FROM threads_lifecycle_receipt").get().n;
  return {sql,db,env,handler,send,get,row,receipts};
 }
@@ -61,6 +61,7 @@ test("Meta data deletion returns stable confirmation code and public completed s
  assert.match(result.confirmation_code,/^[a-f0-9]{40}$/);
  assert.equal(result.url,root+"/api/threads/lifecycle/status/"+result.confirmation_code);
  assert.equal(f.row().token_cipher,null);
+ assert.equal(f.row().public_feed_enabled,0,"signed deletion must also revoke public sharing consent");
  assert.equal(f.row().threads_user_id,null);
  assert.equal(f.row().revision,2);
  const status=await f.get(new URL(result.url).pathname);
@@ -80,10 +81,12 @@ test("valid deauthorization removes pending OAuth attempts and only matching cre
  const wrong=await f.send(await sign("999999999"),"/api/threads/lifecycle/deauthorize");
  assert.equal(wrong.status,200);
  assert.equal(f.row().token_cipher,"encrypted");
+ assert.equal(f.row().public_feed_enabled,1,"wrong Meta account must not change consent");
  assert.equal(f.sql.prepare("SELECT COUNT(*) AS n FROM threads_oauth_attempt").get().n,1);
  const success=await f.send(await sign(),"/api/threads/lifecycle/deauthorize");
  assert.deepEqual(await success.json(),{received:true});
  assert.equal(f.row().token_cipher,null);
+ assert.equal(f.row().public_feed_enabled,0,"signed deauthorization must also revoke publication consent");
  assert.equal(f.sql.prepare("SELECT COUNT(*) AS n FROM threads_oauth_attempt").get().n,0);
 });
 test("signed callback revokes a connection saved within the same issued-at second",async()=>{
@@ -150,6 +153,7 @@ test("forged, expired, oversized and malformed requests fail closed",async()=>{
    assert.equal((await f.send(value)).status,403);
  }
  assert.equal(f.row().token_cipher,"encrypted");
+ assert.equal(f.row().public_feed_enabled,1,"invalid signed requests cannot revoke consent");
  assert.equal(f.receipts(),0);
  assert.equal((await f.send(good,"/api/threads/lifecycle/delete","GET")).status,405);
  assert.equal((await f.send(good,"/api/threads/lifecycle/unknown")).status,404);
@@ -167,6 +171,7 @@ test("database failure rolls back revocation, pending-state deletion and receipt
  const response=await f.send(await sign());
  assert.equal(response.status,503);
  assert.equal(f.row().token_cipher,"encrypted");
+ assert.equal(f.row().public_feed_enabled,1,"failed transaction must roll back consent revocation");
  assert.equal(f.receipts(),0);
  assert.equal(f.sql.prepare("SELECT COUNT(*) AS n FROM threads_oauth_attempt").get().n,1);
 });
