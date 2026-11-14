@@ -111,7 +111,7 @@ try:
                 assert "<script>" in link.inner_text(), "Post is text, never interpreted as HTML"
                 assert panel.locator("script").count() == 0
                 assert post.locator("time").get_attribute("datetime")
-                assert page.locator(".one-social-unverified").count() == 3
+                assert page.locator(".one-social-unverified").count() == 0
                 assert page.locator('.one-threads-profile[href="https://www.threads.com/@devonalanakins"]').count()==1
                 bounds = page.evaluate("""() => {
                   const stage=document.querySelector('.one-stage').getBoundingClientRect();
