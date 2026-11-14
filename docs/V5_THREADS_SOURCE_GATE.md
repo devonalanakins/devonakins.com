@@ -113,8 +113,10 @@ update preserves the **already approved** verified owner grant when the migratio
 is first applied, avoiding a surprise outage during this particular cutover.
 Every new OAuth authorization and disconnect explicitly resets the flag OFF;
 refreshing the same verified account preserves it. The toggle requires Cloudflare
-Access owner identity, same-origin JSON, release approval, a still-valid
-verified grant, global public opt-in, and a current D1 revision for enabling.
+Access owner identity, same-origin JSON, a still-valid verified grant, global
+public opt-in, and a current D1 revision for enabling. Consent may be staged
+when the separate protected Threads source-release flags are OFF; nothing is
+publicly displayed until those independent flags are enabled.
 The OFF operation advances the revision regardless of previous state so that
 stale or in-flight enable requests cannot revive disclosure.
 
