@@ -56,7 +56,5 @@ export function renderThreadsPreview(){
     '<p class="one-threads-description" data-threads-summary>Approved public posts appear only after sharing is enabled.</p>'+
     '<ol class="one-threads-posts" data-threads-posts aria-label="Recent authorized public Threads posts"></ol>'+
     '<p class="one-threads-provenance" data-threads-checked>Public source not yet verified.</p>'+
-    '<a class="one-threads-profile" href="'+THREADS_PROFILE_URL+
-    '" target="_blank" rel="noopener noreferrer" referrerpolicy="no-referrer">Open Threads profile ↗</a>'+
     '</section>';
 }
