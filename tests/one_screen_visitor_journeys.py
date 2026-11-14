@@ -109,7 +109,7 @@ try:
                 assert page.locator('[data-one-view="contact"]').is_visible()
                 email = page.locator('[data-one-view="contact"] .one-email')
                 assert email.is_visible()
-                assert email.get_attribute("href") == "mailto:devon@anevum.com"
+                assert email.get_attribute("href") == "mailto:hello@devonakins.com"
                 assert page.locator(
                     '[data-one-view="contact"] a[href="/contact/"]').is_visible()
                 page.screenshot(path=str(
