@@ -141,6 +141,7 @@ test("encrypted Threads authorization appears in private readiness without enabl
   const sql=new DatabaseSync(":memory:");
   sql.exec(readFileSync(new URL("../migrations/0011_threads_private_oauth.sql",import.meta.url),"utf8"));
   sql.exec(readFileSync(new URL("../migrations/0012_threads_meta_lifecycle.sql",import.meta.url),"utf8"));
+  sql.exec(readFileSync(new URL("../migrations/0013_threads_public_visibility.sql",import.meta.url),"utf8"));
   const now=Date.parse("2026-11-09T20:00:00.000Z");
   sql.prepare("UPDATE threads_connection SET token_cipher=?,username=?,threads_user_id=?,token_expires_at=?,verified_at=? WHERE id=1")
     .run("encrypted-private-fixture","privateFixture","123456789",now+86400000,now);
@@ -155,6 +156,7 @@ test("encrypted Threads authorization appears in private readiness without enabl
   };
   const data=await ownerSourceReadiness(privateEnv,null,now);
   assert.equal(data.threads.privateConnected,true);
+  assert.equal(data.threads.publicFeedEnabled,false);
   assert.equal(data.threads.authorizationConfigured,true);
   assert.equal(data.threads.usernameConfigured,true);
   assert.equal(data.threads.configured,false);
@@ -178,6 +180,7 @@ test("owner integration actions use current protected routes and accessible link
   assert.match(js,/changeThreadsAuthorization\("start"\)/);
   assert.match(js,/changeThreadsAuthorization\("disconnect"\)/);
   assert.match(js,/changeThreadsAuthorization\("renew"\)/);
+  assert.match(js,/\/api\/threads\/auth\/visibility/);
   assert.match(js,/Test Threads connection privately|Checking the authorized Threads account/);
   assert.doesNotMatch(js,/THREADS_USER_ACCESS_TOKEN|SPOTIFY_CLIENT_SECRET|innerHTML=/);
 });
