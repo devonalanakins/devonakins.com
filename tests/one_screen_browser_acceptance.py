@@ -41,7 +41,7 @@ try:
                 assert page.locator('[data-public-threads]').count()==2,(
                     engine,width,height,"two first-party social surfaces")
                 assert page.locator('.one-social-channels a[href="https://www.threads.com/@devonalanakins"]').count()>=2
-                assert page.locator('.one-social-channels a[href*="facebook."]').count()==0
+                assert page.locator('.one-social-channels a[href="https://fb.com/devonalanakins"]').count()>=2
                 if height>470:
                     visible_social=page.evaluate("""() => {
                       const hero=document.querySelector('.concept-intro').getBoundingClientRect();

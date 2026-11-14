@@ -69,7 +69,7 @@ try:
                 assert footer.locator('a[href="https://github.com/devonalanakins"]').count() == 1
                 assert footer.locator('a[href="https://www.instagram.com/devonalanakins/"]').count() == 1
                 assert footer.locator('a[href="https://www.threads.com/@devonalanakins"]').count() == 1
-                assert footer.locator('a[href*="facebook."]').count() == 0
+                assert footer.locator('a[href="https://fb.com/devonalanakins"]').count() == 1
                 home = page.locator(".studio-threads-inline")
                 assert home.is_visible(), (engine,width,height,"homepage Threads preview absent")
                 page.wait_for_function(
@@ -84,7 +84,7 @@ try:
                 if height>470:
                     assert dock.is_visible(),(engine,width,height,"social profiles absent from home")
                 assert dock.locator('a[href="https://www.threads.com/@devonalanakins"]').count()==1
-                assert page.locator(".one-social-unverified").count()==3
+                assert page.locator(".one-social-unverified").count()==0
                 # Use the explicit full-feed action, or mobile Contact tab on
                 # very short phones where the compact action is hidden by CSS.
                 if width<=400 and height<=700:
@@ -111,7 +111,7 @@ try:
                 assert "<script>" in link.inner_text(), "Post is text, never interpreted as HTML"
                 assert panel.locator("script").count() == 0
                 assert post.locator("time").get_attribute("datetime")
-                assert page.locator(".one-social-unverified").count() == 3
+                assert page.locator(".one-social-unverified").count() == 0
                 assert page.locator('.one-threads-profile[href="https://www.threads.com/@devonalanakins"]').count()==1
                 bounds = page.evaluate("""() => {
                   const stage=document.querySelector('.one-stage').getBoundingClientRect();

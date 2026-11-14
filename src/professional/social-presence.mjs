@@ -2,13 +2,15 @@
  * Verified public destinations; Threads handle is from the owner's successful
  * production provider identity check, not guessed from Instagram.
  * A public profile link is NOT consent to republish posts on DevonAkins.com.
- * Facebook is never linked without a confirmed destination.
+ * Facebook links only to the owner's explicitly supplied personal profile URL.
  */
+export const FACEBOOK_PROFILE_URL="https://fb.com/devonalanakins";
 export const THREADS_PROFILE_URL="https://www.threads.com/@devonalanakins";
 const verified=Object.freeze([
   ["GitHub","https://github.com/devonalanakins"],
   ["Instagram","https://www.instagram.com/devonalanakins/"],
   ["Threads",THREADS_PROFILE_URL],
+  ["Facebook",FACEBOOK_PROFILE_URL],
 ]);
 function anchor([label,url]){
   return '<a href="'+url+'" target="_blank" rel="noopener noreferrer" referrerpolicy="no-referrer"'+
@@ -16,9 +18,7 @@ function anchor([label,url]){
 }
 export function renderSocialChannels(compact=false){
   return '<nav class="one-social-channels'+(compact?' one-social-channels--compact':'')+
-    '" aria-label="Social profiles and updates">'+verified.map(anchor).join("")+
-    '<span class="one-social-unverified" title="Exact Facebook profile address has not been confirmed"'+
-      ' aria-label="Facebook profile link not yet verified">'+(compact?'FB · pending':'Facebook · pending')+'</span></nav>';
+    '" aria-label="Social profiles and updates">'+verified.map(anchor).join("")+'</nav>';
 }
 export function renderHomeSocialHub(){
   return '<div class="studio-social-dock"><span class="studio-social-dock-label">FIND ME / VERIFIED CHANNELS</span>'+
