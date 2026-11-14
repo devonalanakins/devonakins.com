@@ -220,7 +220,7 @@ for (const filter of document.querySelectorAll<HTMLButtonElement>(
   });
 document
   .querySelector("#copy-email")
-  ?.addEventListener("click", () => copy("devon@anevum.com"));
+  ?.addEventListener("click", () => copy("hello@devonakins.com"));
 // Desktop perspective responds to pointer position; touch scrolling is never captured.
 if (matchMedia("(hover: hover) and (pointer: fine)").matches) {
   document.querySelectorAll<HTMLElement>(".tilt-card").forEach((card) => {

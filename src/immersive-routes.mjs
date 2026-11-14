@@ -186,7 +186,7 @@ function contentFor(path, projects, gptSnapshot) {
       index: "05 / OPEN CHANNEL", heading: "Let's connect",
       intro: "For writing, software and meaningful collaborations, email remains the simplest way to reach me.",
       breadcrumb: '<a href="/#contact">Interface</a><span aria-hidden="true"> / </span><span aria-current="page">Contact</span>',
-      body: '<div class="route-contact-address"><span>DIRECT EMAIL</span><a href="mailto:devon@anevum.com">devon@anevum.com<span aria-hidden="true"> ↗</span></a></div>' +
+      body: '<div class="route-contact-address"><span>DIRECT EMAIL</span><a href="mailto:hello@devonakins.com">hello@devonakins.com<span aria-hidden="true"> ↗</span></a></div>' +
         '<div class="route-blocks">' +
         block("WORK & CREATIVE INQUIRIES", paragraph("Please include what you're interested in discussing. Client, family, clinical and other private details should not be sent through a public website.")) +
         block("PUBLIC WORK", paragraph("You can review public source and project notes before getting in touch.") + external("https://github.com/devonalanakins", "View my GitHub")) +

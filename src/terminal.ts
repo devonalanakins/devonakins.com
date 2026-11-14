@@ -204,7 +204,7 @@ document.addEventListener("visibilitychange", () => {
 document.querySelector<HTMLButtonElement>("#copy-email")?.addEventListener("click", async () => {
   try {
     if (!navigator.clipboard?.writeText) throw new Error("Clipboard unavailable");
-    await navigator.clipboard.writeText("devon@anevum.com");
+    await navigator.clipboard.writeText("hello@devonakins.com");
     announce("Email address copied.");
   } catch {
     announce("Clipboard unavailable. Select the address to copy.");

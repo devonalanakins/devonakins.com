@@ -110,7 +110,7 @@ const contact = view("contact",
   eyebrow("006 / CONTACT","START A CONVERSATION")+
   '<h1>Let’s make<br><em>things work.</em></h1>'+
   '<p class="one-lede">For professional operations, technical systems, engineering or writing inquiries, email is the direct contact route.</p>'+
-  '<a class="one-email" href="mailto:devon@anevum.com">devon@anevum.com <span aria-hidden="true">↗</span></a>'+
+  '<a class="one-email" href="mailto:hello@devonakins.com">hello@devonakins.com <span aria-hidden="true">↗</span></a>'+
 
   '<div class="one-contact-links"><a href="/contact/">Full contact page ↗</a></div></div>'+
   renderThreadsPreview()+'</div>');
@@ -149,7 +149,7 @@ export function renderOneScreenHome({datedCapture=null,motionAssetAvailable=fals
     '<span class="one-brand-mark">DA</span><span class="one-brand-type">DEVON<span>AKINS</span><small>.COM</small></span></a>'+
     '<p class="one-header-descriptor">INDEPENDENT DEVELOPER <span>—</span> FLORIDA / REMOTE</p>'+
     tabs("desktop")+
-    '<div class="one-header-actions"><button type="button" class="one-motion-toggle" data-motion-toggle aria-pressed="true" aria-label="Pause background motion" title="Pause background motion"><span class="one-motion-dot" aria-hidden="true"></span><span data-motion-label>Motion on</span></button><a class="one-header-email" href="mailto:devon@anevum.com">LET’S TALK <span aria-hidden="true">→</span></a></div></header>'+
+    '<div class="one-header-actions"><button type="button" class="one-motion-toggle" data-motion-toggle aria-pressed="true" aria-label="Pause background motion" title="Pause background motion"><span class="one-motion-dot" aria-hidden="true"></span><span data-motion-label>Motion on</span></button><a class="one-header-email" href="mailto:hello@devonakins.com">LET’S TALK <span aria-hidden="true">→</span></a></div></header>'+
     '<main id="one-stage" class="one-stage" tabindex="-1">'+home.replace('<!--ONE_SCREEN_GPT_SLOT-->',homeGpt)+experience+work+activity+writing+contact+'</main>'+
     tabs("mobile")+
     '</body></html>';

@@ -376,7 +376,7 @@ test("every canonical internal page uses the immersive portrait shell, never the
     ["/work/devonstation/", "DevonStation"],
     ["/about/", "father of two"],
     ["/source/", "PUBLIC REPOSITORIES"],
-    ["/contact/", "devon@anevum.com"],
+    ["/contact/", "hello@devonakins.com"],
   ]) assert.match(await (await get(route)).text(), new RegExp(phrase, "i"), route);
   const v2 = await (await get("/v2/")).text();
   assert.match(v2, /name="robots" content="noindex,nofollow"/);
