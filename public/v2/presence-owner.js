@@ -148,7 +148,9 @@ function lock(value) {
   if (!value) {
     const connected=threadsAuthState?.storageReady && threadsAuthState?.connected &&
       !threadsAuthBusy;
-    const mayEnable=threadsAuthState?.releaseApproved && state?.publishingAllowed;
+    // Allow staging consent while release flags are OFF; publishing remains
+    // independently blocked until protected release approval.
+    const mayEnable=state?.publishingAllowed;
     // Turning sharing OFF stays available even if release permission is revoked.
     el("threads-public-enabled").disabled=!connected ||
       (!mayEnable && !threadsAuthState?.publicFeedEnabled);
@@ -372,7 +374,9 @@ function renderThreadsAuthorization(data) {
   el("threads-sharing-status").textContent=
     !data.storageReady ? "Owner sharing controls require a private database migration." :
     !data.connected ? "Connect and verify Threads privately before enabling its public feed." :
-    !data.releaseApproved ? "Threads release approval is off. The feed is not public." :
+    !data.releaseApproved ? (data.publicFeedEnabled
+      ? "Your sharing preference is saved. The protected Threads release is off; posts remain hidden."
+      : "Threads release is off. You may save a future sharing preference; posts remain hidden.") :
     data.publicFeedEnabled ? "Sharing selected: up to three recent public Threads posts can appear on your website." :
     "Threads posts hidden. Enable this setting and save to share only your public posts.";
   const nextRenewal=Date.parse(data.verifiedAt||"")+24*60*60_000;
@@ -542,7 +546,9 @@ async function changeThreadsSharing(){
     return;
   }
   if(requested && !window.confirm(
-    "Share up to three of my most recent public Threads posts on DevonAkins.com? "+
+    (threadsAuthState.releaseApproved
+      ? "Share up to three of my most recent public Threads posts on DevonAkins.com? "
+      : "Save consent to share up to three recent public Threads posts after a separate protected release? ")+
     "You can turn sharing off here without disconnecting your Meta account.")){
     el("threads-public-enabled").checked=previous;
     return;
