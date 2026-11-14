@@ -24,7 +24,7 @@ export function renderPresenceOwner() {
 <div class="actions"><button id="presence-save" type="button" disabled>Save visibility</button><button id="presence-off" type="button" class="presence-stop" disabled>Stop all broadcasting</button></div>
 <div class="presence-threads-sharing" aria-labelledby="threads-sharing-title"><h3 id="threads-sharing-title">Threads public feed</h3>
 <p class="fine">Your latest three public Threads posts can appear on DevonAkins.com. This is independent of the private Meta connection, your work activity, and the global visibility setting. No posting or private messages.</p>
-<label class="setting"><span><strong>Show public Threads posts</strong><small>Owner-controlled; uncheck and save to hide immediately. Requires an authorized Meta connection and approved release.</small></span><input type="checkbox" id="threads-public-enabled" disabled></label>
+<label class="setting"><span><strong>Show public Threads posts</strong><small>Owner-controlled; uncheck and save to hide immediately. Publishing also needs an approved release.</small></span><input type="checkbox" id="threads-public-enabled" disabled></label>
 <div class="actions"><button id="threads-sharing-save" type="button" class="secondary" disabled>Save Threads sharing</button></div>
 <p id="threads-sharing-status" class="fine" role="status" aria-live="polite">Checking Threads sharing permission…</p></div>
 <h3>Public preview</h3><p id="presence-preview" role="status">Not broadcasting.</p><p class="fine">This is the presence projection. Track details, when separately enabled, appear on the public Listening page. Existing visitors clear on their next refresh, within 60 seconds while connected.</p>
