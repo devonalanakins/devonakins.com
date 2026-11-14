@@ -204,3 +204,40 @@ test("one-screen post-release checker preserves the real public data and privacy
     assert.ok(source.includes(required),"Missing source- or privacy-check: "+required);
   }
 });
+
+test("Threads read-only publishing requires an exact protected one-screen approval",()=>{
+  const selection={...base,releaseVariant:"one-screen",
+    professionalBuildFlag:"1",oneScreenBuildFlag:"1",
+    oneScreenConfirmation:"ONE-SCREEN-CUTOVER-APPROVED"};
+  assert.equal(manualReleaseError({...selection,
+    threadsPublishAction:"enable",
+    threadsPublishConfirmation:"THREADS-PUBLIC-FEED-APPROVED"}),null);
+  assert.equal(manualReleaseError({...selection,threadsPublishAction:"disable"}),null);
+  for(const input of [
+    {threadsPublishAction:"enable"},
+    {threadsPublishAction:"enable",threadsPublishConfirmation:"yes"},
+    {threadsPublishAction:"disable",threadsPublishConfirmation:"THREADS-PUBLIC-FEED-APPROVED"},
+    {threadsPublishAction:"unknown"},
+    {threadsPublishAction:"preserve",threadsPublishConfirmation:"THREADS-PUBLIC-FEED-APPROVED"},
+    {threadsPublishAction:"enable",threadsPublishConfirmation:"THREADS-PUBLIC-FEED-APPROVED",
+      githubOidcAction:"enable",githubOidcConfirmation:"GITHUB-OIDC-ENABLE-APPROVED"},
+  ]) assert.ok(manualReleaseError({...selection,...input}),"Unsafe Threads release permitted");
+  assert.match(manualReleaseError({...base,
+    threadsPublishAction:"enable",
+    threadsPublishConfirmation:"THREADS-PUBLIC-FEED-APPROVED"}),/one-screen/);
+});
+
+test("manual workflow exposes separate owner approval and source acceptance for Threads",()=>{
+  const workflow=readFileSync(new URL("../.github/workflows/deploy.yml",import.meta.url),"utf8");
+  for(const required of [
+    "threads_publication_action:","threads_publication_confirmation:",
+    "THREADS_PUBLICATION_ACTION:","THREADS_PUBLICATION_CONFIRMATION:",
+    "THREADS-PUBLIC-FEED-APPROVED","Verify live read-only Threads feed",
+    "node scripts/verify-live-threads.mjs",
+  ]) assert.ok(workflow.includes(required),"Missing Threads release gate "+required);
+  assert.ok(workflow.indexOf("node scripts/prepare-private-deploy.mjs")<
+    workflow.indexOf("node scripts/verify-live-threads.mjs"));
+  assert.ok(workflow.indexOf("wrangler@4.151.3 deploy")<
+    workflow.indexOf("node scripts/verify-live-threads.mjs"));
+  assert.match(workflow,/environment: production/);
+});
