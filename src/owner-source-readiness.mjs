@@ -16,11 +16,12 @@ export async function ownerSourceReadiness(env={},presence=null,at=Date.now()){
   threads.privateStorageReady=privateThreads.storageReady;
   threads.privateConnected=privateThreads.connected;
   threads.privateExpiresAt=privateThreads.expiresAt;
+  threads.publicFeedEnabled=privateThreads.publicFeedEnabled;
   if(privateThreads.connected){
     threads.authorizationConfigured=true;
     threads.usernameConfigured=true;
     threads.configured=threads.publicationApproved && threads.feedEnabled &&
-      threads.globallyEnabled;
+      threads.globallyEnabled && privateThreads.publicFeedEnabled;
   }
   const spotify={
     appConfigured:false,
