@@ -70,6 +70,13 @@ try:
                 assert footer.locator('a[href="https://www.instagram.com/devonalanakins/"]').count() == 1
                 assert footer.locator('a[href="https://www.threads.com/@devonalanakins"]').count() == 1
                 assert footer.locator('a[href="https://fb.com/devonalanakins"]').count() == 1
+                for social_link in footer.locator("a.one-social-icon").all():
+                    assert social_link.locator("svg path").count() == 1
+                    assert social_link.get_attribute("aria-label")
+                    assert social_link.inner_text().strip() == "", (
+                        engine, width, height, "visible social labels should be brand marks"
+                    )
+                    assert social_link.bounding_box()["width"] >= 27
                 home = page.locator(".studio-threads-inline")
                 assert home.is_visible(), (engine,width,height,"homepage Threads preview absent")
                 page.wait_for_function(
