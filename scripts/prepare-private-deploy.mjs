@@ -264,6 +264,7 @@ export async function verifyThreadsPublicOwnerConsent({
     "WHERE p.id=1 AND p.public_enabled=1 AND p.private_work=0 AND p.paused=0",
     "AND t.token_cipher IS NOT NULL AND t.threads_user_id IS NOT NULL",
     "AND t.username IS NOT NULL AND t.verified_at > 0",
+    "AND t.public_feed_enabled=1",
     "AND t.token_expires_at > ?",
   ].join(" ");
   let response;
@@ -305,7 +306,9 @@ export async function verifyThreadsLifecycleSchema({
     "(SELECT COUNT(*) FROM pragma_table_info('threads_lifecycle_receipt')",
     "WHERE name IN ('request_hash','received_at','kind','confirmation_code')) AS receipt_columns,",
     "(SELECT COUNT(*) FROM sqlite_master WHERE type='table'",
-    "AND name='threads_oauth_attempt') AS attempt_table",
+    "AND name='threads_oauth_attempt') AS attempt_table,",
+    "(SELECT COUNT(*) FROM pragma_table_info('threads_connection')",
+    "WHERE name='public_feed_enabled' AND type='INTEGER') AS sharing_column",
   ].join(" ");
   let response;
   try {
@@ -333,6 +336,8 @@ export async function verifyThreadsLifecycleSchema({
   const row=result.results[0];
   if(row?.identity_column!==1||row?.receipt_columns!==4||row?.attempt_table!==1)
     throw new PrivatePreflightFailure("THREADS_SCHEMA_VALIDATE","MIGRATION_0012_REQUIRED");
+  if(row?.sharing_column!==1)
+    throw new PrivatePreflightFailure("THREADS_SCHEMA_VALIDATE","MIGRATION_0013_REQUIRED");
   return true;
 }
 
