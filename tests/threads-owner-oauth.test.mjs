@@ -15,6 +15,7 @@ function fixture(migrated=true,providerOverride=null){
   if(migrated){
     sql.exec(readFileSync(new URL("../migrations/0011_threads_private_oauth.sql",import.meta.url),"utf8"));
     sql.exec(readFileSync(new URL("../migrations/0012_threads_meta_lifecycle.sql",import.meta.url),"utf8"));
+    sql.exec(readFileSync(new URL("../migrations/0013_threads_public_visibility.sql",import.meta.url),"utf8"));
   }
   const db={prepare(text){
     const query=sql.prepare(text);let values=[];
@@ -84,7 +85,57 @@ test("owner-only OAuth start uses read-only scope and one-time state without lea
   assert.doesNotMatch(target.href,/meta-app-secret|access_token|threads_content_publish/);
   const state=await f.get("/api/threads/auth/status");
   assert.deepEqual(await state.json(),{version:1,appConfigured:true,
-    storageReady:true,connected:false,expiresAt:null,verifiedAt:null});
+    storageReady:true,connected:false,expiresAt:null,verifiedAt:null,
+    revision:0,publicFeedEnabled:false,releaseApproved:false});
+});
+
+
+test("owner Threads sharing requires explicit consent, current revision, release gates and same-origin login",async()=>{
+  const f=fixture();
+  f.sql.exec(readFileSync(new URL("../migrations/0002_presence.sql",import.meta.url),"utf8"));
+  const route="/api/threads/auth/visibility";
+  const req=(payload,origin=root)=>new Request(root+route,{
+    method:"POST",headers:{Origin:origin,"Content-Type":"application/json"},
+    body:JSON.stringify(payload),
+  });
+  const call=(payload,ctx=owner,origin=root)=>f.api(req(payload,origin),f.env,ctx);
+  const connected=await f.auth();
+  assert.equal((await f.callback(connected)).status,303);
+  const initial=await storedThreadsStatus(f.env,now);
+  assert.equal(initial.connected,true);
+  assert.equal(initial.publicFeedEnabled,false,"OAuth must not auto-publish a new grant");
+  assert.equal((await call({enabled:true,revision:initial.revision},{})).status,403);
+  assert.equal((await call({enabled:true,revision:initial.revision},owner,"https://evil.example")).status,403);
+  assert.equal((await call({enabled:"true",revision:initial.revision})).status,400);
+  assert.equal((await call({enabled:true,revision:initial.revision})).status,403,
+    "source release flags are independent from the owner's preference");
+  Object.assign(f.env,{PRESENCE_ENABLED:"true",PRESENCE_PUBLIC_RELEASE_APPROVED:"true",
+    THREADS_PUBLIC_RELEASE_APPROVED:"true",THREADS_PUBLIC_FEED_ENABLED:"true"});
+  assert.equal((await call({enabled:true,revision:initial.revision})).status,409,
+    "global broadcast opt-in must still be enabled");
+  f.sql.prepare("UPDATE presence_state SET public_enabled=1,private_work=0 WHERE id=1").run();
+  const enabled=await call({enabled:true,revision:initial.revision});
+  assert.equal(enabled.status,200);
+  const saved=await enabled.json();
+  assert.equal(saved.publicFeedEnabled,true);
+  assert.equal(saved.releaseApproved,true);
+  assert.equal(saved.revision,initial.revision+1);
+  assert.doesNotMatch(JSON.stringify(saved),/access_token|token_cipher|privateFixture/);
+
+  const hidden=await call({enabled:false,revision:0});
+  assert.equal(hidden.status,200,"an OFF action overrides a stale browser");
+  const state=await hidden.json();
+  assert.equal(state.publicFeedEnabled,false);
+  assert.equal((await call({enabled:true,revision:saved.revision})).status,409,
+    "a stale ON action may not resurrect public posts after OFF");
+  assert.equal((await call({enabled:true,revision:state.revision})).status,200);
+  assert.equal((await storedThreadsStatus(f.env,now)).publicFeedEnabled,true);
+
+  // An entirely new verified Meta grant must reset even a previously enabled feed.
+  assert.equal((await f.callback(await f.auth())).status,303);
+  assert.equal((await storedThreadsStatus(f.env,now)).publicFeedEnabled,false);
+  assert.equal((await f.post("/api/threads/auth/disconnect")).status,200);
+  assert.equal((await storedThreadsStatus(f.env,now)).publicFeedEnabled,false);
 });
 
 test("owner callback binds Meta account identity and encrypts long token at rest without public sharing",async()=>{
