@@ -127,7 +127,7 @@ export function createThreadsMetaLifecycle({clock=Date.now}={}){
           "AND NOT EXISTS(SELECT 1 FROM threads_lifecycle_receipt WHERE request_hash=?))")
           .bind(signed.id,maxConnectedAt,signed.hash),
         db.prepare("UPDATE threads_connection SET revision=revision+1,token_cipher=NULL,"+
-          "username=NULL,threads_user_id=NULL,connected_at=0,token_expires_at=0,verified_at=0 "+
+          "username=NULL,threads_user_id=NULL,connected_at=0,token_expires_at=0,verified_at=0,public_feed_enabled=0 "+
           "WHERE id=1 AND threads_user_id=? AND connected_at<=? "+
           "AND NOT EXISTS(SELECT 1 FROM threads_lifecycle_receipt WHERE request_hash=?)")
           .bind(signed.id,maxConnectedAt,signed.hash),
