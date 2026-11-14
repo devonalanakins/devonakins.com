@@ -16,6 +16,18 @@ test("verified social profiles and Threads signal appear on the initial Living S
   assert.equal((html.match(/role="tabpanel"/g)||[]).length,6);
   assert.equal((html.match(/data-public-threads/g)||[]).length,2);
   assert.match(html,/class="studio-social-dock"/);
+  assert.equal((html.match(/aria-label="Social profiles and updates"/g)||[]).length,1,
+    "Exactly one social profile navigation belongs on the homepage");
+  assert.equal((html.match(/class="one-social-icon one-social-icon--/g)||[]).length,4);
+  assert.doesNotMatch(html,/one-social-channels--compact|one-contact-socials/,
+    "Footer and Contact must not duplicate the homepage social dock");
+  for(const brand of ["GitHub","Instagram","Threads","Facebook"]){
+    assert.match(html,new RegExp('class="one-social-icon one-social-icon--'+brand.toLowerCase()+'"'));
+    assert.match(html,new RegExp('title="'+brand+'" aria-label="Open '+brand+' profile in a new tab"'));
+  }
+  assert.equal((html.match(/<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" focusable="false">/g)||[]).length,4);
+  assert.doesNotMatch(html,/<\/svg>(?:GitHub|Instagram|Threads|Facebook)<\/a>/);
+
   assert.match(html,/class="studio-threads-inline"/);
   assert.match(html,/data-one-go="contact" aria-label="View all approved Threads updates"/);
   assert.match(html,/data-threads-posts/);
@@ -32,10 +44,14 @@ test("public social profiles are separate from approved post display",()=>{
   assert.equal(THREADS_PROFILE_URL,"https://www.threads.com/@devonalanakins");
   assert.equal(FACEBOOK_PROFILE_URL,"https://fb.com/devonalanakins");
   for(const markup of [full,compact,home,signal,renderThreadsPreview()]){
-    assert.match(markup,/https:\/\/www\.threads\.com\/@devonalanakins/);
-    if([full,compact,home].includes(markup)) assert.match(markup,/https:\/\/fb\.com\/devonalanakins/);
+    if([full,compact,home,signal].includes(markup))
+      assert.match(markup,/https:\/\/www\.threads\.com\/@devonalanakins/);
+    if([full,compact,home].includes(markup))
+      assert.match(markup,/https:\/\/fb\.com\/devonalanakins/);
     assert.doesNotMatch(markup,/access_token|client_secret|private grant|bearer/i);
   }
+  assert.doesNotMatch(renderThreadsPreview(),/one-threads-profile/,
+    "Per-post links remain, but duplicate profile navigation is removed");
   assert.doesNotMatch(full,/Facebook · pending/);
   assert.doesNotMatch(compact,/FB · pending/);
   assert.match(full,/aria-label="Open Facebook profile in a new tab"/);
