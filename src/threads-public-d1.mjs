@@ -19,7 +19,7 @@ export function createD1PublicThreadsReader({fetchImpl=fetch,clock=Date.now}={})
     if(!publicThreadsReleaseAllowed(env))return disconnectedThreads();
     try{
       const before=await storedThreadsCredential(env,clock());
-      if(!before)return disconnectedThreads();
+      if(!before?.publicFeedEnabled)return disconnectedThreads();
       const scoped={...env,THREADS_USER_ACCESS_TOKEN:before.token,
         THREADS_PUBLIC_USERNAME:before.username};
       const feed=await provider(scoped);
@@ -27,7 +27,7 @@ export function createD1PublicThreadsReader({fetchImpl=fetch,clock=Date.now}={})
       // Re-read after network/cache resolution so the owner can revoke a
       // running fetch or an earlier token while it is in flight.
       const after=await storedThreadsCredential(env,clock());
-      if(!after || after.revision!==before.revision ||
+      if(!after?.publicFeedEnabled || after.revision!==before.revision ||
          after.cipher!==before.cipher ||
          after.username!==before.username ||
          after.expiresAt!==before.expiresAt ||
