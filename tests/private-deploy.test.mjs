@@ -669,11 +669,14 @@ test("read-only Threads production consent proof requires active public owner sc
     assert.ok(request.sql.includes(fragment),fragment);
   assert.doesNotMatch(request.sql,/SELECT\s+\*/i);
   assert.equal(requests[0].options.redirect,"error");
-  for(const rows of [[],[{eligible:0}],[{eligible:2}]]){
+  for(const rows of [[{eligible:0}],[{eligible:2}],[{eligible:"1"}]]){
     await assert.rejects(verifyThreadsPublicOwnerConsent({...args,
       fetcher:async()=>Response.json({success:true,result:[{success:true,results:rows}]})}),
       e=>e instanceof PrivatePreflightFailure && e.reason==="OWNER_SOURCE_NOT_APPROVED");
   }
+  await assert.rejects(verifyThreadsPublicOwnerConsent({...args,
+    fetcher:async()=>Response.json({success:true,result:[{success:true,results:[]}]})}),
+    e=>e instanceof PrivatePreflightFailure && e.reason==="API_REJECTED");
   await assert.rejects(verifyThreadsPublicOwnerConsent({...args,
     fetcher:async()=>new Response("provider private text",{status:403})}),
     e=>e instanceof PrivatePreflightFailure && e.reason==="HTTP_403" &&
