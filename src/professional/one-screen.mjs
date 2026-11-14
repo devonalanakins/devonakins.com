@@ -3,7 +3,7 @@ import {brandIcon} from "./brand-icons.mjs";
 import {renderOneScreenGptSummary} from "./gpt-capture.mjs";
 import {renderPrestigeHome} from "./prestige-profile.mjs";
 import {renderWorkingStandard} from "./working-standard.mjs";
-import {renderSocialChannels,renderThreadsPreview} from "./social-presence.mjs";
+import {renderThreadsPreview} from "./social-presence.mjs";
 
 /**
  * Opt-in one-viewport design candidate. Existing routes and consent-filtered
@@ -111,7 +111,7 @@ const contact = view("contact",
   '<h1>Let’s make<br><em>things work.</em></h1>'+
   '<p class="one-lede">For professional operations, technical systems, engineering or writing inquiries, email is the direct contact route.</p>'+
   '<a class="one-email" href="mailto:devon@anevum.com">devon@anevum.com <span aria-hidden="true">↗</span></a>'+
-  '<div class="one-contact-socials"><p>CONNECT / PUBLIC CHANNELS</p>'+renderSocialChannels()+'</div>'+
+
   '<div class="one-contact-links"><a href="/contact/">Full contact page ↗</a></div></div>'+
   renderThreadsPreview()+'</div>');
 
@@ -152,7 +152,7 @@ export function renderOneScreenHome({datedCapture=null,motionAssetAvailable=fals
     '<div class="one-header-actions"><button type="button" class="one-motion-toggle" data-motion-toggle aria-pressed="true" aria-label="Pause background motion" title="Pause background motion"><span class="one-motion-dot" aria-hidden="true"></span><span data-motion-label>Motion on</span></button><a class="one-header-email" href="mailto:devon@anevum.com">LET’S TALK <span aria-hidden="true">→</span></a></div></header>'+
     '<main id="one-stage" class="one-stage" tabindex="-1">'+home.replace('<!--ONE_SCREEN_GPT_SLOT-->',homeGpt)+experience+work+activity+writing+contact+'</main>'+
     tabs("mobile")+
-    '<footer class="one-footer"><span>© 2026 DEVON ALAN AKINS</span>'+renderSocialChannels(true)+
+    '<footer class="one-footer"><span>© 2026 DEVON ALAN AKINS</span>'+
     '<a href="/experience/">EXTENDED PROFILE ↗</a></footer>'+
     '</body></html>';
 }
