@@ -171,8 +171,8 @@ function about(){
 }
 function contact(){
   return intro("CONTACT / 06","Let's do <em>useful work.</em>","For professional inquiries, software engineering, systems thinking or writing correspondence, send a message directly.",
-    button("mailto:devon@anevum.com","Email Devon",true)+button("https://github.com/devonalanakins","GitHub profile",false,true))+
-  '<section class="p-section p-contact-panel"><div><p class="p-eyebrow">DIRECT CONTACT</p><h2>Start a conversation.</h2><p>For now, email is the verified contact path; there is no fictitious inquiry form or message delivery service.</p><a class="p-contact-email" href="mailto:devon@anevum.com">devon@anevum.com '+icon("arrow")+'</a></div><div><p class="p-eyebrow">PUBLIC WORK</p><h2>Review the evidence.</h2><p>Explore selected work or public source history before getting in touch.</p>'+button("/work/","Selected work")+button("/activity/","GitHub activity")+'</div></section>';
+    button("mailto:hello@devonakins.com","Email Devon",true)+button("https://github.com/devonalanakins","GitHub profile",false,true))+
+  '<section class="p-section p-contact-panel"><div><p class="p-eyebrow">DIRECT CONTACT</p><h2>Start a conversation.</h2><p>Email is the direct contact path; this site does not collect messages or provide a contact form.</p><a class="p-contact-email" href="mailto:hello@devonakins.com">hello@devonakins.com '+icon("arrow")+'</a></div><div><p class="p-eyebrow">PUBLIC WORK</p><h2>Review the evidence.</h2><p>Explore selected work or public source history before getting in touch.</p>'+button("/work/","Selected work")+button("/activity/","GitHub activity")+'</div></section>';
 }
 export const PROFESSIONAL_PAGES = Object.freeze(Object.keys(pages));
 export const PROFESSIONAL_ROUTES = route;
