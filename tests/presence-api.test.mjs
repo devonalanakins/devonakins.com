@@ -316,6 +316,7 @@ test("Nona public project sharing requires the owner's explicit saved choice",as
  assert.equal(original.projectCatalog.nona,'Nona Neuropsychology');
  assert.equal((await f.write('projects',{projects:['nona']})).status,200);
  assert.equal((await f.api(f.request(),f.env,owner)).status,200);
+ f.advance(); // Owner writes are intentionally rate-limited.
  assert.equal((await f.write('projects',{projects:[]})).status,200);
  const current=await (await f.api(f.request(),f.env,owner)).json();
  assert.deepEqual(current.projects,[]);
