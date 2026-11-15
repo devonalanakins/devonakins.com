@@ -308,7 +308,7 @@ test('legacy invalid project selection stays closed and is repairable only throu
   assert.deepEqual(intentionallyEmpty.projects,[]);
 });
 
-test('Nona public project sharing requires the owner's explicit saved choice',async()=>{
+test("Nona public project sharing requires the owner's explicit saved choice",async()=>{
  const f=fixture();
  const before=await f.api(f.request(),f.env,owner);
  const original=await before.json();
