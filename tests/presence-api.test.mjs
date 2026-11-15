@@ -307,3 +307,16 @@ test('legacy invalid project selection stays closed and is repairable only throu
   assert.equal(intentionallyEmpty.projectChoicesNeedReview,false);
   assert.deepEqual(intentionallyEmpty.projects,[]);
 });
+
+test('Nona public project sharing requires the owner's explicit saved choice',async()=>{
+ const f=fixture();
+ const before=await f.api(f.request(),f.env,owner);
+ const original=await before.json();
+ assert.ok(!original.projects.includes('nona'));
+ assert.equal(original.projectCatalog.nona,'Nona Neuropsychology');
+ assert.equal((await f.write('projects',{projects:['nona']})).status,200);
+ assert.equal((await f.api(f.request(),f.env,owner)).status,200);
+ assert.equal((await f.write('projects',{projects:[]})).status,200);
+ const current=await (await f.api(f.request(),f.env,owner)).json();
+ assert.deepEqual(current.projects,[]);
+});
