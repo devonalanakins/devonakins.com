@@ -847,3 +847,22 @@ test("actual Worker routing protects inventory and exposes only authenticated ed
     401,
   );
 });
+
+test('private Nona editor mapping appears only after explicit owner project approval',async()=>{
+  const f=fixture(),token='b'.repeat(43);
+  f.sql.prepare('UPDATE presence_editor SET token_hash=?,token_until=? WHERE id=1')
+    .run(await digest(token), START+3600000);
+  const request=()=>new Request('https://devonakins.com/api/presence/editor/catalog',{
+    headers:{Authorization:'Bearer '+token},
+  });
+  let data=await (await f.catalog(request(),f.env)).json();
+  assert.ok(!data.repositories.some(r=>r.owner==='nonaneuropsychology'));
+  f.sql.exec(`UPDATE presence_state SET public_projects_json='["nona"]',revision=revision+1`);
+  data=await (await f.catalog(request(),f.env)).json();
+  assert.deepEqual(data.repositories,[{
+    owner:'nonaneuropsychology',name:'nona-neuropsychology',projectSlug:'nona',
+  }]);
+  f.sql.exec(`UPDATE presence_state SET public_projects_json='[]',revision=revision+1`);
+  data=await (await f.catalog(request(),f.env)).json();
+  assert.ok(!data.repositories.some(r=>r.owner==='nonaneuropsychology'));
+});
