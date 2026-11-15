@@ -75,3 +75,46 @@ Resolution for an automatic GPT adapter: confirm an eligible workspace and enabl
 ## Release verification
 
 Source checks, real SQLite concurrency/auth/privacy tests, participating-runner tests, responsive browser/axe acceptance and CI must pass on the PR head before merge. Production deploy remains the manual exact-main-SHA GitHub Actions workflow and preserves active private bindings with all disclosure gates off. Check actual `/_health` SHA and Cloudflare 100%-serving version, public V4 no-store projection and unauthenticated owner denial. Real Spotify playback and editor/remote-host pairing remain separate authenticated acceptance steps; fixture tests are not account integration evidence. Physical iPhone testing is not replaced by desktop WebKit.
+
+
+## Private Nona Neuropsychology source — opt-in only
+
+The public GitHub timeline uses GitHub's **public** user events and intentionally
+does not read private organization repositories. A private organization is never
+included in that public-event feed merely because its development branch exists.
+
+The approved Nona development source is separately recognizable in the owner's
+existing V4 editor / participating-runner presence system. Its only public
+identity is the owner-approved **Nona Neuropsychology** project label and a
+bounded status/timestamp. No private GitHub repository URLs, file paths,
+commit messages, code, patients, clinical data, or workflow payloads are sent
+by the presence reporter. A status is evidence of an observed editor event or
+participating task, **not** a public GitHub push/PR history or a claim that the
+owner is currently at the computer.
+
+- **Default:** Nona is excluded from the default shareable-project selection.
+  Explicitly add Nona under `/owner/presence/` > Projects I can share and save.
+  Existing global Broadcast/Work privately controls remain authoritative.
+- **Editor:** after owner approval, a newly fetched authenticated editor catalog
+  recognizes only the exact Nona organization Git remote. It never learns arbitrary
+  private repositories. The existing paired editor must be resumed; editing
+  events expire after two minutes.
+- **GitHub/Codex runner:** the participating runner locally recognizes the same
+  exact origin and selects a source credential scoped to project `nona` from
+  the private owner-connected workspace. A token must be configured privately
+  in the participating environment; ordinary Actions jobs, uninstrumented Codex
+  sessions and other repositories do not automatically report. Never put tokens
+  into a repository, workflow YAML, browser, public log or issue. An unpaired
+  runner does nothing; reporter errors must not alter real workflow outcomes.
+- **Public display:** the one-screen work status can identify an authorized
+  Nona editor or recently observed participating GitHub Actions task without
+  sharing internal work details. The independent public-events list and its
+  counters still exclude all private repository events. No activity is fabricated
+  when the source is absent, stale, disabled or revoked.
+
+Removing Nona from the owner project selection immediately suppresses its
+public project attribution. Global Stop all, Work privately, source revocation
+and normal expiry gates remain in force. The change does **not** install a
+GitHub App in the organization or activate a production source; production
+configuration, live reporter evidence, protected exact-SHA deployment and
+public endpoint acceptance must be independently verified.
