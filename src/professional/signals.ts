@@ -122,10 +122,40 @@ function renderWork(snapshot:unknown){
       (w.state==="developing"||w.state==="in-the-zone")&&
       (w.source==="editor-heartbeat"||w.source==="owner-declared")){
     state=w.source==="editor-heartbeat"?"EDITOR OBSERVED":"OWNER DECLARED";
-    label=inZone?"In the Zone — Coding":w.source==="editor-heartbeat"?"Development session observed":"Work session declared";
+    const nona=w.project==="Nona Neuropsychology";
+    label=nona?"Nona Neuropsychology · "+(w.source==="editor-heartbeat"?"editing observed":"work reported"):
+      inZone?"In the Zone — Coding":w.source==="editor-heartbeat"?"Development session observed":"Work session declared";
     explanation="Recent authorized "+(w.source==="editor-heartbeat"?"editor":"owner-declared")+
       " work signal, checked "+new Date(time).toLocaleTimeString([],{hour:"numeric",minute:"2-digit"})+
       (inZone?". Spotify independently indicates Devon's owner-defined coding mode.":".");
+  }else if(fresh && p?.version===4 &&
+      typeof p.remote==="object" && p.remote!==null &&
+      (p.remote as UnknownJson).visibility==="public" &&
+      Array.isArray((p.remote as UnknownJson).tasks)){
+    const reported=((p.remote as UnknownJson).tasks as unknown[])
+      .filter((item):item is UnknownJson=>!!item && typeof item==="object" && !Array.isArray(item))
+      .find(item=>{
+        const observed=typeof item.asOf==="string"?Date.parse(item.asOf):NaN;
+        const expiry=typeof item.expiresAt==="string"?Date.parse(item.expiresAt):NaN;
+        return item.project==="Nona Neuropsychology" &&
+          ["github-actions","codex","chatgpt-work"].includes(String(item.source)) &&
+          ["queued","running","completed","failed","cancelled"].includes(String(item.state)) &&
+          Number.isFinite(observed) && Number.isFinite(expiry) &&
+          observed<=at+10000 && at-observed<120000 &&
+          expiry>at && expiry<=observed+120000;
+      });
+    if(reported){
+      const github=reported.source==="github-actions";
+      const ongoing=reported.state==="queued"||reported.state==="running";
+      state=github?"GITHUB ACTIONS":"REMOTE WORK";
+      label="Nona Neuropsychology · "+(ongoing?"workflow observed":"recent workflow result");
+      explanation=(github?"Authorized GitHub Actions":"Authorized remote task")+
+        " status: "+String(reported.state)+". Recent source timestamp; not evidence Devon is currently editing.";
+    } else if(inZone){
+      state="SPOTIFY SIGNAL";
+      label="In the Zone — Coding";
+      explanation="Devon's owner-defined rule: Spotify playing means he's coding. Source: recent public playback; editor activity has not been independently observed.";
+    }
   }else if(inZone){
     state="SPOTIFY SIGNAL";
     label="In the Zone — Coding";
