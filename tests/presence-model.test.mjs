@@ -56,3 +56,14 @@ test('no source fields or private objects escape public projection',()=>{
  for (const forbidden of ['patient.md','private','secret','client','TOP_SECRET','fileContent','token']) assert.equal(text.includes(forbidden),false,forbidden);
  assert.deepEqual(PRESENCE_PROJECTOR_POLICY.publicProjects.includes('patient-clinical'),false);
 });
+
+test('Nona private-organization work is always opt-in and revocable',()=>{
+ assert.equal(PRESENCE_PROJECTOR_POLICY.publicProjects.includes('nona'),false);
+ const session=freshSession({projectSlug:'nona'});
+ const candidate={...base,playback:null,session};
+ assert.equal(projectPublicPresence(candidate,now).project,null);
+ assert.equal(projectPublicPresence({...candidate,allowedProjects:['merit']},now).project,null);
+ assert.equal(projectPublicPresence({...candidate,allowedProjects:['nona']},now).project,'Nona Neuropsychology');
+ assert.equal(projectPublicPresence({...candidate,allowedProjects:['nona'],privateOverride:true},now).project,null);
+ assert.equal(projectPublicPresence({...candidate,allowedProjects:['nona'],publicEnabled:false},now).visibility,'hidden');
+});
