@@ -116,6 +116,9 @@ export function projectPublicPresence(input, now = Date.now()) {
     active &&
     session.publicProject === true &&
     Object.hasOwn(ALLOWED_PROJECTS, session.projectSlug) &&
+    // Private-organization work is never disclosed without a saved allowlist.
+    (session.projectSlug !== "nona" ||
+      (Array.isArray(input.allowedProjects) && input.allowedProjects.includes("nona"))) &&
     (!Array.isArray(input.allowedProjects) ||
       input.allowedProjects.includes(session.projectSlug))
       ? ALLOWED_PROJECTS[session.projectSlug]
