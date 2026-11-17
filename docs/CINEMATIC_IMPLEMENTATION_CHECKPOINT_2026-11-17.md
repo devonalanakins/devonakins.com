@@ -1,5 +1,7 @@
 # Cinematic implementation checkpoint — 2026-11-17
 
+> Historical checkpoint. The design kit was subsequently supplied; see [approved kit implementation](CINEMATIC_DESIGN_KIT_IMPLEMENTATION_2026-11-17.md) for the current implementation and evidence.
+
 Continuation of draft PR #126, starting at `4021a74d178062aa647b0e72fc5325398f963a91` on `design/computational-laboratory-2026-11-17`.
 
 ## Implemented

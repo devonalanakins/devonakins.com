@@ -34,21 +34,60 @@ function redraw(){
 inputA?.addEventListener('input',redraw);
 inputB?.addEventListener('input',redraw);
 redraw();
-const motion=document.querySelector<HTMLButtonElement>('[data-lab-motion]');
+const motions=[...document.querySelectorAll<HTMLButtonElement>('[data-lab-motion], [data-lab-motion-footer]')];
 const reduce=window.matchMedia('(prefers-reduced-motion: reduce)');
 let userPause=false;
 function syncMotion(){
   const running=!userPause&&!reduce.matches;
   document.body.classList.toggle('lab-motion-paused',!running);
-  if(motion){
+  for(const motion of motions){
     motion.setAttribute('aria-pressed',String(running));
-    motion.textContent=running?'MOTION ON':'MOTION OFF';
+    motion.textContent=motion.hasAttribute('data-lab-motion-footer')?(running?'Pause motion':'Resume motion'):(running?'MOTION ON':'MOTION OFF');
     motion.setAttribute('aria-label',running?'Pause decorative motion':'Resume decorative motion');
     motion.disabled=reduce.matches;
     if(reduce.matches)motion.title='Reduced motion is enabled in system settings';
   }
 }
-motion?.addEventListener('click',()=>{userPause=!userPause;syncMotion()});
+motions.forEach(motion=>motion.addEventListener('click',()=>{userPause=!userPause;syncMotion()}));
 reduce.addEventListener('change',syncMotion);
 syncMotion();
 export {};
+
+// Native modal supplies focus containment, Escape dismissal and background inertness.
+const menu=document.querySelector<HTMLDialogElement>('#lab-menu');
+const menuOpeners=[...document.querySelectorAll<HTMLButtonElement>('[data-lab-menu-open]')];
+const menuClose=document.querySelector<HTMLButtonElement>('[data-lab-menu-close]');
+menuOpeners.forEach(menuOpen=>menuOpen.addEventListener('click',()=>{
+  menu?.showModal();
+  menuOpen.setAttribute('aria-expanded','true');
+  document.documentElement.classList.add('lab-menu-open');
+}));
+menuClose?.addEventListener('click',()=>menu?.close());
+menu?.addEventListener('close',()=>{
+  menuOpeners.forEach(opener=>opener.setAttribute('aria-expanded','false'));
+  document.documentElement.classList.remove('lab-menu-open');
+});
+menu?.addEventListener('click',event=>{
+  const target=event.target instanceof Element?event.target.closest<HTMLElement>('[data-one-target]'):null;
+  if(!target)return;
+  menu.close();
+  document.querySelector<HTMLElement>('[data-one-view="'+target.dataset.oneTarget+'"]')?.focus({preventScroll:true});
+  window.scrollTo({top:0,behavior:'instant'});
+});
+const search=document.querySelector<HTMLInputElement>('[data-lab-project-search]');
+const category=document.querySelector<HTMLSelectElement>('[data-lab-project-filter]');
+const projectCount=document.querySelector<HTMLElement>('[data-lab-project-count]');
+const projectCards=[...document.querySelectorAll<HTMLElement>('[data-lab-project]')];
+function filterProjects(){
+  const query=(search?.value||'').toLocaleLowerCase().trim();
+  let count=0;
+  for(const card of projectCards){
+    const visible=(!query||card.textContent?.toLocaleLowerCase().includes(query))&&
+      (!category?.value||category.value==='all'||card.dataset.category===category.value);
+    card.hidden=!visible;
+    if(visible)count++;
+  }
+  if(projectCount)projectCount.textContent=count+' public project'+(count===1?'':'s')+(count?'':' · No matching projects. Try another search.');
+}
+search?.addEventListener('input',filterProjects);
+category?.addEventListener('change',filterProjects);

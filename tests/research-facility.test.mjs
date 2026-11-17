@@ -14,13 +14,13 @@ test('laboratory candidate is independently navigable, semantic and source-hones
     assert.match(page,new RegExp('data-one-target="'+key+'"'));
   }
   for(const term of ['Devon Alan Akins','MATHEMATICS','PHYSICS','COMPUTATIONAL NEUROSCIENCE',
-    'Explore the work.','What I am working on.','ANALYTIC MODEL',
+    'Independent','Understanding complex systems.','ANALYTIC MODEL',
     'NO MEASURED DATA','EXPERIMENT','PROPOSED','scientific computing']){
     assert.ok(page.toLowerCase().includes(term.toLowerCase()),term);
   }
   assert.match(page,/data-public-github-feed/);
   assert.match(page,/data-public-spotify/);
-  assert.match(page,/data-public-work data-work-mode="idle"/);
+  assert.match(page,/data-public-work data-work-presentation="editor" data-work-mode="idle"/);
   assert.doesNotMatch(page,/data-public-gpt|\/gpt\/|GPT analytics|token counts|GPT · CAPTURED/i);
   assert.equal((page.match(/class="lab-destination"/g)||[]).length,5);
   for(const key of ['experience','systems','work','portfolio','writing']){
@@ -54,7 +54,7 @@ test('the candidate uses first-party interactions and an explicit build gate',as
   assert.match(stylesheet,/prefers-reduced-motion:\s*reduce/);
   assert.match(stylesheet,/focus-visible/);
   const portfolioStyle=await readFile(new URL('../src/professional/research-portfolio.css',import.meta.url),'utf8');
-  assert.match(portfolioStyle,/\.lab-portfolio-projects/);
+  assert.match(portfolioStyle,/\.lab-destinations/);
   assert.match(portfolioStyle,/\.lab-portfolio-signal-grid/);
   assert.match(portfolioStyle,/@media\(max-width:760px\)/);
   assert.doesNotMatch(portfolioStyle,/@import|url\(\s*["']?https?:|https:\/\/fonts\./);

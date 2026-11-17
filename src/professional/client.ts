@@ -178,6 +178,11 @@ function paint(){
   const snapshot=latest;
   const now=Date.now();
   paintPublicEventSpark(snapshot,now);
+  for(const label of document.querySelectorAll<HTMLElement>('[data-github-compact]')){
+    label.textContent=snapshot?.status==='available'
+      ? 'Public history · '+age(snapshot.events[0]?.at||snapshot.checkedAt,now)
+      :snapshot?.status==='empty'?'No recent public events':'Source unavailable';
+  }
   for(const panel of panels){
     const list=panel.querySelector<HTMLOListElement>("[data-feed-list]");
     const status=panel.querySelector<HTMLElement>("[data-feed-status]");

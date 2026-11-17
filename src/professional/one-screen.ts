@@ -37,9 +37,13 @@ function fitGitHubFeedToViewport(){
 }
 fitGitHubFeedToViewport();
 window.addEventListener("resize",fitGitHubFeedToViewport);
-const known=(value:string|null):value is TabName=>!!value&&names.includes(value as TabName);
+const known=(value:string|null|undefined):value is TabName=>!!value&&names.includes(value as TabName);
 const currentHash=():TabName=>{
-  const raw=location.hash.slice(1).toLowerCase();
+  let raw=location.hash.slice(1).toLowerCase();
+  if(document.body.classList.contains("lab-body")){
+    raw=raw.replace(/^one-panel-/,"");
+    raw=({research:"experience",projects:"work",fieldnotes:"writing"} as Record<string,string>)[raw]||raw;
+  }
   return known(raw)?raw:"home";
 };
 let current:TabName="home";
@@ -60,6 +64,7 @@ function show(next:TabName,focus=false,updateUrl=true){
   if(updateUrl){
     const suffix=next==="home"?"":"#"+next;
     history.replaceState(null,"",location.pathname+location.search+suffix);
+    if(document.body.classList.contains("lab-body"))window.scrollTo({top:0,behavior:"instant"});
   }
 }
 tabs.forEach(tab=>{
@@ -68,15 +73,16 @@ tabs.forEach(tab=>{
     if(known(next))show(next,false);
   });
   tab.addEventListener("keydown",event=>{
+    const group=tab.closest<HTMLElement>(".one-tabs");
+    const groupNames=[...group?.querySelectorAll<HTMLElement>("[data-one-target]")||[]].map(t=>t.dataset.oneTarget).filter(known);
     const delta=event.key==="ArrowRight"||event.key==="ArrowDown"?1:
       event.key==="ArrowLeft"||event.key==="ArrowUp"?-1:0;
-    const target=event.key==="Home"?0:event.key==="End"?names.length-1:
-      delta?(names.indexOf(current)+delta+names.length)%names.length:-1;
+    const target=event.key==="Home"?0:event.key==="End"?groupNames.length-1:
+      delta?(groupNames.indexOf(current)+delta+groupNames.length)%groupNames.length:-1;
     if(target<0)return;
     event.preventDefault();
-    show(names[target]);
-    const group=tab.closest<HTMLElement>(".one-tabs");
-    group?.querySelector<HTMLButtonElement>('[data-one-target="'+names[target]+'"]')?.focus();
+    show(groupNames[target]);
+    group?.querySelector<HTMLButtonElement>('[data-one-target="'+groupNames[target]+'"]')?.focus();
   });
 });
 buttons.forEach(button=>button.addEventListener("click",event=>{
