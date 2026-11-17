@@ -146,6 +146,9 @@ body.lab-body *{box-sizing:border-box}
 .lab-contact-social{align-self:center;display:flex;flex-direction:column;gap:25px;min-width:0;justify-content:center}
 .lab-contact-social .studio-social-dock{position:relative;inset:auto;display:flex;flex-wrap:wrap;max-width:100%}
 .lab-contact-social .one-social-icon{display:inline-flex}
+.lab-nojs{display:flex;flex-wrap:wrap;gap:9px;margin:8px 0}
+.lab-nojs a{color:#d8b687;border-bottom:1px solid #d8b68780;font:700 10px ui-monospace,monospace;text-decoration:none;padding:6px}
+.lab-source-link{color:#e0b788!important;text-decoration:underline;text-underline-offset:3px}
 @media(max-width:1500px){
   .lab-header-index{display:none}
   .lab-stage .lab-overview{grid-template-columns:minmax(300px,1fr) minmax(260px,.8fr) minmax(260px,.88fr)}
