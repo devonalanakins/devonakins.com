@@ -20,6 +20,7 @@ test('laboratory candidate is independently navigable, semantic and source-hones
   }
   assert.match(page,/data-public-github-feed/);
   assert.match(page,/data-public-spotify/);
+  assert.match(page,/<img data-spotify-cover[^>]+referrerpolicy="no-referrer"/);
   assert.match(page,/data-public-work data-work-presentation="editor" data-work-mode="idle"/);
   assert.doesNotMatch(page,/data-public-gpt|\/gpt\/|GPT analytics|token counts|GPT · CAPTURED/i);
   assert.equal((page.match(/class="lab-destination"/g)||[]).length,5);

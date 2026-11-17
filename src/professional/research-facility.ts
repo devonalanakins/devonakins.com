@@ -45,7 +45,7 @@ function syncMotion(){
     motion.textContent=motion.hasAttribute('data-lab-motion-footer')?(running?'Pause motion':'Resume motion'):(running?'MOTION ON':'MOTION OFF');
     motion.setAttribute('aria-label',running?'Pause decorative motion':'Resume decorative motion');
     motion.disabled=reduce.matches;
-    if(reduce.matches)motion.title='Reduced motion is enabled in system settings';
+    motion.title=reduce.matches?'Reduced motion is enabled in system settings':'';
   }
 }
 motions.forEach(motion=>motion.addEventListener('click',()=>{userPause=!userPause;syncMotion()}));
@@ -63,6 +63,10 @@ menuOpeners.forEach(menuOpen=>menuOpen.addEventListener('click',()=>{
   document.documentElement.classList.add('lab-menu-open');
 }));
 menuClose?.addEventListener('click',()=>menu?.close());
+// Dismiss the modal before the route controller restores focus and scrolling.
+function dismissMenuForHistory(){if(menu?.open)menu.close()}
+window.addEventListener('popstate',dismissMenuForHistory,{capture:true});
+window.addEventListener('hashchange',dismissMenuForHistory,{capture:true});
 menu?.addEventListener('close',()=>{
   menuOpeners.forEach(opener=>opener.setAttribute('aria-expanded','false'));
   document.documentElement.classList.remove('lab-menu-open');

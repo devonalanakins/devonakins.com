@@ -304,8 +304,10 @@ jobs:
         run: |
           python3 -m pip install --disable-pip-version-check playwright==1.57.0
           python3 -m playwright install --with-deps chromium webkit
-      - name: Render and inspect seven responsive dimensions in both browser engines
+      - name: Render and inspect ten responsive dimensions in both browser engines
         run: python3 tests/laboratory_browser_acceptance.py
+      - name: Verify candidate browser history and media privacy
+        run: python3 tests/cinematic_navigation_acceptance.py
       - name: Preserve screenshots for owner visual acceptance
         if: always()
         uses: actions/upload-artifact@v4

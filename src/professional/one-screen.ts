@@ -1,10 +1,11 @@
 /**
- * One-viewport client. This controls only the visual tab shell; live GitHub
+ * Shared section navigation for the viewport shell and long-scroll candidate; GitHub
  * and Spotify/GPT rendering remain the existing independent, consent-aware
  * professional clients. No telemetry or owner state is written here.
  */
 type TabName="systems"|"portfolio"|"home"|"experience"|"work"|"activity"|"writing"|"contact";
-const names:TabName[]=document.body.classList.contains("lab-body")?
+const laboratory=document.body.classList.contains("lab-body");
+const names:TabName[]=laboratory?
   ["home","experience","systems","work","portfolio","activity","writing","contact"]:
   ["home","experience","work","activity","writing","contact"];
 const tabs=[...document.querySelectorAll<HTMLButtonElement>("[data-one-target]")];
@@ -40,14 +41,21 @@ window.addEventListener("resize",fitGitHubFeedToViewport);
 const known=(value:string|null|undefined):value is TabName=>!!value&&names.includes(value as TabName);
 const currentHash=():TabName=>{
   let raw=location.hash.slice(1).toLowerCase();
-  if(document.body.classList.contains("lab-body")){
+  if(laboratory){
     raw=raw.replace(/^one-panel-/,"");
     raw=({research:"experience",projects:"work",fieldnotes:"writing"} as Record<string,string>)[raw]||raw;
   }
   return known(raw)?raw:"home";
 };
 let current:TabName="home";
+// The long-scroll candidate owns same-document history. Other variants keep
+// their existing replace-only tab shell and browser scroll behavior.
+if(laboratory)history.scrollRestoration="manual";
 function show(next:TabName,focus=false,updateUrl=true){
+  const changed=next!==current;
+  if(laboratory&&updateUrl&&changed){
+    history.replaceState({...history.state,laboratoryScrollY:window.scrollY},"");
+  }
   current=next;
   for(const panel of panels){
     const selected=panel.dataset.oneView===next;
@@ -63,8 +71,12 @@ function show(next:TabName,focus=false,updateUrl=true){
   }
   if(updateUrl){
     const suffix=next==="home"?"":"#"+next;
-    history.replaceState(null,"",location.pathname+location.search+suffix);
-    if(document.body.classList.contains("lab-body"))window.scrollTo({top:0,behavior:"instant"});
+    const url=location.pathname+location.search+suffix;
+    if(laboratory){
+      if(changed)history.pushState({laboratoryScrollY:0},"",url);
+      else history.replaceState(history.state,"",url);
+      window.scrollTo({top:0,behavior:"instant"});
+    }else history.replaceState(null,"",url);
   }
 }
 tabs.forEach(tab=>{
@@ -86,9 +98,18 @@ tabs.forEach(tab=>{
   });
 });
 buttons.forEach(button=>button.addEventListener("click",event=>{
+  if(button instanceof HTMLAnchorElement&&event instanceof MouseEvent&&
+      (event.metaKey||event.ctrlKey||event.shiftKey||event.altKey||event.button!==0))return;
   const next=button.dataset.oneGo||"";
   if(known(next)){event.preventDefault();show(next,true);}
 }));
-window.addEventListener("hashchange",()=>show(currentHash(),false,false));
-window.addEventListener("popstate",()=>show(currentHash(),false,false));
+function restoreLocation(){
+  show(currentHash(),laboratory,false);
+  if(laboratory){
+    const saved=history.state?.laboratoryScrollY;
+    window.scrollTo({top:typeof saved==="number"&&Number.isFinite(saved)&&saved>=0?saved:0,behavior:"instant"});
+  }
+}
+window.addEventListener("hashchange",restoreLocation);
+window.addEventListener("popstate",restoreLocation);
 show(currentHash(),false,false);

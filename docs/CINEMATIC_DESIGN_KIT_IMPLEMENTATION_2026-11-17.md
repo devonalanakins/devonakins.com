@@ -78,3 +78,19 @@ Local host libraries for the pinned WebKit build were extracted to `/tmp` and it
 Static preview screenshots show real GitHub browser-fallback history where available (WebKit), otherwise explicit source unavailable; no verified editor session, unavailable Spotify playback, and unavailable/unshared Threads posts. This is not a claim that production integrations are disconnected. Existing consent/expiry/privacy behavior is preserved and tested; no provider credentials or policy were changed.
 
 Exact-head remote CI and physical iPhone review remain independent acceptance gates. Original art geometry and accessible mobile density differ from the raster concept as disclosed above. Legacy analytics retirement is prepared as a plan, not a production migration. No merge, deploy or production change performed.
+
+## Continuation: navigation and playback-art privacy
+
+Recovered after the interrupted tool call: the working tree was clean at `60c1d83`, and the no-referrer patch had not applied. Both push and pull-request verification/candidate jobs for that exact head were subsequently observed **successful**.
+
+Implemented next:
+
+- Candidate section changes create browser history entries; Back/Forward restores the previous section, focus and saved document scroll. Repeated selection of the current section does not create duplicate history. Existing query strings, public aliases and legacy deep links are preserved. Other site variants keep their replace-only navigation behavior.
+- Modified clicks on destination/CTA anchors retain native new-tab behavior. The native modal dismisses before history restoration so the visitor cannot remain trapped over a different section.
+- Compact playback artwork preserves the original no-referrer policy, lazy loading and asynchronous decode. A synthetic test intercepts the actual outgoing cover request and observes no Referer header. Changing sharing to hidden clears track text and the image source; fixture metadata is never used in public screenshots.
+- Changing the system reduced-motion setting updates the toggle and clears its disabled-state tooltip when motion is permitted again.
+- Added `tests/cinematic_navigation_acceptance.py` to the existing candidate CI job; corrected the matrix step label to ten viewport sizes. Deployment and credential permissions are unchanged.
+
+Pinned Playwright 1.57.0, Chromium and WebKit passed focused browser checks at 1536×720 and 390×844, including real modified-click new tabs, direct/reloaded deep links, saved scroll, modal Back behavior, dynamic reduced motion, outgoing image privacy and consent revocation. The existing source/math tests and TypeScript check passed. Final default build and all 81 test files passed. Exact-head remote checks are recorded in PR #126 after completion. Visual assets/layout are unchanged; existing screenshots remain representative and CI rerenders the ten-size matrix.
+
+The GitHub advisory record for GHSA-fc5q-39xc-vjpf was read again and lists affected picomatch versions `<=4.0.7` with **no first patched version**. No guessed override or unrelated Vite major change was introduced. Production dependency audit was previously clear; the development-tooling advisory remains disclosed.
