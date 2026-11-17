@@ -69,15 +69,6 @@ try:
                         for i in range(6):
                             rect = buttons.nth(i).bounding_box()
                             assert rect and rect['x'] >= -1 and rect['x'] + rect['width'] <= width + 1
-                        scroll = page.locator('.lab-observatory').evaluate("""el => ({
-                            overflow: getComputedStyle(el).overflowY,
-                            height: el.clientHeight,
-                            full: el.scrollHeight
-                        })""")
-                        assert scroll["overflow"] in ("auto", "scroll"), (engine_name, width, scroll)
-                        if scroll["full"] > scroll["height"] + 5:
-                            page.locator('.lab-observatory').evaluate('el => { el.scrollTop = el.scrollHeight; }')
-                            assert page.locator('.lab-observatory').evaluate('el => el.scrollTop') > 0
                     else:
                         assert desktop_nav.is_visible(), (engine_name, width, 'desktop nav hidden')
                         assert mobile_nav.is_hidden(), (engine_name, width, 'mobile nav visible')
@@ -100,6 +91,18 @@ try:
                     assert geometry["headingHeight"] > 35
                     page.wait_for_timeout(400)  # CSS entrance settles before visual evidence
                     page.screenshot(path=str(OUT / f"{engine_name}-home-{width}x{height}.png"))
+                    if width <= 760:
+                        assert page.locator('.lab-evidence-note').is_hidden()
+                        scroll = page.locator('.lab-observatory').evaluate("""el => ({
+                            overflow: getComputedStyle(el).overflowY,
+                            height: el.clientHeight,
+                            full: el.scrollHeight
+                        })""")
+                        assert scroll["overflow"] in ("auto", "scroll"), (engine_name, width, scroll)
+                        if scroll["full"] > scroll["height"] + 5:
+                            page.locator('.lab-observatory').evaluate('el => { el.scrollTop = el.scrollHeight; }')
+                            assert page.locator('.lab-observatory').evaluate('el => el.scrollTop') > 0
+                        page.screenshot(path=str(OUT / f"{engine_name}-observatory-scrolled-{width}x{height}.png"))
                     nav = ("mobile" if width <= 760 else "desktop")
                     page.locator(f'.lab-tabs-{nav} [data-one-target="experience"]').click()
                     assert page.locator('[data-one-view="experience"]').is_visible()
