@@ -3,6 +3,7 @@ import { existsSync } from "node:fs";
 import { execFileSync } from "node:child_process";
 import {renderProfessionalPage, renderProfessionalProjectPage, PROFESSIONAL_ROUTES} from "../src/professional/site.mjs";
 import {renderOneScreenHome} from "../src/professional/one-screen.mjs";
+import {renderResearchFacilityHome} from "../src/professional/research-facility.mjs";
 import { pages } from "../src/content.mjs";
 import { approvedPublicProjects as projects } from "../src/publication-manifest.mjs";
 import { promotePortraitHome } from "../src/portrait-home.mjs";
@@ -34,6 +35,11 @@ const v5Candidate = process.env.V5_PUBLIC_HOME_CANDIDATE === "1";
 const professionalCandidate = process.env.PROFESSIONAL_SITE_CANDIDATE === "1";
 // Explicit preview-only homepage design. Protected production defaults remain unchanged.
 const oneScreenCandidate = process.env.ONE_SCREEN_SITE_CANDIDATE === "1";
+// Review-only scientific identity. No change to the protected default V4.
+const laboratoryCandidate = process.env.LABORATORY_SITE_CANDIDATE === "1";
+if (laboratoryCandidate && (oneScreenCandidate || professionalCandidate || fullV5Candidate || v5Candidate)) {
+  throw new Error("Select only one public website design candidate per build");
+}
 // The cinematic film is a deterministic first-party build asset only for the
 // selected one-screen candidate. Baseline V4 and other variants are unchanged.
 if(oneScreenCandidate && process.env.SKIP_LIVING_ATMOSPHERE !== "1") {
@@ -58,7 +64,7 @@ function repairProfessionalLegacyNavigation(html) {
   });
 }
 
-await writeFile("index.html", oneScreenCandidate ? renderOneScreenHome({datedCapture:datedGptCapture,motionAssetAvailable}) : professionalCandidate ? renderProfessionalPage("home",publicGptContext) : fullV5Candidate ? renderV5PublicPage("home") : v5Candidate ? renderV5PublicHomepage() : home);
+await writeFile("index.html", laboratoryCandidate ? renderResearchFacilityHome({datedCapture:datedGptCapture}) : oneScreenCandidate ? renderOneScreenHome({datedCapture:datedGptCapture,motionAssetAvailable}) : professionalCandidate ? renderProfessionalPage("home",publicGptContext) : fullV5Candidate ? renderV5PublicPage("home") : v5Candidate ? renderV5PublicHomepage() : home);
 const all = [...new Set([
   ...pages.map(({ path }) => path),
   ...(professionalCandidate ? [...professionalPaths.keys()] : []),
@@ -93,5 +99,5 @@ await writeFile(
     "</urlset>",
 );
 console.log("Generated " + all.length + " public HTML routes (" +
-  (v5Candidate ? "V5 homepage release candidate, V4 deep links preserved" :
+  (laboratoryCandidate ? "computational laboratory review candidate, V4 deep links preserved" : v5Candidate ? "V5 homepage release candidate, V4 deep links preserved" :
     "verified V4 homepage and deep links") + ").");
