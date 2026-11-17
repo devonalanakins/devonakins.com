@@ -54,6 +54,24 @@ try:
                     assert page.locator('[data-one-view]').count() == 6
                     assert page.locator('[data-one-view="home"]').is_visible()
                     assert page.locator('[data-one-view="work"]').is_hidden()
+                    desktop_nav = page.locator('.lab-header .lab-tabs-desktop')
+                    mobile_nav = page.locator('body > .lab-tabs-mobile')
+                    if width <= 760:
+                        assert desktop_nav.is_hidden(), (engine_name, width, 'duplicate top nav')
+                        assert mobile_nav.is_visible(), (engine_name, width, 'missing mobile nav')
+                        bar = mobile_nav.bounding_box()
+                        assert bar and bar['height'] <= 67 and bar['y'] >= height - 75, (
+                            engine_name, width, bar)
+                        buttons = mobile_nav.locator('[data-one-target]')
+                        assert buttons.count() == 6
+                        rows = [buttons.nth(i).bounding_box()['y'] for i in range(6)]
+                        assert max(rows) - min(rows) < 12, (engine_name, width, rows)
+                        for i in range(6):
+                            rect = buttons.nth(i).bounding_box()
+                            assert rect and rect['x'] >= -1 and rect['x'] + rect['width'] <= width + 1
+                    else:
+                        assert desktop_nav.is_visible(), (engine_name, width, 'desktop nav hidden')
+                        assert mobile_nav.is_hidden(), (engine_name, width, 'mobile nav visible')
                     geometry = page.evaluate("""() => {
                         const el = document.querySelector('.lab-intro h1');
                         const box = el.getBoundingClientRect();
