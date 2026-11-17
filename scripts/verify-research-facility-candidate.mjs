@@ -10,7 +10,7 @@ assert.match(html,/lab-overview/);
 assert.match(html,/Mathematical Field/);
 assert.match(html,/data-public-github-feed/);
 assert.match(html,/data-public-spotify/);
-assert.match(html,/data-public-gpt/);
+assert.match(html,/Owner recording · dated, not live/);
 assert.doesNotMatch(html,/headshot-concept\.webp|PRIVATE REPO CONTENT|fictional live work/i);
 for(const route of ['/work/','/about/','/gpt/','/contact/']){
   const response=await get(route);
