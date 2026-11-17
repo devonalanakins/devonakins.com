@@ -48,6 +48,10 @@ test('the candidate uses first-party interactions and an explicit build gate',as
   assert.match(stylesheet,/prefers-reduced-motion:\s*reduce/);
   assert.match(stylesheet,/focus-visible/);
   assert.doesNotMatch(stylesheet,/@import|url\(\s*["']?https?:|https:\/\/fonts\./);
+  assert.match(stylesheet,/\/professional\/laboratory-chamber\.svg/);
+  const chamber=await readFile(new URL('../public/professional/laboratory-chamber.svg',import.meta.url),'utf8');
+  assert.match(chamber,/viewBox="0 0 960 1240"/);
+  assert.doesNotMatch(chamber,/<script|<image|href="https?:|data:image\//i);
   assert.match(client,/data-lab-axis/);
   assert.match(client,/data-lab-curve/);
   assert.match(client,/Math\.sin/);
