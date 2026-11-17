@@ -14,6 +14,8 @@ export function manualReleaseError({
   professionalConfirmation = "",
   oneScreenBuildFlag = "0",
   oneScreenConfirmation = "",
+  laboratoryBuildFlag = "0",
+  laboratoryConfirmation = "",
   githubOidcAction = "preserve",
   githubOidcConfirmation = "",
   threadsPublishAction = "preserve",
@@ -49,6 +51,17 @@ export function manualReleaseError({
     return "Threads publication changes require the protected one-screen release.";
   if (threadsPublishAction !== "preserve" && githubOidcAction !== "preserve")
     return "Threads publication cannot be combined with GitHub OIDC source changes.";
+  if(releaseVariant!=="laboratory"&&(laboratoryBuildFlag!=="0"||laboratoryConfirmation))
+    return "Laboratory flags or confirmation cannot leak into another release variant.";
+  if(releaseVariant==="laboratory"){
+    if(laboratoryBuildFlag!=="1"||v5BuildFlag!=="0"||professionalBuildFlag!=="0"||oneScreenBuildFlag!=="0")
+      return "Laboratory release requires its exclusive build flag and all older variants off.";
+    if(v5Confirmation||professionalConfirmation||oneScreenConfirmation)
+      return "Laboratory release cannot carry another cutover confirmation.";
+    if(laboratoryConfirmation!=="LABORATORY-CUTOVER-APPROVED")
+      return "Laboratory release requires exact LABORATORY-CUTOVER-APPROVED confirmation after owner authorization and release verification.";
+    return null;
+  }
   if (releaseVariant === "v4") {
     if (v5BuildFlag !== "0" || professionalBuildFlag !== "0" || oneScreenBuildFlag !== "0")
       return "The V4 release must use the V4 build. Do not enable V5, professional or one-screen during a V4 hotfix.";
@@ -85,7 +98,7 @@ export function manualReleaseError({
       return "One-screen cutover requires exact ONE-SCREEN-CUTOVER-APPROVED confirmation after visual review and a tested main commit.";
     return null;
   }
-  return "release_variant must be v4, v5, professional, or one-screen."
+  return "release_variant must be v4, v5, professional, or one-screen, or laboratory."
 }
 
 // Workflow-only CLI. Never contacts providers or prints tokens.
@@ -106,6 +119,8 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === resolve(process.argv[1
       professionalConfirmation: process.env.PROFESSIONAL_CONFIRMATION,
       oneScreenBuildFlag: process.env.ONE_SCREEN_SITE_CANDIDATE,
       oneScreenConfirmation: process.env.ONE_SCREEN_CONFIRMATION,
+      laboratoryBuildFlag: process.env.LABORATORY_SITE_CANDIDATE || "0",
+      laboratoryConfirmation: process.env.LABORATORY_CONFIRMATION || "",
       githubOidcAction: process.env.GITHUB_OIDC_ACTION || "preserve",
       githubOidcConfirmation: process.env.GITHUB_OIDC_CONFIRMATION || "",
       threadsPublishAction: process.env.THREADS_PUBLICATION_ACTION || "preserve",

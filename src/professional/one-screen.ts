@@ -1,3 +1,4 @@
+import {LABORATORY_ROUTES,laboratoryViewForPath} from "./laboratory-routes.mjs";
 /**
  * Shared section navigation for the viewport shell and long-scroll candidate; GitHub
  * and Spotify/GPT rendering remain the existing independent, consent-aware
@@ -45,18 +46,29 @@ const currentHash=():TabName=>{
     raw=raw.replace(/^one-panel-/,"");
     raw=({research:"experience",projects:"work",fieldnotes:"writing"} as Record<string,string>)[raw]||raw;
   }
-  return known(raw)?raw:"home";
+  const route=laboratory?laboratoryViewForPath(location.pathname):null;
+  return known(raw)?raw:known(route)?route:laboratory&&known(document.body.dataset.labInitial)?document.body.dataset.labInitial:"home";
 };
 let current:TabName="home";
 // The long-scroll candidate owns same-document history. Other variants keep
 // their existing replace-only tab shell and browser scroll behavior.
 if(laboratory)history.scrollRestoration="manual";
 function show(next:TabName,focus=false,updateUrl=true){
+  if(laboratory&&updateUrl&&document.body.dataset.labNative==='true'){
+    location.assign(LABORATORY_ROUTES[next]+location.search);return;
+  }
   const changed=next!==current;
   if(laboratory&&updateUrl&&changed){
     history.replaceState({...history.state,laboratoryScrollY:window.scrollY},"");
   }
   current=next;
+  if(laboratory&&document.body.dataset.labNative!=='true'){
+    const label=document.querySelector<HTMLElement>('[data-one-target="'+next+'"] .one-tab-label')?.textContent?.trim()||'Portfolio';
+    const title=next==='home'?'Devon Alan Akins — Software, Systems & Research':label+' — Devon Alan Akins';
+    document.title=title;
+    document.querySelector('meta[property="og:title"]')?.setAttribute('content',title);
+    document.querySelector('link[rel="canonical"]')?.setAttribute('href','https://devonakins.com'+LABORATORY_ROUTES[next]);
+  }
   for(const panel of panels){
     const selected=panel.dataset.oneView===next;
     panel.hidden=!selected;
@@ -71,7 +83,7 @@ function show(next:TabName,focus=false,updateUrl=true){
   }
   if(updateUrl){
     const suffix=next==="home"?"":"#"+next;
-    const url=location.pathname+location.search+suffix;
+    const url=laboratory?LABORATORY_ROUTES[next]+location.search:location.pathname+location.search+suffix;
     if(laboratory){
       if(changed)history.pushState({laboratoryScrollY:0},"",url);
       else history.replaceState(history.state,"",url);
@@ -103,13 +115,27 @@ buttons.forEach(button=>button.addEventListener("click",event=>{
   const next=button.dataset.oneGo||"";
   if(known(next)){event.preventDefault();show(next,true);}
 }));
+let historyFrame=0;
 function restoreLocation(){
-  show(currentHash(),laboratory,false);
+  const next=currentHash();
+  show(next,false,false);
   if(laboratory){
     const saved=history.state?.laboratoryScrollY;
-    window.scrollTo({top:typeof saved==="number"&&Number.isFinite(saved)&&saved>=0?saved:0,behavior:"instant"});
+    const top=typeof saved==="number"&&Number.isFinite(saved)&&saved>=0?saved:0;
+    cancelAnimationFrame(historyFrame);
+    historyFrame=requestAnimationFrame(()=>{
+      if(currentHash()!==next)return;
+      document.querySelector<HTMLElement>('[data-one-view="'+next+'"]')?.focus({preventScroll:true});
+      window.scrollTo({top,behavior:"instant"});
+    });
   }
 }
 window.addEventListener("hashchange",restoreLocation);
 window.addEventListener("popstate",restoreLocation);
+if(laboratory){
+  window.addEventListener("pagehide",()=>history.replaceState({...history.state,laboratoryScrollY:window.scrollY},""));
+  window.addEventListener("pageshow",event=>{
+    if(event.persisted||typeof history.state?.laboratoryScrollY==="number")restoreLocation();
+  });
+}
 show(currentHash(),false,false);

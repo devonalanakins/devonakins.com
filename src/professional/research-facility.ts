@@ -43,7 +43,7 @@ function syncMotion(){
   for(const motion of motions){
     motion.setAttribute('aria-pressed',String(running));
     motion.textContent=motion.hasAttribute('data-lab-motion-footer')?(running?'Pause motion':'Resume motion'):(running?'MOTION ON':'MOTION OFF');
-    motion.setAttribute('aria-label',running?'Pause decorative motion':'Resume decorative motion');
+    motion.setAttribute('aria-label',running?'MOTION ON — Pause decorative motion':'MOTION OFF — Resume decorative motion');
     motion.disabled=reduce.matches;
     motion.title=reduce.matches?'Reduced motion is enabled in system settings':'';
   }

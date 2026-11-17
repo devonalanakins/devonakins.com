@@ -16,6 +16,7 @@ on:
           - v5
           - professional
           - one-screen
+          - laboratory
         default: v4
       v5_confirmation:
         description: V5 only - enter V5-CUTOVER-APPROVED after final release acceptance
@@ -27,6 +28,10 @@ on:
         type: string
       one_screen_confirmation:
         description: One-screen only - enter ONE-SCREEN-CUTOVER-APPROVED after final release acceptance
+        required: false
+        type: string
+      laboratory_confirmation:
+        description: Cinematic site only - enter LABORATORY-CUTOVER-APPROVED after owner release authorization
         required: false
         type: string
       github_oidc_action:
@@ -64,11 +69,12 @@ jobs:
   deploy:
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-24.04
-    timeout-minutes: 20
+    timeout-minutes: 35
     environment: production
     # Also inherited by wrangler's configured build command: a V5 build
     # must not silently turn back into V4 during deployment.
     env:
+      LABORATORY_SITE_CANDIDATE: ${{ inputs.release_variant == 'laboratory' && '1' || '0' }}
       V5_PUBLIC_SITE_CANDIDATE: ${{ inputs.release_variant == 'v5' && '1' || '0' }}
       PROFESSIONAL_SITE_CANDIDATE: ${{ (inputs.release_variant == 'professional' || inputs.release_variant == 'one-screen') && '1' || '0' }}
       ONE_SCREEN_SITE_CANDIDATE: ${{ inputs.release_variant == 'one-screen' && '1' || '0' }}
@@ -86,6 +92,7 @@ jobs:
         env:
           EXPECTED_SHA: ${{ inputs.expected_sha }}
           RELEASE_VARIANT: ${{ inputs.release_variant }}
+          LABORATORY_CONFIRMATION: ${{ inputs.laboratory_confirmation }}
           V5_CONFIRMATION: ${{ inputs.v5_confirmation }}
           PROFESSIONAL_CONFIRMATION: ${{ inputs.professional_confirmation }}
           ONE_SCREEN_CONFIRMATION: ${{ inputs.one_screen_confirmation }}
@@ -109,8 +116,9 @@ jobs:
           # Existing V4 tests assert V4 markup and stay mandatory for BOTH
           # release variants. A V5 production run must not execute them against
           # generated V5 HTML or bypass them entirely.
-          PROFESSIONAL_SITE_CANDIDATE=0 ONE_SCREEN_SITE_CANDIDATE=0 V5_PUBLIC_SITE_CANDIDATE=0 npm run build
-          PROFESSIONAL_SITE_CANDIDATE=0 ONE_SCREEN_SITE_CANDIDATE=0 V5_PUBLIC_SITE_CANDIDATE=0 npm test
+          LABORATORY_SITE_CANDIDATE=0 PROFESSIONAL_SITE_CANDIDATE=0 ONE_SCREEN_SITE_CANDIDATE=0 V5_PUBLIC_SITE_CANDIDATE=0 npm run build
+          LABORATORY_SITE_CANDIDATE=0 PROFESSIONAL_SITE_CANDIDATE=0 ONE_SCREEN_SITE_CANDIDATE=0 V5_PUBLIC_SITE_CANDIDATE=0 npm test
+          node --check scripts/verify-live-laboratory.mjs
           node --check scripts/verify-live.mjs
           node --check scripts/verify-live-v5.mjs
           node --check scripts/verify-live-professional.mjs
@@ -132,6 +140,27 @@ jobs:
             PROFESSIONAL_SITE_CANDIDATE=1 ONE_SCREEN_SITE_CANDIDATE=1 V5_PUBLIC_SITE_CANDIDATE=0 npm run build
             node scripts/verify-one-screen-candidate.mjs
           fi
+          if [ "$LABORATORY_SITE_CANDIDATE" = '1' ]; then
+            LABORATORY_SITE_CANDIDATE=1 npm run build
+            node scripts/verify-research-facility-candidate.mjs
+          fi
+      - uses: actions/setup-python@v5
+        if: inputs.release_variant == 'laboratory'
+        with:
+          python-version: '3.13'
+      - name: Verify exact-main cinematic release in pinned browsers before deployment
+        if: inputs.release_variant == 'laboratory'
+        run: |
+          python3 -m pip install --disable-pip-version-check playwright==1.57.0
+          python3 -m playwright install --with-deps chromium webkit
+          LABORATORY_RUNTIME_BROWSER_CHECK=1 node scripts/verify-laboratory-runtime.mjs
+      - name: Preserve cinematic production release evidence
+        if: always() && inputs.release_variant == 'laboratory'
+        uses: actions/upload-artifact@v4
+        with:
+          name: cinematic-release-evidence
+          path: browser-qa/laboratory/
+          retention-days: 14
       - name: Verify approved GitHub repository links remain public
         env:
           GITHUB_TOKEN: ${{ github.token }}
@@ -163,7 +192,9 @@ jobs:
         env:
           EXPECTED_COMMIT: ${{ github.sha }}
         run: |
-          if [ "$ONE_SCREEN_SITE_CANDIDATE" = '1' ]; then
+          if [ "$LABORATORY_SITE_CANDIDATE" = '1' ]; then
+            node scripts/verify-live-laboratory.mjs
+          elif [ "$ONE_SCREEN_SITE_CANDIDATE" = '1' ]; then
             node scripts/verify-live-one-screen.mjs
           elif [ "$PROFESSIONAL_SITE_CANDIDATE" = '1' ]; then
             node scripts/verify-live-professional.mjs
@@ -172,6 +203,20 @@ jobs:
           else
             node scripts/verify-live.mjs
           fi
+      - name: Verify live cinematic rendering and navigation in both engines
+        if: inputs.release_variant == 'laboratory'
+        env:
+          LABORATORY_TEST_ORIGIN: https://devonakins.com
+        run: |
+          python3 tests/laboratory_browser_acceptance.py
+          python3 tests/cinematic_navigation_acceptance.py
+      - name: Preserve live cinematic browser evidence
+        if: always() && inputs.release_variant == 'laboratory'
+        uses: actions/upload-artifact@v4
+        with:
+          name: cinematic-live-browser-evidence
+          path: browser-qa/laboratory/
+          retention-days: 14
       - name: Verify live read-only Threads feed or owner-triggered hiding
         if: inputs.threads_publication_action != 'preserve'
         env:

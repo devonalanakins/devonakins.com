@@ -3,6 +3,7 @@ import { existsSync } from "node:fs";
 import { execFileSync } from "node:child_process";
 import {renderProfessionalPage, renderProfessionalProjectPage, PROFESSIONAL_ROUTES} from "../src/professional/site.mjs";
 import {renderOneScreenHome} from "../src/professional/one-screen.mjs";
+import {LABORATORY_ROUTES,LABORATORY_REDIRECTS,laboratoryViewForPath} from "../src/professional/laboratory-routes.mjs";
 import {renderResearchFacilityHome} from "../src/professional/research-facility.mjs";
 import { pages } from "../src/content.mjs";
 import { approvedPublicProjects as projects } from "../src/publication-manifest.mjs";
@@ -67,6 +68,7 @@ function repairProfessionalLegacyNavigation(html) {
 await writeFile("index.html", laboratoryCandidate ? renderResearchFacilityHome({datedCapture:datedGptCapture}) : oneScreenCandidate ? renderOneScreenHome({datedCapture:datedGptCapture,motionAssetAvailable}) : professionalCandidate ? renderProfessionalPage("home",publicGptContext) : fullV5Candidate ? renderV5PublicPage("home") : v5Candidate ? renderV5PublicHomepage() : home);
 const all = [...new Set([
   ...pages.map(({ path }) => path),
+  ...(laboratoryCandidate?[...Object.values(LABORATORY_ROUTES),...Object.keys(LABORATORY_REDIRECTS),"/listening/"]:[]),
   ...(professionalCandidate ? [...professionalPaths.keys()] : []),
   ...projects.map((project) => "/work/" + project.slug + "/"),
   "/404/",
@@ -79,7 +81,9 @@ for (const path of all) {
   const routeKey=Object.keys(V5_PUBLIC_ROUTES).find(key=>V5_PUBLIC_ROUTES[key]===path);
   const topic=publicNotes.find(n=>path==="/knowledge/"+n.slug+"/");
   const project=projects.find(p=>path==="/work/"+p.slug+"/");
-  const html=professionalCandidate && professionalPaths.has(path) ? renderProfessionalPage(professionalPaths.get(path),publicGptContext) :
+  const laboratoryPath=LABORATORY_REDIRECTS[path]||path;
+  const laboratoryView=laboratoryViewForPath(laboratoryPath)||'portfolio';
+  const html=laboratoryCandidate?renderResearchFacilityHome({initialView:project?'portfolio':path==='/listening/'?'activity':path==='/404/'?'home':laboratoryView,canonicalPath:project?path:laboratoryPath,project,listening:path==='/listening/',notFound:path==='/404/'}):professionalCandidate && professionalPaths.has(path) ? renderProfessionalPage(professionalPaths.get(path),publicGptContext) :
     fullV5Candidate && routeKey ? renderV5PublicPage(routeKey) :
     fullV5Candidate && topic ? renderV5PublicPage("knowledge",{topic:topic.slug,publicPath:path}) :
     professionalCandidate && project ? renderProfessionalProjectPage(project.slug) :
@@ -93,11 +97,11 @@ await writeFile(
   "public/sitemap.xml",
   '<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">' +
     all
-      .filter((path) => path !== "/404/")
+      .filter((path) => path !== "/404/" && (!laboratoryCandidate||!Object.hasOwn(LABORATORY_REDIRECTS,path)))
       .map((path) => '<url><loc>https://devonakins.com' + path + "</loc></url>")
       .join("") +
     "</urlset>",
 );
 console.log("Generated " + all.length + " public HTML routes (" +
-  (laboratoryCandidate ? "computational laboratory review candidate, V4 deep links preserved" : v5Candidate ? "V5 homepage release candidate, V4 deep links preserved" :
+  (laboratoryCandidate ? "cinematic laboratory site, legacy destinations mapped reversibly" : v5Candidate ? "V5 homepage release candidate, V4 deep links preserved" :
     "verified V4 homepage and deep links") + ").");

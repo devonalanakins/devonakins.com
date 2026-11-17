@@ -77,7 +77,7 @@ function renderListening(value:unknown){
         link.target="_blank";
         link.rel="noopener noreferrer";
       }else{
-        link.textContent="About listening ↗";
+        link.textContent=card.dataset.spotifyPresentation==="listening"?"View public activity ↗":"About listening ↗";
         link.removeAttribute("target");
         link.removeAttribute("rel");
       }

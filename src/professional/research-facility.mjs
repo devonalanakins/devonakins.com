@@ -3,6 +3,8 @@
  * Deliberately separate from the production V4 and approved one-screen builds.
  * Mathematical figures are analytic, not measured experiments or live telemetry.
  */
+import {LABORATORY_ROUTES} from './laboratory-routes.mjs';
+import {listeningCollections} from './signal-cards.mjs';
 import {brandIcon} from './brand-icons.mjs';
 import {approvedPublicProjects} from '../publication-manifest.mjs';
 import {renderHomeSocialHub, renderThreadsPreview, renderSocialChannels, THREADS_PROFILE_URL} from './social-presence.mjs';
@@ -26,23 +28,23 @@ export function lissajousPath(a=3,b=4,phase=Math.PI/2) {
   });
   return points.join(' ');
 }
-function nav(kind){
+function renderNavigation(kind,activeView){
   return '<nav class="one-tabs lab-tabs lab-tabs-'+kind+'" aria-label="'+
     (kind==='desktop'?'Laboratory navigation':'Mobile laboratory navigation')+'">'+
     '<div class="one-tablist" role="tablist" aria-label="Laboratory sections">'+
     sections.filter(([key])=>kind==='mobile'||!['activity','contact'].includes(key)).map(([key,label])=>'<button type="button" role="tab" id="one-'+kind+'-'+key+
-      '" aria-controls="one-panel-'+key+'" aria-selected="'+(key==='home'?'true':'false')+
-      '" tabindex="'+(key==='home'?'0':'-1')+'" data-one-target="'+key+'">'+
+      '" aria-controls="one-panel-'+key+'" aria-selected="'+(key===activeView?'true':'false')+
+      '" tabindex="'+(key===activeView?'0':'-1')+'" data-one-target="'+key+'">'+
       '<span class="one-tab-label">'+escapeHtml(label)+'</span></button>').join('')+
     '</div></nav>';
 }
-function view(key,content){
+function renderView(key,content,activeView){
   return '<section class="one-view lab-view lab-view-'+key+'" id="one-panel-'+key+
     '" data-one-view="'+key+'" aria-label="'+sections.find(([id])=>id===key)[1]+
-    '" role="tabpanel" tabindex="-1"'+(key==='home'?'':' hidden')+'>'+content+'</section>';
+    '" role="tabpanel" tabindex="-1"'+(key===activeView?'':' hidden')+'>'+content+'</section>';
 }
 function goto(key,label,primary=false){
-  return '<a href="#one-panel-'+key+'" class="lab-action'+(primary?' lab-action-primary':'')+
+  return '<a href="'+LABORATORY_ROUTES[key]+'" class="lab-action'+(primary?' lab-action-primary':'')+
     '" data-one-go="'+key+'">'+escapeHtml(label)+' <span aria-hidden="true">→</span></a>';
 }
 function feed(id,limit){
@@ -96,7 +98,7 @@ const destinations=[
 ];
 function destinationCards(){
  return destinations.map(([key,title,description,art,path])=>
- '<a class="lab-destination" href="#one-panel-'+key+'" data-one-go="'+key+'" data-lab-destination="'+key+'">'+
+ '<a class="lab-destination" href="'+LABORATORY_ROUTES[key]+'" data-one-go="'+key+'" data-lab-destination="'+key+'">'+
  '<img src="/professional/cinematic/'+art+'.webp" alt="" width="500" height="300" loading="lazy" decoding="async">'+
  '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none"><path d="'+path+'" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/></svg>'+
  '<div><strong>'+title+'</strong><small>'+description+'</small></div><b aria-hidden="true">→</b></a>').join('');
@@ -111,8 +113,14 @@ function compactSignals(){return '<section class="lab-portfolio-signals" aria-la
  '<details class="lab-signal-tile lab-signal-threads" data-public-threads><summary><span class="lab-threads-mark" aria-hidden="true">@</span><span><strong>Threads</strong><small data-threads-state>Checking public source</small></span></summary><div class="lab-signal-expanded"><p data-threads-summary>Only approved public posts are displayed.</p><a data-threads-link href="'+THREADS_PROFILE_URL+'" target="_blank" rel="noopener noreferrer">Open Threads profile →</a><button data-one-go="activity">Full feed →</button></div></details>'+
  '</div></section>'}
 function projectCatalog(){return '<div class="lab-project-browser"><label for="lab-project-search">Search public projects</label><input type="search" id="lab-project-search" data-lab-project-search placeholder="Search by name or area"><label for="lab-project-filter">Area</label><select id="lab-project-filter" data-lab-project-filter><option value="all">All areas</option>'+[...new Set(approvedPublicProjects.map(p=>p.publication.category))].map(c=>'<option>'+escapeHtml(c)+'</option>').join('')+'</select><p role="status" data-lab-project-count>'+approvedPublicProjects.length+' public projects</p><div class="lab-system-grid">'+approvedPublicProjects.map(p=>'<a class="lab-system-card" data-lab-project data-category="'+escapeHtml(p.publication.category)+'" href="/work/'+p.slug+'/"><span>'+escapeHtml(p.publication.category)+' / '+escapeHtml(p.publication.stage)+'</span><h3>'+escapeHtml(p.title)+'</h3><p>'+escapeHtml(p.summary)+'</p><small>'+escapeHtml(p.status)+' · PUBLIC OVERVIEW →</small></a>').join('')+'</div></div>'}
-export function renderResearchFacilityHome(){
-  const introduction='Devon Alan Akins is an independent software developer pursuing scientific computing, computational modeling and open-source AI infrastructure.';
+export function renderResearchFacilityHome({initialView='home',canonicalPath='/',project=null,listening=false,notFound=false}={}){
+  if(project&&!approvedPublicProjects.includes(project))throw new Error('Project publication is not approved');
+  if(!Object.hasOwn(LABORATORY_ROUTES,initialView))throw new Error('Unknown cinematic view');
+  const view=(key,content)=>renderView(key,content,initialView);
+  const nav=kind=>renderNavigation(kind,initialView);
+  const pageTitle=project?project.title+' — Devon Alan Akins':notFound?'Page not found — Devon Alan Akins':listening?'Listening — Devon Alan Akins':initialView==='home'?'Devon Alan Akins — Software, Systems & Research':sections.find(([key])=>key===initialView)[1]+' — Devon Alan Akins';
+  const introductions={home:'Devon Alan Akins is an independent software developer pursuing scientific computing, computational modeling and open-source AI infrastructure.',experience:'Interactive mathematical models, scientific questions, assumptions and citations from Devon Alan Akins.',systems:'Documented software architecture, privacy boundaries and independent infrastructure engineering.',work:'Explore approved public software projects, source links, categories and honest implementation status.',portfolio:'Selected software, independent systems and nonclinical professional operations by Devon Alan Akins.',activity:'Source-qualified public GitHub history, development presence and approved public updates.',writing:'Mathematical explanations, engineering notes, original writing and books in development.',contact:'Contact Devon Alan Akins for software, research computing and nonclinical collaboration. Do not send protected information.'};
+  const introduction=project?project.summary:listening?'Owner-approved Spotify playback and selected public playlists, with independent source and privacy controls.':notFound?'This page is unavailable. Explore Devon Alan Akins’s public software and research portfolio.':introductions[initialView];
   const home=view('home',
  '<div class="lab-overview lab-portfolio-layout">'+
  '<section class="lab-portfolio-hero" aria-label="Personal portfolio introduction"><picture class="lab-scene"><source media="(max-width:760px)" srcset="/professional/cinematic/chamber-mobile.webp"><img src="/professional/cinematic/chamber-wide.webp" width="1672" height="941" alt="" fetchpriority="high" decoding="async"></picture><div class="lab-scene-light" aria-hidden="true"></div>'+
@@ -149,7 +157,7 @@ export function renderResearchFacilityHome(){
     studyCard('03','SOURCE INTEGRITY','Evidence before confidence','Versioned changes, automated checks and independent browser review make work inspectable. A passing test is evidence only for what it actually checks.','ENGINEERING PRACTICE')+
     studyCard('04','RESEARCH COMPUTING','Reproducible methods','Numerical correctness and documented assumptions come before performance claims. GPU benchmarks and scientific results remain proposed work.','RESEARCH DIRECTION')+
     '</div></div>');
-  const portfolio=view('portfolio',
+  const portfolio=view('portfolio',project?renderLaboratoryCaseStudy(project):
     '<div class="lab-secondary lab-systems"><div class="lab-section-intro"><p class="lab-overline">PORTFOLIO / SELECTED PRACTICE</p>'+
     '<h1>Software that supports <em>real work.</em></h1><p>Independent development and practical operations, with public scope and project maturity made explicit.</p></div>'+
     '<div class="lab-system-grid">'+
@@ -158,7 +166,7 @@ export function renderResearchFacilityHome(){
     '<a class="lab-system-card" href="https://github.com/devonalanakins/devonakins.com" target="_blank" rel="noopener noreferrer"><span>03 / WEB ENGINEERING</span><h3>DevonAkins.com</h3><p>Personal portfolio, research exploration and consent-aware public presence.</p><small>INSPECT PUBLIC SOURCE ↗</small></a>'+
     '<a class="lab-system-card" href="https://github.com/devonalanakins/merit" target="_blank" rel="noopener noreferrer"><span>04 / SOFTWARE INTEGRITY</span><h3>Merit</h3><p>Experimental tools for evidence-based software review.</p><small>EXPERIMENTAL PUBLIC SOURCE ↗</small></a>'+
     '</div></div>');
-  const activity=view('activity',
+  const activity=view('activity',listening?renderLaboratoryListening():
     '<div class="lab-secondary lab-activity"><div class="lab-section-intro">'+
       '<p class="lab-overline">ACTIVITY / WORK IN THE OPEN</p>'+
       '<h1>A visible record of <em>making.</em></h1>'+
@@ -176,7 +184,7 @@ export function renderResearchFacilityHome(){
     '<section class="lab-data-panel lab-threads">'+renderThreadsPreview()+'</section>'+
     '<section class="lab-data-panel lab-evidence-guide"><strong>SOURCE / INTEGRITY</strong>'+
     '<h2>Measured, not imagined.</h2><p>Recent public commits and pull requests are dated history. Development presence requires an owner-approved reporter. Playback reflects approved listening, not proof of coding. Posts appear only when public sharing is enabled.</p>'+
-    '<a class="lab-text-link" href="/activity/">Explore the full public activity page ↗</a>'+
+    '<a class="lab-text-link" href="https://github.com/devonalanakins">Inspect the public GitHub profile ↗</a>'+
     '</section></div></div></div>');
   const notes=view('writing',
     '<div class="lab-secondary lab-notes"><div class="lab-section-intro">'+
@@ -186,7 +194,7 @@ export function renderResearchFacilityHome(){
     '<article class="lab-study"><span>01 / MATHEMATICAL NOTE</span><h3>A curve is not a measurement</h3><p>The Research instrument evaluates x = sin(a·t), y = sin(b·t + π/2) over 0 ≤ t ≤ 2π. Integer frequencies close the trajectory over that interval. Changing their ratio changes the geometry.</p><details><summary>Read the assumptions</summary><p>Each coordinate is bounded by −1 and 1 before display scaling. The path joins 301 samples with straight segments; it is a visual approximation of an analytic curve. It contains no neural recordings and cannot establish anything about a biological system.</p></details><small>ANALYTIC EXPLANATION · NOT AN EXPERIMENT</small></article>'+
     '<article class="lab-study"><span>02 / ENGINEERING NOTE</span><h3>What a public signal proves</h3><p>A timestamped GitHub event records a public change. It does not establish an active editor session. Development presence comes from a separate owner-approved reporter.</p><details><summary>Read the evidence boundary</summary><p>Unavailable sources remain unavailable. Playback metadata describes approved listening; decorative graphics are illustrations. Project maturity, test results and release status must each have their own evidence.</p></details><small>PUBLIC SOURCE INTERPRETATION</small></article>'+
     studyCard('03','ORIGINAL WRITING','Books & worlds','Long-form creative work remains part of my life, without defining the technical research specialization.','ONGOING CREATIVE WORK')+
-    '</div><a class="lab-text-link" href="/writing/">Existing writing and research page ↗</a></div>');
+    '</div><a class="lab-text-link" href="/work/writing/">Books and manuscripts overview ↗</a></div>');
   const contact=view('contact',
     '<div class="lab-secondary lab-contact"><div class="lab-section-intro">'+
       '<p class="lab-overline">CONTACT / DEVON ALAN AKINS</p><h1>Let’s discuss a <em>real problem.</em></h1>'+
@@ -194,15 +202,15 @@ export function renderResearchFacilityHome(){
       '<a class="lab-contact-email" href="mailto:hello@devonakins.com">hello@devonakins.com <span aria-hidden="true">↗</span></a>'+
       '<p class="lab-secondary-note">Do not send confidential medical, patient, employee or other protected information through this public contact route.</p></div>'+
       '<div class="lab-contact-social">'+renderHomeSocialHub()+
-      '<a class="lab-text-link" href="/contact/">Full contact details ↗</a></div></div>');
+      '<a class="lab-text-link" href="mailto:hello@devonakins.com">Write to Devon ↗</a></div></div>');
   return '<!doctype html><html lang="en" class="one-html lab-html"><head>'+
     '<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">'+
     '<meta name="theme-color" content="#071013"><meta name="color-scheme" content="dark">'+
     '<meta name="description" content="'+escapeHtml(introduction)+'">'+
-    '<meta property="og:type" content="website"><meta property="og:title" content="Devon Alan Akins — Software, Systems & Research">'+
-    '<meta property="og:description" content="'+escapeHtml(introduction)+'">'+
-    '<link rel="canonical" href="https://devonakins.com/">'+
-    '<link rel="icon" href="/favicon-32.png"><title>Devon Alan Akins — Software, Systems & Research</title>'+
+    '<meta property="og:type" content="website"><meta property="og:title" content="'+escapeHtml(pageTitle)+'">'+
+    '<meta property="og:url" content="https://devonakins.com'+escapeHtml(canonicalPath)+'"><meta property="og:description" content="'+escapeHtml(introduction)+'">'+
+    '<link rel="canonical" href="https://devonakins.com'+escapeHtml(canonicalPath)+'">'+(notFound?'<meta name="robots" content="noindex">':'')+
+    '<link rel="icon" href="/favicon-32.png"><title>'+escapeHtml(pageTitle)+'</title>'+
     '<link rel="stylesheet" href="/src/professional/site.css">'+
     '<link rel="stylesheet" href="/src/professional/one-screen.css">'+
     '<link rel="stylesheet" href="/src/professional/social-presence.css">'+
@@ -212,14 +220,28 @@ export function renderResearchFacilityHome(){
     '<script type="module" src="/src/professional/one-screen.ts"></script>'+
     '<script type="module" src="/src/professional/research-facility.ts"></script>'+
     '<noscript><style>html.lab-html,body.lab-body{height:auto;overflow:auto}.lab-body .lab-stage{height:auto;overflow:visible}.lab-body .lab-stage>.lab-view[hidden]{display:block!important}.lab-body .lab-view{height:auto;min-height:100vh}.lab-body .lab-secondary{height:auto}.lab-tabs,.lab-motion,.lab-menu-toggle,.lab-desktop-menu{display:none!important}</style></noscript>'+
-    '</head><body class="p-body one-body lab-body">'+
+    '</head><body class="p-body one-body lab-body" data-lab-initial="'+initialView+'"'+(project||listening||notFound?' data-lab-native="true"':'')+'>'+
     '<a class="one-skip lab-skip" href="#one-stage">Skip to content</a>'+
     '<div class="lab-background" aria-hidden="true"><div class="lab-background-grid"></div>'+
     '<div class="lab-background-glow"></div></div>'+
-    '<header class="lab-header"><a href="/" class="lab-brand" aria-label="Devon Akins home">'+atomMark()+'<span class="lab-brand-caption">DEVONAKINS.COM<small>THE COMPUTATIONAL LABORATORY</small></span></a>'+nav('desktop')+'<div class="lab-header-end"><span class="lab-hatch" aria-hidden="true"></span><button type="button" class="lab-desktop-menu" data-lab-menu-open aria-controls="lab-menu" aria-expanded="false" aria-label="Open contact, activity and motion menu">DA / 001</button></div><button type="button" class="lab-menu-toggle" data-lab-menu-open aria-controls="lab-menu" aria-expanded="false" aria-label="Open navigation menu"><span></span><span></span><span></span></button></header>'+
-    '<dialog id="lab-menu" aria-labelledby="lab-menu-title"><div class="lab-menu-heading"><h2 id="lab-menu-title">Explore the laboratory</h2><button data-lab-menu-close aria-label="Close navigation menu">Close ×</button></div>'+nav('mobile')+'<button type="button" class="lab-motion" data-lab-motion aria-pressed="true">MOTION ON</button><a href="mailto:hello@devonakins.com">hello@devonakins.com</a></dialog>'+
+    '<header class="lab-header"><a href="/" class="lab-brand" title="Devon Alan Akins home">'+atomMark()+'<span class="lab-brand-caption">DEVONAKINS.COM<small>THE COMPUTATIONAL LABORATORY</small></span></a>'+nav('desktop')+'<div class="lab-header-end"><span class="lab-hatch" aria-hidden="true"></span><button type="button" class="lab-desktop-menu" data-lab-menu-open aria-controls="lab-menu" aria-expanded="false" aria-label="DA / 001 — Open contact, activity and motion menu">DA / 001</button></div><button type="button" class="lab-menu-toggle" data-lab-menu-open aria-controls="lab-menu" aria-expanded="false" aria-label="Open navigation menu"><span></span><span></span><span></span></button></header>'+
+    '<dialog id="lab-menu" aria-labelledby="lab-menu-title"><div class="lab-menu-heading"><h2 id="lab-menu-title">Explore the laboratory</h2><button data-lab-menu-close aria-label="Close navigation menu">Close <span aria-hidden="true">×</span></button></div>'+nav('mobile')+'<button type="button" class="lab-motion" data-lab-motion aria-pressed="true">MOTION ON</button><a href="mailto:hello@devonakins.com">hello@devonakins.com</a></dialog>'+
     '<main id="one-stage" class="one-stage lab-stage" tabindex="-1">'+
-    home+research+systems+projects+portfolio+activity+notes+contact+'</main>'+
+    (notFound?view('home','<div class="lab-secondary"><div class="lab-section-intro"><p class="lab-overline">404 / WAYFINDING</p><h1>That page is <em>not here.</em></h1><p>Explore the public portfolio or return to the laboratory.</p><a class="lab-action" href="/">Return home →</a></div></div>'):home)+research+systems+projects+portfolio+activity+notes+contact+'</main>'+
     '<footer class="lab-footer"><div class="lab-footer-identity"><span>DA / 001</span><small>SCIENCE / SOFTWARE / SYSTEMS / EXPLORATION</small></div>'+renderSocialChannels(true)+'<div class="lab-footer-status"><span aria-hidden="true"></span>LABORATORY ONLINE<small>Website available · decorative research environment</small></div></footer>'+
     '</body></html>';
+}
+
+function renderLaboratoryCaseStudy(project){
+  const p=project;
+  const text=value=>escapeHtml(value||'');
+  const source=p.url&&p.publication?.sourceLinkApproved===true?'<a class="lab-action" href="'+text(p.url)+'" target="_blank" rel="noopener noreferrer">Inspect public source →</a>':'';
+  return '<article class="lab-secondary lab-case-study"><div class="lab-section-intro"><p class="lab-overline">PORTFOLIO / '+text(p.publication.category)+'</p><h1>'+text(p.title)+'</h1><p>'+text(p.summary)+'</p><div class="lab-portfolio-actions"><a class="lab-action lab-action-primary" href="/projects/">All public projects →</a>'+source+'</div></div><div class="lab-case-sections">'+
+    '<section class="lab-study"><span>CONTEXT / PUBLIC SCOPE</span><h2>Purpose & context</h2><p>'+text(p.description)+'</p></section>'+
+    '<section class="lab-study"><span>STATUS / '+text(p.publication.stage)+'</span><h2>What exists</h2><p>'+text(p.detail)+'</p><dl><dt>Role</dt><dd>'+text(p.role)+'</dd><dt>Current stage</dt><dd>'+text(p.status)+'</dd></dl></section>'+
+    '<section class="lab-study"><span>BOUNDARIES / EVIDENCE</span><h2>What is not claimed</h2><p>'+text(p.boundary)+'</p></section>'+
+    '<section class="lab-study"><span>NEXT / NOT A RELEASE CLAIM</span><h2>Next step</h2><p>'+text(p.next)+'</p></section></div></article>';
+}
+function renderLaboratoryListening(){
+  return '<div class="lab-secondary"><div class="lab-section-intro"><p class="lab-overline">LISTENING / CONSENT-QUALIFIED SOURCE</p><h1>A soundtrack for <em>making.</em></h1><p>Only owner-approved playback is shown. Music is independent of editor presence and public GitHub history. No audio autoplays here.</p></div><section class="lab-study" data-public-spotify data-spotify-presentation="listening"><h2 data-spotify-title>Checking approved playback</h2><p data-spotify-state role="status">Checking source</p><p data-spotify-artist></p><img data-spotify-cover alt="" width="96" height="96" referrerpolicy="no-referrer" loading="lazy" decoding="async" hidden><progress data-spotify-progress aria-label="Track playback progress" hidden></progress><p data-spotify-note></p><a data-spotify-link href="/listening/">Playback source →</a></section>'+listeningCollections()+'</div>';
 }

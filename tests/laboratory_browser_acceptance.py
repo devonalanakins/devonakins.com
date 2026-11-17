@@ -1,3 +1,7 @@
+import ssl
+from urllib.parse import urlparse
+from cinematic_browser_helpers import wait_for_condition
+import os
 """Approved cinematic composition: independent DOM, truthful sources and real browsers."""
 import json
 import subprocess
@@ -6,12 +10,14 @@ import urllib.request
 from pathlib import Path
 from playwright.sync_api import sync_playwright
 
-BASE = 'http://127.0.0.1:4179'
+BASE = os.environ.get('LABORATORY_TEST_ORIGIN','http://127.0.0.1:4179').rstrip('/')
+LOCAL_TLS=urlparse(BASE).scheme=='https' and urlparse(BASE).hostname=='127.0.0.1'
+TLS_CONTEXT=ssl._create_unverified_context() if LOCAL_TLS else None
 OUT = Path('browser-qa/laboratory')
 OUT.mkdir(parents=True, exist_ok=True)
 SIZES = ((320,568),(375,667),(390,844),(393,852),(428,926),(768,1024),
          (1024,768),(1440,900),(1536,864),(1920,1080))
-server = subprocess.Popen(['./node_modules/.bin/vite','preview','--host','127.0.0.1','--port','4179','--strictPort'],stdout=subprocess.DEVNULL,stderr=subprocess.STDOUT)
+server = None if os.environ.get('LABORATORY_TEST_ORIGIN') else subprocess.Popen(['./node_modules/.bin/vite','preview','--host','127.0.0.1','--port','4179','--strictPort'],stdout=subprocess.DEVNULL,stderr=subprocess.STDOUT)
 
 def navigate(page,key,width):
     if width<=760:
@@ -28,10 +34,10 @@ def navigate(page,key,width):
 try:
     for _ in range(100):
         try:
-            urllib.request.urlopen(BASE,timeout=1).close()
+            urllib.request.urlopen(BASE,timeout=1,context=TLS_CONTEXT).close()
             break
         except Exception:
-            if server.poll() is not None: raise AssertionError('Preview exited')
+            if server and server.poll() is not None: raise AssertionError('Preview exited')
             time.sleep(.2)
     else: raise AssertionError('Preview unavailable')
     with sync_playwright() as pw:
@@ -39,7 +45,7 @@ try:
             browser=getattr(pw,engine).launch()
             try:
                 for width,height in SIZES:
-                    context=browser.new_context(viewport={'width':width,'height':height},reduced_motion='reduce' if width==375 else 'no-preference')
+                    context=browser.new_context(ignore_https_errors=LOCAL_TLS,viewport={'width':width,'height':height},reduced_motion='reduce' if width==375 else 'no-preference')
                     page=context.new_page()
                     errors=[]
                     page.on('pageerror',lambda error:errors.append(str(error)))
@@ -75,7 +81,7 @@ try:
                         assert page.locator('#lab-menu').is_visible()
                         page.keyboard.press('Escape')
                         assert page.locator('#lab-menu').is_hidden()
-                        page.wait_for_function("document.querySelector('.lab-menu-toggle').getAttribute('aria-expanded')==='false'")
+                        wait_for_condition(page,"document.querySelector('.lab-menu-toggle').getAttribute('aria-expanded')==='false'")
                         assert page.evaluate("document.activeElement.hasAttribute('data-lab-menu-open')")
                     else:
                         assert page.locator('.lab-tabs-desktop').is_visible()
@@ -127,8 +133,8 @@ try:
                     if width in (390,1536):
                         for key in ('home','experience','systems','work','portfolio','writing','activity','contact'):
                             navigate(page,key,width)
-                            page.add_script_tag(path='node_modules/axe-core/axe.min.js')
-                            violations=page.evaluate("""async()=> (await axe.run(document,{runOnly:{type:'tag',values:['wcag2a','wcag2aa','wcag21aa','wcag22aa']}})).violations.map(v=>({id:v.id,impact:v.impact,nodes:v.nodes.map(n=>n.target)}))""")
+                            page.evaluate(Path('node_modules/axe-core/axe.min.js').read_text())
+                            violations=page.evaluate("""async()=> (await axe.run(document,{runOnly:{type:'tag',values:['wcag2a','wcag2aa','wcag21a','wcag21aa','wcag22a','wcag22aa']}})).violations.map(v=>({id:v.id,impact:v.impact,nodes:v.nodes.map(n=>n.target)}))""")
                             (OUT/f'{engine}-axe-{key}-{width}.json').write_text(json.dumps(violations,indent=2))
                             assert not [v for v in violations if v['impact'] in ('serious','critical')],(engine,width,key,violations)
                         navigate(page,'home',width)
@@ -137,7 +143,7 @@ try:
                 # Synthetic fixtures exercise privacy semantics only; no fixture screenshots are published.
                 import datetime
                 for source,age_seconds,expected in (('owner-declared',0,'NO VERIFIED EDITOR'),('editor-heartbeat',0,'EDITOR OBSERVED'),('editor-heartbeat',600,'NO VERIFIED EDITOR')):
-                    fixture=browser.new_context(viewport={'width':390,'height':844})
+                    fixture=browser.new_context(ignore_https_errors=LOCAL_TLS,viewport={'width':390,'height':844})
                     now=datetime.datetime.now(datetime.timezone.utc)
                     stamp=now.isoformat(timespec='milliseconds').replace('+00:00','Z')
                     observed=(now-datetime.timedelta(seconds=age_seconds)).isoformat(timespec='milliseconds').replace('+00:00','Z')
@@ -145,18 +151,18 @@ try:
                     snapshot={'version':4,'asOf':stamp,'work':{'visibility':'public','state':'developing','source':source,'asOf':observed}}
                     fixture.route('**/api/activity/v4',lambda route:route.fulfill(json=snapshot))
                     sample=fixture.new_page();sample.goto(BASE,wait_until='networkidle')
-                    sample.wait_for_function("document.querySelector('[data-work-state]').textContent === "+json.dumps(expected))
+                    wait_for_condition(sample,"document.querySelector('[data-work-state]').textContent === "+json.dumps(expected))
                     assert sample.locator('[data-public-work]').get_attribute('data-work-mode')==('active' if expected=='EDITOR OBSERVED' else 'idle')
                     fixture.close()
                 # Failure of decorative image loading must leave readable, operable content.
-                fallback=browser.new_context(viewport={'width':390,'height':844},reduced_motion='reduce')
+                fallback=browser.new_context(ignore_https_errors=LOCAL_TLS,viewport={'width':390,'height':844},reduced_motion='reduce')
                 fallback.route('**/professional/cinematic/**',lambda route:route.abort())
                 sample=fallback.new_page();sample.goto(BASE,wait_until='networkidle')
                 assert sample.locator('.lab-portfolio-hero h1').is_visible()
                 sample.locator('[data-lab-destination="experience"]').click()
                 assert sample.locator('[data-lab-axis="a"]').is_visible()
                 fallback.close()
-                context=browser.new_context(viewport={'width':390,'height':844},java_script_enabled=False)
+                context=browser.new_context(ignore_https_errors=LOCAL_TLS,viewport={'width':390,'height':844},java_script_enabled=False)
                 page=context.new_page();page.goto(BASE,wait_until='networkidle')
                 assert page.locator('.lab-portfolio-hero h1').is_visible()
                 for key in ('systems','portfolio','writing','contact'): assert page.locator(f'[data-one-view="{key}"]').is_visible()
@@ -165,6 +171,7 @@ try:
             finally: browser.close()
     print('Cinematic acceptance passed: Chromium/WebKit, 10 viewports, eight views, five destinations, modal/Escape/focus, source disclosures, project search, analytic model, reduced motion, no-JS, WCAG audit and landmark checks.')
 finally:
-    server.terminate()
-    try:server.wait(timeout=10)
-    except subprocess.TimeoutExpired:server.kill();server.wait()
+    if server:
+        server.terminate()
+        try:server.wait(timeout=10)
+        except subprocess.TimeoutExpired:server.kill();server.wait()

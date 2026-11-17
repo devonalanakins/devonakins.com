@@ -8,7 +8,8 @@
     "history": "passed",
     "deep_links": "passed",
     "modified_click": "passed",
-    "scroll_restore": 133
+    "scroll_restore": 133,
+    "dynamic_reduced_motion": "passed"
   },
   {
     "engine": "chromium",
@@ -19,7 +20,8 @@
     "history": "passed",
     "deep_links": "passed",
     "modified_click": "passed",
-    "scroll_restore": 113
+    "scroll_restore": 113,
+    "dynamic_reduced_motion": "passed"
   },
   {
     "engine": "chromium",
@@ -35,7 +37,8 @@
     "history": "passed",
     "deep_links": "passed",
     "modified_click": "passed",
-    "scroll_restore": 133
+    "scroll_restore": 133,
+    "dynamic_reduced_motion": "passed"
   },
   {
     "engine": "webkit",
@@ -46,7 +49,8 @@
     "history": "passed",
     "deep_links": "passed",
     "modified_click": "passed",
-    "scroll_restore": 110
+    "scroll_restore": 110,
+    "dynamic_reduced_motion": "passed"
   },
   {
     "engine": "webkit",

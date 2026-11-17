@@ -1,29 +1,37 @@
+import {localWorkerRequest} from './local-worker-request.mjs';
 import assert from 'node:assert/strict';
-import assets from '../.release/assets.mjs';
-import {createHandler} from '../src/worker.mjs';
-
-const site=createHandler(assets,{version:'computational-laboratory-candidate',commit:'candidate'},{professionalCandidate:false});
-const get=path=>site.fetch(new Request('https://devonakins.com'+path));
-const html=await(await get('/')).text();
-assert.match(html,/Devon Alan Akins — Software, Systems & Research/);
-assert.match(html,/lab-overview/);
-assert.match(html,/lab-destinations/);
-assert.match(html,/lab-portfolio-signal-grid/);
-assert.match(html,/data-public-github-feed/);
-assert.match(html,/data-public-spotify/);
-assert.match(html,/data-public-work/);
-assert.match(html,/data-public-threads/);
-assert.doesNotMatch(html,/data-public-gpt|GPT analytics|\/gpt\/|Owner recording · dated, not live/);
-assert.doesNotMatch(html,/headshot-concept\.webp|PRIVATE REPO CONTENT|fictional live work/i);
-for(const route of ['/work/','/about/','/gpt/','/contact/']){
-  const response=await get(route);
-  assert.equal(response.status,200,route);
-  assert.match(await response.text(),/<html/i,route);
+import {readFile} from 'node:fs/promises';
+import site from '../.release/worker.mjs';
+import {LABORATORY_ROUTES,LABORATORY_REDIRECTS} from '../src/professional/laboratory-routes.mjs';
+import {approvedPublicProjects} from '../src/publication-manifest.mjs';
+const runtime=process.env.LABORATORY_VERIFY_ORIGIN;
+if(runtime)assert.match(runtime,/^https:\/\/127\.0\.0\.1:\d+$/);
+const get=path=>runtime?localWorkerRequest(runtime,path):site.fetch(new Request('https://devonakins.com'+path));
+const health=await(await get('/_health')).json();
+assert.equal(health.variant,'laboratory');
+for(const [view,path] of Object.entries(LABORATORY_ROUTES)){
+ const response=await get(path);assert.equal(response.status,200,path);
+ const html=await response.text();
+ assert.match(html,new RegExp('data-lab-initial="'+view+'"'));
+ assert.match(html,new RegExp('rel="canonical" href="https://devonakins.com'+path+'"'));
+ assert.match(html,/lab-destinations/);
+ assert.doesNotMatch(html,/data-public-gpt|GPT analytics|\/gpt\/|headshot-concept\.webp|SYNTHETIC QA FIXTURE/);
+ assert.match(response.headers.get('content-security-policy'),/connect-src 'self' https:\/\/api\.github\.com;/);
 }
-const missing=await get('/not-a-real-laboratory-page-404/');
-assert.equal(missing.status,404);
-const headers=await get('/');
-assert.match(headers.headers.get('content-type')||'',/text\/html/);
-const worker=await(await import('node:fs/promises')).readFile('.release/worker.mjs','utf8');
-assert.match(worker,/professionalCandidate:false/);
-console.log('Portfolio-first laboratory candidate: verified project and public feed shell, no GPT analytics, deep-link compatibility and packaged Worker passed.');
+for(const p of approvedPublicProjects){
+ const response=await get('/work/'+p.slug+'/');assert.equal(response.status,200,p.slug);
+ const html=await response.text();assert.match(html,/lab-case-study/);assert.ok(html.includes(p.title.replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;")));
+ assert.doesNotMatch(html,/data-public-gpt|\/gpt\//);
+}
+for(const [from,to]of Object.entries(LABORATORY_REDIRECTS)){
+ const response=await get(from+'?keep=query');assert.equal(response.status,308,from);
+ assert.equal(new URL(response.headers.get('location')).pathname,to);assert.equal(new URL(response.headers.get('location')).search,'?keep=query');
+ assert.equal(response.headers.get('cache-control'),'no-store');
+}
+for(const path of ['/gpt/snapshots/2026-11-10.json','/g%70t/snapshots/2026-11-10.json','/v2/','/v2/usage-snapshot.json','/not-a-real-laboratory-page-404/'])assert.equal((await get(path)).status,404,path);
+for(const path of ['/v2/listening-owner.css','/v2/gpt-owner.js','/v2/presence-owner.js'])assert.equal((await get(path)).status,200,'Owner resource preserved: '+path);
+const publicSignal=await(await get('/api/activity/v4')).json();assert.equal(Object.hasOwn(publicSignal,'gpt'),false);
+assert.equal((await get('/owner/gpt/')).status,403);
+const worker=await readFile('.release/worker.mjs','utf8');assert.match(worker,/professionalCandidate:false,laboratoryCandidate:true/);
+const sitemap=await(await get('/sitemap.xml')).text();assert.doesNotMatch(sitemap,/\/gpt\//);
+console.log('Cinematic packaged Worker: public routes, approved cases, reversible redirects, retired analytics, owner resources, CSP and exact variant passed.');

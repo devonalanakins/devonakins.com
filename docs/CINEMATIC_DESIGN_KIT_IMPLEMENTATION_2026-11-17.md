@@ -1,5 +1,7 @@
 # Approved design kit implementation — 2026-11-17
 
+**Release continuation:** The owner subsequently instructed “Continue to develop and implement through to completion and make live.” The earlier draft-only/no-deployment statements below describe previous checkpoints. The authorized cinematic cutover, completed routing/analytics retirement, exact-main checks and rollback procedure are recorded in [CINEMATIC_RELEASE.md](CINEMATIC_RELEASE.md). Live status must be read from that record and the linked deployment evidence.
+
 This supersedes the missing-reference limitation in the earlier checkpoint. Work continues on draft PR #126 from `f1b8dd3`; production stays on its independently gated release path.
 
 ## Authoritative input and comparison

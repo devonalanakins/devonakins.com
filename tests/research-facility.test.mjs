@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
+import {LABORATORY_ROUTES} from '../src/professional/laboratory-routes.mjs';
 import {renderResearchFacilityHome,lissajousPath} from '../src/professional/research-facility.mjs';
 
 const page=renderResearchFacilityHome();
@@ -25,7 +26,7 @@ test('laboratory candidate is independently navigable, semantic and source-hones
   assert.doesNotMatch(page,/data-public-gpt|\/gpt\/|GPT analytics|token counts|GPT · CAPTURED/i);
   assert.equal((page.match(/class="lab-destination"/g)||[]).length,5);
   for(const key of ['experience','systems','work','portfolio','writing']){
-    assert.match(page,new RegExp('href="#one-panel-'+key+'" data-one-go="'+key+'" data-lab-destination="'+key+'"'));
+    assert.match(page,new RegExp('href="'+LABORATORY_ROUTES[key]+'" data-one-go="'+key+'" data-lab-destination="'+key+'"'));
   }
   assert.equal((page.match(/class="lab-signal-tile /g)||[]).length,4);
   assert.match(page,/Independent software developer/i);

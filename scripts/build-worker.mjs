@@ -51,9 +51,10 @@ try {
   }).trim();
 } catch {}
 const release = {
-  version: "1.3.0",
+  version: process.env.LABORATORY_SITE_CANDIDATE === "1"?"1.4.0":"1.3.0",
   session: "DEVONAKINS.BUILD.2026-10-29.001",
   commit,
+  ...(process.env.LABORATORY_SITE_CANDIDATE === "1"?{variant:"laboratory"}:{}),
 };
 await mkdir(".release", { recursive: true });
 await writeFile(
@@ -72,7 +73,7 @@ for (const module of [
   "presence-preferences", "presence-editor-api",
   "cloud-presence-model", "cloud-presence-api", "activity-tasks", "github-actions-oidc", "live-signal", "activity-history",
   "listening-collections", "threads-public", "threads-public-d1", "threads-owner-probe", "threads-owner-oauth", "threads-meta-lifecycle",
-  "professional/github-public",
+  "professional/github-public", "professional/laboratory-routes",
 ]) {
   if (module.includes("/")) await mkdir(".release/" + module.split("/")[0], {recursive:true});
   await writeFile(".release/" + module + ".mjs", await readFile("src/" + module + ".mjs"));
@@ -87,7 +88,7 @@ await writeFile(".release/content.mjs",await readFile("src/content.mjs"));
 await writeFile(".release/publication-manifest.mjs",await readFile("src/publication-manifest.mjs"));
 await writeFile(
   ".release/worker.mjs",
-  `import assets from './assets.mjs';import {createHandler} from './handler.mjs';export default createHandler(assets,${JSON.stringify(release)},{professionalCandidate:${JSON.stringify(process.env.PROFESSIONAL_SITE_CANDIDATE === "1")}});\n`,
+  `import assets from './assets.mjs';import {createHandler} from './handler.mjs';export default createHandler(assets,${JSON.stringify(release)},{professionalCandidate:${JSON.stringify(process.env.PROFESSIONAL_SITE_CANDIDATE === "1")},laboratoryCandidate:${JSON.stringify(process.env.LABORATORY_SITE_CANDIDATE === "1")}});\n`,
 );
 await writeFile(
   ".release/release.json",

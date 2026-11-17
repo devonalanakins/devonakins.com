@@ -209,3 +209,11 @@ html.lab-html{scrollbar-gutter:auto}
  .lab-scene img{object-position:50% top}
  .lab-body .lab-portfolio-hero:before{background:linear-gradient(90deg,#00101245,transparent 85%),linear-gradient(0deg,#030d10 5%,#031316de 25%,transparent 70%)}
 }
+.lab-body .lab-case-sections{display:grid;gap:16px;min-width:0}
+.lab-body .lab-case-sections h2{font:400 25px/1.25 Arial,sans-serif;color:#e4eee5;margin:12px 0}
+.lab-body .lab-case-sections p,.lab-body .lab-case-sections dl{font:14px/1.7 Arial,sans-serif;color:#c8dcd1}
+.lab-body .lab-case-sections dt{font-weight:700;color:#e9c399;margin-top:12px}
+.lab-body .lab-case-sections dd{margin:4px 0}
+.lab-body .lab-secondary .p-listening-collections{grid-column:1/-1;min-width:0}
+.lab-body .lab-case-sections{overflow-wrap:anywhere}
+@media(max-width:760px){.lab-body .lab-secondary .lab-section-intro h1{font-size:clamp(28px,7vw,44px)}.lab-body .lab-secondary .lab-section-intro h1 em{white-space:normal}}
