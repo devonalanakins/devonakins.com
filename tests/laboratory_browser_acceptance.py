@@ -1,4 +1,4 @@
-"""Review-only laboratory candidate: meaningful UI, sources and responsive behavior."""
+"""Independent portfolio laboratory: verified responsive and functional review."""
 import subprocess
 import time
 import urllib.request
@@ -15,26 +15,26 @@ server = subprocess.Popen(
      "--port", "4179", "--strictPort"],
     stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT,
 )
+
 try:
-    for attempt in range(100):
+    for _ in range(100):
         try:
             urllib.request.urlopen(BASE, timeout=1).close()
             break
         except Exception:
             if server.poll() is not None:
-                raise AssertionError("Vite preview exited before acceptance")
+                raise AssertionError("Preview exited before acceptance")
             time.sleep(.2)
     else:
-        raise AssertionError("Vite preview was not ready")
+        raise AssertionError("Preview was not ready")
 
     with sync_playwright() as pw:
         for engine_name in ("chromium", "webkit"):
-            engine = getattr(pw, engine_name)
-            browser = engine.launch()
+            browser = getattr(pw, engine_name).launch()
             try:
                 sizes = (
                     (1440, 900), (1024, 768), (768, 1024),
-                    (390, 844), (375, 667), (320, 568), (1920, 1080),
+                    (390, 844), (375, 667), (320, 568), (1920, 1080)
                 )
                 for width, height in sizes:
                     context = browser.new_context(
@@ -43,117 +43,116 @@ try:
                     )
                     page = context.new_page()
                     page.goto(BASE, wait_until="domcontentloaded")
-                    page.locator(".lab-intro h1").wait_for(state="visible", timeout=15000)
-                    assert page.title() == "Devon Alan Akins — Computational Laboratory"
-                    assert "Build the instrument" in page.locator(".lab-intro h1").inner_text()
+                    heading = page.locator(".lab-portfolio-hero h1")
+                    heading.wait_for(state="visible", timeout=15000)
+                    assert page.title() == "Devon Alan Akins — Software, Systems & Research"
+                    assert "Devon Alan" in heading.inner_text()
+                    assert "Akins" in heading.inner_text()
+                    assert page.locator(".lab-portfolio-project").count() == 4
+                    assert page.locator(".lab-signal-tile").count() == 4
                     assert page.locator('[data-public-github-feed]').count() == 2
-                    assert page.locator('[data-public-spotify]').count() == 1
-                    assert page.locator('.lab-gpt').count() == 1
-                    assert 'Owner recording' in page.locator('.lab-gpt').inner_text()
                     assert page.locator('[data-public-work]').count() == 1
+                    assert page.locator('[data-public-spotify]').count() == 1
+                    assert page.locator('[data-public-threads]').count() == 2
+                    assert page.locator('[data-public-gpt]').count() == 0
+                    assert page.locator('[href="/gpt/"]').count() == 0
                     assert page.locator('[data-one-view]').count() == 6
                     assert page.locator('[data-one-view="home"]').is_visible()
                     assert page.locator('[data-one-view="work"]').is_hidden()
-                    desktop_nav = page.locator('.lab-header .lab-tabs-desktop')
-                    mobile_nav = page.locator('body > .lab-tabs-mobile')
+                    assert "Nonclinical" in page.locator(".lab-portfolio-project").first.inner_text()
+                    desktop = page.locator(".lab-header .lab-tabs-desktop")
+                    mobile = page.locator("body > .lab-tabs-mobile")
                     if width <= 760:
-                        assert desktop_nav.is_hidden(), (engine_name, width, 'duplicate top nav')
-                        assert mobile_nav.is_visible(), (engine_name, width, 'missing mobile nav')
-                        bar = mobile_nav.bounding_box()
-                        assert bar and bar['height'] <= 67 and bar['y'] >= height - 75, (
+                        assert desktop.is_hidden(), (engine_name, width, "duplicate desktop nav")
+                        assert mobile.is_visible(), (engine_name, width, "missing mobile nav")
+                        bar = mobile.bounding_box()
+                        assert bar and bar["height"] <= 67 and bar["y"] >= height - 75, (
                             engine_name, width, bar)
-                        buttons = mobile_nav.locator('[data-one-target]')
-                        assert buttons.count() == 6
-                        rows = [buttons.nth(i).bounding_box()['y'] for i in range(6)]
-                        assert max(rows) - min(rows) < 12, (engine_name, width, rows)
+                        tabs = mobile.locator("[data-one-target]")
+                        assert tabs.count() == 6
+                        rows = [tabs.nth(i).bounding_box()["y"] for i in range(6)]
+                        assert max(rows)-min(rows) < 12, (engine_name, width, rows)
                         for i in range(6):
-                            rect = buttons.nth(i).bounding_box()
-                            assert rect and rect['x'] >= -1 and rect['x'] + rect['width'] <= width + 1
+                            rect = tabs.nth(i).bounding_box()
+                            assert rect and rect["x"] >= -1 and rect["x"]+rect["width"] <= width+1
+                        behavior = page.locator('[data-one-view="home"]').evaluate(
+                            """el => ({overflow:getComputedStyle(el).overflowY, visible:el.clientHeight, full:el.scrollHeight})""")
+                        assert behavior["overflow"] in ("auto","scroll"),(engine_name,width,behavior)
+                        assert behavior["full"]>behavior["visible"],(engine_name,width,behavior)
                     else:
-                        assert desktop_nav.is_visible(), (engine_name, width, 'desktop nav hidden')
-                        assert mobile_nav.is_hidden(), (engine_name, width, 'mobile nav visible')
-                    geometry = page.evaluate("""() => {
-                        const el = document.querySelector('.lab-intro h1');
-                        const box = el.getBoundingClientRect();
-                        return {
-                          scrollWidth: document.documentElement.scrollWidth,
-                          viewport: window.innerWidth,
-                          headingLeft: box.left, headingRight: box.right,
-                          headingHeight: box.height,
-                          pageScrollHeight: document.documentElement.scrollHeight,
-                          pageHeight: window.innerHeight
-                        };
+                        assert desktop.is_visible(), (engine_name, width)
+                        assert mobile.is_hidden(), (engine_name, width)
+                    geo = page.evaluate("""() => {
+                        const h=document.querySelector('.lab-portfolio-hero h1').getBoundingClientRect();
+                        return {width:document.documentElement.scrollWidth,view:innerWidth,
+                                left:h.left,right:h.right,height:h.height};
                     }""")
-                    assert geometry["scrollWidth"] <= geometry["viewport"] + 2, (
-                        engine_name, width, geometry)
-                    assert geometry["headingLeft"] >= -2 and geometry["headingRight"] <= width + 2, (
-                        engine_name, width, geometry)
-                    assert geometry["headingHeight"] > 35
-                    page.wait_for_timeout(400)  # CSS entrance settles before visual evidence
-                    page.screenshot(path=str(OUT / f"{engine_name}-home-{width}x{height}.png"))
+                    assert geo["width"] <= geo["view"]+2,(engine_name,width,geo)
+                    assert geo["left"]>=-2 and geo["right"]<=width+2,(engine_name,width,geo)
+                    assert geo["height"]>35
+                    page.wait_for_timeout(300)
+                    page.screenshot(path=str(OUT / f"{engine_name}-portfolio-{width}x{height}.png"))
                     if width <= 760:
-                        assert page.locator('.lab-evidence-note').is_hidden()
-                        scroll = page.locator('.lab-observatory').evaluate("""el => ({
-                            overflow: getComputedStyle(el).overflowY,
-                            height: el.clientHeight,
-                            full: el.scrollHeight
-                        })""")
-                        assert scroll["overflow"] in ("auto", "scroll"), (engine_name, width, scroll)
-                        if scroll["full"] > scroll["height"] + 5:
-                            page.locator('.lab-observatory').evaluate('el => { el.scrollTop = el.scrollHeight; }')
-                            assert page.locator('.lab-observatory').evaluate('el => el.scrollTop') > 0
-                        page.screenshot(path=str(OUT / f"{engine_name}-observatory-scrolled-{width}x{height}.png"))
-                    nav = ("mobile" if width <= 760 else "desktop")
+                        page.locator(".lab-portfolio-signals").scroll_into_view_if_needed(timeout=8000)
+                        assert page.locator(".lab-portfolio-signals").is_visible()
+                        page.screenshot(path=str(OUT / f"{engine_name}-portfolio-feeds-{width}x{height}.png"))
+                        page.locator(".lab-portfolio-hero").scroll_into_view_if_needed(timeout=8000)
+                    nav = "mobile" if width <= 760 else "desktop"
                     page.locator(f'.lab-tabs-{nav} [data-one-target="experience"]').click()
                     assert page.locator('[data-one-view="experience"]').is_visible()
                     assert page.locator('[data-one-view="home"]').is_hidden()
-                    assert page.url.endswith("#experience"), page.url
+                    assert page.url.endswith("#experience")
                     assert page.locator(f'.lab-tabs-{nav} [data-one-target="experience"]').get_attribute("aria-selected") == "true"
-                    assert page.locator(f'.lab-tabs-{nav} [data-one-target="home"]').get_attribute("aria-selected") == "false"
                     path = page.locator('[data-lab-curve="interactive"]')
                     before = path.get_attribute("d")
-                    slider = page.locator('[data-lab-axis="a"]')
-                    slider.evaluate("""el => {
+                    page.locator('[data-lab-axis="a"]').evaluate("""el => {
                         el.value = '5';
-                        el.dispatchEvent(new Event('input', { bubbles: true }));
+                        el.dispatchEvent(new Event('input',{bubbles:true}));
                     }""")
                     after = path.get_attribute("d")
                     assert after != before
                     assert "a = 5" in page.locator('[data-lab-model-caption]').inner_text()
-                    page.wait_for_timeout(400)
-                    page.screenshot(path=str(OUT / f"{engine_name}-research-{width}x{height}.png"))
+                    if width in (1440,390):
+                        page.screenshot(path=str(OUT / f"{engine_name}-research-{width}x{height}.png"))
                     page.locator(f'.lab-tabs-{nav} [data-one-target="work"]').click()
                     assert page.locator('[data-one-view="work"]').is_visible()
-                    assert page.locator('.lab-system-card').count() == 4
+                    assert page.locator(".lab-system-card").count() == 4
+                    if width in (1440,390):
+                        page.screenshot(path=str(OUT / f"{engine_name}-work-{width}x{height}.png"))
                     page.locator(f'.lab-tabs-{nav} [data-one-target="activity"]').click()
                     assert page.locator('[data-one-view="activity"]').is_visible()
+                    assert page.locator(".lab-evidence-guide").count() == 1
+                    assert page.locator(".lab-activity [data-public-threads]").count() == 1
+                    if width in (1440,390):
+                        page.screenshot(path=str(OUT / f"{engine_name}-activity-{width}x{height}.png"))
+                    page.locator(f'.lab-tabs-{nav} [data-one-target="writing"]').click()
+                    assert page.locator('[data-one-view="writing"]').is_visible()
                     page.locator(f'.lab-tabs-{nav} [data-one-target="contact"]').click()
                     assert page.locator('[data-one-view="contact"]').is_visible()
-                    assert page.locator('a[href="mailto:hello@devonakins.com"]').count() >= 1
-                    if width > 760:
+                    assert page.locator('a[href="mailto:hello@devonakins.com"]').count()>=1
+                    if width>760:
                         page.locator('.lab-tabs-desktop [data-one-target="home"]').click()
-                        toggle = page.locator('[data-lab-motion]')
-                        if width >= 1200:
-                            assert toggle.is_visible()
-                            toggle.click()
-                            assert toggle.get_attribute('aria-pressed') == "false"
+                        motion = page.locator('[data-lab-motion]')
+                        if width>=1200:
+                            assert motion.is_visible()
+                            motion.click()
+                            assert motion.get_attribute("aria-pressed")=="false"
                         else:
-                            assert not toggle.is_visible()
-                    if width == 375:
-                        assert page.locator('[data-lab-motion]').is_disabled()
+                            assert not motion.is_visible()
+                    if width==375:
+                        assert page.locator("[data-lab-motion]").is_disabled()
                     context.close()
-
-                context = browser.new_context(viewport={"width": 390, "height": 844},
-                                              java_script_enabled=False)
-                page = context.new_page()
-                page.goto(BASE, wait_until="domcontentloaded")
-                assert page.locator('.lab-intro h1').is_visible()
-                assert page.locator('noscript .lab-nojs a[href="/work/"]').count() == 1
+                context=browser.new_context(
+                    viewport={"width":390,"height":844}, java_script_enabled=False)
+                page=context.new_page()
+                page.goto(BASE,wait_until="domcontentloaded")
+                assert page.locator(".lab-portfolio-hero h1").is_visible()
+                assert page.locator('noscript .lab-nojs a[href="/work/"]').count()==1
                 page.screenshot(path=str(OUT / f"{engine_name}-nojs-390x844.png"))
                 context.close()
             finally:
                 browser.close()
-    print("Laboratory candidate Chromium/WebKit: 7 viewports, six sections, analytic controls, reduced-motion, no-JS passed.")
+    print("Portfolio candidate: Chromium/WebKit seven viewports, six sections, sourced feeds, no-GPT, native research interaction, no-JS passed.")
 finally:
     server.terminate()
     try:
