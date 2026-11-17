@@ -20,7 +20,7 @@ for(const route of ['/work/','/about/','/gpt/','/contact/']){
 const missing=await get('/not-a-real-laboratory-page-404/');
 assert.equal(missing.status,404);
 const headers=await get('/');
-assert.match(headers.headers.get('content-type')||'','text/html');
+assert.match(headers.headers.get('content-type')||'',/text\/html/);
 const worker=await(await import('node:fs/promises')).readFile('.release/worker.mjs','utf8');
 assert.match(worker,/professionalCandidate:false/);
 console.log('Laboratory candidate: source-qualified landing, retained deep links, 404 and packaged Worker passed.');
