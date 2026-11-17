@@ -13,15 +13,18 @@ test('laboratory candidate is independently navigable, semantic and source-hones
     assert.match(page,new RegExp('id="one-panel-'+key+'"'));
     assert.match(page,new RegExp('data-one-target="'+key+'"'));
   }
-  for(const term of ['Computational Laboratory','MATHEMATICS','PHYSICS',
-    'COMPUTATIONAL BIOLOGY','AI SYSTEMS','Mathematical Field','ANALYTIC MODEL',
+  for(const term of ['Devon Alan Akins','MATHEMATICS','PHYSICS','COMPUTATIONAL NEUROSCIENCE',
+    'What I build.','What I am working on.','ANALYTIC MODEL',
     'NO MEASURED DATA','EXPERIMENT','PROPOSED','scientific computing']){
     assert.ok(page.toLowerCase().includes(term.toLowerCase()),term);
   }
   assert.match(page,/data-public-github-feed/);
   assert.match(page,/data-public-spotify/);
   assert.match(page,/data-public-work data-work-mode="idle"/);
-  assert.match(page,/data-public-gpt/);
+  assert.doesNotMatch(page,/data-public-gpt|\/gpt\/|GPT analytics|token counts|GPT · CAPTURED/i);
+  assert.equal((page.match(/class="lab-portfolio-project"/g)||[]).length,4);
+  assert.equal((page.match(/class="lab-signal-tile /g)||[]).length,4);
+  assert.match(page,/Independent software developer/i);
   assert.match(page,/data-public-threads/);
   assert.match(page,/Public events only/);
   assert.doesNotMatch(page,/GPU speedup: \d+|active neural network|trained model deployed|LIVE NOW/i);
@@ -47,6 +50,12 @@ test('the candidate uses first-party interactions and an explicit build gate',as
   assert.match(stylesheet,/@media\s*\(max-width:\s*760px\)/);
   assert.match(stylesheet,/prefers-reduced-motion:\s*reduce/);
   assert.match(stylesheet,/focus-visible/);
+  const portfolioStyle=await readFile(new URL('../src/professional/research-portfolio.css',import.meta.url),'utf8');
+  assert.match(portfolioStyle,/\.lab-portfolio-projects/);
+  assert.match(portfolioStyle,/\.lab-portfolio-signal-grid/);
+  assert.match(portfolioStyle,/@media\(max-width:760px\)/);
+  assert.doesNotMatch(portfolioStyle,/@import|url\(\s*["']?https?:|https:\/\/fonts\./);
+  assert.match(page,/href="\/src\/professional\/research-portfolio.css"/);
   assert.match(stylesheet,/\.lab-header \.lab-tabs-desktop\{display:none\}/);
   assert.match(stylesheet,/\.lab-body>\.lab-tabs-mobile \.one-tablist\{display:grid/);
   assert.doesNotMatch(stylesheet,/\.lab-header \.one-tabs-desktop|\.lab-body>\.one-tabs-mobile/);
