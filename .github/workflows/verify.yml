@@ -274,3 +274,45 @@ jobs:
             browser-qa/one-screen/
           if-no-files-found: warn
           retention-days: 14
+
+  laboratory_candidate:
+    # Opt-in personal scientific identity. Does not deploy or modify default V4.
+    if: github.head_ref == 'design/computational-laboratory-2026-11-17' || github.ref == 'refs/heads/design/computational-laboratory-2026-11-17'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - run: npm ci
+      - name: Build independent scientific laboratory variant
+        run: LABORATORY_SITE_CANDIDATE=1 npm run build
+      - name: Verify analytic geometry and candidate source contracts
+        run: node --test tests/research-facility.test.mjs
+      - name: Verify built Worker, deep links and evidence boundaries
+        run: node scripts/verify-research-facility-candidate.mjs
+      - name: Install pinned Chromium and WebKit verification engines
+        run: |
+          python3 -m pip install --disable-pip-version-check playwright==1.57.0
+          python3 -m playwright install --with-deps chromium webkit
+      - name: Render and inspect seven responsive dimensions in both browser engines
+        run: python3 tests/laboratory_browser_acceptance.py
+      - name: Preserve screenshots for owner visual acceptance
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: computational-laboratory-candidate
+          path: |
+            dist/
+            browser-qa/laboratory/
+          if-no-files-found: warn
+          retention-days: 14
