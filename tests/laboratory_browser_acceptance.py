@@ -69,6 +69,15 @@ try:
                         for i in range(6):
                             rect = buttons.nth(i).bounding_box()
                             assert rect and rect['x'] >= -1 and rect['x'] + rect['width'] <= width + 1
+                        scroll = page.locator('.lab-observatory').evaluate("""el => ({
+                            overflow: getComputedStyle(el).overflowY,
+                            height: el.clientHeight,
+                            full: el.scrollHeight
+                        })""")
+                        assert scroll["overflow"] in ("auto", "scroll"), (engine_name, width, scroll)
+                        if scroll["full"] > scroll["height"] + 5:
+                            page.locator('.lab-observatory').evaluate('el => { el.scrollTop = el.scrollHeight; }')
+                            assert page.locator('.lab-observatory').evaluate('el => el.scrollTop') > 0
                     else:
                         assert desktop_nav.is_visible(), (engine_name, width, 'desktop nav hidden')
                         assert mobile_nav.is_hidden(), (engine_name, width, 'mobile nav visible')
