@@ -5,10 +5,22 @@ import {createHandler} from '../src/worker.mjs';
 import {renderResearchFacilityHome} from '../src/professional/research-facility.mjs';
 import {approvedPublicProjects} from '../src/publication-manifest.mjs';
 import {LABORATORY_ROUTES,LABORATORY_REDIRECTS} from '../src/professional/laboratory-routes.mjs';
+import {validatePublicAnalytics} from '../scripts/validate-public-analytics.mjs';
 const asset=(body,type='text/html')=>({type,etag:'"test"',gzip:gzipSync(body).toString('base64')});
 const assets={'/index.html':asset(renderResearchFacilityHome()),'/gpt/index.html':asset('historical source'),'/gpt/snapshots/test.json':asset('{"history":true}','application/json'),'/v2/usage-snapshot.json':asset('{}','application/json'),'/v2/index.html':asset('legacy page'),'/v2/gpt-owner.js':asset('/* protected owner controller */','text/javascript'),'/404/index.html':asset('not found')};
 const make=laboratory=>createHandler(assets,{version:'test',commit:'test'},{laboratoryCandidate:laboratory,githubFetch:async()=>new Response('[]',{headers:{'content-type':'application/json'}})});
 const get=(site,path)=>site.fetch(new Request('https://devonakins.com'+path));
+
+test('ongoing anonymous smoke requires retired analytics absent only on the serving cinematic variant',()=>{
+ const snapshot={state:'snapshot',metric:'profile_7d_tokens',count:12,asOf:'2026-11-10T00:00:00Z',sourceUpdatedAt:null,freshness:'historical'};
+ assert.doesNotThrow(()=>validatePublicAnalytics({}, {variant:'laboratory'}));
+ for(const gpt of [null,{state:'disconnected',count:null},snapshot])
+  assert.throws(()=>validatePublicAnalytics({gpt},{variant:'laboratory'}),/omit retired analytics/);
+ assert.doesNotThrow(()=>validatePublicAnalytics({gpt:snapshot},{}));
+ assert.doesNotThrow(()=>validatePublicAnalytics({gpt:{state:'disconnected',count:null}},{}));
+ assert.throws(()=>validatePublicAnalytics({},{}));
+ assert.throws(()=>validatePublicAnalytics({gpt:{...snapshot,count:-1}},{}));
+});
 
 test('release retirement is reversible and preserves private owner resources',async()=>{
  const site=make(true),baseline=make(false);

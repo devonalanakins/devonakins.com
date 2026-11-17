@@ -49,6 +49,8 @@ Security limitation: production dependency audit reports no vulnerabilities. The
 
 Exact-head GitHub CI, main merge SHA and actual deployment observations belong in the existing PR's final release evidence; local success alone does not establish them.
 
+The ongoing anonymous main-push smoke check also follows the **serving health variant**: cinematic releases require GPT fields to be absent, while earlier variants retain their existing snapshot/disconnected validation. This prevents both an analytics regression and false failures on subsequent maintenance pushes. Variant transitions and malformed legacy snapshots are covered by the release tests.
+
 ## Release procedure and rollback
 
 Use the existing protected manual workflow on **main**, with its exact 40-character SHA, `release_variant=laboratory`, `laboratory_confirmation=LABORATORY-CUTOVER-APPROVED`, and both source-policy actions `preserve`. All older build flags and confirmations must be off/empty. The guard rejects mixed variants, mismatched SHAs, other Workers and implicit consent changes. The workflow's existing dedicated Cloudflare credentials and `--keep-vars` preserve secret bindings; the preflight reads configuration from the actively serving version, validates the existing private schema and performs no database migration.
