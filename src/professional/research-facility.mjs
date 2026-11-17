@@ -3,15 +3,14 @@
  * Deliberately separate from the production V4 and approved one-screen builds.
  * Mathematical figures are analytic, not measured experiments or live telemetry.
  */
-import {spotifyCard, gptSignalCard} from './signal-cards.mjs';
-import {renderOneScreenGptSummary} from './gpt-capture.mjs';
-import {renderHomeSocialHub, renderHomeThreadsSignal} from './social-presence.mjs';
+import {spotifyCard} from './signal-cards.mjs';
+import {renderHomeSocialHub, renderHomeThreadsSignal, renderThreadsPreview} from './social-presence.mjs';
 
 const escapeHtml=value=>String(value ?? '').replace(/[&<>"']/g,
   c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const sections=Object.freeze([
-  ['home','Overview'],['experience','Research'],['work','Systems'],
-  ['activity','Signals'],['writing','Fieldnotes'],['contact','Contact'],
+  ['home','Home'],['experience','Research'],['work','Work'],
+  ['activity','Activity'],['writing','Writing'],['contact','Contact'],
 ]);
 /** Actual analytic Lissajous curve: x=sin(a*t), y=sin(b*t+phase).
  * Validated integer frequencies; no random data, inferred experiment or API.
@@ -93,39 +92,47 @@ function studyCard(index,category,title,description,status){
   return '<article class="lab-study"><span>'+index+' / '+category+'</span><h3>'+title+'</h3>'+
     '<p>'+description+'</p><small>'+status+'</small></article>';
 }
-export function renderResearchFacilityHome({datedCapture=null}={}){
-  const gpt=datedCapture?renderOneScreenGptSummary(datedCapture):gptSignalCard();
+export function renderResearchFacilityHome(){
   const introduction='Devon Alan Akins is an independent software developer pursuing scientific computing, computational modeling and open-source AI infrastructure.';
   const home=view('home',
-    '<div class="lab-overview">'+
-    '<section class="lab-intro" aria-label="Introduction">'+
-      '<p class="lab-overline"><span class="lab-diamond" aria-hidden="true"></span>DEVON ALAN AKINS / PERSONAL LABORATORY</p>'+
-      '<p class="lab-edition">INDEPENDENT SOFTWARE DEVELOPMENT & RESEARCH</p>'+
-      '<h1>Understand the system.<br><em>Build the instrument.</em></h1>'+
-      '<p class="lab-intro-text">I build software for studying complex systems—at the intersection of mathematics, physics, biology and artificial intelligence infrastructure.</p>'+
-      '<p class="lab-qualification">A developing research practice grounded in reproducible experiments, source code and measured evidence.</p>'+
-      '<div class="lab-actions">'+goto('experience','Explore the research',true)+goto('work','Inspect the systems')+'</div>'+'<noscript><nav class="lab-nojs" aria-label="Non-JavaScript navigation"><a href="/work/">Work</a><a href="/about/">About</a><a href="/contact/">Contact</a><a href="/gpt/">GPT record</a></nav></noscript>'+
-      '<div class="lab-discipline-grid"><span>MATHEMATICS</span><span>PHYSICS</span>'+
-      '<span>COMPUTATIONAL BIOLOGY</span><span>AI SYSTEMS</span></div>'+
-      '<div class="lab-intro-bottom"><span>OPEN SOURCE / SELF-HOSTABLE</span>'+
-      '<span>FLORIDA, USA · REMOTE</span></div>'+
+    '<div class="lab-overview lab-portfolio-layout">'+
+    '<section class="lab-portfolio-hero" aria-label="Personal portfolio introduction">'+
+      '<div class="lab-portfolio-hero-art" aria-hidden="true"></div>'+
+      '<div class="lab-portfolio-hero-content">'+
+        '<p class="lab-overline"><span class="lab-diamond" aria-hidden="true"></span>INDEPENDENT SOFTWARE / RESEARCH / SYSTEMS</p>'+
+        '<h1>Devon Alan <em>Akins.</em></h1>'+
+        '<p class="lab-portfolio-role">INDEPENDENT SOFTWARE DEVELOPER & RESEARCH ENGINEER</p>'+
+        '<p class="lab-portfolio-statement">I build independent software, explore complex systems, and engineer the tools that make ideas work.</p>'+
+        '<p class="lab-portfolio-details">Scientific computing · AI infrastructure · Physics · Mathematics · Computational neuroscience</p>'+
+        '<div class="lab-portfolio-actions">'+
+          goto('work','Explore my work',true)+goto('experience','Research laboratory')+
+          '<a class="lab-portfolio-link" href="https://github.com/devonalanakins" target="_blank" rel="noopener noreferrer">PERSONAL GITHUB ↗</a>'+
+        '</div>'+
+        '<noscript><nav class="lab-nojs" aria-label="Alternative navigation"><a href="/work/">Work</a><a href="/about/">About</a><a href="/contact/">Contact</a></nav></noscript>'+
+      '</div>'+
+      '<div class="lab-hero-art-label"><span>PERSONAL LABORATORY / DA 001</span><span>ARCHITECTURAL ILLUSTRATION</span></div>'+
     '</section>'+
-    '<section class="lab-field" aria-label="Illustrated mathematical field">'+
-      '<div class="lab-field-label"><span>THEORETICAL SYSTEMS</span><b>DA / 001</b></div>'+
-      instrument('lab-field-home')+
-      '<div class="lab-field-annotation"><strong>Mathematical Field</strong>'+
-      '<p>An analytic trajectory, not a live measurement. Explore the adjustable model in Research.</p>'+
-      goto('experience','Open instrument')+'</div>'+
+    '<section class="lab-portfolio-selected" aria-labelledby="lab-selected-title">'+
+      '<div class="lab-portfolio-section-label"><div><p class="lab-overline">PORTFOLIO / SELECTED WORK</p><h2 id="lab-selected-title">What I build.</h2></div>'+
+      '<button type="button" data-one-go="work" aria-label="Explore all selected work">ALL PROJECTS ↗</button></div>'+
+      '<div class="lab-portfolio-projects">'+
+        '<a class="lab-portfolio-project" href="/work/operations/"><span>01 / PRACTICE SYSTEMS</span><strong>Nona Neuropsychology</strong><small>Nonclinical operations & digital experience</small><b>PUBLIC OPERATIONS OVERVIEW ↗</b></a>'+
+        '<a class="lab-portfolio-project" href="https://github.com/devonalanakins/devonakins.com" target="_blank" rel="noopener noreferrer"><span>02 / WEB ENGINEERING</span><strong>DevonAkins.com</strong><small>Independent web platform & public activity</small><b>PUBLIC SOURCE ↗</b></a>'+
+        '<a class="lab-portfolio-project" href="/work/devonstation/"><span>03 / PERSONAL SYSTEMS</span><strong>DevonStation</strong><small>Owner-controlled software & infrastructure</small><b>PUBLIC PROJECT OVERVIEW ↗</b></a>'+
+        '<a class="lab-portfolio-project" href="https://github.com/devonalanakins/merit" target="_blank" rel="noopener noreferrer"><span>04 / SOFTWARE QUALITY</span><strong>Merit</strong><small>Evidence-based code integrity experiments</small><b>PUBLIC SOURCE ↗</b></a>'+
+      '</div>'+
     '</section>'+
-    '<aside class="lab-observatory" aria-label="Public source-qualified signals">'+
-      '<div class="lab-observatory-heading"><span>OBSERVATORY / PUBLIC SIGNALS</span>'+
-      '<strong>What is verifiable.</strong><small>Only connected and dated sources are reported.</small></div>'+
-      '<div class="lab-observatory-feed"><div class="lab-signal-heading">GITHUB / RECENT PUBLIC EVENTS'+
-      '<button type="button" data-one-go="activity">ALL ↗</button></div>'+feed('one-home-github',4)+'</div>'+
-      workPresence()+
-      '<div class="lab-spotify">'+spotifyCard()+'</div>'+
-      '<p class="lab-evidence-note">Signals are historical or source-verified. Unavailable means unavailable—not zero activity. <a class="lab-source-link" href="https://github.com/devonalanakins" target="_blank" rel="noopener noreferrer">Inspect source ↗</a></p>'+
-    '</aside>'+
+    '<section class="lab-portfolio-signals" aria-labelledby="lab-signals-title">'+
+      '<div class="lab-portfolio-section-label"><div><p class="lab-overline">PERSONAL PRESENCE / SOURCE-QUALIFIED FEEDS</p><h2 id="lab-signals-title">What I am working on.</h2></div>'+
+      '<button type="button" data-one-go="activity" aria-label="Explore public activity and sources">ALL ACTIVITY ↗</button></div>'+
+      '<div class="lab-portfolio-signal-grid">'+
+        '<div class="lab-signal-tile lab-signal-github"><div class="lab-signal-title"><span>GITHUB / PUBLIC EVENTS</span><a href="https://github.com/devonalanakins" target="_blank" rel="noopener noreferrer">PROFILE ↗</a></div>'+feed('one-home-github',3)+'</div>'+
+        '<div class="lab-signal-tile lab-signal-work">'+workPresence()+'</div>'+
+        '<div class="lab-signal-tile lab-signal-spotify">'+spotifyCard()+'</div>'+
+        '<div class="lab-signal-tile lab-signal-threads">'+renderHomeThreadsSignal('activity')+'</div>'+
+      '</div>'+
+      '<p class="lab-portfolio-provenance">Feeds only report approved public sources and timestamps. Unavailable is not inactive; historical activity is not a live editor session.</p>'+
+    '</section>'+
     '</div>');
   const research=view('experience',
     '<div class="lab-secondary lab-research">'+
@@ -160,21 +167,24 @@ export function renderResearchFacilityHome({datedCapture=null}={}){
     '</div><p class="lab-secondary-note">The proposed AI compute laboratory is a research direction, not a deployed cloud or a published GPU benchmark.</p></div>');
   const activity=view('activity',
     '<div class="lab-secondary lab-activity"><div class="lab-section-intro">'+
-      '<p class="lab-overline">OBSERVATORY / PUBLIC EVIDENCE</p>'+
-      '<h1>Signals, not <em>fiction.</em></h1>'+
-      '<p>GitHub events, independent development presence, approved listening and dated GPT captures remain separate sources.</p></div>'+
+      '<p class="lab-overline">ACTIVITY / WORK IN THE OPEN</p>'+
+      '<h1>A visible record of <em>making.</em></h1>'+
+      '<p>Public GitHub changes, owner-authorized development presence, music, and public writing. Each source stays separate, timestamped, and correctly labeled.</p></div>'+
     '<div class="lab-activity-grid">'+
     '<section class="lab-data-panel"><div class="lab-data-title"><strong>GITHUB / PUBLIC HISTORY</strong>'+
-    '<a href="https://github.com/devonalanakins" target="_blank" rel="noopener noreferrer">FULL HISTORY ↗</a></div>'+
+    '<a href="https://github.com/devonalanakins" target="_blank" rel="noopener noreferrer">OPEN GITHUB ↗</a></div>'+
     '<div class="lab-activity-filters" role="group" aria-label="Filter GitHub activity">'+
     '<button type="button" data-github-filter="all" aria-pressed="true">All</button>'+
     '<button type="button" data-github-filter="push" aria-pressed="false">Pushes</button>'+
     '<button type="button" data-github-filter="pull_request" aria-pressed="false">PRs</button>'+
     '<button type="button" data-github-refresh>Refresh</button></div>'+
     feed('one-activity-github',6)+'</section>'+
-    '<div class="lab-activity-side"><section class="lab-data-panel lab-gpt">'+gpt+'</section>'+
-    '<section class="lab-data-panel lab-threads">'+renderHomeThreadsSignal()+'</section>'+
-    '</div></div></div>');
+    '<div class="lab-activity-side">'+
+    '<section class="lab-data-panel lab-threads">'+renderThreadsPreview()+'</section>'+
+    '<section class="lab-data-panel lab-evidence-guide"><strong>SOURCE / INTEGRITY</strong>'+
+    '<h2>Measured, not imagined.</h2><p>Recent public commits and pull requests are dated history. Development presence requires an owner-approved reporter. Playback reflects approved listening, not proof of coding. Posts appear only when public sharing is enabled.</p>'+
+    '<a class="lab-text-link" href="/activity/">Explore the full public activity page ↗</a>'+
+    '</section></div></div></div>');
   const notes=view('writing',
     '<div class="lab-secondary lab-notes"><div class="lab-section-intro">'+
       '<p class="lab-overline">FIELDNOTES / PUBLIC WRITING</p><h1>Think rigorously.<br><em>Write clearly.</em></h1>'+
@@ -196,14 +206,15 @@ export function renderResearchFacilityHome({datedCapture=null}={}){
     '<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">'+
     '<meta name="theme-color" content="#071013"><meta name="color-scheme" content="dark">'+
     '<meta name="description" content="'+escapeHtml(introduction)+'">'+
-    '<meta property="og:type" content="website"><meta property="og:title" content="Devon Alan Akins — Computational Systems & AI Infrastructure">'+
+    '<meta property="og:type" content="website"><meta property="og:title" content="Devon Alan Akins — Software, Systems & Research">'+
     '<meta property="og:description" content="'+escapeHtml(introduction)+'">'+
     '<link rel="canonical" href="https://devonakins.com/">'+
-    '<link rel="icon" href="/favicon-32.png"><title>Devon Alan Akins — Computational Laboratory</title>'+
+    '<link rel="icon" href="/favicon-32.png"><title>Devon Alan Akins — Software, Systems & Research</title>'+
     '<link rel="stylesheet" href="/src/professional/site.css">'+
     '<link rel="stylesheet" href="/src/professional/one-screen.css">'+
     '<link rel="stylesheet" href="/src/professional/social-presence.css">'+
     '<link rel="stylesheet" href="/src/professional/research-facility.css">'+
+    '<link rel="stylesheet" href="/src/professional/research-portfolio.css">'+
     '<script type="module" src="/src/professional/client.ts"></script>'+
     '<script type="module" src="/src/professional/one-screen.ts"></script>'+
     '<script type="module" src="/src/professional/research-facility.ts"></script>'+
@@ -213,15 +224,15 @@ export function renderResearchFacilityHome({datedCapture=null}={}){
     '<div class="lab-background-glow"></div></div>'+
     '<header class="lab-header"><a href="/" class="lab-brand" aria-label="Devon Akins home">'+
     '<span class="lab-brand-glyph">DA<span aria-hidden="true">·</span></span><span class="lab-brand-caption">DEVON ALAN AKINS'+
-    '<small>COMPUTATIONAL LABORATORY</small></span></a>'+
+    '<small>INDEPENDENT SOFTWARE · SCIENTIFIC COMPUTING</small></span></a>'+
     nav('desktop')+
     '<div class="lab-header-end"><span class="lab-header-index">PERSONAL / INDEPENDENT</span>'+
     '<button type="button" class="lab-motion" data-lab-motion aria-pressed="true" aria-label="Pause decorative motion">MOTION ON</button>'+
     '<a href="mailto:hello@devonakins.com" class="lab-header-contact">CONTACT ↗</a></div></header>'+
     '<main id="one-stage" class="one-stage lab-stage" tabindex="-1">'+
     home+research+systems+activity+notes+contact+'</main>'+
-    '<div class="lab-bottom-status"><span>DA / SCIENTIFIC COMPUTING</span>'+
-    '<span>ORIGINAL RESEARCH DIRECTIONS · VERIFIED WORK MARKED EXPLICITLY</span></div>'+
+    '<div class="lab-bottom-status"><span>DEVON ALAN AKINS / INDEPENDENT DEVELOPER</span>'+
+    '<span>PORTFOLIO · VERIFIED ACTIVITY · OPEN SOURCE</span></div>'+
     nav('mobile')+
     '</body></html>';
 }
