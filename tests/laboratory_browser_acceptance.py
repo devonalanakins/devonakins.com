@@ -48,7 +48,8 @@ try:
                     assert "Build the instrument" in page.locator(".lab-intro h1").inner_text()
                     assert page.locator('[data-public-github-feed]').count() == 2
                     assert page.locator('[data-public-spotify]').count() == 1
-                    assert page.locator('[data-public-gpt]').count() >= 1
+                    assert page.locator('.lab-gpt').count() == 1
+                    assert 'Owner recording' in page.locator('.lab-gpt').inner_text()
                     assert page.locator('[data-public-work]').count() == 1
                     assert page.locator('[data-one-view]').count() == 6
                     assert page.locator('[data-one-view="home"]').is_visible()
