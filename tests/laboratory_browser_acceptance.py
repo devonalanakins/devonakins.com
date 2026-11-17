@@ -71,12 +71,15 @@ try:
                     assert geometry["headingLeft"] >= -2 and geometry["headingRight"] <= width + 2, (
                         engine_name, width, geometry)
                     assert geometry["headingHeight"] > 35
+                    page.wait_for_timeout(400)  # CSS entrance settles before visual evidence
                     page.screenshot(path=str(OUT / f"{engine_name}-home-{width}x{height}.png"))
                     nav = ("mobile" if width <= 760 else "desktop")
                     page.locator(f'.lab-tabs-{nav} [data-one-target="experience"]').click()
                     assert page.locator('[data-one-view="experience"]').is_visible()
                     assert page.locator('[data-one-view="home"]').is_hidden()
                     assert page.url.endswith("#experience"), page.url
+                    assert page.locator(f'.lab-tabs-{nav} [data-one-target="experience"]').get_attribute("aria-selected") == "true"
+                    assert page.locator(f'.lab-tabs-{nav} [data-one-target="home"]').get_attribute("aria-selected") == "false"
                     path = page.locator('[data-lab-curve="interactive"]')
                     before = path.get_attribute("d")
                     slider = page.locator('[data-lab-axis="a"]')
@@ -87,6 +90,7 @@ try:
                     after = path.get_attribute("d")
                     assert after != before
                     assert "a = 5" in page.locator('[data-lab-model-caption]').inner_text()
+                    page.wait_for_timeout(400)
                     page.screenshot(path=str(OUT / f"{engine_name}-research-{width}x{height}.png"))
                     page.locator(f'.lab-tabs-{nav} [data-one-target="work"]').click()
                     assert page.locator('[data-one-view="work"]').is_visible()
@@ -99,9 +103,12 @@ try:
                     if width > 760:
                         page.locator('.lab-tabs-desktop [data-one-target="home"]').click()
                         toggle = page.locator('[data-lab-motion]')
-                        assert toggle.is_visible()
-                        toggle.click()
-                        assert toggle.get_attribute('aria-pressed') == "false"
+                        if width >= 1200:
+                            assert toggle.is_visible()
+                            toggle.click()
+                            assert toggle.get_attribute('aria-pressed') == "false"
+                        else:
+                            assert not toggle.is_visible()
                     if width == 375:
                         assert page.locator('[data-lab-motion]').is_disabled()
                     context.close()
