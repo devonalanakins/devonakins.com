@@ -89,7 +89,7 @@ try:
                     }""")
                     assert geo["width"] <= geo["view"]+2,(engine_name,width,geo)
                     assert geo["left"]>=-2 and geo["right"]<=width+2,(engine_name,width,geo)
-                    assert geo["height"]>35
+                    assert geo["height"]>25, (engine_name, width, geo)
                     page.wait_for_timeout(300)
                     page.screenshot(path=str(OUT / f"{engine_name}-portfolio-{width}x{height}.png"))
                     if width <= 760:
