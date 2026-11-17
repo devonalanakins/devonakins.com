@@ -104,7 +104,7 @@ export function renderResearchFacilityHome({datedCapture=null}={}){
       '<h1>Understand the system.<br><em>Build the instrument.</em></h1>'+
       '<p class="lab-intro-text">I build software for studying complex systems—at the intersection of mathematics, physics, biology and artificial intelligence infrastructure.</p>'+
       '<p class="lab-qualification">A developing research practice grounded in reproducible experiments, source code and measured evidence.</p>'+
-      '<div class="lab-actions">'+goto('experience','Explore the research',true)+goto('work','Inspect the systems')+'</div>'+
+      '<div class="lab-actions">'+goto('experience','Explore the research',true)+goto('work','Inspect the systems')+'</div>'+'<noscript><nav class="lab-nojs" aria-label="Non-JavaScript navigation"><a href="/work/">Work</a><a href="/about/">About</a><a href="/contact/">Contact</a><a href="/gpt/">GPT record</a></nav></noscript>'+
       '<div class="lab-discipline-grid"><span>MATHEMATICS</span><span>PHYSICS</span>'+
       '<span>COMPUTATIONAL BIOLOGY</span><span>AI SYSTEMS</span></div>'+
       '<div class="lab-intro-bottom"><span>OPEN SOURCE / SELF-HOSTABLE</span>'+
@@ -124,7 +124,7 @@ export function renderResearchFacilityHome({datedCapture=null}={}){
       '<button type="button" data-one-go="activity">ALL ↗</button></div>'+feed('one-home-github',4)+'</div>'+
       workPresence()+
       '<div class="lab-spotify">'+spotifyCard()+'</div>'+
-      '<p class="lab-evidence-note">Signals are historical or source-verified. Unavailable means unavailable—not zero activity.</p>'+
+      '<p class="lab-evidence-note">Signals are historical or source-verified. Unavailable means unavailable—not zero activity. <a class="lab-source-link" href="https://github.com/devonalanakins" target="_blank" rel="noopener noreferrer">Inspect source ↗</a></p>'+
     '</aside>'+
     '</div>');
   const research=view('experience',
