@@ -190,3 +190,42 @@
 @media(prefers-reduced-motion:reduce){
   .lab-body .lab-portfolio-project,.lab-body .lab-portfolio-hero-art{animation:none!important;transition:none!important}
 }
+/* Five individually navigable destinations; illustrations never carry live data. */
+.lab-body .lab-destinations{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;min-height:0;flex:1}
+.lab-body .lab-destination{display:flex;flex-direction:column;justify-content:flex-end;position:relative;min-width:0;min-height:140px;padding:14px;overflow:hidden;text-decoration:none;border:1px solid #7fb1a64d;background:linear-gradient(135deg,#18353b9c,#07151be8);transition:background .2s,border-color .2s}
+.lab-body .lab-destination svg{position:absolute;right:0;top:-10px;width:135px;height:108px;color:#a6e1d1;opacity:.5;pointer-events:none}
+.lab-body .lab-destination:nth-child(2n) svg{color:#dfb184}
+.lab-body .lab-destination span{font:600 8px ui-monospace,monospace;letter-spacing:.12em;color:#9fc5ba;margin-bottom:7px}
+.lab-body .lab-destination strong{font:400 clamp(20px,1.8vw,29px) Georgia,serif;letter-spacing:-.035em;color:#f2f2e7;position:relative}
+.lab-body .lab-destination small{font:400 10px/1.5 system-ui,sans-serif;color:#b9cec7;max-width:85%;margin-top:7px;position:relative}
+.lab-body .lab-destination b{position:absolute;right:13px;bottom:16px;color:#dfb184}
+.lab-body .lab-destination:hover{border-color:#b4e8dc;background:#18353be0}
+.lab-body .lab-destination:focus-visible{outline-offset:-4px}
+.lab-body .lab-header{grid-template-columns:minmax(190px,1fr) auto auto;gap:16px}
+.lab-body .lab-header-index{display:none}
+.lab-body .lab-header .one-tablist button{padding-inline:10px;min-height:44px}
+@media(max-width:1199px){.lab-body .lab-header-end{display:none}.lab-body .lab-header{grid-template-columns:1fr auto}.lab-body .lab-destination{padding:10px;min-height:145px}}
+@media(max-width:760px){
+  .lab-body .lab-header{grid-template-columns:1fr}
+  .lab-body .lab-destinations{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+  .lab-body .lab-destination{min-height:158px;padding:15px}
+  .lab-body .lab-destination:last-child{grid-column:1/-1;min-height:125px}
+  .lab-body .lab-destination svg{right:5px;top:0}
+  .lab-body .lab-destination:last-child svg{right:20px;width:170px;height:130px}
+  .lab-body>.lab-tabs-mobile{height:calc(60px + env(safe-area-inset-bottom,0px));overflow-x:auto}
+  .lab-body>.lab-tabs-mobile .one-tablist{display:flex;width:max-content;min-width:100%;gap:2px}
+  .lab-body>.lab-tabs-mobile button{min-width:65px;min-height:44px;padding:8px;font-size:10px}
+}
+@media(prefers-reduced-motion:reduce){.lab-body .lab-destination{transition:none}}
+.lab-body .lab-neural-apparatus{position:absolute;z-index:-1;inset:-15% -3% -18% 50%;background:url('/professional/neural-apparatus.svg') center/contain no-repeat;pointer-events:none;opacity:.9}
+.lab-body .lab-stage .lab-overview.lab-portfolio-layout{grid-template-rows:minmax(300px,1.43fr) minmax(220px,.78fr) minmax(235px,.88fr)}
+.lab-body .lab-signal-tile{overflow:auto;scrollbar-width:thin}
+.lab-body .lab-study details{font-size:12px;line-height:1.6;color:#bfd6cc}
+.lab-body .lab-study summary{cursor:pointer;padding:12px 0;color:#dfb184}
+@media(max-width:760px){.lab-body .lab-neural-apparatus{inset:0 -42% -10% 24%;opacity:.25}.lab-body .lab-signal-tile{overflow:visible}}
+@media(max-width:760px){
+  .lab-body .lab-destination{min-height:190px;padding-top:76px}
+  .lab-body .lab-destination svg{width:110px;height:87px;right:8px;top:0;opacity:.4}
+  .lab-body .lab-destination:last-child{min-height:130px;padding-top:20px}
+  .lab-body .lab-destination:last-child small{max-width:65%}
+}

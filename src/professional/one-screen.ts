@@ -3,10 +3,12 @@
  * and Spotify/GPT rendering remain the existing independent, consent-aware
  * professional clients. No telemetry or owner state is written here.
  */
-type TabName="home"|"experience"|"work"|"activity"|"writing"|"contact";
-const names:TabName[]=["home","experience","work","activity","writing","contact"];
+type TabName="systems"|"portfolio"|"home"|"experience"|"work"|"activity"|"writing"|"contact";
+const names:TabName[]=document.body.classList.contains("lab-body")?
+  ["home","experience","systems","work","portfolio","activity","writing","contact"]:
+  ["home","experience","work","activity","writing","contact"];
 const tabs=[...document.querySelectorAll<HTMLButtonElement>("[data-one-target]")];
-const buttons=[...document.querySelectorAll<HTMLButtonElement>("[data-one-go]")];
+const buttons=[...document.querySelectorAll<HTMLButtonElement|HTMLAnchorElement>("[data-one-go]")];
 const panels=[...document.querySelectorAll<HTMLElement>("[data-one-view]")];
 // A fixed viewport cannot show an unbounded list. Match the public event
 // summary to the number of rows the visible panel can actually accommodate.
@@ -53,6 +55,7 @@ function show(next:TabName,focus=false,updateUrl=true){
     const selected=tab.dataset.oneTarget===next;
     tab.setAttribute("aria-selected",String(selected));
     tab.tabIndex=selected?0:-1;
+    if(selected&&tab.closest(".lab-tabs-mobile"))tab.scrollIntoView({block:"nearest",inline:"nearest",behavior:"instant"});
   }
   if(updateUrl){
     const suffix=next==="home"?"":"#"+next;
@@ -76,9 +79,9 @@ tabs.forEach(tab=>{
     group?.querySelector<HTMLButtonElement>('[data-one-target="'+names[target]+'"]')?.focus();
   });
 });
-buttons.forEach(button=>button.addEventListener("click",()=>{
+buttons.forEach(button=>button.addEventListener("click",event=>{
   const next=button.dataset.oneGo||"";
-  if(known(next))show(next,true);
+  if(known(next)){event.preventDefault();show(next,true);}
 }));
 window.addEventListener("hashchange",()=>show(currentHash(),false,false));
 window.addEventListener("popstate",()=>show(currentHash(),false,false));

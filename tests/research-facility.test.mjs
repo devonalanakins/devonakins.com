@@ -6,15 +6,15 @@ import {renderResearchFacilityHome,lissajousPath} from '../src/professional/rese
 const page=renderResearchFacilityHome();
 
 test('laboratory candidate is independently navigable, semantic and source-honest',()=>{
-  assert.equal((page.match(/role="tabpanel"/g)||[]).length,6);
+  assert.equal((page.match(/role="tabpanel"/g)||[]).length,8);
   assert.equal((page.match(/role="tablist"/g)||[]).length,2);
-  assert.equal((page.match(/<h1(?:\s|>)/g)||[]).length,6);
-  for(const key of ['home','experience','work','activity','writing','contact']){
+  assert.equal((page.match(/<h1(?:\s|>)/g)||[]).length,8);
+  for(const key of ['home','experience','systems','work','portfolio','activity','writing','contact']){
     assert.match(page,new RegExp('id="one-panel-'+key+'"'));
     assert.match(page,new RegExp('data-one-target="'+key+'"'));
   }
   for(const term of ['Devon Alan Akins','MATHEMATICS','PHYSICS','COMPUTATIONAL NEUROSCIENCE',
-    'What I build.','What I am working on.','ANALYTIC MODEL',
+    'Explore the work.','What I am working on.','ANALYTIC MODEL',
     'NO MEASURED DATA','EXPERIMENT','PROPOSED','scientific computing']){
     assert.ok(page.toLowerCase().includes(term.toLowerCase()),term);
   }
@@ -22,7 +22,10 @@ test('laboratory candidate is independently navigable, semantic and source-hones
   assert.match(page,/data-public-spotify/);
   assert.match(page,/data-public-work data-work-mode="idle"/);
   assert.doesNotMatch(page,/data-public-gpt|\/gpt\/|GPT analytics|token counts|GPT · CAPTURED/i);
-  assert.equal((page.match(/class="lab-portfolio-project"/g)||[]).length,4);
+  assert.equal((page.match(/class="lab-destination"/g)||[]).length,5);
+  for(const key of ['experience','systems','work','portfolio','writing']){
+    assert.match(page,new RegExp('href="#one-panel-'+key+'" data-one-go="'+key+'" data-lab-destination="'+key+'"'));
+  }
   assert.equal((page.match(/class="lab-signal-tile /g)||[]).length,4);
   assert.match(page,/Independent software developer/i);
   assert.match(page,/data-public-threads/);

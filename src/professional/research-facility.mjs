@@ -9,8 +9,8 @@ import {renderHomeSocialHub, renderHomeThreadsSignal, renderThreadsPreview} from
 const escapeHtml=value=>String(value ?? '').replace(/[&<>"']/g,
   c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const sections=Object.freeze([
-  ['home','Home'],['experience','Research'],['work','Work'],
-  ['activity','Activity'],['writing','Writing'],['contact','Contact'],
+  ['home','Home'],['experience','Research'],['systems','Systems'],['work','Projects'],['portfolio','Portfolio'],
+  ['activity','Activity'],['writing','Fieldnotes'],['contact','Contact'],
 ]);
 /** Actual analytic Lissajous curve: x=sin(a*t), y=sin(b*t+phase).
  * Validated integer frequencies; no random data, inferred experiment or API.
@@ -92,12 +92,27 @@ function studyCard(index,category,title,description,status){
   return '<article class="lab-study"><span>'+index+' / '+category+'</span><h3>'+title+'</h3>'+
     '<p>'+description+'</p><small>'+status+'</small></article>';
 }
+// Original, lightweight line illustrations; decorative rather than measured data.
+const destinations=[
+  ['experience','Research','Mathematics, models & neural dynamics','01','M24 60C38 2 62 118 76 60S114 2 128 60 M24 60C38 118 62 2 76 60S114 118 128 60'],
+  ['systems','Systems','Architecture & independent infrastructure','02','M30 30H66V52H30Z M86 30H122V52H86Z M58 78H94V100H58Z M48 52V66H104V52 M76 66V78'],
+  ['work','Projects','Open source & work in progress','03','M30 30H122V100H30Z M30 48H122 M48 65L60 76L48 87 M72 87H100'],
+  ['portfolio','Portfolio','Selected software & practical work','04','M28 40H124V98H28Z M56 40V28H96V40 M28 62L76 79L124 62 M70 72H82V85H70Z'],
+  ['writing','Fieldnotes','Engineering notes & original writing','05','M38 26H104L118 40V100H38Z M104 26V42H118 M52 58H102 M52 72H102 M52 86H84'],
+];
+function destinationCards(){
+  return destinations.map(([key,title,description,index,path])=>
+    '<a class="lab-destination" href="#one-panel-'+key+'" data-one-go="'+key+'" data-lab-destination="'+key+'">'+
+    '<svg viewBox="0 0 152 120" aria-hidden="true" fill="none"><circle cx="76" cy="60" r="48" stroke="currentColor" opacity=".12"/>'+
+    '<path d="'+path+'" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/></svg>'+
+    '<span>'+index+' / EXPLORE</span><strong>'+title+'</strong><small>'+description+'</small><b aria-hidden="true">↗</b></a>').join('');
+}
 export function renderResearchFacilityHome(){
   const introduction='Devon Alan Akins is an independent software developer pursuing scientific computing, computational modeling and open-source AI infrastructure.';
   const home=view('home',
     '<div class="lab-overview lab-portfolio-layout">'+
     '<section class="lab-portfolio-hero" aria-label="Personal portfolio introduction">'+
-      '<div class="lab-portfolio-hero-art" aria-hidden="true"></div>'+
+      '<div class="lab-portfolio-hero-art" aria-hidden="true"></div><div class="lab-neural-apparatus" aria-hidden="true"></div>'+
       '<div class="lab-portfolio-hero-content">'+
         '<p class="lab-overline"><span class="lab-diamond" aria-hidden="true"></span>INDEPENDENT SOFTWARE / RESEARCH / SYSTEMS</p>'+
         '<h1>Devon Alan <em>Akins.</em></h1>'+
@@ -113,13 +128,9 @@ export function renderResearchFacilityHome(){
       '<div class="lab-hero-art-label"><span>PERSONAL LABORATORY / DA 001</span><span>ARCHITECTURAL ILLUSTRATION</span></div>'+
     '</section>'+
     '<section class="lab-portfolio-selected" aria-labelledby="lab-selected-title">'+
-      '<div class="lab-portfolio-section-label"><div><p class="lab-overline">PORTFOLIO / SELECTED WORK</p><h2 id="lab-selected-title">What I build.</h2></div>'+
+      '<div class="lab-portfolio-section-label"><div><p class="lab-overline">THE LABORATORY / FIVE DIRECTIONS</p><h2 id="lab-selected-title">Explore the work.</h2></div>'+
       '<button type="button" data-one-go="work" aria-label="Explore all selected work">ALL PROJECTS ↗</button></div>'+
-      '<div class="lab-portfolio-projects">'+
-        '<a class="lab-portfolio-project" href="/work/operations/"><span>01 / PRACTICE SYSTEMS</span><strong>Nona Neuropsychology</strong><small>Nonclinical operations & digital experience</small><b>PUBLIC OPERATIONS OVERVIEW ↗</b></a>'+
-        '<a class="lab-portfolio-project" href="https://github.com/devonalanakins/devonakins.com" target="_blank" rel="noopener noreferrer"><span>02 / WEB ENGINEERING</span><strong>DevonAkins.com</strong><small>Independent web platform & public activity</small><b>PUBLIC SOURCE ↗</b></a>'+
-        '<a class="lab-portfolio-project" href="/work/devonstation/"><span>03 / PERSONAL SYSTEMS</span><strong>DevonStation</strong><small>Owner-controlled software & infrastructure</small><b>PUBLIC PROJECT OVERVIEW ↗</b></a>'+
-        '<a class="lab-portfolio-project" href="https://github.com/devonalanakins/merit" target="_blank" rel="noopener noreferrer"><span>04 / SOFTWARE QUALITY</span><strong>Merit</strong><small>Evidence-based code integrity experiments</small><b>PUBLIC SOURCE ↗</b></a>'+
+      '<div class="lab-destinations">'+destinationCards()+
       '</div>'+
     '</section>'+
     '<section class="lab-portfolio-signals" aria-labelledby="lab-signals-title">'+
@@ -151,9 +162,9 @@ export function renderResearchFacilityHome(){
       studyCard('02','COMPUTATIONAL NEUROSCIENCE','Excitable systems','From membrane models to reproducible simulations of neural behavior.','PROPOSED EXPERIMENT')+
       studyCard('03','SCIENTIFIC COMPUTING','Accelerated methods','Test numerical algorithms, CPU/GPU correctness and workload-specific performance.','PROPOSED BENCHMARKS')+
       '</div></div>');
-  const systems=view('work',
+  const projects=view('work',
     '<div class="lab-secondary lab-systems"><div class="lab-section-intro">'+
-    '<p class="lab-overline">ENGINEERING / OPEN SOURCE</p><h1>Systems with <em>evidence.</em></h1>'+
+    '<p class="lab-overline">ENGINEERING / OPEN SOURCE</p><h1>Projects with <em>evidence.</em></h1>'+
     '<p>Existing software and operational work are distinct from future scientific infrastructure. Every project should show its maturity and source.</p></div>'+
     '<div class="lab-system-grid">'+
     '<a href="/work/" class="lab-system-card"><span>01 / PERSONAL WEBSITE</span><h3>DevonAkins.com</h3>'+
@@ -165,6 +176,24 @@ export function renderResearchFacilityHome(){
     '<a href="/work/operations/" class="lab-system-card"><span>04 / PROFESSIONAL OPERATIONS</span><h3>Practical systems</h3>'+
     '<p>Nonclinical workflows, service coordination and software that supports real work.</p><small>ONGOING PRACTICE · VIEW WORK ↗</small></a>'+
     '</div><p class="lab-secondary-note">The proposed AI compute laboratory is a research direction, not a deployed cloud or a published GPU benchmark.</p></div>');
+  const systems=view('systems',
+    '<div class="lab-secondary lab-systems"><div class="lab-section-intro"><p class="lab-overline">SYSTEMS / ENGINEERING PRACTICE</p>'+
+    '<h1>Architecture for <em>independence.</em></h1><p>I build source-controlled systems with explicit data boundaries, observable behavior, and a path back when a change fails.</p></div>'+
+    '<div class="lab-system-grid">'+
+    studyCard('01','WEB PLATFORM','An inspectable edge','This website combines static pages with a Worker API. Public signals use narrowly scoped projections rather than exposing owner records.','EXISTING WEBSITE ARCHITECTURE')+
+    studyCard('02','PERSONAL INFRASTRUCTURE','DevonStation','Owner-controlled software and private-first knowledge systems. Public descriptions stay separate from private records and services.','IN DEVELOPMENT')+
+    studyCard('03','SOURCE INTEGRITY','Evidence before confidence','Versioned changes, automated checks and independent browser review make work inspectable. A passing test is evidence only for what it actually checks.','ENGINEERING PRACTICE')+
+    studyCard('04','RESEARCH COMPUTING','Reproducible methods','Numerical correctness and documented assumptions come before performance claims. GPU benchmarks and scientific results remain proposed work.','RESEARCH DIRECTION')+
+    '</div></div>');
+  const portfolio=view('portfolio',
+    '<div class="lab-secondary lab-systems"><div class="lab-section-intro"><p class="lab-overline">PORTFOLIO / SELECTED PRACTICE</p>'+
+    '<h1>Software that supports <em>real work.</em></h1><p>Independent development and practical operations, with public scope and project maturity made explicit.</p></div>'+
+    '<div class="lab-system-grid">'+
+    '<a class="lab-system-card" href="/work/operations/"><span>01 / NONCLINICAL OPERATIONS</span><h3>Nona Neuropsychology</h3><p>Service coordination, administrative workflows and digital experience. This public overview contains no clinical records or patient information.</p><small>PUBLIC OPERATIONS OVERVIEW ↗</small></a>'+
+    '<a class="lab-system-card" href="/work/devonstation/"><span>02 / PERSONAL SOFTWARE</span><h3>DevonStation</h3><p>Independent tools and owner-controlled infrastructure, currently in development.</p><small>PUBLIC PROJECT OVERVIEW ↗</small></a>'+
+    '<a class="lab-system-card" href="https://github.com/devonalanakins/devonakins.com" target="_blank" rel="noopener noreferrer"><span>03 / WEB ENGINEERING</span><h3>DevonAkins.com</h3><p>Personal portfolio, research exploration and consent-aware public presence.</p><small>INSPECT PUBLIC SOURCE ↗</small></a>'+
+    '<a class="lab-system-card" href="https://github.com/devonalanakins/merit" target="_blank" rel="noopener noreferrer"><span>04 / SOFTWARE INTEGRITY</span><h3>Merit</h3><p>Experimental tools for evidence-based software review.</p><small>EXPERIMENTAL PUBLIC SOURCE ↗</small></a>'+
+    '</div></div>');
   const activity=view('activity',
     '<div class="lab-secondary lab-activity"><div class="lab-section-intro">'+
       '<p class="lab-overline">ACTIVITY / WORK IN THE OPEN</p>'+
@@ -190,8 +219,8 @@ export function renderResearchFacilityHome(){
       '<p class="lab-overline">FIELDNOTES / PUBLIC WRITING</p><h1>Think rigorously.<br><em>Write clearly.</em></h1>'+
       '<p>Technical research notes, mathematical derivations, engineering reports, and original writing. Published results must remain distinguishable from hypotheses.</p></div>'+
     '<div class="lab-notes-grid">'+
-    studyCard('01','SCIENTIFIC NOTEBOOK','Mathematical models','Working through equations, assumptions, tests and numerical methods before claiming results.','IN DEVELOPMENT')+
-    studyCard('02','ENGINEERING REPORTS','Reproducibility','Source-linked benchmarks, test limitations and verified deployment evidence.','PRACTICE STANDARD')+
+    '<article class="lab-study"><span>01 / MATHEMATICAL NOTE</span><h3>A curve is not a measurement</h3><p>The Research instrument evaluates x = sin(a·t), y = sin(b·t + π/2) over 0 ≤ t ≤ 2π. Integer frequencies close the trajectory over that interval. Changing their ratio changes the geometry.</p><details><summary>Read the assumptions</summary><p>Each coordinate is bounded by −1 and 1 before display scaling. The path joins 301 samples with straight segments; it is a visual approximation of an analytic curve. It contains no neural recordings and cannot establish anything about a biological system.</p></details><small>ANALYTIC EXPLANATION · NOT AN EXPERIMENT</small></article>'+
+    '<article class="lab-study"><span>02 / ENGINEERING NOTE</span><h3>What a public signal proves</h3><p>A timestamped GitHub event records a public change. It does not establish an active editor session. Development presence comes from a separate owner-approved reporter.</p><details><summary>Read the evidence boundary</summary><p>Unavailable sources remain unavailable. Playback metadata describes approved listening; decorative graphics are illustrations. Project maturity, test results and release status must each have their own evidence.</p></details><small>PUBLIC SOURCE INTERPRETATION</small></article>'+
     studyCard('03','ORIGINAL WRITING','Books & worlds','Long-form creative work remains part of my life, without defining the technical research specialization.','ONGOING CREATIVE WORK')+
     '</div><a class="lab-text-link" href="/writing/">Existing writing and research page ↗</a></div>');
   const contact=view('contact',
@@ -218,6 +247,7 @@ export function renderResearchFacilityHome(){
     '<script type="module" src="/src/professional/client.ts"></script>'+
     '<script type="module" src="/src/professional/one-screen.ts"></script>'+
     '<script type="module" src="/src/professional/research-facility.ts"></script>'+
+    '<noscript><style>html.lab-html,body.lab-body{height:auto;overflow:auto}.lab-body .lab-stage{height:auto;overflow:visible}.lab-body .lab-stage>.lab-view[hidden]{display:block!important}.lab-body .lab-view{height:auto;min-height:100vh}.lab-body .lab-secondary{height:auto}.lab-tabs,.lab-motion{display:none!important}</style></noscript>'+
     '</head><body class="p-body one-body lab-body">'+
     '<a class="one-skip lab-skip" href="#one-stage">Skip to content</a>'+
     '<div class="lab-background" aria-hidden="true"><div class="lab-background-grid"></div>'+
@@ -230,7 +260,7 @@ export function renderResearchFacilityHome(){
     '<button type="button" class="lab-motion" data-lab-motion aria-pressed="true" aria-label="Pause decorative motion">MOTION ON</button>'+
     '<a href="mailto:hello@devonakins.com" class="lab-header-contact">CONTACT ↗</a></div></header>'+
     '<main id="one-stage" class="one-stage lab-stage" tabindex="-1">'+
-    home+research+systems+activity+notes+contact+'</main>'+
+    home+research+systems+projects+portfolio+activity+notes+contact+'</main>'+
     '<div class="lab-bottom-status"><span>DEVON ALAN AKINS / INDEPENDENT DEVELOPER</span>'+
     '<span>PORTFOLIO · VERIFIED ACTIVITY · OPEN SOURCE</span></div>'+
     nav('mobile')+

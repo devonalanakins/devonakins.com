@@ -7,7 +7,7 @@ const get=path=>site.fetch(new Request('https://devonakins.com'+path));
 const html=await(await get('/')).text();
 assert.match(html,/Devon Alan Akins — Software, Systems & Research/);
 assert.match(html,/lab-overview/);
-assert.match(html,/lab-portfolio-projects/);
+assert.match(html,/lab-destinations/);
 assert.match(html,/lab-portfolio-signal-grid/);
 assert.match(html,/data-public-github-feed/);
 assert.match(html,/data-public-spotify/);
