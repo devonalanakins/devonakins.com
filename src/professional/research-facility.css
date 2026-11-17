@@ -196,17 +196,17 @@ body.lab-body *{box-sizing:border-box}
   .lab-discipline-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:1px;margin-top:1px}
   .lab-discipline-grid span{font-size:7px;padding:6px}
   .lab-intro-bottom{padding-top:8px;font-size:7px}
-  .lab-observatory{padding:11px;gap:8px;min-height:240px;flex:1}
+  .lab-observatory{padding:11px;gap:8px;min-height:240px;flex:1;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:#7ca99d transparent}
   .lab-observatory-heading{padding-bottom:8px;gap:4px}
   .lab-observatory-heading>span{font-size:8px}
   .lab-observatory-heading strong{font-size:20px}
   .lab-observatory-heading small{font-size:9px}
-  .lab-observatory-feed{min-height:90px;padding:9px}
+  .lab-observatory-feed{min-height:90px;flex:0 0 auto;padding:9px}
   .lab-feed [data-feed-status]{font-size:9px;margin:6px 0}
   .lab-feed li{padding:5px 0}
   .lab-source-status{padding:8px;gap:8px}
   .lab-source-status strong{font-size:9px}
-  .lab-evidence-note{font-size:8px}
+  .lab-evidence-note{font-size:8px;flex:none;margin:5px 0 0}
   .lab-spotify .p-signal-card{padding:7px}
   .lab-spotify .p-spotify-art{width:34px;height:34px}
   .lab-secondary{display:flex;flex-direction:column;gap:14px;padding:17px!important;min-height:0}
