@@ -111,7 +111,15 @@ async function refresh() {
 async function action(work, error) {
   if (processing) return;
   processing = true;
-  if (account) render(account);
+  // Lock controls without re-rendering: render(account) restores the last
+  // saved checkbox values, which would discard the owner's selections
+  // before the visibility request reads them.
+  if (account) {
+    for (const id of [
+      "connect", "disconnect", "preview-playback",
+      "public-status", "track-details", "save-settings",
+    ]) $(id).disabled = true;
+  }
   try {
     await work();
   } catch {

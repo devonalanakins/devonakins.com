@@ -693,6 +693,56 @@ def check_owner_control(browser, engine, origin, output, axe_source):
             assert page.locator("#public-status").is_disabled()
             assert page.locator("#track-details").is_disabled()
             assert page.locator("#save-settings").is_disabled()
+            # Reproduce the reported regression in both browsers: a save action
+            # must capture the unsaved checkbox selections before disabling
+            # controls, and persisted server state must survive a page reload.
+            spotify_status["publishingAllowed"] = True
+            writes = []
+            def settings_respond(route):
+                assert route.request.method == "POST"
+                assert route.request.headers.get("origin") == origin
+                requested = json.loads(route.request.post_data or "{}")
+                assert set(requested) == {"publicEnabled", "showDetails"}
+                assert all(isinstance(requested[key], bool) for key in requested)
+                writes.append(requested)
+                spotify_status.update(requested)
+                route.fulfill(status=200, content_type="application/json",
+                              body=json.dumps(spotify_status))
+            page.route("**/api/listening/admin/settings", settings_respond)
+            page.on("dialog", lambda dialog: dialog.accept())
+            page.reload(wait_until="load")
+            page.wait_for_function("!document.querySelector('#save-settings').disabled")
+            page.locator("#public-status").check()
+            page.locator("#track-details").check()
+            page.locator("#save-settings").click()
+            page.wait_for_function("document.querySelector('#public-state').textContent === 'Broadcasting enabled'")
+            assert writes == [{"publicEnabled": True, "showDetails": True}], (
+                label, "checked selections must reach same-origin API"
+            )
+            assert page.locator("#public-status").is_checked()
+            assert page.locator("#track-details").is_checked()
+            page.reload(wait_until="load")
+            page.wait_for_function("document.querySelector('#public-state').textContent === 'Broadcasting enabled'")
+            assert page.locator("#public-status").is_checked()
+            assert page.locator("#track-details").is_checked()
+            page.locator("#public-status").uncheck()
+            page.locator("#track-details").uncheck()
+            page.locator("#save-settings").click()
+            page.wait_for_function("document.querySelector('#public-state').textContent === 'Private'")
+            assert writes == [
+                {"publicEnabled": True, "showDetails": True},
+                {"publicEnabled": False, "showDetails": False},
+            ], (label, "visibility off must persist without a Spotify account mutation")
+            page.reload(wait_until="load")
+            page.wait_for_function("document.querySelector('#connection-state').textContent === 'CONNECTED'")
+            assert not page.locator("#public-status").is_checked()
+            assert not page.locator("#track-details").is_checked()
+            assert page.locator("#save-settings").is_enabled()
+            page.unroute("**/api/listening/admin/settings")
+            spotify_status["publishingAllowed"] = False
+            page.reload(wait_until="load")
+            page.wait_for_function("document.querySelector('#connection-state').textContent === 'CONNECTED'")
+            assert page.locator("#save-settings").is_disabled()
             assert page.locator("h1").inner_text().startswith("Listen anywhere.")
             geometry = page.evaluate("""() => ({
               overflow: document.documentElement.scrollWidth - innerWidth,
