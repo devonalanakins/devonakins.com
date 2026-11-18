@@ -1,4 +1,4 @@
-import { readFile, writeFile, readdir, mkdir } from "node:fs/promises";
+import { readFile, writeFile, readdir, mkdir, rm } from "node:fs/promises";
 import { createHash } from "node:crypto";
 import { gzipSync } from "node:zlib";
 import { execFileSync } from "node:child_process";
@@ -26,6 +26,12 @@ async function walk(dir) {
       ),
     )
   ).flat();
+}
+// Keep retired generated imagery in source history, but do not publish it
+// as accessible assets in the approved 2D laboratory variant. V4 and all
+// other design variants retain their original assets and behavior.
+if(process.env.LABORATORY_SITE_CANDIDATE==="1"){
+  await rm("dist/professional/cinematic",{recursive:true,force:true});
 }
 const files = await walk("dist");
 const assets = {};
