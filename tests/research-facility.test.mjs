@@ -91,10 +91,8 @@ test('the candidate uses first-party interactions and an explicit build gate',as
   assert.match(stylesheet,/\.lab-body>\.lab-tabs-mobile \.one-tablist\{display:grid/);
   assert.doesNotMatch(stylesheet,/\.lab-header \.one-tabs-desktop|\.lab-body>\.one-tabs-mobile/);
   assert.doesNotMatch(stylesheet,/@import|url\(\s*["']?https?:|https:\/\/fonts\./);
-  assert.match(stylesheet,/\/professional\/laboratory-chamber\.svg/);
-  const chamber=await readFile(new URL('../public/professional/laboratory-chamber.svg',import.meta.url),'utf8');
-  assert.match(chamber,/viewBox="0 0 960 1240"/);
-  assert.doesNotMatch(chamber,/<script|<image|href="https?:|data:image\//i);
+  assert.doesNotMatch(stylesheet,/laboratory-chamber\.svg|perspective\(|rotateX\(|rotateY\(/);
+  assert.doesNotMatch(portfolioStyle,/translate3d\(|preserve-3d|WebGLRenderer/);
   assert.match(client,/data-lab-axis/);
   assert.match(client,/data-lab-curve/);
   assert.match(client,/Math\.sin/);
