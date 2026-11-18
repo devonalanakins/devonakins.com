@@ -222,6 +222,13 @@ async function finish(request,env,now,fetcher){
        (typeof env.THREADS_PUBLIC_USERNAME==="string" &&
         identity.username.toLowerCase()!==env.THREADS_PUBLIC_USERNAME.toLowerCase()))
       throw Error("Wrong account");
+    // Reauthorizing a connected account cannot silently switch its identity.
+    // An intentional account switch first requires an explicit disconnect.
+    const previous=await accountRow(db);
+    if(previous?.token_cipher &&
+       (!metaId(previous.threads_user_id) ||
+        metaId(previous.threads_user_id)!==metaId(identity.id)))
+      throw Error("Wrong account");
     const key=await importEncryptionKey(env.LISTENING_TOKEN_KEY);
     stage="storage";
     const cipher=await seal(long.access_token,key,"threads-long-lived-access");
