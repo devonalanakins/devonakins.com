@@ -350,6 +350,33 @@ test("private connection verification reads encrypted D1, rejects wrong audience
   assert.doesNotMatch(await (await check(endpoint,f.env,owner)).text(),/DO_NOT_RETURN|l{96}/);
 });
 
+test("reauthorization never discards an existing grant when a replacement fails",async()=>{
+  let failExchange=false;
+  const f=fixture(true,async(url)=>{
+    const path=new URL(url).pathname;
+    if(path==="/oauth/access_token")
+      return failExchange?Response.json({error:{code:100,message:"PRIVATE_META_MESSAGE"}},{status:400}):
+        Response.json({access_token:"s".repeat(96),user_id:"123456789012345"});
+    if(path==="/access_token")
+      return Response.json({access_token:"l".repeat(96),token_type:"bearer",expires_in:5184000});
+    if(path==="/v1.0/me")
+      return Response.json({id:"123456789012345",username:"DevonFixture"});
+    throw Error("Unexpected provider request");
+  });
+  assert.equal((await f.callback(await f.auth())).status,303);
+  const before=f.sql.prepare("SELECT revision,token_cipher,token_expires_at,verified_at FROM threads_connection WHERE id=1").get();
+  assert.equal((await storedThreadsStatus(f.env,now)).connected,true);
+  const retry=await f.auth();
+  assert.deepEqual(f.sql.prepare("SELECT revision,token_cipher,token_expires_at,verified_at FROM threads_connection WHERE id=1").get(),before,
+    "Beginning reauthorization cannot revoke an existing credential");
+  failExchange=true;
+  const result=await f.callback(retry);
+  assert.equal(result.headers.get("Location"),"/owner/presence/?threads=exchange&detail=http-400-meta-100");
+  assert.deepEqual(f.sql.prepare("SELECT revision,token_cipher,token_expires_at,verified_at FROM threads_connection WHERE id=1").get(),before,
+    "Failed reauthorization must preserve the prior token and release consent");
+  assert.equal((await storedThreadsStatus(f.env,now)).connected,true);
+});
+
 test("owner renews a mature unexpired private Threads token without public sharing",async()=>{
   const f=fixture();
   await f.callback(await f.auth());
