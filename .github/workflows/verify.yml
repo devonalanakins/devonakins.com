@@ -306,9 +306,7 @@ jobs:
           python3 -m playwright install --with-deps chromium webkit
       - name: Verify ten viewports, navigation and media privacy in actual workerd
         run: LABORATORY_RUNTIME_BROWSER_CHECK=1 node scripts/verify-laboratory-runtime.mjs
-      - name: Verify serving cinematic site in both real browser engines
-        env:
-          LABORATORY_TEST_ORIGIN: https://devonakins.com
+      - name: Verify candidate build in both real browser engines
         run: |
           python3 tests/laboratory_browser_acceptance.py
           python3 tests/cinematic_navigation_acceptance.py
