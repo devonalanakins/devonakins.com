@@ -122,6 +122,18 @@ test("public site uses human-first labels, never release or internal interface n
   }
 });
 
+test("ANEVUM writing and project views do not resurrect the old fictional universe identity", () => {
+  const writing = renderV5PublicPage("writing");
+  const institute = renderV5ProjectPage("anevum");
+  assert.match(writing,/A separate direction: open learning/);
+  assert.match(writing,/Open Institute project context/);
+  assert.doesNotMatch(writing,/A world for original stories|Creative project context/);
+  assert.match(institute,/ANEVUM — The Open Institute/);
+  assert.match(institute,/free-to-learn STEM institute in development/i);
+  assert.match(institute,/non-accredited/);
+  assert.doesNotMatch(institute,/A creative world for stories, games/);
+});
+
 test("Work directory filters follow reviewed public presentation categories, not legacy implementation labels", () => {
   const work = renderV5PublicPage("projects");
   for(const part of ["editor","tasks","github","status"])
