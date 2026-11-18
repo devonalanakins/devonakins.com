@@ -61,7 +61,12 @@ try:
                     if personal.count():
                         assert personal.is_visible()
                         assert page.locator('.lab-personal-portrait img').get_attribute('src')=='/professional/devon-portrait.avif'
-                        assert page.locator('.lab-personal-portrait img').evaluate('image=>image.complete && image.naturalWidth>=400')
+                        # The portrait is intentionally lazy-loaded below the fold.
+                        # Request it by bringing it into view, then wait for decode;
+                        # checking naturalWidth immediately at load is a false failure.
+                        page.locator('.lab-personal-portrait img').scroll_into_view_if_needed()
+                        page.wait_for_function("() => {const im=document.querySelector('.lab-personal-portrait img');return im.complete && im.naturalWidth>=400}",timeout=15000)
+                        page.evaluate("window.scrollTo(0,0)")
                         assert page.locator('.lab-personal-portrait img').get_attribute('alt')
                         assert page.evaluate("""() => {
                           const hero=document.querySelector('.lab-portfolio-hero').getBoundingClientRect();
