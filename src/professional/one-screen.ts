@@ -9,6 +9,9 @@ const laboratory=document.body.classList.contains("lab-body");
 const names:TabName[]=laboratory?
   ["home","experience","systems","work","portfolio","activity","writing","contact"]:
   ["home","experience","work","activity","writing","contact"];
+const primaryForView=(view:TabName):TabName=>!laboratory?view:
+  view==="systems"||view==="portfolio"||view==="activity"?"work":
+  view==="writing"?"experience":view==="contact"?"home":view;
 const tabs=[...document.querySelectorAll<HTMLButtonElement>("[data-one-target]")];
 const buttons=[...document.querySelectorAll<HTMLButtonElement|HTMLAnchorElement>("[data-one-go]")];
 const panels=[...document.querySelectorAll<HTMLElement>("[data-one-view]")];
@@ -63,8 +66,8 @@ function show(next:TabName,focus=false,updateUrl=true){
   }
   current=next;
   if(laboratory&&document.body.dataset.labNative!=='true'){
-    const label=document.querySelector<HTMLElement>('[data-one-target="'+next+'"] .one-tab-label')?.textContent?.trim()||'Portfolio';
-    const title=next==='home'?'Devon Alan Akins — Software, Systems & Research':label+' — Devon Alan Akins';
+    const label=({home:'Home',experience:'Research',systems:'Systems',work:'Work',portfolio:'Portfolio',activity:'Activity',writing:'Fieldnotes',contact:'Contact'} as Record<TabName,string>)[next];
+    const title=next==='home'?'Devon Alan Akins — Operations, Engineering & Research':label+' — Devon Alan Akins';
     document.title=title;
     document.querySelector('meta[property="og:title"]')?.setAttribute('content',title);
     document.querySelector('link[rel="canonical"]')?.setAttribute('href','https://devonakins.com'+LABORATORY_ROUTES[next]);
@@ -76,7 +79,7 @@ function show(next:TabName,focus=false,updateUrl=true){
     if(selected&&focus)panel.focus({preventScroll:true});
   }
   for(const tab of tabs){
-    const selected=tab.dataset.oneTarget===next;
+    const selected=tab.dataset.oneTarget===primaryForView(next);
     tab.setAttribute("aria-selected",String(selected));
     tab.tabIndex=selected?0:-1;
     if(selected&&tab.closest(".lab-tabs-mobile"))tab.scrollIntoView({block:"nearest",inline:"nearest",behavior:"instant"});
@@ -102,7 +105,7 @@ tabs.forEach(tab=>{
     const delta=event.key==="ArrowRight"||event.key==="ArrowDown"?1:
       event.key==="ArrowLeft"||event.key==="ArrowUp"?-1:0;
     const target=event.key==="Home"?0:event.key==="End"?groupNames.length-1:
-      delta?(groupNames.indexOf(current)+delta+groupNames.length)%groupNames.length:-1;
+      delta?(groupNames.indexOf(primaryForView(current))+delta+groupNames.length)%groupNames.length:-1;
     if(target<0)return;
     event.preventDefault();
     show(groupNames[target]);

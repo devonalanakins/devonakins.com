@@ -18,6 +18,23 @@ for(const [view,path] of Object.entries(LABORATORY_ROUTES)){
  assert.doesNotMatch(html,/data-public-gpt|GPT analytics|\/gpt\/|headshot-concept\.webp|SYNTHETIC QA FIXTURE/);
  assert.match(response.headers.get('content-security-policy'),/connect-src 'self' https:\/\/api\.github\.com;/);
 }
+// The owner-approved portrait must be part of the exact packaged Worker, not
+// merely a link in rendered HTML or a local-only build artifact.
+const portraitHome=await(await get('/')).text();
+assert.match(portraitHome,/class="lab-personal"/);
+assert.match(portraitHome,/src="\/professional\/devon-portrait\.avif"/);
+assert.doesNotMatch(portraitHome,/\/professional\/cinematic\/[^"]+\.webp/);
+const portrait=await get('/professional/devon-portrait.avif');
+assert.equal(portrait.status,200,'Approved portrait must be present');
+assert.match(portrait.headers.get('content-type')||'',/^image\/avif\b/);
+const portraitBytes=new Uint8Array(await portrait.arrayBuffer());
+assert.ok(portraitBytes.length>2000&&portraitBytes.length<220000);
+assert.equal(new TextDecoder().decode(portraitBytes.slice(4,8)),'ftyp');
+
+// Removed artwork must not be accessible from the new two-dimensional release.
+for(const old of ['/professional/cinematic/chamber-wide.webp','/professional/cinematic/chamber-mobile.webp','/professional/cinematic/research.webp','/professional/cinematic/systems.webp','/professional/cinematic/projects.webp','/professional/cinematic/portfolio.webp','/professional/cinematic/fieldnotes.webp']){
+ assert.equal((await get(old)).status,404,'Legacy generated image must not be served: '+old);
+}
 for(const p of approvedPublicProjects){
  const response=await get('/work/'+p.slug+'/');assert.equal(response.status,200,p.slug);
  const html=await response.text();assert.match(html,/lab-case-study/);assert.ok(html.includes(p.title.replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;")));
@@ -34,4 +51,4 @@ const publicSignal=await(await get('/api/activity/v4')).json();assert.equal(Obje
 assert.equal((await get('/owner/gpt/')).status,403);
 const worker=await readFile('.release/worker.mjs','utf8');assert.match(worker,/professionalCandidate:false,laboratoryCandidate:true/);
 const sitemap=await(await get('/sitemap.xml')).text();assert.doesNotMatch(sitemap,/\/gpt\//);
-console.log('Cinematic packaged Worker: public routes, approved cases, reversible redirects, retired analytics, owner resources, CSP and exact variant passed.');
+console.log('Cinematic packaged Worker: public routes, approved cases, reversible redirects, approved AVIF portrait, retired analytics, owner resources, CSP and exact variant passed.');

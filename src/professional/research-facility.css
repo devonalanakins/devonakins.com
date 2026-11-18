@@ -9,11 +9,11 @@ body.lab-body *{box-sizing:border-box}
 .lab-body :focus-visible{outline:2px solid var(--lab-green);outline-offset:3px}
 .lab-body a{color:inherit}
 .lab-body .lab-visually-hidden{position:absolute!important;width:1px;height:1px;clip:rect(0,0,0,0);overflow:hidden;white-space:nowrap}
-.lab-body .one-skip{position:fixed;top:12px;left:12px;z-index:500;transform:translateY(-140%);background:var(--lab-frost);color:var(--lab-bg);padding:10px 15px;border-radius:2px}
-.lab-body .one-skip:focus{transform:none}
+.lab-body .one-skip{position:fixed;top:12px;left:12px;z-index:500;transform:translateY(-140%);clip-path:inset(50%);background:var(--lab-frost);color:var(--lab-bg);padding:10px 15px;border-radius:2px}
+.lab-body .one-skip:focus{transform:none;clip-path:none}
 .lab-background{position:fixed;inset:0;overflow:hidden;z-index:-2;pointer-events:none;background:radial-gradient(ellipse 65% 80% at 54% 44%,#16333a 0,#0c2028 36%,transparent 78%),linear-gradient(122deg,#071014,#0a1c20 55%,#050b11)}
 .lab-background:before{content:"";position:absolute;inset:0;background:linear-gradient(115deg,transparent 47%,#d2a6770a 60%,transparent 71%);opacity:.6}
-.lab-background-grid{position:absolute;inset:-60%;background-image:linear-gradient(#a7dfd408 1px,transparent 1px),linear-gradient(90deg,#a7dfd408 1px,transparent 1px);background-size:72px 72px;transform:perspective(680px) rotateX(68deg) translateY(30%) scale(1.15);mask-image:linear-gradient(to top,#0007,transparent 75%);opacity:.5}
+.lab-background-grid{position:absolute;inset:-60%;background-image:linear-gradient(#a7dfd408 1px,transparent 1px),linear-gradient(90deg,#a7dfd408 1px,transparent 1px);background-size:72px 72px;transform:none;mask-image:linear-gradient(to top,#0007,transparent 75%);opacity:.5}
 .lab-background-glow{position:absolute;inset:-25%;background:radial-gradient(ellipse 21% 40% at 50% 42%,#7ed7c217,transparent 86%);animation:lab-ambient 20s ease-in-out infinite alternate}
 @keyframes lab-ambient{from{transform:translateX(-2%) scale(.98)}to{transform:translateX(3%) scale(1.06)}}
 .lab-header{display:grid;grid-template-columns:minmax(225px,1fr) auto minmax(200px,1fr);align-items:center;gap:25px;position:relative;z-index:20;height:76px;padding:0 clamp(20px,3.1vw,56px);border-bottom:1px solid var(--lab-hair);background:#061014da;backdrop-filter:blur(18px)}
@@ -54,7 +54,7 @@ body.lab-body *{box-sizing:border-box}
 .lab-discipline-grid span{padding:11px;font:700 9px/1.45 ui-monospace,monospace;letter-spacing:.055em;background:#112328;color:#b5d6cd}
 .lab-intro-bottom{display:flex;align-items:center;justify-content:space-between;gap:15px;margin-top:auto;padding-top:22px;width:100%;font-size:9px;letter-spacing:.06em;color:#a0bdb3}
 .lab-field{background:radial-gradient(ellipse at 45% 44%,#1b383a66,transparent 59%),linear-gradient(120deg,#0c1e23,#071318)}
-.lab-field:before{content:"";position:absolute;inset:0;background:url('/professional/laboratory-chamber.svg') center center/cover no-repeat;opacity:.37;mix-blend-mode:screen;pointer-events:none}
+.lab-field:before{content:"";position:absolute;inset:0;background-image:linear-gradient(#86c8c315 1px,transparent 1px),linear-gradient(90deg,#86c8c315 1px,transparent 1px);background-size:28px 28px;opacity:.55;pointer-events:none}
 .lab-field>.lab-instrument{z-index:1}
 .lab-field-label,.lab-field-annotation{z-index:2}
 .lab-field:after{content:"";position:absolute;pointer-events:none;inset:0;border:11px solid #80b4b008}

@@ -38,6 +38,18 @@ const professionalCandidate = process.env.PROFESSIONAL_SITE_CANDIDATE === "1";
 const oneScreenCandidate = process.env.ONE_SCREEN_SITE_CANDIDATE === "1";
 // Review-only scientific identity. No change to the protected default V4.
 const laboratoryCandidate = process.env.LABORATORY_SITE_CANDIDATE === "1";
+// A real, locally packaged owner photo is required; absent assets render no
+// portrait block and make no broken or third-party image requests.
+const laboratoryPortraitAvailable = laboratoryCandidate && existsSync('public/professional/devon-portrait.avif');
+if(laboratoryPortraitAvailable){
+  const bytes=await readFile('public/professional/devon-portrait.avif');
+  // AVIF box signature and size check prevent a stray placeholder, misnamed
+  // file or giant original upload from silently shipping on a public build.
+  if(bytes.length<2_000 || bytes.length>220_000 ||
+     bytes.toString('ascii',4,8)!=='ftyp' ||
+     !['avif','avis'].includes(bytes.toString('ascii',8,12)))
+    throw new Error('Invalid first-party portrait asset: expected optimized AVIF');
+}
 if (laboratoryCandidate && (oneScreenCandidate || professionalCandidate || fullV5Candidate || v5Candidate)) {
   throw new Error("Select only one public website design candidate per build");
 }
@@ -65,7 +77,7 @@ function repairProfessionalLegacyNavigation(html) {
   });
 }
 
-await writeFile("index.html", laboratoryCandidate ? renderResearchFacilityHome({datedCapture:datedGptCapture}) : oneScreenCandidate ? renderOneScreenHome({datedCapture:datedGptCapture,motionAssetAvailable}) : professionalCandidate ? renderProfessionalPage("home",publicGptContext) : fullV5Candidate ? renderV5PublicPage("home") : v5Candidate ? renderV5PublicHomepage() : home);
+await writeFile("index.html", laboratoryCandidate ? renderResearchFacilityHome({portraitAvailable:laboratoryPortraitAvailable}) : oneScreenCandidate ? renderOneScreenHome({datedCapture:datedGptCapture,motionAssetAvailable}) : professionalCandidate ? renderProfessionalPage("home",publicGptContext) : fullV5Candidate ? renderV5PublicPage("home") : v5Candidate ? renderV5PublicHomepage() : home);
 const all = [...new Set([
   ...pages.map(({ path }) => path),
   ...(laboratoryCandidate?[...Object.values(LABORATORY_ROUTES),...Object.keys(LABORATORY_REDIRECTS),"/listening/"]:[]),
@@ -83,7 +95,7 @@ for (const path of all) {
   const project=projects.find(p=>path==="/work/"+p.slug+"/");
   const laboratoryPath=LABORATORY_REDIRECTS[path]||path;
   const laboratoryView=laboratoryViewForPath(laboratoryPath)||'portfolio';
-  const html=laboratoryCandidate?renderResearchFacilityHome({initialView:project?'portfolio':path==='/listening/'?'activity':path==='/404/'?'home':laboratoryView,canonicalPath:project?path:laboratoryPath,project,listening:path==='/listening/',notFound:path==='/404/'}):professionalCandidate && professionalPaths.has(path) ? renderProfessionalPage(professionalPaths.get(path),publicGptContext) :
+  const html=laboratoryCandidate?renderResearchFacilityHome({initialView:project?'portfolio':path==='/listening/'?'activity':path==='/404/'?'home':laboratoryView,canonicalPath:project?path:laboratoryPath,project,listening:path==='/listening/',notFound:path==='/404/',portraitAvailable:laboratoryPortraitAvailable}):professionalCandidate && professionalPaths.has(path) ? renderProfessionalPage(professionalPaths.get(path),publicGptContext) :
     fullV5Candidate && routeKey ? renderV5PublicPage(routeKey) :
     fullV5Candidate && topic ? renderV5PublicPage("knowledge",{topic:topic.slug,publicPath:path}) :
     professionalCandidate && project ? renderProfessionalProjectPage(project.slug) :

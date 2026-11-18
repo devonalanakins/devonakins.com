@@ -277,7 +277,7 @@ jobs:
 
   laboratory_candidate:
     # Opt-in personal scientific identity. Does not deploy or modify default V4.
-    if: github.head_ref == 'design/computational-laboratory-2026-11-17' || github.ref == 'refs/heads/design/computational-laboratory-2026-11-17'
+    if: github.head_ref == 'design/computational-laboratory-2026-11-17' || github.ref == 'refs/heads/design/computational-laboratory-2026-11-17' || github.head_ref == 'fix/restore-live-cinematic-depth-2026-11-17' || github.ref == 'refs/heads/fix/restore-live-cinematic-depth-2026-11-17'
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     permissions:
@@ -306,9 +306,7 @@ jobs:
           python3 -m playwright install --with-deps chromium webkit
       - name: Verify ten viewports, navigation and media privacy in actual workerd
         run: LABORATORY_RUNTIME_BROWSER_CHECK=1 node scripts/verify-laboratory-runtime.mjs
-      - name: Verify serving cinematic site in both real browser engines
-        env:
-          LABORATORY_TEST_ORIGIN: https://devonakins.com
+      - name: Verify candidate build in both real browser engines
         run: |
           python3 tests/laboratory_browser_acceptance.py
           python3 tests/cinematic_navigation_acceptance.py
