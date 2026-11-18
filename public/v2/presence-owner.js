@@ -131,8 +131,7 @@ function lock(value) {
     !state?.sources?.threads?.usernameConfigured;
   if (!value) {
     el("threads-connect").disabled = !threadsAuthState?.appConfigured ||
-      !threadsAuthState?.storageReady || !!threadsAuthState?.connected ||
-      threadsAuthBusy;
+      !threadsAuthState?.storageReady || threadsAuthBusy;
     el("threads-disconnect").disabled = !threadsAuthState?.connected ||
       threadsAuthBusy;
     const last=Date.parse(threadsAuthState?.verifiedAt||"");
@@ -356,6 +355,7 @@ el("threads-check").onclick=checkThreadsConnection;
 function renderThreadsAuthorization(data) {
   if(!data || data.version!==1)throw Error("Invalid Threads status.");
   threadsAuthState=data;
+  el("threads-connect").textContent=data.connected?"Reauthorize Threads privately":"Connect Threads privately";
   const nextRenewal=Date.parse(data.verifiedAt||"")+24*60*60_000;
   const message=data.connected
     ? "Official Threads authorization securely stored. Expires " +
@@ -404,16 +404,16 @@ function displayThreadsReturn(result,connection,started,detail=null) {
     callback:"Meta did not return a usable authorization response. Try again in a single Safari tab.",
     expired:"The OAuth session expired or its private browser cookie was lost. Sign in through Cloudflare Access and retry in the same Safari tab.",
     reused:"That authorization response was already used. Start a new private connection.",
-    exchange:"Meta rejected or failed the first authorization-code exchange. No token was stored. App ID, app secret, provider host and callback are the next diagnostics.",
-    extend:"Meta rejected the long-lived-token exchange. No authorization was saved.",
-    profile:"Meta returned an account that could not be verified. No authorization was saved.",
-    storage:"Meta authorization succeeded, but private encrypted storage failed.",
+    exchange:"Meta rejected or failed the first authorization-code exchange. Existing authorization, if any, was not replaced. App ID, app secret, provider host and callback are the next diagnostics.",
+    extend:"Meta rejected the long-lived-token exchange. Existing authorization, if any, was not replaced.",
+    profile:"Meta returned an account that could not be verified. Existing authorization, if any, was not replaced.",
+    storage:"Meta authorization succeeded, but private encrypted storage failed. Any previously stored authorization remains unchanged.",
     authorization:"Meta authorization was not completed. No sharing was changed.",
   };
   let message=null;
   if(result==="connected"){
     message=connection?.connected
-      ? "Threads is privately connected and verified. Public sharing remains disabled."
+      ? "Threads is privately connected and verified. Public post visibility is controlled separately and was not changed."
       : "Meta returned a success indication, but the private database did not verify a stored connection.";
   } else if(result && Object.hasOwn(failures,result)){
     message=failures[result];
@@ -457,7 +457,7 @@ async function loadThreadsAuthorization() {
 }
 async function changeThreadsAuthorization(action) {
   if(busy || threadsAuthBusy || !threadsAuthState?.storageReady ||
-     (action==="start" && (!threadsAuthState.appConfigured || threadsAuthState.connected)) ||
+     (action==="start" && !threadsAuthState.appConfigured) ||
      (action==="disconnect" && !threadsAuthState.connected) ||
      (action==="renew" && (!threadsAuthState.connected ||
        !Number.isFinite(Date.parse(threadsAuthState.verifiedAt||"")) ||
@@ -497,8 +497,8 @@ async function changeThreadsAuthorization(action) {
     } else {
       await Promise.all([loadThreadsAuthorization(),load()]);
       el("threads-check-result").textContent=action==="renew"
-        ? "Private Threads authorization renewed. No posts shared."
-        : "Local Threads token removed. Revoke app access in Meta separately. Public posts remain off.";
+        ? "Private Threads authorization renewed. Public post visibility settings were not changed."
+        : "Local Threads token removed. Public feed will be unavailable without renewed authorization; revoke app access in Meta separately.";
     }
   } catch(error) {
     el("threads-connection-status").textContent=
