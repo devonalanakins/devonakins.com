@@ -278,3 +278,28 @@ html.lab-html{background:#f3f1e9;scroll-padding-top:80px}
 @media(max-width:760px){.lab-body .lab-portfolio-hero h1{font-size:clamp(58px,17vw,125px)}}
 
 .lab-body .lab-stage .lab-overview.lab-portfolio-layout:not(:has(.lab-personal)){grid-template-columns:1fr}
+
+/* PUBLIC NONCLINICAL OPERATING BRIEF / case-study-specific, no live counters. */
+.lab-body .da-nona-brief{margin-top:clamp(45px,6vw,90px);border-top:1px solid var(--line);padding-top:clamp(30px,4vw,55px);min-width:0}
+.lab-body .da-nona-kicker,.lab-body .da-nona-stream-head,.lab-body .da-nona-evidence span{font:650 10px/1.5 Arial,sans-serif;letter-spacing:.11em;color:var(--blue)}
+.lab-body .da-nona-intro{max-width:900px;margin-bottom:34px}
+.lab-body .da-nona-intro h2{font:700 clamp(38px,5.2vw,82px)/.99 Arial,sans-serif;letter-spacing:-.065em;color:var(--ink);margin:18px 0 22px}
+.lab-body .da-nona-intro>p{max-width:74ch;font:16px/1.7 Arial,sans-serif;color:var(--muted)}
+.lab-body .da-nona-streams{list-style:none;counter-reset:none;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));padding:0;margin:0;gap:0 40px}
+.lab-body .da-nona-streams li{border-top:1px solid var(--line);padding:25px 0 32px;min-width:0}
+.lab-body .da-nona-stream-head{display:flex;align-items:center;gap:18px}
+.lab-body .da-nona-stream-head b{font-size:12px;color:var(--ink);font-weight:650}
+.lab-body .da-nona-streams h3{color:var(--ink);font:650 clamp(22px,2.5vw,37px)/1.1 Arial,sans-serif;letter-spacing:-.045em;margin:16px 0 12px}
+.lab-body .da-nona-streams p,.lab-body .da-nona-evidence p{font:14px/1.65 Arial,sans-serif;color:var(--muted);max-width:57ch;margin:0}
+.lab-body .da-nona-evidence{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px;padding:26px 0 30px;border-block:1px solid var(--line)}
+.lab-body .da-nona-evidence>div{display:flex;flex-direction:column;align-items:flex-start;gap:9px}
+.lab-body .da-nona-evidence strong{font:650 19px/1.25 Arial,sans-serif;color:var(--ink);letter-spacing:-.025em}
+.lab-body .da-nona-disclosure{font:12px/1.65 Arial,sans-serif;color:var(--muted);max-width:86ch;margin:20px 0 0}
+@media(max-width:760px){
+ .lab-body .da-nona-brief{margin-top:40px;padding-top:30px}
+ .lab-body .da-nona-intro h2{font-size:clamp(34px,9vw,52px)}
+ .lab-body .da-nona-intro>p{font-size:14px}
+ .lab-body .da-nona-streams,.lab-body .da-nona-evidence{grid-template-columns:1fr;gap:0}
+ .lab-body .da-nona-streams li{padding:22px 0 27px}
+ .lab-body .da-nona-evidence{gap:22px}
+}
