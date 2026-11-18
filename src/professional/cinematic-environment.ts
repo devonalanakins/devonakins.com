@@ -315,7 +315,7 @@ function mountEnvironment(host: HTMLElement, surface: HTMLCanvasElement): void {
       (event.clientY - rect.top) / rect.height * 2 - 1,
     );
   };
-  const resetPointer = (): void => pointer.set(0, 0);
+  const resetPointer = (): void => { pointer.set(0, 0); };
   host.addEventListener("pointermove", onPointer, { passive: true });
   host.addEventListener("pointerleave", resetPointer);
   const intersection = new IntersectionObserver(entries => {
