@@ -25,6 +25,8 @@ test('laboratory candidate is independently navigable, semantic and source-hones
   assert.match(page,/data-public-work data-work-presentation="editor" data-work-mode="idle"/);
   assert.doesNotMatch(page,/data-public-gpt|\/gpt\/|GPT analytics|token counts|GPT · CAPTURED/i);
   assert.equal((page.match(/class="lab-destination"/g)||[]).length,5);
+  assert.match(page,/data-lab-scene-canvas/);
+  assert.match(page,/src="\/src\/professional\/cinematic-environment\.ts"/);
   for(const key of ['experience','systems','work','portfolio','writing']){
     assert.match(page,new RegExp('href="'+LABORATORY_ROUTES[key]+'" data-one-go="'+key+'" data-lab-destination="'+key+'"'));
   }
@@ -58,6 +60,8 @@ test('the candidate uses first-party interactions and an explicit build gate',as
   const portfolioStyle=await readFile(new URL('../src/professional/research-portfolio.css',import.meta.url),'utf8');
   assert.match(portfolioStyle,/\.lab-destinations/);
   assert.match(portfolioStyle,/\.lab-portfolio-signal-grid/);
+  assert.match(portfolioStyle,/\.lab-live-scene/);
+  assert.match(portfolioStyle,/prefers-reduced-motion/);
   assert.match(portfolioStyle,/@media\(max-width:760px\)/);
   assert.doesNotMatch(portfolioStyle,/@import|url\(\s*["']?https?:|https:\/\/fonts\./);
   assert.match(page,/href="\/src\/professional\/research-portfolio.css"/);
