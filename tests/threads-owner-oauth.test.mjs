@@ -152,7 +152,7 @@ test("OAuth refuses wrong accounts, invalid provider payload and preexisting con
 });
 
 
-test("Workers-compatible manual redirect policy permits same-host OAuth success without auto-follow",async()=>{
+test("Workers-compatible manual redirect policy permits allowlisted Meta Graph hosts without auto-follow",async()=>{
   const observed=[];
   const f=fixture(true,async (url,init)=>{
     observed.push({url,init});
@@ -171,7 +171,9 @@ test("Workers-compatible manual redirect policy permits same-host OAuth success 
   assert.equal(result.headers.get("Location"),"/owner/presence/?threads=connected");
   assert.equal(observed.length,3);
   assert.ok(observed.every(item=>item.init.redirect==="manual"));
-  assert.ok(observed.every(item=>new URL(item.url).origin==="https://graph.threads.com"));
+  assert.deepEqual(observed.map(item=>new URL(item.url).origin),[
+    "https://graph.threads.com", "https://graph.threads.net", "https://graph.threads.com"
+  ]);
   assert.equal((await storedThreadsStatus(f.env,now)).connected,true);
 });
 
