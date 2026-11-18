@@ -59,7 +59,7 @@ export function publicAtlasProfiles(layout) {
     const url = approvedUrl && source.url === approvedUrl ? approvedUrl : null;
     const urlLabel = url ? (short(source.urlLabel, 90) || "Open public project") : null;
     result.push(Object.freeze({
-      id, title: node.label, category, status, summary, boundary,
+      id, title: source.title, category, status, summary, boundary,
       url, urlLabel,
     }));
   }
