@@ -47,6 +47,11 @@ try:
                             if '/api/activity/v4' in request.url else None)
                     response=page.goto(BASE,wait_until='networkidle')
                     assert response and response.status==200,(engine,width,'Public navigation failed')
+                    assert page.evaluate("getComputedStyle(document.querySelector('.one-skip')).clipPath !== 'none'")
+                    page.locator('.one-skip').focus()
+                    assert page.evaluate("getComputedStyle(document.querySelector('.one-skip')).clipPath === 'none'")
+                    page.locator('.lab-brand').focus()
+                    assert page.evaluate("getComputedStyle(document.querySelector('.one-skip')).clipPath !== 'none'")
                     assert page.title()=='Devon Alan Akins — Operations, Engineering & Research'
                     assert 'Build what matters.' in page.locator('.lab-portfolio-hero h1').inner_text()
                     assert page.locator('.lab-focus-card').count()==3
