@@ -136,12 +136,26 @@ try:
                         assert page.locator(f'[data-one-view="{key}"]').is_visible()
                         assert page.evaluate('document.activeElement.dataset.oneView')==key
                         if key=='experience':
+                            if width in (390,1536):
+                                assert page.evaluate("""() => {
+                                  const container=document.querySelector('.lab-research');
+                                  const journal=container.querySelector('.lab-research-journal').getBoundingClientRect();
+                                  const sources=['.lab-section-intro','.lab-research-instrument','.lab-research-stack'];
+                                  const bottom=Math.max(...sources.map(s=>container.querySelector(s).getBoundingClientRect().bottom));
+                                  return journal.top>=bottom-5 && journal.width>container.clientWidth*.75;
+                                }"""),(engine,width,'Research journal must follow the instrument, full width')
                             curve=page.locator('[data-lab-curve="interactive"]')
                             before=curve.get_attribute('d')
                             page.locator('[data-lab-axis="a"]').fill('5')
                             assert curve.get_attribute('d')!=before
                             assert 'a = 5' in page.locator('[data-lab-model-caption]').inner_text()
                         if key=='work':
+                            if width in (390,1536):
+                                assert page.evaluate("""() => {
+                                  const root=document.querySelector('.lab-work-hub');
+                                  const blocks=['.lab-section-intro','.lab-work-feature','.lab-work-collection','.lab-work-method'].map(s=>root.querySelector(s).getBoundingClientRect());
+                                  return blocks.every((r,i)=>i===0||r.top>=blocks[i-1].bottom-5);
+                                }"""),(engine,width,'Work sections must read top to bottom')
                             search=page.locator('[data-lab-project-search]')
                             search.fill('Merit')
                             assert page.locator('[data-lab-project]:visible').count()==1
