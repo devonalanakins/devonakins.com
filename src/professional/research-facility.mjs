@@ -105,7 +105,7 @@ function destinationCards(){
 }
 function atomMark(){return '<svg viewBox="0 0 90 50" aria-hidden="true" fill="none"><ellipse cx="45" cy="25" rx="40" ry="10" transform="rotate(-24 45 25)" stroke="#a8dad3"/><ellipse cx="45" cy="25" rx="40" ry="10" transform="rotate(24 45 25)" stroke="#dfaa75"/><path d="M45 2v46" stroke="#8ca7a0" stroke-width=".5"/><circle cx="45" cy="25" r="3" fill="#fff0d3"/></svg>'}
 function compactSignals(){return '<section class="lab-portfolio-signals" aria-label="Selected public sources">'+
- '<div class="lab-signals-label"><span class="lab-source-eyebrow">THE PUBLIC RECORD / 01</span><strong>Traceable work.<br>Intentional listening.</strong><small>Two optional windows into the practice, never a substitute for the work itself.</small></div>'+
+ '<div class="lab-signals-label"><span class="lab-source-eyebrow">THE PUBLIC RECORD / 01</span><strong>Traceable work.<br> Intentional listening.</strong><small>Two optional windows into the practice, never a substitute for the work itself.</small></div>'+
  '<div class="lab-portfolio-signal-grid">'+
  '<details class="lab-signal-tile lab-signal-github"><summary>'+brandIcon('github')+'<span><strong>Source &amp; changes</strong><small data-github-compact>Checking dated public history</small></span></summary><div class="lab-signal-expanded">'+feed('one-home-github',3)+'<button data-one-go="activity">Explore public record →</button></div></details>'+
  '<details class="lab-signal-tile lab-signal-spotify" data-public-spotify><summary>'+brandIcon('spotify')+'<span><strong>Listening room</strong><small data-spotify-title>Checking approved playback</small></span></summary><div class="lab-signal-expanded"><span data-spotify-state>Checking source</span><p data-spotify-artist>Only explicitly shared playback.</p><img data-spotify-cover alt="" width="48" height="48" referrerpolicy="no-referrer" decoding="async" loading="lazy" hidden><progress data-spotify-progress aria-label="Track progress" hidden></progress><p data-spotify-note>No autoplay audio.</p><a data-spotify-link href="/listening/">About listening →</a></div></details>'+
@@ -179,7 +179,6 @@ export function renderResearchFacilityHome({initialView='home',canonicalPath='/'
     '<button type="button" data-github-refresh>Refresh</button></div>'+
     feed('one-activity-github',6)+'</section>'+
     '<div class="lab-activity-side">'+
-    
     '<section class="lab-data-panel lab-evidence-guide"><strong>SOURCE / INTEGRITY</strong>'+
     '<h2>Read the work, not a status light.</h2><p>Public commits and pull requests are dated evidence of changes, not proof of activity at this moment. Systems, research and project pages explain scope and maturity.</p>'+
     '<a class="lab-text-link" href="https://github.com/devonalanakins">Inspect the public GitHub profile ↗</a><a class="lab-text-link" href="/research/">Explore the research direction →</a>'+
