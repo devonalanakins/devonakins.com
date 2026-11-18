@@ -42,6 +42,10 @@ assert.equal(photo.headers.get('x-content-type-options'),'nosniff');
 const image=new Uint8Array(await photo.arrayBuffer());
 assert.ok(image.length>2000&&image.length<220000,'Portrait transfer is complete and optimized');
 assert.equal(new TextDecoder().decode(image.slice(4,8)),'ftyp');
+// Removed artwork must not be accessible from the new two-dimensional release.
+for(const old of ['/professional/cinematic/chamber-wide.webp','/professional/cinematic/chamber-mobile.webp','/professional/cinematic/research.webp','/professional/cinematic/systems.webp','/professional/cinematic/projects.webp','/professional/cinematic/portfolio.webp','/professional/cinematic/fieldnotes.webp']){
+ assert.equal((await get(old)).status,404,'Legacy generated image must not be served: '+old);
+}
 const listening=await get('/api/listening/now');assert.equal(listening.status,200);assert.ok(validPublicListening(await listening.json()));
 const signal=await get('/api/activity/v4');assert.equal(signal.status,200);const data=await signal.json();assert.equal(Object.hasOwn(data,'gpt'),false);
 const github=await get('/api/github/public-feed');assert.equal(github.status,200);assert.ok(['available','empty','unavailable'].includes((await github.json()).status));
