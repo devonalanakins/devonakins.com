@@ -22,7 +22,7 @@ def selected(page,key):
     assert page.locator('[data-one-view]:visible').count()==1
 
 def navigate(page,key,width):
-    if width<=760:
+    if width<=1100:
         page.locator('.lab-menu-toggle').click()
         page.locator(f'#lab-menu [data-one-target="{key}"]').click()
     else:page.locator(f'.lab-tabs-desktop [data-one-target="{key}"]').click()
@@ -46,28 +46,28 @@ try:
                     page.evaluate('window.scrollTo(0,document.documentElement.scrollHeight)')
                     before=page.evaluate('scrollY')
                     assert before>20,(engine,width,before)
-                    page.locator('[data-lab-destination="writing"]').click();selected(page,'writing')
+                    page.locator('[data-lab-destination="experience"]').click();selected(page,'experience')
                     assert page.evaluate('scrollY')==0
                     navigate(page,'work',width)
                     page.locator('[data-lab-project-search]').fill('Merit')
                     length=page.evaluate('history.length')
                     navigate(page,'work',width)
                     assert page.evaluate('history.length')==length,'Duplicate current-view history entry'
-                    page.go_back();selected(page,'writing')
+                    page.go_back();selected(page,'experience')
                     page.go_back();selected(page,'home')
                     wait_for_condition(page,'Math.abs(scrollY-'+str(before)+')<3')
                     wait_for_condition(page,"document.activeElement.dataset.oneView==='home'")
                     assert page.url.endswith('/?keep=query')
-                    page.go_forward();selected(page,'writing')
+                    page.go_forward();selected(page,'experience')
                     page.go_forward();selected(page,'work')
                     assert page.locator('[data-lab-project-search]').input_value()=='Merit'
                     # Back with an open dialog must not leave an inert background or focus trap.
                     page.locator('.lab-menu-toggle' if width<=760 else '.lab-desktop-menu').click()
                     assert page.locator('#lab-menu').is_visible()
-                    page.go_back();selected(page,'writing')
+                    page.go_back();selected(page,'experience')
                     page.locator('#lab-menu').wait_for(state='hidden')
                     wait_for_condition(page,"!document.documentElement.classList.contains('lab-menu-open')")
-                    wait_for_condition(page,"document.activeElement.dataset.oneView==='writing'")
+                    wait_for_condition(page,"document.activeElement.dataset.oneView==='experience'")
                     navigate(page,'home',width)
                     # A real modified click retains the browser's native new-tab behavior.
                     with context.expect_page() as opened:
@@ -88,9 +88,9 @@ try:
                     context.close()
                 context=browser.new_context(ignore_https_errors=LOCAL_TLS,viewport={'width':390,'height':844})
                 sample=context.new_page()
-                for path,key in (('/research/','experience'),('/systems/','systems'),('/projects/','work'),('/portfolio/','portfolio'),('/fieldnotes/','writing'),('/contact/','contact')):
+                for path,key,canonical in (('/research/','experience','/research/'),('/work/','work','/work/'),('/projects/','work','/work/'),('/systems/','systems','/systems/'),('/portfolio/','portfolio','/portfolio/'),('/fieldnotes/','writing','/fieldnotes/'),('/contact/','contact','/contact/')):
                     sample.goto(BASE+path,wait_until='networkidle');selected(sample,key)
-                    assert sample.locator('link[rel="canonical"]').get_attribute('href')=='https://devonakins.com'+path
+                    assert sample.locator('link[rel="canonical"]').get_attribute('href')=='https://devonakins.com'+canonical
                 sample.goto(BASE+'/work/merit/',wait_until='networkidle')
                 assert sample.locator('.lab-case-study h1').inner_text()=='Merit'
                 sample.evaluate(Path('node_modules/axe-core/axe.min.js').read_text())
