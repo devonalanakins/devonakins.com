@@ -362,7 +362,7 @@ function renderThreadsAuthorization(data) {
       new Date(data.expiresAt).toLocaleDateString() +
       (Number.isFinite(nextRenewal) ? ". Renewal available after " +
         new Date(nextRenewal).toLocaleString() : "") +
-      ". Public posts are not enabled."
+      ". This private credential alone does not determine public post visibility."
     : !data.appConfigured
       ? "Meta Threads App ID and secret are not configured on the Worker."
       : !data.storageReady
@@ -472,7 +472,7 @@ async function changeThreadsAuthorization(action) {
   try {
     const response=await fetch("/api/threads/auth/"+action,{
       method:"POST",credentials:"same-origin",cache:"no-store",
-      headers:{Accept:"application/json"},signal:AbortSignal.timeout(12000),
+      headers:{Accept:"application/json"},signal:AbortSignal.timeout(action==="renew"?25000:12000),
     });
     if(!response.headers.get("Content-Type")?.includes("application/json"))
       throw Error("Owner sign-in required.");
@@ -502,7 +502,9 @@ async function changeThreadsAuthorization(action) {
     }
   } catch(error) {
     el("threads-connection-status").textContent=
-      error?.message || "Private Threads operation unavailable.";
+      action==="renew" && (error?.name==="TimeoutError"||error?.name==="AbortError")
+        ? "The renewal request timed out. The saved authorization may be unchanged or still updating; reload its private status before retrying."
+        : error?.message || "Private Threads operation unavailable.";
   } finally {
     threadsAuthBusy=false;
     lock(busy || !state);
