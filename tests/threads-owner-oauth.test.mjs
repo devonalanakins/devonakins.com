@@ -377,6 +377,28 @@ test("reauthorization never discards an existing grant when a replacement fails"
   assert.equal((await storedThreadsStatus(f.env,now)).connected,true);
 });
 
+test("reauthorization refuses to silently replace the account with a different identity",async()=>{
+  let selected="123456789012345";
+  const f=fixture(true,async(url)=>{
+    const path=new URL(url).pathname;
+    if(path==="/oauth/access_token")
+      return Response.json({access_token:"s".repeat(96),user_id:selected});
+    if(path==="/access_token")
+      return Response.json({access_token:"l".repeat(96),token_type:"bearer",expires_in:5184000});
+    if(path==="/v1.0/me")
+      return Response.json({id:selected,username:"DevonFixture"});
+    throw Error("Unexpected provider request");
+  });
+  const first=await f.callback(await f.auth());
+  assert.equal(first.headers.get("Location"),"/owner/presence/?threads=connected");
+  const before=f.sql.prepare("SELECT revision,token_cipher,threads_user_id FROM threads_connection WHERE id=1").get();
+  selected="999999999999999";
+  const second=await f.callback(await f.auth());
+  assert.equal(second.headers.get("Location"),"/owner/presence/?threads=profile");
+  assert.deepEqual(f.sql.prepare("SELECT revision,token_cipher,threads_user_id FROM threads_connection WHERE id=1").get(),before);
+  assert.equal((await storedThreadsStatus(f.env,now)).connected,true);
+});
+
 test("owner renews a mature unexpired private Threads token without public sharing",async()=>{
   const f=fixture();
   await f.callback(await f.auth());
