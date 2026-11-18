@@ -154,7 +154,8 @@ body.lab-motion-paused .lab-trace{animation-play-state:paused}
 }
 .lab-body .lab-destination-arrow{font-size:30px;right:clamp(22px,2.5vw,42px);bottom:clamp(22px,2.5vw,42px)}
 .lab-body .lab-destination:hover{transform:translateY(-3px);border-color:#d0eada}
-.lab-body .lab-work-hub{max-width:1580px;margin-inline:auto}
+.lab-body .lab-work-hub{display:flex;flex-direction:column;align-items:stretch;gap:0;max-width:1580px;margin-inline:auto}
+.lab-body .lab-work-hub>.lab-section-intro{width:100%;max-width:900px;margin-bottom:clamp(34px,4vw,70px)}
 .lab-body .lab-work-feature{
  display:grid;grid-template-columns:minmax(110px,.55fr) minmax(0,2fr) minmax(130px,.7fr);
  gap:clamp(20px,3.4vw,58px);padding:clamp(26px,3vw,55px);
@@ -185,7 +186,7 @@ body.lab-motion-paused .lab-trace{animation-play-state:paused}
 .lab-body .lab-work-method li span{color:#bfcfc9;font:400 13px/1.5 Arial,sans-serif}
 .lab-body .lab-work-resources{display:flex;flex-wrap:wrap;gap:14px 25px;margin:25px 0 0}
 .lab-body .lab-work-resources a{font:500 12px/1.6 Arial,sans-serif;color:#c1e8dd;text-underline-offset:5px}
-.lab-body .lab-research-journal{margin:clamp(32px,4.5vw,70px) 0 0;padding:clamp(24px,3vw,46px) 0;border-top:1px solid #95c6b556}
+.lab-body .lab-research-journal{grid-column:1/-1;min-width:0;margin:clamp(32px,4.5vw,70px) 0 0;padding:clamp(24px,3vw,46px) 0;border-top:1px solid #95c6b556}
 .lab-body .lab-research-notes{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-bottom:24px}
 .lab-body .lab-research-notes details{padding:22px;border:1px solid #82b2a75c;background:#092229;color:#e9f2e9}
 .lab-body .lab-research-notes summary{cursor:pointer;font:400 clamp(17px,1.6vw,23px)/1.32 Georgia,serif;line-height:1.3}
