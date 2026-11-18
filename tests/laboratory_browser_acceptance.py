@@ -72,21 +72,14 @@ try:
                     assert page.locator('.lab-footer .one-social-icon').count()==4
                     assert page.locator('.lab-portfolio-hero picture').count()==0
                     assert page.locator('.lab-destination img').count()==0
-                    if urlparse(BASE).hostname in ('127.0.0.1','localhost','::1'):
-                        assert page.locator('[data-lab-scene-canvas]').count()==1
-                        # Prevent a silent regression to the image-only candidate.
-                        webgl_supported=page.evaluate("() => !!document.createElement('canvas').getContext('webgl2')")
-                        if webgl_supported:
-                            wait_for_condition(page,"document.querySelector('.lab-portfolio-hero').classList.contains('lab-cinematic-ready')")
-                            assert page.locator('[data-lab-scene-canvas]').is_visible()
-                        else:
-                            assert page.locator('.lab-hero-field').is_visible()
-                        if width==1536 and webgl_supported:
-                            card=page.locator('[data-lab-destination="experience"]')
-                            card.hover(position={'x':80,'y':40})
-                            wait_for_condition(page,"!!document.querySelector('[data-lab-destination=\"experience\"]').style.getPropertyValue('--lab-card-rotate-y')")
-                            page.mouse.move(1,1)
-                            wait_for_condition(page,"!document.querySelector('[data-lab-destination=\"experience\"]').style.getPropertyValue('--lab-card-rotate-y')")
+                    # The authored design is a native two-dimensional SVG/CSS experience.
+                    # No Three.js, WebGL scene, 3D orbital sculpture, or perspective cards.
+                    assert page.locator('[data-lab-scene-canvas],.lab-live-scene,.lab-field-reticle,.lab-card-geometry').count()==0
+                    assert page.locator('.lab-field-traces').count()==1
+                    assert page.locator('.lab-trace').count()==3
+                    assert page.locator('.lab-card-print').count()==5
+                    assert page.evaluate("""() => [...document.querySelectorAll('script[src]')].every(s=>!s.src.includes('cinematic-environment'))""")
+                    assert page.locator('.lab-field-sheet-foot').inner_text().find('NOT MEASURED DATA')>=0
                     geometry=page.evaluate('''() => {
                       const rect=s=>{const r=document.querySelector(s).getBoundingClientRect();return {x:r.x,y:r.y,width:r.width,height:r.height,bottom:r.bottom}};
                       return {viewport:innerWidth,scroll:document.documentElement.scrollWidth,header:rect('.lab-header'),hero:rect('.lab-portfolio-hero'),focus:rect('.lab-focus'),signals:rect('.lab-portfolio-signals'),explore:rect('.lab-explore-heading'),selected:rect('.lab-portfolio-selected'),destinations:rect('.lab-destinations'),footer:rect('.lab-footer'),cards:[...document.querySelectorAll('.lab-destination')].map(el=>({x:el.getBoundingClientRect().x,y:el.getBoundingClientRect().y})),signalCards:[...document.querySelectorAll('.lab-signal-tile')].map(el=>({x:el.getBoundingClientRect().x,y:el.getBoundingClientRect().y}))};}''')
