@@ -95,6 +95,21 @@ test('Nona executive case study is public, nonclinical, and isolated to its appr
   assert.doesNotMatch(page,/da-nona-brief/);
 });
 
+test('owner leadership and proven delivery remain first-class without clinical or invented performance claims',()=>{
+  assert.match(page,/CEO · NONA NEUROPSYCHOLOGY \/ INDEPENDENT SOFTWARE DEVELOPER/);
+  assert.match(page,/CEO, Nona Neuropsychology/);
+  assert.match(page,/CEO \/ CURRENT PROFESSIONAL FOCUS/);
+  assert.match(page,/Clinical decisions remain with licensed professionals\./);
+  assert.match(page,/Founder, ANEVUM — The Open Institute \(in development\)/);
+  assert.match(page,/02 \/ PRODUCTION WEB ENGINEERING/);
+  assert.match(page,/Live personal website · deployment verified November 2026/);
+  assert.match(page,/github\.com\/devonalanakins\/devonakins\.com\/actions\/runs\/44384435946/);
+  assert.match(page,/Test Chromium and WebKit/);
+  assert.match(page,/Deploy and verify the exact commit/);
+  assert.match(page,/\/work\/squelch\//);
+  assert.doesNotMatch(page,/improved client outcomes by|\$[\d,]+ in savings|trained foundational model/i);
+});
+
 test('approved portrait section renders only when a real first-party image is packaged',()=>{
   assert.doesNotMatch(page,/class="lab-personal"|devon-portrait\.avif/,
     'No empty portrait card or broken image may appear in the default candidate');
