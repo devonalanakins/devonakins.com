@@ -118,7 +118,7 @@ function compactSignals(){return '<section class="lab-portfolio-signals" aria-la
  * from a third-party host. */
 function portraitIntroduction(){return '<section class="lab-personal" aria-labelledby="lab-personal-title">'+
  '<div class="lab-personal-inner">'+
- '<figure class="lab-personal-portrait"><img src="/professional/devon-portrait.avif" width="520" height="693" alt="Devon outdoors wearing a backwards dark cap and gray hoodie" loading="lazy" decoding="async">'+
+ '<figure class="lab-personal-portrait"><img src="/professional/devon-portrait.avif" width="420" height="560" alt="Devon outdoors wearing a backwards dark cap and gray T-shirt" loading="lazy" decoding="async">'+
  '<figcaption><span>IN PERSON</span><span>2026</span></figcaption></figure>'+
  '<div class="lab-personal-story"><p class="lab-personal-eyebrow">THE PERSON BEHIND THE WORK / 001</p>'+
  '<h2 id="lab-personal-title">Independent by design.</h2>'+
