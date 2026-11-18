@@ -52,7 +52,7 @@ try:
                     assert page.evaluate("getComputedStyle(document.querySelector('.one-skip')).clipPath === 'none'")
                     page.locator('.lab-brand').focus()
                     assert page.evaluate("getComputedStyle(document.querySelector('.one-skip')).clipPath !== 'none'")
-                    assert page.title()=='Devon Alan Akins — Operations, Engineering & Research'
+                    assert page.title()=='Devon Alan Akins — CEO, Software Engineering & Research'
                     assert 'Devon' in page.locator('.lab-portfolio-hero h1').inner_text() and 'Alan Akins' in page.locator('.lab-portfolio-hero h1').inner_text()
                     assert page.locator('.lab-focus-card').count()==3
                     # The personal photograph is an optional packaged first-party
