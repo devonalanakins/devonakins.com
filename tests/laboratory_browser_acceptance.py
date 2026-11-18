@@ -47,7 +47,7 @@ try:
                             if '/api/activity/v4' in request.url else None)
                     response=page.goto(BASE,wait_until='networkidle')
                     assert response and response.status==200,(engine,width,'Public navigation failed')
-                    assert page.title()=='Devon Alan Akins — Software, Systems & Research'
+                    assert page.title()=='Devon Alan Akins — Operations, Engineering & Research'
                     assert 'Build what matters.' in page.locator('.lab-portfolio-hero h1').inner_text()
                     assert page.locator('.lab-focus-card').count()==3
                     assert page.locator('.lab-focus-card--nona').is_visible()
