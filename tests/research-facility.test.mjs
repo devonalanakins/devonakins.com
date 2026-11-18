@@ -15,7 +15,7 @@ test('laboratory candidate is independently navigable, semantic and source-hones
     assert.match(page,new RegExp('data-one-target="'+key+'"'));
   }
   for(const term of ['Devon Alan Akins','MATHEMATICS','PHYSICS','COMPUTATIONAL NEUROSCIENCE',
-    'Independent','Understanding complex systems.','ANALYTIC MODEL',
+    'Independent','Build what matters.','ANALYTIC MODEL',
     'NO MEASURED DATA','EXPERIMENT','PROPOSED','scientific computing']){
     assert.ok(page.toLowerCase().includes(term.toLowerCase()),term);
   }
