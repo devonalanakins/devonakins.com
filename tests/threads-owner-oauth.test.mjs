@@ -101,7 +101,7 @@ test("owner callback binds Meta account identity and encrypts long token at rest
   assert.equal(body.get("redirect_uri"),entry.target.searchParams.get("redirect_uri"));
   assert.equal(body.get("client_secret"),f.env.THREADS_APP_SECRET);
   assert.equal(short[1].redirect,"manual");
-  assert.equal(new URL(long[0]).origin,"https://graph.threads.com");
+  assert.equal(new URL(long[0]).origin,"https://graph.threads.net");
   assert.equal(new URL(long[0]).searchParams.get("grant_type"),"th_exchange_token");
   assert.equal(long[1].redirect,"manual");
   assert.equal(profile[1].redirect,"manual");
