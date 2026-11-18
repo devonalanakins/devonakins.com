@@ -54,7 +54,7 @@ body.lab-body *{box-sizing:border-box}
 .lab-discipline-grid span{padding:11px;font:700 9px/1.45 ui-monospace,monospace;letter-spacing:.055em;background:#112328;color:#b5d6cd}
 .lab-intro-bottom{display:flex;align-items:center;justify-content:space-between;gap:15px;margin-top:auto;padding-top:22px;width:100%;font-size:9px;letter-spacing:.06em;color:#a0bdb3}
 .lab-field{background:radial-gradient(ellipse at 45% 44%,#1b383a66,transparent 59%),linear-gradient(120deg,#0c1e23,#071318)}
-.lab-field:before{content:"";position:absolute;inset:0;background:url('/professional/laboratory-chamber.svg') center center/cover no-repeat;opacity:.37;mix-blend-mode:screen;pointer-events:none}
+.lab-field:before{content:"";position:absolute;inset:0;background-image:linear-gradient(#86c8c315 1px,transparent 1px),linear-gradient(90deg,#86c8c315 1px,transparent 1px);background-size:28px 28px;opacity:.55;pointer-events:none}
 .lab-field>.lab-instrument{z-index:1}
 .lab-field-label,.lab-field-annotation{z-index:2}
 .lab-field:after{content:"";position:absolute;pointer-events:none;inset:0;border:11px solid #80b4b008}
