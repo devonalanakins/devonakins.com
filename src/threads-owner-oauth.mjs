@@ -264,7 +264,7 @@ async function renewalProviderResult(response,stage){
     const metaCode=match?.[2]||null;
     const code=metaCode?" (Meta code "+metaCode+(match[3]?", subcode "+match[3]:"")+")":"";
     if(metaCode==="190" || status===401 || status===403)
-      return {error:ownerError("Meta rejected the saved Threads authorization"+code+". The existing connection was not changed. Test the connection; if invalid, remove it and reconnect privately.",409)};
+      return {error:ownerError("Meta rejected the saved Threads authorization"+code+". The existing connection was not changed. Test the connection; if invalid, use Reauthorize Threads privately to replace it without deleting the old grant first.",409)};
     if(status===429 || metaCode==="4" || metaCode==="17")
       return {error:ownerError("Meta rate-limited Threads "+stage+code+". The saved credential is unchanged; retry after the provider limit clears.",429)};
     if(status!==null && status>=500)
