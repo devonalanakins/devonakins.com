@@ -80,6 +80,15 @@ try:
                     assert page.locator('.lab-card-print').count()==5
                     assert page.evaluate("""() => [...document.querySelectorAll('script[src]')].every(s=>!s.src.includes('cinematic-environment'))""")
                     assert page.locator('.lab-field-sheet-foot').inner_text().find('NOT MEASURED DATA')>=0
+                    if width<=760:
+                        # On phones, micro-labels must not leak into the first viewport
+                        # or obscure the main identity and calls to action.
+                        assert page.locator('.lab-field-sheet-head').is_hidden()
+                        assert page.locator('.lab-field-sheet-foot').is_hidden()
+                        assert page.locator('.lab-field-measure').first.is_hidden()
+                    else:
+                        assert page.locator('.lab-field-sheet-head').is_visible()
+                        assert page.evaluate("document.querySelector('.lab-field-sheet').getBoundingClientRect().right<=innerWidth+1")
                     geometry=page.evaluate('''() => {
                       const rect=s=>{const r=document.querySelector(s).getBoundingClientRect();return {x:r.x,y:r.y,width:r.width,height:r.height,bottom:r.bottom}};
                       return {viewport:innerWidth,scroll:document.documentElement.scrollWidth,header:rect('.lab-header'),hero:rect('.lab-portfolio-hero'),focus:rect('.lab-focus'),signals:rect('.lab-portfolio-signals'),explore:rect('.lab-explore-heading'),selected:rect('.lab-portfolio-selected'),destinations:rect('.lab-destinations'),footer:rect('.lab-footer'),cards:[...document.querySelectorAll('.lab-destination')].map(el=>({x:el.getBoundingClientRect().x,y:el.getBoundingClientRect().y})),signalCards:[...document.querySelectorAll('.lab-signal-tile')].map(el=>({x:el.getBoundingClientRect().x,y:el.getBoundingClientRect().y}))};}''')
