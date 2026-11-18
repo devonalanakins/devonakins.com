@@ -100,7 +100,8 @@ function destinationCards(){
  return destinations.map(([key,title,description,art,path],index)=>
  '<a class="lab-destination lab-destination--'+art+'" href="'+LABORATORY_ROUTES[key]+'" data-one-go="'+key+'" data-lab-destination="'+key+'">'+
  '<span class="lab-destination-index" aria-hidden="true">'+String(index+1).padStart(2,'0')+' / 05</span>'+
- '<span class="lab-card-geometry" aria-hidden="true"><i></i><i></i><i></i><i></i></span>'+
+ '<span class="lab-card-print" aria-hidden="true">'+String(index+1).padStart(2,'0')+'</span>'+
+ '<span class="lab-card-rule" aria-hidden="true"></span>'+
  '<svg class="lab-destination-glyph" viewBox="0 0 24 24" aria-hidden="true" fill="none"><path d="'+path+'" stroke="currentColor" stroke-width="1.1" stroke-linejoin="round"/></svg>'+
  '<div class="lab-destination-copy"><strong>'+title+'</strong><small>'+description+'</small></div>'+
  '<span class="lab-destination-arrow" aria-hidden="true">↗</span></a>').join('');
@@ -124,8 +125,7 @@ export function renderResearchFacilityHome({initialView='home',canonicalPath='/'
   const home=view('home',
  '<div class="lab-overview lab-portfolio-layout">'+
  '<section class="lab-portfolio-hero" aria-label="Personal introduction and current professional focus">'+
- '<div class="lab-hero-field" aria-hidden="true"><div class="lab-field-grid"></div><div class="lab-field-reticle"><span class="lab-field-halo"></span><span class="lab-field-ring lab-field-ring--a"></span><span class="lab-field-ring lab-field-ring--b"></span><span class="lab-field-ring lab-field-ring--c"></span><span class="lab-field-core"></span></div><span class="lab-field-measure lab-field-measure--top">D/A — AN INDEPENDENT ENGINEERING PRACTICE</span><span class="lab-field-measure lab-field-measure--bottom">SYSTEMS / INQUIRY / COMPUTATION</span></div>'+
- '<canvas class="lab-live-scene" data-lab-scene-canvas aria-hidden="true"></canvas><div class="lab-scene-light" aria-hidden="true"></div>'+
+ '<div class="lab-hero-field" aria-hidden="true"><div class="lab-field-grid"></div><div class="lab-field-sheet"><div class="lab-field-sheet-head"><span>DA / 001 — FIELD STUDY</span><span>2D / EXPERIMENTAL DIAGRAM</span></div><svg class="lab-field-traces" viewBox="0 0 720 420" preserveAspectRatio="xMidYMid meet" fill="none"><g class="lab-trace-grid" stroke="currentColor" stroke-width="1"><path d="M0 60H720 M0 120H720 M0 180H720 M0 240H720 M0 300H720 M0 360H720 M90 0V420 M180 0V420 M270 0V420 M360 0V420 M450 0V420 M540 0V420 M630 0V420"/></g><g class="lab-trace-axis" stroke="currentColor" stroke-width="1"><path d="M42 210H680 M360 24V396"/></g><path class="lab-trace lab-trace--primary" d="M24 268 C90 268 108 156 170 156 S262 310 340 260 S444 95 520 143 S634 280 700 128" stroke="currentColor" stroke-width="2.5"/><path class="lab-trace lab-trace--secondary" d="M24 130 C110 170 116 290 204 276 S311 112 390 155 S500 330 586 250 S664 160 700 210" stroke="currentColor" stroke-width="1.6"/><path class="lab-trace lab-trace--fine" d="M24 330 L94 330 L130 322 L177 331 L237 285 L299 292 L352 194 L405 202 L452 132 L520 154 L568 101 L620 126 L700 65" stroke="currentColor" stroke-width="1.2"/><circle cx="360" cy="194" r="5" fill="currentColor"/><circle cx="520" cy="143" r="4" fill="currentColor"/><circle cx="586" cy="250" r="3" fill="currentColor"/></svg><div class="lab-field-sheet-foot"><span>SCHEMATIC / NOT MEASURED DATA</span><span>STUDY ↔ BUILD</span></div></div><span class="lab-field-measure lab-field-measure--top">INQUIRY / 001</span><span class="lab-field-measure lab-field-measure--bottom">MATH · SYSTEMS · COMPUTING</span></div><div class="lab-scene-light" aria-hidden="true"></div>'+
  '<div class="lab-portfolio-hero-content"><p class="lab-hero-name"><span class="lab-hero-marker" aria-hidden="true"></span>DEVON ALAN AKINS<span class="lab-hero-ordinal">/ 001</span></p>'+
  '<p class="lab-hero-kicker">OPERATIONS. ENGINEERING. RESEARCH.</p>'+
  '<h1>Build what matters.<br><em>Study what comes next.</em></h1>'+
@@ -234,7 +234,7 @@ export function renderResearchFacilityHome({initialView='home',canonicalPath='/'
     '<link rel="stylesheet" href="/src/professional/research-identity.css">'+
     '<script type="module" src="/src/professional/client.ts"></script>'+
     '<script type="module" src="/src/professional/one-screen.ts"></script>'+
-    '<script type="module" src="/src/professional/research-facility.ts"></script><script type="module" src="/src/professional/cinematic-environment.ts"></script>'+
+    '<script type="module" src="/src/professional/research-facility.ts"></script>'+
     '<noscript><style>html.lab-html,body.lab-body{height:auto;overflow:auto}.lab-body .lab-stage{height:auto;overflow:visible}.lab-body .lab-stage>.lab-view[hidden]{display:block!important}.lab-body .lab-view{height:auto;min-height:100vh}.lab-body .lab-secondary{height:auto}.lab-tabs,.lab-motion,.lab-menu-toggle,.lab-desktop-menu{display:none!important}</style></noscript>'+
     '</head><body class="p-body one-body lab-body" data-lab-initial="'+initialView+'"'+(project||listening||notFound?' data-lab-native="true"':'')+'>'+
     '<a class="one-skip lab-skip" href="#one-stage">Skip to content</a>'+
