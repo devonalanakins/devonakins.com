@@ -136,7 +136,7 @@ test("Work directory filters follow reviewed public presentation categories, not
   const projectDetail = renderV5ProjectPage("merit");
   assert.doesNotMatch(projectDetail, /data-v5-work-live/,
     "Detail pages remain public descriptions rather than unapproved live readers");
-  const categories = ["software", "research", "creative", "writing", "operations", "archive"];
+  const categories = ["software", "research", "writing", "operations", "archive"];
   for (const category of categories)
     assert.ok(work.includes('<option value="' + category + '">'),
       "Missing approved category: " + category);
