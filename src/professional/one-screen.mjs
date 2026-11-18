@@ -101,7 +101,7 @@ const writing = view("writing",
   '<a href="/writing/" class="one-detail-link">More about writing and research ↗</a></div>'+
   '<div class="one-fact-stack one-writing-stack">'+
   '<article><span>BOOKS · REVISION</span><h2>Long-form fiction</h2><p>Revisiting published writing and developing manuscripts.</p></article>'+
-  '<article><span>CREATIVE UNIVERSE</span><h2>ANEVUM</h2><p>Original fictional worlds, mythology and storytelling.</p></article>'+
+  '<article><span>OPEN EDUCATION · PROTOTYPE</span><h2>ANEVUM Open Institute</h2><p>Free continuing STEM learning and practical scientific inquiry, with an interactive computing curriculum prototype. Not yet launched or accredited.</p></article>'+
   '<article><span>ONGOING INQUIRY</span><h2>Research notes</h2><p>Engineering, cognition, mathematics and the study of systems.</p></article>'+
   '</div></div>');
 
