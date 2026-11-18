@@ -113,9 +113,25 @@ function compactSignals(){return '<section class="lab-portfolio-signals" aria-la
  '<details class="lab-signal-tile lab-signal-github"><summary>'+brandIcon('github')+'<span><strong>Source &amp; changes</strong><small data-github-compact>Checking dated public history</small></span></summary><div class="lab-signal-expanded">'+feed('one-home-github',3)+'<button data-one-go="activity">Explore public record →</button></div></details>'+
  '<details class="lab-signal-tile lab-signal-spotify" data-public-spotify><summary>'+brandIcon('spotify')+'<span><strong>Listening room</strong><small data-spotify-title>Checking approved playback</small></span></summary><div class="lab-signal-expanded"><span data-spotify-state>Checking source</span><p data-spotify-artist>Only explicitly shared playback.</p><img data-spotify-cover alt="" width="48" height="48" referrerpolicy="no-referrer" decoding="async" loading="lazy" hidden><progress data-spotify-progress aria-label="Track progress" hidden></progress><p data-spotify-note>No autoplay audio.</p><a data-spotify-link href="/listening/">About listening →</a></div></details>'+
  '</div></section>'}
+/** Render this personal photograph only when its original, owner-approved
+ * first-party image is actually packaged. Never invent a portrait or fetch one
+ * from a third-party host. */
+function portraitIntroduction(){return '<section class="lab-personal" aria-labelledby="lab-personal-title">'+
+ '<div class="lab-personal-inner">'+
+ '<figure class="lab-personal-portrait"><img src="/professional/devon-portrait.avif" width="520" height="693" alt="Devon outdoors wearing a backwards dark cap and gray hoodie" loading="lazy" decoding="async">'+
+ '<figcaption><span>IN PERSON</span><span>2026</span></figcaption></figure>'+
+ '<div class="lab-personal-story"><p class="lab-personal-eyebrow">THE PERSON BEHIND THE WORK / 001</p>'+
+ '<h2 id="lab-personal-title">Independent by design.</h2>'+
+ '<p>I lead nonclinical operations and technology work, develop independent software, and study the mathematics and science of complex systems.</p>'+
+ '<div class="lab-personal-rule" aria-hidden="true"></div>'+
+ '<p>Away from the screen: fatherhood, writing, hands-on projects, and the questions that make lifelong learning worthwhile.</p>'+
+ '<div class="lab-personal-links"><a href="https://github.com/devonalanakins" target="_blank" rel="noopener noreferrer">GitHub ↗</a><a href="mailto:hello@devonakins.com">Get in touch ↗</a></div></div>'+
+ '<aside class="lab-personal-aside" aria-label="Professional and personal focus"><div><span>NOW / PRACTICE</span><p>Nonclinical operations &amp; technology</p></div><div><span>ALWAYS / APPROACH</span><p>Curiosity, experimentation, craft</p></div></aside>'+
+ '</div></section>'}
 function projectCatalog(){return '<div class="lab-project-browser"><label for="lab-project-search">Search public projects</label><input type="search" id="lab-project-search" data-lab-project-search placeholder="Search by name or area"><label for="lab-project-filter">Area</label><select id="lab-project-filter" data-lab-project-filter><option value="all">All areas</option>'+[...new Set(approvedPublicProjects.map(p=>p.publication.category))].map(c=>'<option>'+escapeHtml(c)+'</option>').join('')+'</select><p role="status" data-lab-project-count>'+approvedPublicProjects.length+' public projects</p><div class="lab-system-grid">'+approvedPublicProjects.map(p=>'<a class="lab-system-card" data-lab-project data-category="'+escapeHtml(p.publication.category)+'" href="/work/'+p.slug+'/"><span>'+escapeHtml(p.publication.category)+' / '+escapeHtml(p.publication.stage)+'</span><h3>'+escapeHtml(p.title)+'</h3><p>'+escapeHtml(p.summary)+'</p><small>'+escapeHtml(p.status)+' · PUBLIC OVERVIEW →</small></a>').join('')+'</div></div>'}
-export function renderResearchFacilityHome({initialView='home',canonicalPath='/',project=null,listening=false,notFound=false}={}){
+export function renderResearchFacilityHome({initialView='home',canonicalPath='/',project=null,listening=false,notFound=false,portraitAvailable=false}={}){
   if(project&&!approvedPublicProjects.includes(project))throw new Error('Project publication is not approved');
+  if(typeof portraitAvailable!=='boolean')throw new TypeError('Portrait publication gate must be a boolean');
   if(!Object.hasOwn(LABORATORY_ROUTES,initialView))throw new Error('Unknown cinematic view');
   const view=(key,content)=>renderView(key,content,initialView);
   const nav=kind=>renderNavigation(kind,initialView);
