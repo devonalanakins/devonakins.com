@@ -12,8 +12,17 @@ test('laboratory candidate is independently navigable, semantic and source-hones
   assert.equal((page.match(/<h1(?:\s|>)/g)||[]).length,8);
   for(const key of ['home','experience','systems','work','portfolio','activity','writing','contact']){
     assert.match(page,new RegExp('id="one-panel-'+key+'"'));
-    assert.match(page,new RegExp('data-one-target="'+key+'"'));
   }
+  for(const key of ['home','work','experience']){
+    assert.equal((page.match(new RegExp('data-one-target="'+key+'"','g'))||[]).length,2);
+  }
+  for(const key of ['systems','portfolio','activity','writing','contact']){
+    assert.doesNotMatch(page,new RegExp('data-one-target="'+key+'"'));
+  }
+  assert.equal(LABORATORY_ROUTES.work,'/work/');
+  assert.match(page,/class="lab-work-feature"/);
+  assert.match(page,/class="lab-work-method"/);
+  assert.match(page,/class="lab-research-journal"/);
   for(const term of ['Devon Alan Akins','MATHEMATICS','PHYSICS','COMPUTATIONAL NEUROSCIENCE',
     'Independent','Build what matters.','ANALYTIC MODEL',
     'NO MEASURED DATA','EXPERIMENT','PROPOSED','scientific computing']){
@@ -25,16 +34,16 @@ test('laboratory candidate is independently navigable, semantic and source-hones
   assert.doesNotMatch(page,/data-public-work|data-work-presentation="editor"/);
   assert.doesNotMatch(page,/data-public-threads|data-threads-summary|data-threads-posts/);
   assert.doesNotMatch(page,/data-public-gpt|\/gpt\/|GPT analytics|token counts|GPT · CAPTURED/i);
-  assert.equal((page.match(/data-lab-destination="/g)||[]).length,5);
+  assert.equal((page.match(/data-lab-destination="/g)||[]).length,2);
   assert.equal((page.match(/class="lab-focus-card /g)||[]).length,3);
   assert.match(page,/Nona Neuropsychology/);
   assert.match(page,/Build what matters/);
   assert.match(page,/class="lab-hero-field"/);
   assert.doesNotMatch(page,/<picture|class="lab-scene"|\/professional\/cinematic\/[^"']+\.webp/);
   assert.match(page,/class="lab-field-traces"/);
-  assert.equal((page.match(/class="lab-card-print"/g)||[]).length,5);
+  assert.equal((page.match(/class="lab-card-print"/g)||[]).length,2);
   assert.doesNotMatch(page,/data-lab-scene-canvas|cinematic-environment\.ts|lab-field-reticle|lab-card-geometry|WebGLRenderer/i);
-  for(const key of ['experience','systems','work','portfolio','writing']){
+  for(const key of ['work','experience']){
     assert.match(page,new RegExp('href="'+LABORATORY_ROUTES[key]+'" data-one-go="'+key+'" data-lab-destination="'+key+'"'));
   }
   assert.equal((page.match(/class="lab-signal-tile /g)||[]).length,2);
@@ -77,6 +86,8 @@ test('the candidate uses first-party interactions and an explicit build gate',as
   assert.doesNotMatch(portfolioStyle,/\.lab-live-scene|perspective\(|rotateX\(|rotateY\(|transform-style:preserve-3d/);
   const identityStyle=await readFile(new URL('../src/professional/research-identity.css',import.meta.url),'utf8');
   assert.match(identityStyle,/\.lab-focus-grid/);
+  assert.match(identityStyle,/\.lab-work-feature/);
+  assert.match(identityStyle,/\.lab-research-notes/);
   assert.match(identityStyle,/\.lab-field-traces/);
   assert.match(identityStyle,/@keyframes lab-ink-flow/);
   assert.doesNotMatch(identityStyle,/\.lab-field-reticle|\.lab-card-geometry|perspective\(|rotateX\(|rotateY\(/);
