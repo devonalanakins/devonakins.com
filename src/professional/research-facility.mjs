@@ -150,6 +150,7 @@ export function renderResearchFacilityHome({initialView='home',canonicalPath='/'
  '<div class="lab-portfolio-actions">'+goto('work','Explore my work',true)+goto('experience','Enter the research lab')+'</div>'+
  '<p class="lab-hero-method"><span class="lab-hero-method-line" aria-hidden="true"></span>Documented work. Open questions. No manufactured signals.</p>'+
  '<noscript><nav class="lab-nojs" aria-label="Alternative navigation"><a href="/work/">Work</a><a href="/research/">Research</a><a href="/contact/">Contact</a></nav></noscript></div></section>'+
+ (portraitAvailable?portraitIntroduction():'')+
  '<section class="lab-focus" aria-label="Current work and professional focus"><div class="lab-focus-heading"><span>THE WORK / PRESENT</span><p>One practice. Three connected disciplines.</p></div>'+
  '<div class="lab-focus-grid">'+
  '<a class="lab-focus-card lab-focus-card--nona" href="/work/" data-one-go="work"><span class="lab-focus-number">01 / PRINCIPAL FOCUS</span><strong>Nona Neuropsychology</strong><p>Nonclinical operations, digital experience, and dependable systems supporting professional care.</p><span class="lab-focus-bottom">OPERATIONS &amp; TECHNOLOGY <b aria-hidden="true">↗</b></span></a>'+
