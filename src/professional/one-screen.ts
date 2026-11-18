@@ -64,7 +64,7 @@ function show(next:TabName,focus=false,updateUrl=true){
   current=next;
   if(laboratory&&document.body.dataset.labNative!=='true'){
     const label=document.querySelector<HTMLElement>('[data-one-target="'+next+'"] .one-tab-label')?.textContent?.trim()||'Portfolio';
-    const title=next==='home'?'Devon Alan Akins — Software, Systems & Research':label+' — Devon Alan Akins';
+    const title=next==='home'?'Devon Alan Akins — Operations, Engineering & Research':label+' — Devon Alan Akins';
     document.title=title;
     document.querySelector('meta[property="og:title"]')?.setAttribute('content',title);
     document.querySelector('link[rel="canonical"]')?.setAttribute('href','https://devonakins.com'+LABORATORY_ROUTES[next]);
