@@ -97,11 +97,13 @@ const destinations=[
  ['writing','Fieldnotes','Ideas, analysis, reading, and long-form work','fieldnotes','M12 5Q6 1 2 3v18q4-2 10 2 6-4 10-2V3q-4-2-10 2v18'],
 ];
 function destinationCards(){
- return destinations.map(([key,title,description,art,path])=>
- '<a class="lab-destination" href="'+LABORATORY_ROUTES[key]+'" data-one-go="'+key+'" data-lab-destination="'+key+'">'+
- '<img src="/professional/cinematic/'+art+'.webp" alt="" width="500" height="300" loading="lazy" decoding="async">'+
- '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none"><path d="'+path+'" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/></svg>'+
- '<div><strong>'+title+'</strong><small>'+description+'</small></div><b aria-hidden="true">→</b></a>').join('');
+ return destinations.map(([key,title,description,art,path],index)=>
+ '<a class="lab-destination lab-destination--'+art+'" href="'+LABORATORY_ROUTES[key]+'" data-one-go="'+key+'" data-lab-destination="'+key+'">'+
+ '<span class="lab-destination-index" aria-hidden="true">'+String(index+1).padStart(2,'0')+' / 05</span>'+
+ '<span class="lab-card-geometry" aria-hidden="true"><i></i><i></i><i></i><i></i></span>'+
+ '<svg class="lab-destination-glyph" viewBox="0 0 24 24" aria-hidden="true" fill="none"><path d="'+path+'" stroke="currentColor" stroke-width="1.1" stroke-linejoin="round"/></svg>'+
+ '<div class="lab-destination-copy"><strong>'+title+'</strong><small>'+description+'</small></div>'+
+ '<span class="lab-destination-arrow" aria-hidden="true">↗</span></a>').join('');
 }
 function atomMark(){return '<svg viewBox="0 0 90 50" aria-hidden="true" fill="none"><ellipse cx="45" cy="25" rx="40" ry="10" transform="rotate(-24 45 25)" stroke="#a8dad3"/><ellipse cx="45" cy="25" rx="40" ry="10" transform="rotate(24 45 25)" stroke="#dfaa75"/><path d="M45 2v46" stroke="#8ca7a0" stroke-width=".5"/><circle cx="45" cy="25" r="3" fill="#fff0d3"/></svg>'}
 function compactSignals(){return '<section class="lab-portfolio-signals" aria-label="Selected public sources">'+
@@ -121,9 +123,9 @@ export function renderResearchFacilityHome({initialView='home',canonicalPath='/'
   const introduction=project?project.summary:listening?'Owner-approved Spotify playback and selected public playlists, with independent source and privacy controls.':notFound?'This page is unavailable. Explore Devon Alan Akins’s public software and research portfolio.':introductions[initialView];
   const home=view('home',
  '<div class="lab-overview lab-portfolio-layout">'+
- '<section class="lab-portfolio-hero" aria-label="Personal portfolio introduction"><picture class="lab-scene"><source media="(max-width:760px)" srcset="/professional/cinematic/chamber-mobile.webp"><img src="/professional/cinematic/chamber-wide.webp" width="1672" height="941" alt="" fetchpriority="high" decoding="async"></picture><canvas class="lab-live-scene" data-lab-scene-canvas aria-hidden="true"></canvas><div class="lab-scene-light" aria-hidden="true"></div>'+
- '<div class="lab-portfolio-hero-content"><p class="lab-hero-name">DEVON ALAN AKINS</p><h1>Independent<br>Research <em>&amp;</em> Engineering</h1><p class="lab-portfolio-statement">UNDERSTANDING COMPLEX SYSTEMS.<br>BUILDING THE MACHINES TO EXPLORE THEM.</p><ul class="lab-disciplines"><li>Scientific Computing</li><li>AI Infrastructure</li><li>Physics</li><li>Mathematics</li><li>Neuroscience</li></ul><div class="lab-portfolio-actions">'+goto('work','Explore work',true)+goto('portfolio','View portfolio')+'</div><noscript><nav class="lab-nojs" aria-label="Alternative navigation"><a href="/work/">Work</a><a href="/about/">About</a><a href="/contact/">Contact</a></nav></noscript></div></section>'+
- compactSignals()+'<section class="lab-portfolio-selected" aria-label="Explore five destinations"><div class="lab-explore-heading"><div><span>EXPLORE / THE LABORATORY</span><h2>Ideas made tangible.</h2></div><p>Research directions, working systems, finished artifacts, and the questions behind them.</p></div><div class="lab-destinations">'+destinationCards()+'</div></section></div>');
+ '<section class="lab-portfolio-hero" aria-label="Personal portfolio introduction"><div class="lab-hero-field" aria-hidden="true"><div class="lab-field-grid"></div><div class="lab-field-reticle"><span class="lab-field-halo"></span><span class="lab-field-ring lab-field-ring--a"></span><span class="lab-field-ring lab-field-ring--b"></span><span class="lab-field-ring lab-field-ring--c"></span><span class="lab-field-core"></span></div><span class="lab-field-measure lab-field-measure--top">FIELD / 001 &nbsp; ORIGINAL PROCEDURAL GEOMETRY</span><span class="lab-field-measure lab-field-measure--bottom">X / MATHEMATICS &nbsp; Y / COMPUTATION &nbsp; Z / EXPLORATION</span></div><canvas class="lab-live-scene" data-lab-scene-canvas aria-hidden="true"></canvas><div class="lab-scene-light" aria-hidden="true"></div>'+
+ '<div class="lab-portfolio-hero-content"><p class="lab-hero-name"><span class="lab-hero-marker" aria-hidden="true"></span> DEVON ALAN AKINS <span class="lab-hero-ordinal">/ INDEPENDENT LABORATORY</span></p><h1>Independent<br>Research <em>&amp;</em> Engineering</h1><p class="lab-portfolio-statement">UNDERSTANDING COMPLEX SYSTEMS.<br>BUILDING THE MACHINES TO EXPLORE THEM.</p><ul class="lab-disciplines"><li>Scientific Computing</li><li>AI Infrastructure</li><li>Physics</li><li>Mathematics</li><li>Neuroscience</li></ul><div class="lab-portfolio-actions">'+goto('work','Explore work',true)+goto('portfolio','View portfolio')+'</div><noscript><nav class="lab-nojs" aria-label="Alternative navigation"><a href="/work/">Work</a><a href="/about/">About</a><a href="/contact/">Contact</a></nav></noscript></div></section>'+
+ compactSignals()+'<section class="lab-portfolio-selected" aria-label="Explore five destinations"><div class="lab-explore-heading"><div><span>INDEX / 01—05</span><h2>Explore the laboratory.</h2></div><p>Five disciplines, one independent research and engineering practice.</p></div><div class="lab-destinations">'+destinationCards()+'</div></section></div>');
   const research=view('experience',
     '<div class="lab-secondary lab-research">'+
       '<div class="lab-section-intro"><p class="lab-overline">RESEARCH / PROGRAM 001</p>'+
