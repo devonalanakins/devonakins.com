@@ -197,7 +197,7 @@ async function finish(request,env,now,fetcher){
     // for the long-lived exchange. Both go ONLY to Meta's fixed HTTPS origin,
     // never to the browser, application URL, logs or any redirect target.
     stage="extend";
-    const exchange=new URL("https://graph.threads.com/access_token");
+    const exchange=new URL("https://graph.threads.net/access_token");
     exchange.search=new URLSearchParams({grant_type:"th_exchange_token",
       client_secret:env.THREADS_APP_SECRET,access_token:short.access_token}).toString();
     const long=await providerJson(await fetcher(exchange.href,{
