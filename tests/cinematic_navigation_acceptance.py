@@ -1,14 +1,12 @@
 import ssl
 from urllib.parse import urlparse
-from cinematic_browser_helpers import wait_for_condition
+from cinematic_browser_helpers import wait_for_condition, wait_for_local_preview
 import os
 """Actual browser history and media privacy; fixtures never become public activity."""
 import base64
 import datetime
 import json
 import subprocess
-import time
-import urllib.request
 from pathlib import Path
 from playwright.sync_api import sync_playwright
 
@@ -31,12 +29,7 @@ def navigate(page,key,width):
     selected(page,key)
 
 try:
-    for _ in range(100):
-        try:urllib.request.urlopen(BASE,timeout=1,context=TLS_CONTEXT).close();break
-        except Exception:
-            if server and server.poll() is not None:raise AssertionError('Preview exited')
-            time.sleep(.2)
-    else:raise AssertionError('Preview unavailable')
+    wait_for_local_preview(BASE,server,TLS_CONTEXT)
     results=[]
     with sync_playwright() as pw:
         for engine in ('chromium','webkit'):

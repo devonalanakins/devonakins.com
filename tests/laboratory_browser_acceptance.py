@@ -1,12 +1,10 @@
 import ssl
 from urllib.parse import urlparse
-from cinematic_browser_helpers import wait_for_condition
+from cinematic_browser_helpers import wait_for_condition, wait_for_local_preview
 import os
 """Approved cinematic composition: independent DOM, truthful sources and real browsers."""
 import json
 import subprocess
-import time
-import urllib.request
 from pathlib import Path
 from playwright.sync_api import sync_playwright
 
@@ -32,14 +30,7 @@ def navigate(page,key,width):
     assert page.locator(f'[data-one-view="{key}"]').is_visible()
 
 try:
-    for _ in range(100):
-        try:
-            urllib.request.urlopen(BASE,timeout=1,context=TLS_CONTEXT).close()
-            break
-        except Exception:
-            if server and server.poll() is not None: raise AssertionError('Preview exited')
-            time.sleep(.2)
-    else: raise AssertionError('Preview unavailable')
+    wait_for_local_preview(BASE,server,TLS_CONTEXT)
     with sync_playwright() as pw:
         for engine in ('chromium','webkit'):
             browser=getattr(pw,engine).launch()
@@ -49,7 +40,8 @@ try:
                     page=context.new_page()
                     errors=[]
                     page.on('pageerror',lambda error:errors.append(str(error)))
-                    page.goto(BASE,wait_until='networkidle')
+                    response=page.goto(BASE,wait_until='networkidle')
+                    assert response and response.status==200,(engine,width,'Public navigation failed')
                     assert page.title()=='Devon Alan Akins — Software, Systems & Research'
                     assert 'Research & Engineering' in page.locator('.lab-portfolio-hero h1').inner_text()
                     assert page.locator('.lab-hero-name').inner_text()=='DEVON ALAN AKINS'
