@@ -9,6 +9,10 @@ const page=renderResearchFacilityHome();
 test('laboratory candidate is independently navigable, semantic and source-honest',()=>{
   assert.equal((page.match(/role="tabpanel"/g)||[]).length,8);
   assert.equal((page.match(/role="tablist"/g)||[]).length,2);
+  assert.match(page,/aria-label="Primary navigation"/);
+  assert.match(page,/aria-label="Mobile primary navigation"/);
+  assert.equal((page.match(/aria-label="Primary pages"/g)||[]).length,2);
+  assert.doesNotMatch(page,/aria-label="(?:Mobile )?[Ll]aboratory (?:navigation|sections)"/);
   assert.equal((page.match(/<h1(?:\s|>)/g)||[]).length,8);
   for(const key of ['home','experience','systems','work','portfolio','activity','writing','contact']){
     assert.match(page,new RegExp('id="one-panel-'+key+'"'));
@@ -61,6 +65,9 @@ test('laboratory candidate is independently navigable, semantic and source-hones
   assert.match(page,/Public events only/);
   assert.doesNotMatch(page,/GPU speedup: \d+|active neural network|trained model deployed|LIVE NOW/i);
   assert.doesNotMatch(page,/<iframe|headshot-concept\.webp|Patient:|access_token|private repository/i);
+  const unknown=renderResearchFacilityHome({notFound:true});
+  assert.match(unknown,/Explore the work or return to the homepage\./);
+  assert.doesNotMatch(unknown,/return to the laboratory/i);
 });
 test('approved portrait section renders only when a real first-party image is packaged',()=>{
   assert.doesNotMatch(page,/class="lab-personal"|devon-portrait\.avif/,
@@ -68,7 +75,7 @@ test('approved portrait section renders only when a real first-party image is pa
   const approved=renderResearchFacilityHome({portraitAvailable:true});
   assert.equal((approved.match(/class="lab-personal"/g)||[]).length,1);
   assert.match(approved,/<figure class="lab-personal-portrait"><img src="\/professional\/devon-portrait\.avif"/);
-  assert.match(approved,/alt="Devon outdoors wearing a backwards dark cap and gray T-shirt"/);
+  assert.match(approved,/alt="Devon outdoors wearing a backward dark cap and a gray graphic hoodie with green trim"/);
   assert.match(approved,/loading="lazy" decoding="async"/);
   assert.match(approved,/Father\. Builder\. Writer\./);
   assert.match(approved,/ABOUT ME/);
