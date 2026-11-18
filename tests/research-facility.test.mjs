@@ -22,7 +22,8 @@ test('laboratory candidate is independently navigable, semantic and source-hones
   assert.match(page,/data-public-github-feed/);
   assert.match(page,/data-public-spotify/);
   assert.match(page,/<img data-spotify-cover[^>]+referrerpolicy="no-referrer"/);
-  assert.match(page,/data-public-work data-work-presentation="editor" data-work-mode="idle"/);
+  assert.doesNotMatch(page,/data-public-work|data-work-presentation="editor"/);
+  assert.doesNotMatch(page,/data-public-threads|data-threads-summary|data-threads-posts/);
   assert.doesNotMatch(page,/data-public-gpt|\/gpt\/|GPT analytics|token counts|GPT · CAPTURED/i);
   assert.equal((page.match(/class="lab-destination"/g)||[]).length,5);
   assert.match(page,/data-lab-scene-canvas/);
@@ -30,9 +31,14 @@ test('laboratory candidate is independently navigable, semantic and source-hones
   for(const key of ['experience','systems','work','portfolio','writing']){
     assert.match(page,new RegExp('href="'+LABORATORY_ROUTES[key]+'" data-one-go="'+key+'" data-lab-destination="'+key+'"'));
   }
-  assert.equal((page.match(/class="lab-signal-tile /g)||[]).length,4);
+  assert.equal((page.match(/class="lab-signal-tile /g)||[]).length,2);
   assert.match(page,/Independent software developer/i);
-  assert.match(page,/data-public-threads/);
+  assert.match(page,/class="lab-explore-heading"/);
+  assert.match(page,/THE PUBLIC RECORD/);
+  assert.match(page,/class="lab-signal-tile lab-signal-github"/);
+  assert.match(page,/class="lab-signal-tile lab-signal-spotify"/);
+  assert.match(page,/one-social-icon--threads/);
+  assert.doesNotMatch(page,/Recent authorized public Threads posts|No verified editor session/);
   assert.match(page,/Public events only/);
   assert.doesNotMatch(page,/GPU speedup: \d+|active neural network|trained model deployed|LIVE NOW/i);
   assert.doesNotMatch(page,/<iframe|headshot-concept\.webp|Patient:|access_token|private repository/i);
@@ -60,6 +66,8 @@ test('the candidate uses first-party interactions and an explicit build gate',as
   const portfolioStyle=await readFile(new URL('../src/professional/research-portfolio.css',import.meta.url),'utf8');
   assert.match(portfolioStyle,/\.lab-destinations/);
   assert.match(portfolioStyle,/\.lab-portfolio-signal-grid/);
+  assert.match(portfolioStyle,/\.lab-explore-heading/);
+  assert.match(portfolioStyle,/grid-template-columns:repeat\(2,minmax\(0,1fr\)\)/);
   assert.match(portfolioStyle,/\.lab-live-scene/);
   assert.match(portfolioStyle,/prefers-reduced-motion/);
   assert.match(portfolioStyle,/@media\(max-width:760px\)/);
