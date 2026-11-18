@@ -131,9 +131,12 @@ export function publicThreadsPosts(payload,username,now=Date.now()) {
     const publishedAt=date(post.timestamp,now);
     if(!href || !publishedAt)return null;
     seen.add(post.id);
-    if(typeof post.text!=="string" || post.text.length>2200)return null;
-    const cleaned=post.text.replace(/[\u0000-\u0008\u000b-\u001f\u007f]/g,"").trim();
+    // Meta permits image/video posts without captions. Preserve the original
+    // post identity and media_type checks; never substitute a fabricated caption.
     const media=post.media_type!=="TEXT_POST";
+    if(!(typeof post.text==="string" || (media && (post.text===null || post.text===undefined))) ||
+       (typeof post.text==="string" && post.text.length>2200))return null;
+    const cleaned=(post.text??"").replace(/[\u0000-\u0008\u000b-\u001f\u007f]/g,"").trim();
     if(!cleaned && !media)continue;
     const chars=Array.from(cleaned);
     const excerpt=chars.length>280?chars.slice(0,280).join("")+"…":cleaned;
