@@ -64,7 +64,7 @@ html.lab-html{background:#f3f1e9;scroll-padding-top:80px}
 .lab-body .lab-destination{display:flex;flex-direction:column;align-items:start;justify-content:end;position:relative;min-height:250px;border:0;border-radius:0;padding:30px;background:var(--ink);color:#fff;overflow:hidden;box-shadow:none;transform:none;transition:background .25s}
 .lab-body .lab-destination--research{background:var(--blue)}
 .lab-body .lab-destination:before,.lab-body .lab-card-print,.lab-body .lab-card-rule,.lab-body .lab-destination .lab-destination-glyph{display:none}
-.lab-body .lab-destination-index{position:absolute;top:25px;left:30px;color:#ffffffa8;font:10px/1.5 Arial,sans-serif;letter-spacing:.08em}
+.lab-body .lab-destination-index{position:absolute;top:25px;left:30px;color:#fff;font:10px/1.5 Arial,sans-serif;letter-spacing:.08em}
 .lab-body .lab-destination-copy{min-width:0;max-width:90%}
 .lab-body .lab-destination strong{font:700 clamp(43px,4.5vw,76px)/1 Arial,sans-serif;letter-spacing:-.055em;color:#fff;text-transform:none}
 .lab-body .lab-destination small{color:#e1e6e4;font:14px/1.6 Arial,sans-serif;max-width:36ch;margin-top:14px}
