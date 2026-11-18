@@ -37,7 +37,7 @@ export const PUBLICATION_POLICY = Object.freeze({
     "https://github.com/devonalanakins/vesper-legacy"),
   operations: entry("Operations", "Professional support", "maintained"),
   writing: entry("Writing", "Books and manuscripts", "draft"),
-  anevum: entry("Creative", "Creative property", "draft", "https://anevum.com", true),
+  anevum: entry("Research", "Open STEM education prototype", "draft", "https://anevum.com", true),
   ideaflow: entry("Software", "Meeting software", "draft"),
   devonstation: entry("Software", "Private personal workspace", "draft",
     null, true),

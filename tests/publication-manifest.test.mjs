@@ -67,6 +67,24 @@ test("external links must match exact owner-approved destinations to remain publ
   assert.equal(publicProjectBySlug("rhen").publication.activitySharingApproved,false);
 });
 
+test("ANEVUM public identity reflects the developing Open Institute without false launch claims", () => {
+  const institute=publicProjectBySlug("anevum");
+  assert.ok(institute);
+  assert.equal(institute.category,"research");
+  assert.equal(institute.publication.category,"Research");
+  assert.equal(institute.publication.stage,"draft");
+  assert.match(institute.title,/Open Institute/);
+  assert.match(institute.summary,/STEM institute in development/);
+  assert.match(institute.description,/freely accessible, continuing STEM education/);
+  assert.match(institute.detail,/source-level learning prototype/);
+  assert.match(institute.boundary,/non-accredited/);
+  assert.match(institute.boundary,/not operational/);
+  assert.doesNotMatch(institute.summary+" "+institute.description,
+    /family creative project|worldbuilding and games/i);
+  assert.equal(institute.url,"https://anevum.com");
+  assert.match(institute.urlLabel,/not yet launched/);
+});
+
 test("published V5 systems atlas cannot resurrect a private source destination", () => {
   const at=Date.parse("2026-11-08T18:00:00.000Z");
   const layout=projectV5Atlas(replayPublicGraphHistory([],at));

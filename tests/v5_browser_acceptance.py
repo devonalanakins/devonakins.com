@@ -146,7 +146,7 @@ def check_page(page, origin, path, axe):
             "() => document.querySelector('[data-v5-atlas-spotlight]')?.dataset.v5AtlasSelected === 'project:anevum'",
             timeout=10000,
         )
-        assert "Anevum" in spotlight.inner_text()
+        assert "ANEVUM — The Open Institute" in spotlight.inner_text()
         assert "anevum.com" in spotlight.locator("a").get_attribute("href")
         search.fill("Merit")
         page.wait_for_function(

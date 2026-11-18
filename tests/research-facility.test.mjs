@@ -29,7 +29,7 @@ test('laboratory candidate is independently navigable, semantic and source-hones
   assert.match(page,/class="lab-research-journal"/);
   for(const term of ['Devon Alan Akins','MATHEMATICS','PHYSICS','COMPUTATIONAL NEUROSCIENCE',
     'Independent','Anevum Open Institute','ANALYTIC MODEL',
-    'NO MEASURED DATA','unmerged','Planned initiative','scientific computing']){
+    'NO MEASURED DATA','unmerged','Prototype curriculum','scientific computing']){
     assert.ok(page.replace(/<[^>]*>/g,' ').toLowerCase().includes(term.toLowerCase()),term);
   }
   assert.match(page,/data-public-github-feed/);
@@ -41,6 +41,11 @@ test('laboratory candidate is independently navigable, semantic and source-hones
   assert.equal((page.match(/data-lab-destination="/g)||[]).length,2);
   assert.equal((page.match(/class="lab-focus-card /g)||[]).length,3);
   assert.match(page,/Nona Neuropsychology/);
+  assert.match(page,/03 \/ OPEN EDUCATION/);
+  assert.match(page,/ANEVUM Open Institute/);
+  assert.match(page,/Free STEM learning and practical scientific inquiry/);
+  assert.match(page,/source-level preview/);
+  assert.doesNotMatch(page,/STORIES &amp; CREATIVE WORK|Writing, imagined worlds and interactive experiences/);
   assert.match(page,/Devon<br>Alan Akins/);
   assert.match(page,/Own the model/);
   assert.match(page,/rhen\/pull\/1/);

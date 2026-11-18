@@ -48,7 +48,7 @@ test("public archive and detail routes use correct, independent visual identitie
     ["rhen-language", "Rhen", "rhen.svg"],
     ["vesper", "Vesper", "vesper.svg"],
     ["squelch", "Squelch", "squelch.svg"],
-    ["anevum", "Anevum", "anevum.svg"],
+    ["anevum", "ANEVUM — The Open Institute", "anevum.svg"],
   ];
   for (const [slug, name, file] of wordmarks) {
     assert.ok(archive.includes('class="route-project route-project-' + slug + '" data-identity="' + slug + '"'), slug);

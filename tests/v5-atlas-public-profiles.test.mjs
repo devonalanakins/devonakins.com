@@ -68,6 +68,8 @@ test("forged or malformed public structural identity cannot produce profiles", (
     { ...layout, nodes: layout.nodes.map(n =>
       n.id === "project:mizvo" ? { ...n, label: "Private Client" } : n) },
     { ...layout, nodes: layout.nodes.map(n =>
+      n.id === "project:anevum" ? { ...n, label: "Unapproved Institute" } : n) },
+    { ...layout, nodes: layout.nodes.map(n =>
       n.id === "project:merit" ? { ...n, state: "published" } : n) },
     { ...layout, nodes: layout.nodes.map(n =>
       n.id === "section:knowledge-overview" ? { ...n, type: "project" } : n) },

@@ -46,7 +46,11 @@ export function publicAtlasProfiles(layout) {
       continue;
     }
     const source = projects.find(project => project.slug === slug);
-    if (!source || node.label !== source.title) return [];
+    // The structural atlas retains the short ANEVUM root label; its editorial
+    // profile shows the current Open Institute title. Neither arbitrary labels
+    // nor unapproved project identities are permitted.
+    const expectedRootLabel = slug === "anevum" ? "Anevum" : source?.title;
+    if (!source || node.label !== expectedRootLabel) return [];
     const category = short(source.label, 90);
     const status = short(source.status, 100);
     const summary = short(source.summary, 450);
@@ -55,7 +59,7 @@ export function publicAtlasProfiles(layout) {
     const url = approvedUrl && source.url === approvedUrl ? approvedUrl : null;
     const urlLabel = url ? (short(source.urlLabel, 90) || "Open public project") : null;
     result.push(Object.freeze({
-      id, title: node.label, category, status, summary, boundary,
+      id, title: source.title, category, status, summary, boundary,
       url, urlLabel,
     }));
   }
