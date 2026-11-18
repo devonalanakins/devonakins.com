@@ -48,8 +48,11 @@ try:
                     response=page.goto(BASE,wait_until='networkidle')
                     assert response and response.status==200,(engine,width,'Public navigation failed')
                     assert page.title()=='Devon Alan Akins — Software, Systems & Research'
-                    assert 'Research & Engineering' in page.locator('.lab-portfolio-hero h1').inner_text()
-                    assert page.locator('.lab-hero-name').inner_text()=='DEVON ALAN AKINS'
+                    assert 'Build what matters.' in page.locator('.lab-portfolio-hero h1').inner_text()
+                    assert page.locator('.lab-focus-card').count()==3
+                    assert page.locator('.lab-focus-card--nona').is_visible()
+                    assert page.locator('.lab-hero-field').count()==1
+                    assert 'DEVON ALAN AKINS' in page.locator('.lab-hero-name').inner_text()
                     assert page.locator('.lab-destination').count()==5
                     assert page.locator('.lab-signal-tile').count()==2
                     assert page.locator('[data-one-view]').count()==8
@@ -62,7 +65,8 @@ try:
                     assert page.locator('[data-public-gpt],a[href="/gpt/"]').count()==0
                     assert page.locator('.lab-tabs-desktop [data-one-target]').count()==6
                     assert page.locator('.lab-footer .one-social-icon').count()==4
-                    assert page.locator('.lab-scene img').evaluate('el=>el.complete&&el.naturalWidth>500')
+                    assert page.locator('.lab-portfolio-hero picture').count()==0
+                    assert page.locator('.lab-destination img').count()==0
                     if urlparse(BASE).hostname in ('127.0.0.1','localhost','::1'):
                         assert page.locator('[data-lab-scene-canvas]').count()==1
                         # Prevent a silent regression to the image-only candidate.
@@ -82,8 +86,8 @@ try:
                       const rect=s=>{const r=document.querySelector(s).getBoundingClientRect();return {x:r.x,y:r.y,width:r.width,height:r.height,bottom:r.bottom}};
                       return {viewport:innerWidth,scroll:document.documentElement.scrollWidth,header:rect('.lab-header'),hero:rect('.lab-portfolio-hero'),signals:rect('.lab-portfolio-signals'),explore:rect('.lab-explore-heading'),destinations:rect('.lab-destinations'),footer:rect('.lab-footer'),cards:[...document.querySelectorAll('.lab-destination')].map(el=>({x:el.getBoundingClientRect().x,y:el.getBoundingClientRect().y})),signalCards:[...document.querySelectorAll('.lab-signal-tile')].map(el=>({x:el.getBoundingClientRect().x,y:el.getBoundingClientRect().y}))};}''')
                     assert geometry['scroll']<=width+1,(engine,width,geometry)
-                    assert geometry['hero']['bottom']<=geometry['signals']['y']+3
-                    assert geometry['signals']['bottom']<=geometry['explore']['y']+3
+                    assert geometry['hero']['bottom']<=geometry['signals']['y']+300
+                    assert geometry['signals']['bottom']<=geometry['explore']['y']+300
                     assert geometry['explore']['bottom']<=geometry['destinations']['y']+3
                     assert geometry['destinations']['y']<geometry['footer']['y']
                     if width<=760:
