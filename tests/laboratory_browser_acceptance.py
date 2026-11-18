@@ -58,7 +58,7 @@ try:
                     assert page.locator('.lab-focus-card--nona').is_visible()
                     assert page.locator('.lab-hero-field').count()==1
                     assert 'DEVON ALAN AKINS' in page.locator('.lab-hero-name').inner_text()
-                    assert page.locator('.lab-destination').count()==5
+                    assert page.locator('.lab-destination').count()==2
                     assert page.locator('.lab-signal-tile').count()==2
                     assert page.locator('[data-one-view]').count()==8
                     assert page.locator('[data-public-github-feed]').count()==2
@@ -68,7 +68,10 @@ try:
                     assert page.locator('.lab-footer .one-social-icon--threads').count()==1
                     assert page.locator('.lab-explore-heading').count()==1
                     assert page.locator('[data-public-gpt],a[href="/gpt/"]').count()==0
-                    assert page.locator('.lab-tabs-desktop [data-one-target]').count()==6
+                    assert page.locator('.lab-tabs-desktop [data-one-target]').count()==3
+                    assert page.locator('#lab-menu [data-one-target]').count()==3
+                    assert page.locator('.lab-work-feature').count()==1
+                    assert page.locator('.lab-research-journal').count()==1
                     assert page.locator('.lab-footer .one-social-icon').count()==4
                     assert page.locator('.lab-portfolio-hero picture').count()==0
                     assert page.locator('.lab-destination img').count()==0
@@ -77,7 +80,7 @@ try:
                     assert page.locator('[data-lab-scene-canvas],.lab-live-scene,.lab-field-reticle,.lab-card-geometry').count()==0
                     assert page.locator('.lab-field-traces').count()==1
                     assert page.locator('.lab-trace').count()==3
-                    assert page.locator('.lab-card-print').count()==5
+                    assert page.locator('.lab-card-print').count()==2
                     assert page.evaluate("""() => [...document.querySelectorAll('script[src]')].every(s=>!s.src.includes('cinematic-environment'))""")
                     assert page.locator('.lab-field-sheet-foot').inner_text().find('NOT MEASURED DATA')>=0
                     if width<=760:
@@ -102,7 +105,7 @@ try:
                         assert page.locator('.lab-tabs-desktop').is_hidden()
                         assert page.locator('.lab-menu-toggle').is_visible()
                         assert len(set(round(c['x']) for c in geometry['cards']))==1
-                        assert len(set(round(c['y']) for c in geometry['cards']))==5
+                        assert len(set(round(c['y']) for c in geometry['cards']))==2
                         assert len(set(round(c['x']) for c in geometry['signalCards']))==(1 if width<=350 else 2)
                         assert len(set(round(c['y']) for c in geometry['signalCards']))==(2 if width<=350 else 1)
                         assert page.evaluate("getComputedStyle(document.body).overflowY")!='hidden'
@@ -128,7 +131,7 @@ try:
                     (OUT/f'{engine}-landmarks-{width}.json').write_text(json.dumps(geometry,indent=2))
                     page.mouse.click(width-2,65)
                     page.screenshot(path=str(OUT/f'{engine}-cinematic-{width}x{height}.png'),full_page=True)
-                    for key in ('experience','systems','work','portfolio','writing'):
+                    for key in ('work','experience'):
                         page.locator(f'[data-lab-destination="{key}"]').click()
                         assert page.locator(f'[data-one-view="{key}"]').is_visible()
                         assert page.evaluate('document.activeElement.dataset.oneView')==key
@@ -154,9 +157,11 @@ try:
                         card.locator('summary').click()
                         assert card.get_attribute('open') is not None
                         card.locator('summary').click()
-                    for key in ('activity','contact'):
-                        navigate(page,key,width)
-                        navigate(page,'home',width)
+                    # Historical routes remain reachable but are not primary tabs.
+                    for route,key in (('/systems/','systems'),('/portfolio/','portfolio'),('/fieldnotes/','writing'),('/activity/','activity'),('/contact/','contact')):
+                        page.goto(BASE+route,wait_until='networkidle')
+                        assert page.locator(f'[data-one-view="{key}"]').is_visible()
+                    page.goto(BASE,wait_until='networkidle')
                     page.locator('.lab-menu-toggle' if width<=1100 else '.lab-desktop-menu').click()
                     motion=page.locator('#lab-menu [data-lab-motion]')
                     if width==375: assert motion.is_disabled()
@@ -166,7 +171,7 @@ try:
                         motion.click()
                     page.locator('[data-lab-menu-close]').click()
                     if width in (390,1536):
-                        for key in ('home','experience','systems','work','portfolio','writing','activity','contact'):
+                        for key in ('home','work','experience'):
                             navigate(page,key,width)
                             page.evaluate(Path('node_modules/axe-core/axe.min.js').read_text())
                             violations=page.evaluate("""async()=> (await axe.run(document,{runOnly:{type:'tag',values:['wcag2a','wcag2aa','wcag21a','wcag21aa','wcag22a','wcag22aa']}})).violations.map(v=>({id:v.id,impact:v.impact,nodes:v.nodes.map(n=>n.target)}))""")
@@ -191,7 +196,7 @@ try:
                 page.screenshot(path=str(OUT/f'{engine}-nojs.png'),full_page=True)
                 context.close()
             finally: browser.close()
-    print('Cinematic acceptance passed: Chromium/WebKit, 10 viewports, eight views, five destinations, two public source cards, no editor/Threads feed requests, modal/Escape/focus, project search, analytic model, reduced motion, no-JS and WCAG audit.')
+    print('Cinematic acceptance passed: Chromium/WebKit, 10 viewports, three primary destinations, two public source cards, historical direct links, no editor/Threads feed requests, modal/Escape/focus, project search, analytic model, reduced motion, no-JS and WCAG audit.')
 finally:
     if server:
         server.terminate()
