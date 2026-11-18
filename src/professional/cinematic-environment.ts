@@ -21,6 +21,35 @@ if (hero && canvas) {
   }
 }
 
+
+/** The destination illustrations are actual navigation, with subtle physical
+ * response on precise pointers; the underlying artwork remains fully usable. */
+for (const card of document.querySelectorAll<HTMLElement>("[data-lab-destination]")) {
+  function reset(): void {
+    for (const name of ["--lab-card-rotate-x", "--lab-card-rotate-y", "--lab-card-shift-x",
+      "--lab-card-shift-y", "--lab-card-spot-x", "--lab-card-spot-y"]) {
+      card.style.removeProperty(name);
+    }
+  }
+  card.addEventListener("pointermove", (event: PointerEvent) => {
+    if (!finePointer.matches || reducedMotion.matches ||
+      document.body.classList.contains("lab-motion-paused")) return;
+    const rect = card.getBoundingClientRect();
+    if (!rect.width || !rect.height) return;
+    const x = Math.max(-1, Math.min(1, (event.clientX - rect.left) / rect.width * 2 - 1));
+    const y = Math.max(-1, Math.min(1, (event.clientY - rect.top) / rect.height * 2 - 1));
+    card.style.setProperty("--lab-card-rotate-x", (-y * 3.5).toFixed(2) + "deg");
+    card.style.setProperty("--lab-card-rotate-y", (x * 5.5).toFixed(2) + "deg");
+    card.style.setProperty("--lab-card-shift-x", (-x * 7).toFixed(1) + "px");
+    card.style.setProperty("--lab-card-shift-y", (-y * 7).toFixed(1) + "px");
+    card.style.setProperty("--lab-card-spot-x", ((x + 1) * 50).toFixed(1) + "%");
+    card.style.setProperty("--lab-card-spot-y", ((y + 1) * 50).toFixed(1) + "%");
+  }, {passive: true});
+  card.addEventListener("pointerleave", reset);
+  card.addEventListener("blur", reset);
+  reducedMotion.addEventListener("change", reset);
+}
+
 function mountEnvironment(host: HTMLElement, surface: HTMLCanvasElement): void {
   const renderer = new THREE.WebGLRenderer({
     canvas: surface,
@@ -94,13 +123,11 @@ function mountEnvironment(host: HTMLElement, surface: HTMLCanvasElement): void {
     glass,
   );
   sculpture.add(vessel);
-  const caps: THREE.Object3D[] = [];
   for (const y of [-2.15, 2.15]) {
     const rim = new THREE.Mesh(geometry(new THREE.TorusGeometry(1.94, 0.024, 8, 144)), pale);
     rim.rotation.x = Math.PI / 2;
     rim.position.y = y;
     sculpture.add(rim);
-    caps.push(rim);
   }
   for (let i = 0; i < 8; i++) {
     const angle = i / 8 * Math.PI * 2;
@@ -244,6 +271,11 @@ function mountEnvironment(host: HTMLElement, surface: HTMLCanvasElement): void {
   function tick(time: number): void {
     raf = 0;
     if (!shouldRun()) return;
+    // Cap mobile rendering to roughly 30fps while keeping elapsed time honest.
+    if (mobile && last && time - last < 32) {
+      raf = window.requestAnimationFrame(tick);
+      return;
+    }
     const dt = last ? Math.min((time - last) / 1000, 0.05) : 0;
     last = time;
     elapsed += dt;
@@ -322,9 +354,5 @@ function mountEnvironment(host: HTMLElement, surface: HTMLCanvasElement): void {
   resize();
   host.classList.add("lab-cinematic-ready");
   sync();
-  // Keep assets owned by this scene, with no shared global renderer or timer.
-  void material;
-  void geometry;
-  void geometries;
-  void materials;
+  // All state is scoped to this page scene; no global rendering loop is installed.
 }
