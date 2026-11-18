@@ -31,6 +31,10 @@ const portraitBytes=new Uint8Array(await portrait.arrayBuffer());
 assert.ok(portraitBytes.length>2000&&portraitBytes.length<220000);
 assert.equal(new TextDecoder().decode(portraitBytes.slice(4,8)),'ftyp');
 
+// Removed artwork must not be accessible from the new two-dimensional release.
+for(const old of ['/professional/cinematic/chamber-wide.webp','/professional/cinematic/chamber-mobile.webp','/professional/cinematic/research.webp','/professional/cinematic/systems.webp','/professional/cinematic/projects.webp','/professional/cinematic/portfolio.webp','/professional/cinematic/fieldnotes.webp']){
+ assert.equal((await get(old)).status,404,'Legacy generated image must not be served: '+old);
+}
 for(const p of approvedPublicProjects){
  const response=await get('/work/'+p.slug+'/');assert.equal(response.status,200,p.slug);
  const html=await response.text();assert.match(html,/lab-case-study/);assert.ok(html.includes(p.title.replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;")));
