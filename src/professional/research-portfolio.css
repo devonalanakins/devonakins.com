@@ -19,8 +19,6 @@ body.lab-body{height:auto;min-height:100dvh;overflow:visible;background:#030d10;
 .lab-body .lab-view{height:auto;min-height:0;overflow:visible;animation:none}
 .lab-body .lab-stage .lab-overview.lab-portfolio-layout{display:flex;flex-direction:column;gap:0;height:auto;min-height:0;overflow:visible;padding:0}
 .lab-body .lab-portfolio-hero{position:relative;isolation:isolate;min-height:425px;height:clamp(425px,50.5vh,590px);border:0;background:none;overflow:hidden;border-radius:0}
-.lab-scene{position:absolute;inset:0;z-index:-3;display:block}
-.lab-scene img{width:100%;height:100%;object-fit:cover;object-position:50% 38%;display:block}
 .lab-body .lab-portfolio-hero:before{content:'';position:absolute;inset:0;z-index:-2;background:linear-gradient(90deg,#00101233,transparent 75%),linear-gradient(0deg,#030d10 0%,transparent 21%)}
 .lab-scene-light{position:absolute;inset:0;z-index:-1;pointer-events:none;background:radial-gradient(ellipse at 75% 20%,#a2f9e212,transparent 45%);animation:lab-breathe 16s ease-in-out infinite alternate}
 @keyframes lab-breathe{to{opacity:.3;transform:translate3d(0,4px,0)}}
@@ -217,52 +215,6 @@ html.lab-html{scrollbar-gutter:auto}
 .lab-body .lab-secondary .p-listening-collections{grid-column:1/-1;min-width:0}
 .lab-body .lab-case-sections{overflow-wrap:anywhere}
 @media(max-width:760px){.lab-body .lab-secondary .lab-section-intro h1{font-size:clamp(28px,7vw,44px)}.lab-body .lab-secondary .lab-section-intro h1 em{white-space:normal}}
-
-/* A real-time canvas sits above the original illustration without baking any
-   interface text into the scene. The image is always the GPU-safe fallback. */
-.lab-body .lab-live-scene{
-  position:absolute;inset:0;z-index:-1;display:block;width:100%;height:100%;
-  pointer-events:none;opacity:0;transition:opacity 1100ms ease;
-}
-.lab-body .lab-portfolio-hero.lab-cinematic-ready .lab-live-scene{opacity:1}
-.lab-body .lab-live-scene[hidden]{display:none}
-.lab-body .lab-portfolio-hero .lab-scene img{transition:filter 800ms,opacity 800ms}
-.lab-body .lab-portfolio-hero.lab-cinematic-ready .lab-scene img{
-  filter:saturate(.81) brightness(.8);opacity:.84
-}
-/* Responsive, pointer-only card depth. Real links, focus and labels remain DOM. */
-@media(hover:hover) and (pointer:fine){
- .lab-body .lab-destination{
-   transform-style:preserve-3d;will-change:transform;
-   transition:transform .24s ease-out,border-color .25s,box-shadow .25s
- }
- .lab-body .lab-destination:hover{
-   transform:perspective(1000px) rotateX(var(--lab-card-rotate-x,0deg))
-     rotateY(var(--lab-card-rotate-y,0deg)) translateY(-5px);
- }
- .lab-body .lab-destination img{
-   transform:translate3d(var(--lab-card-shift-x,0px),var(--lab-card-shift-y,0px),0) scale(1.07);
-   transition:transform .35s ease-out;
- }
- .lab-body .lab-destination:hover img{
-   transform:translate3d(var(--lab-card-shift-x,0px),var(--lab-card-shift-y,0px),0) scale(1.12);
- }
- .lab-body .lab-destination:after{
-   content:'';position:absolute;inset:0;z-index:-1;pointer-events:none;opacity:0;
-   background:radial-gradient(ellipse 70% 65% at var(--lab-card-spot-x,50%) var(--lab-card-spot-y,50%),#c6f8ee33,transparent 74%);
-   transition:opacity .25s
- }
- .lab-body .lab-destination:hover:after{opacity:1}
-}
-@media(prefers-reduced-motion:reduce){
- .lab-body .lab-live-scene,.lab-body .lab-scene img{transition:none!important}
- .lab-body .lab-destination,.lab-body .lab-destination img{transform:none!important;will-change:auto!important}
- .lab-body .lab-destination:after{display:none!important}
-}
-body.lab-motion-paused .lab-body .lab-destination,
-body.lab-motion-paused .lab-destination,
-body.lab-motion-paused .lab-destination img{transform:none!important}
-
 
 /* EDITORIAL REFINEMENT / source feeds simplified to GitHub and listening.
    No static artwork is treated as a live signal or proof of engineering activity. */
