@@ -11,6 +11,7 @@ const mime = {
   ".png": "image/png",
   ".jpg": "image/jpeg",
   ".webp": "image/webp",
+  ".avif": "image/avif",
   ".mp4": "video/mp4",
   ".xml": "application/xml; charset=utf-8",
   ".txt": "text/plain; charset=utf-8",
