@@ -55,6 +55,22 @@ try:
                     assert page.title()=='Devon Alan Akins — Operations, Engineering & Research'
                     assert 'Build what matters.' in page.locator('.lab-portfolio-hero h1').inner_text()
                     assert page.locator('.lab-focus-card').count()==3
+                    # The personal photograph is an optional packaged first-party
+                    # asset: never show a broken image or a placeholder if absent.
+                    personal=page.locator('.lab-personal')
+                    if personal.count():
+                        assert personal.is_visible()
+                        assert page.locator('.lab-personal-portrait img').get_attribute('src')=='/professional/devon-portrait.avif'
+                        assert page.locator('.lab-personal-portrait img').evaluate('image=>image.complete && image.naturalWidth>=400')
+                        assert page.locator('.lab-personal-portrait img').get_attribute('alt')
+                        assert page.evaluate("""() => {
+                          const hero=document.querySelector('.lab-portfolio-hero').getBoundingClientRect();
+                          const personal=document.querySelector('.lab-personal').getBoundingClientRect();
+                          const focus=document.querySelector('.lab-focus').getBoundingClientRect();
+                          return hero.bottom<=personal.top+3 && personal.bottom<=focus.top+3;
+                        }"""),(engine,width,'portrait should follow hero and precede work focus')
+                    else:
+                        assert page.locator('img[src="/professional/devon-portrait.avif"]').count()==0
                     assert page.locator('.lab-focus-card--nona').is_visible()
                     assert page.locator('.lab-hero-field').count()==1
                     assert 'DEVON ALAN AKINS' in page.locator('.lab-hero-name').inner_text()
