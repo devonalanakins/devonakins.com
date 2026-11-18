@@ -75,7 +75,7 @@ try:
                             wait_for_condition(page,"document.querySelector('.lab-portfolio-hero').classList.contains('lab-cinematic-ready')")
                             assert page.locator('[data-lab-scene-canvas]').is_visible()
                         else:
-                            assert page.locator('.lab-scene img').is_visible()
+                            assert page.locator('.lab-hero-field').is_visible()
                         if width==1536 and webgl_supported:
                             card=page.locator('[data-lab-destination="experience"]')
                             card.hover(position={'x':80,'y':40})
@@ -84,10 +84,11 @@ try:
                             wait_for_condition(page,"!document.querySelector('[data-lab-destination=\"experience\"]').style.getPropertyValue('--lab-card-rotate-y')")
                     geometry=page.evaluate('''() => {
                       const rect=s=>{const r=document.querySelector(s).getBoundingClientRect();return {x:r.x,y:r.y,width:r.width,height:r.height,bottom:r.bottom}};
-                      return {viewport:innerWidth,scroll:document.documentElement.scrollWidth,header:rect('.lab-header'),hero:rect('.lab-portfolio-hero'),signals:rect('.lab-portfolio-signals'),explore:rect('.lab-explore-heading'),destinations:rect('.lab-destinations'),footer:rect('.lab-footer'),cards:[...document.querySelectorAll('.lab-destination')].map(el=>({x:el.getBoundingClientRect().x,y:el.getBoundingClientRect().y})),signalCards:[...document.querySelectorAll('.lab-signal-tile')].map(el=>({x:el.getBoundingClientRect().x,y:el.getBoundingClientRect().y}))};}''')
+                      return {viewport:innerWidth,scroll:document.documentElement.scrollWidth,header:rect('.lab-header'),hero:rect('.lab-portfolio-hero'),focus:rect('.lab-focus'),signals:rect('.lab-portfolio-signals'),explore:rect('.lab-explore-heading'),selected:rect('.lab-portfolio-selected'),destinations:rect('.lab-destinations'),footer:rect('.lab-footer'),cards:[...document.querySelectorAll('.lab-destination')].map(el=>({x:el.getBoundingClientRect().x,y:el.getBoundingClientRect().y})),signalCards:[...document.querySelectorAll('.lab-signal-tile')].map(el=>({x:el.getBoundingClientRect().x,y:el.getBoundingClientRect().y}))};}''')
                     assert geometry['scroll']<=width+1,(engine,width,geometry)
-                    assert geometry['hero']['bottom']<=geometry['signals']['y']+300
-                    assert geometry['signals']['bottom']<=geometry['explore']['y']+300
+                    assert geometry['hero']['bottom']<=geometry['focus']['y']+3
+                    assert geometry['focus']['bottom']<=geometry['explore']['y']+3
+                    assert geometry['selected']['bottom']<=geometry['signals']['y']+3
                     assert geometry['explore']['bottom']<=geometry['destinations']['y']+3
                     assert geometry['destinations']['y']<geometry['footer']['y']
                     if width<=760:
@@ -116,7 +117,7 @@ try:
                     if width==1536:
                         # Responsive editorial content flows instead of fixed image-era landmarks.
                         assert abs(geometry['header']['height']-62)<=8
-                        assert geometry['destinations']['y']-geometry['signals']['y']>=100
+                        assert geometry['signals']['y']-geometry['destinations']['y']>=100
                     (OUT/f'{engine}-landmarks-{width}.json').write_text(json.dumps(geometry,indent=2))
                     page.mouse.click(width-2,65)
                     page.screenshot(path=str(OUT/f'{engine}-cinematic-{width}x{height}.png'),full_page=True)
