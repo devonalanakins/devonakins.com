@@ -25,7 +25,12 @@ test('laboratory candidate is independently navigable, semantic and source-hones
   assert.doesNotMatch(page,/data-public-work|data-work-presentation="editor"/);
   assert.doesNotMatch(page,/data-public-threads|data-threads-summary|data-threads-posts/);
   assert.doesNotMatch(page,/data-public-gpt|\/gpt\/|GPT analytics|token counts|GPT · CAPTURED/i);
-  assert.equal((page.match(/class="lab-destination"/g)||[]).length,5);
+  assert.equal((page.match(/data-lab-destination="/g)||[]).length,5);
+  assert.equal((page.match(/class="lab-focus-card /g)||[]).length,3);
+  assert.match(page,/Nona Neuropsychology/);
+  assert.match(page,/Build what matters/);
+  assert.match(page,/class="lab-hero-field"/);
+  assert.doesNotMatch(page,/<picture|class="lab-scene"|\/professional\/cinematic\/[^"']+\.webp/);
   assert.match(page,/data-lab-scene-canvas/);
   assert.match(page,/src="\/src\/professional\/cinematic-environment\.ts"/);
   for(const key of ['experience','systems','work','portfolio','writing']){
@@ -69,10 +74,15 @@ test('the candidate uses first-party interactions and an explicit build gate',as
   assert.match(portfolioStyle,/\.lab-explore-heading/);
   assert.match(portfolioStyle,/grid-template-columns:repeat\(2,minmax\(0,1fr\)\)/);
   assert.match(portfolioStyle,/\.lab-live-scene/);
+  const identityStyle=await readFile(new URL('../src/professional/research-identity.css',import.meta.url),'utf8');
+  assert.match(identityStyle,/\.lab-focus-grid/);
+  assert.match(identityStyle,/\.lab-field-reticle/);
+  assert.doesNotMatch(identityStyle,/\.webp|url\(\s*['"]?https?:/);
   assert.match(portfolioStyle,/prefers-reduced-motion/);
   assert.match(portfolioStyle,/@media\(max-width:760px\)/);
   assert.doesNotMatch(portfolioStyle,/@import|url\(\s*["']?https?:|https:\/\/fonts\./);
   assert.match(page,/href="\/src\/professional\/research-portfolio.css"/);
+  assert.match(page,/href="\/src\/professional\/research-identity.css"/);
   assert.match(stylesheet,/\.lab-header \.lab-tabs-desktop\{display:none\}/);
   assert.match(stylesheet,/\.lab-body>\.lab-tabs-mobile \.one-tablist\{display:grid/);
   assert.doesNotMatch(stylesheet,/\.lab-header \.one-tabs-desktop|\.lab-body>\.one-tabs-mobile/);
