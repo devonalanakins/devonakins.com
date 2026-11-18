@@ -37,7 +37,7 @@ test('laboratory candidate is independently navigable, semantic and source-hones
     assert.match(page,new RegExp('href="'+LABORATORY_ROUTES[key]+'" data-one-go="'+key+'" data-lab-destination="'+key+'"'));
   }
   assert.equal((page.match(/class="lab-signal-tile /g)||[]).length,2);
-  assert.match(page,/Independent software developer/i);
+  assert.match(page,/INDEPENDENT SOFTWARE DEVELOPMENT/i);
   assert.match(page,/class="lab-explore-heading"/);
   assert.match(page,/THE PUBLIC RECORD/);
   assert.match(page,/class="lab-signal-tile lab-signal-github"/);
