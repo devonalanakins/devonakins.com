@@ -217,3 +217,48 @@ html.lab-html{scrollbar-gutter:auto}
 .lab-body .lab-secondary .p-listening-collections{grid-column:1/-1;min-width:0}
 .lab-body .lab-case-sections{overflow-wrap:anywhere}
 @media(max-width:760px){.lab-body .lab-secondary .lab-section-intro h1{font-size:clamp(28px,7vw,44px)}.lab-body .lab-secondary .lab-section-intro h1 em{white-space:normal}}
+
+/* A real-time canvas sits above the original illustration without baking any
+   interface text into the scene. The image is always the GPU-safe fallback. */
+.lab-body .lab-live-scene{
+  position:absolute;inset:0;z-index:-1;display:block;width:100%;height:100%;
+  pointer-events:none;opacity:0;transition:opacity 1100ms ease;
+}
+.lab-body .lab-portfolio-hero.lab-cinematic-ready .lab-live-scene{opacity:1}
+.lab-body .lab-live-scene[hidden]{display:none}
+.lab-body .lab-portfolio-hero .lab-scene img{transition:filter 800ms,opacity 800ms}
+.lab-body .lab-portfolio-hero.lab-cinematic-ready .lab-scene img{
+  filter:saturate(.81) brightness(.8);opacity:.84
+}
+/* Responsive, pointer-only card depth. Real links, focus and labels remain DOM. */
+@media(hover:hover) and (pointer:fine){
+ .lab-body .lab-destination{
+   transform-style:preserve-3d;will-change:transform;
+   transition:transform .24s ease-out,border-color .25s,box-shadow .25s
+ }
+ .lab-body .lab-destination:hover{
+   transform:perspective(1000px) rotateX(var(--lab-card-rotate-x,0deg))
+     rotateY(var(--lab-card-rotate-y,0deg)) translateY(-5px);
+ }
+ .lab-body .lab-destination img{
+   transform:translate3d(var(--lab-card-shift-x,0px),var(--lab-card-shift-y,0px),0) scale(1.07);
+   transition:transform .35s ease-out;
+ }
+ .lab-body .lab-destination:hover img{
+   transform:translate3d(var(--lab-card-shift-x,0px),var(--lab-card-shift-y,0px),0) scale(1.12);
+ }
+ .lab-body .lab-destination:after{
+   content:'';position:absolute;inset:0;z-index:-1;pointer-events:none;opacity:0;
+   background:radial-gradient(ellipse 70% 65% at var(--lab-card-spot-x,50%) var(--lab-card-spot-y,50%),#c6f8ee33,transparent 74%);
+   transition:opacity .25s
+ }
+ .lab-body .lab-destination:hover:after{opacity:1}
+}
+@media(prefers-reduced-motion:reduce){
+ .lab-body .lab-live-scene,.lab-body .lab-scene img{transition:none!important}
+ .lab-body .lab-destination,.lab-body .lab-destination img{transform:none!important;will-change:auto!important}
+ .lab-body .lab-destination:after{display:none!important}
+}
+body.lab-motion-paused .lab-body .lab-destination,
+body.lab-motion-paused .lab-destination,
+body.lab-motion-paused .lab-destination img{transform:none!important}
