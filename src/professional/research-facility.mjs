@@ -12,9 +12,12 @@ import {renderHomeSocialHub, renderSocialChannels} from './social-presence.mjs';
 const escapeHtml=value=>String(value ?? '').replace(/[&<>"']/g,
   c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const sections=Object.freeze([
-  ['home','Home'],['experience','Research'],['systems','Systems'],['work','Projects'],['portfolio','Portfolio'],
+  ['home','Home'],['experience','Research'],['systems','Systems'],['work','Work'],['portfolio','Portfolio'],
   ['activity','Activity'],['writing','Fieldnotes'],['contact','Contact'],
 ]);
+// Only three public destinations; historical sections remain addressable for
+// bookmarks, case studies and direct links without cluttering the main nav.
+const primarySections=Object.freeze([['home','Home'],['work','Work'],['experience','Research']]);
 /** Actual analytic Lissajous curve: x=sin(a*t), y=sin(b*t+phase).
  * Validated integer frequencies; no random data, inferred experiment or API.
  */
@@ -32,7 +35,7 @@ function renderNavigation(kind,activeView){
   return '<nav class="one-tabs lab-tabs lab-tabs-'+kind+'" aria-label="'+
     (kind==='desktop'?'Laboratory navigation':'Mobile laboratory navigation')+'">'+
     '<div class="one-tablist" role="tablist" aria-label="Laboratory sections">'+
-    sections.filter(([key])=>kind==='mobile'||!['activity','contact'].includes(key)).map(([key,label])=>'<button type="button" role="tab" id="one-'+kind+'-'+key+
+    primarySections.map(([key,label])=>'<button type="button" role="tab" id="one-'+kind+'-'+key+
       '" aria-controls="one-panel-'+key+'" aria-selected="'+(key===activeView?'true':'false')+
       '" tabindex="'+(key===activeView?'0':'-1')+'" data-one-target="'+key+'">'+
       '<span class="one-tab-label">'+escapeHtml(label)+'</span></button>').join('')+
@@ -90,16 +93,13 @@ function studyCard(index,category,title,description,status){
     '<p>'+description+'</p><small>'+status+'</small></article>';
 }
 const destinations=[
- ['experience','Research','Models, experiments, and investigations','research','M12 2C2 2 2 22 12 22S22 2 12 2 M2 7C-2 16 26 16 22 7S-2 16 2 7 M12 11h.01'],
- ['systems','Systems','Infrastructure, tools, and computational systems','systems','M2 8l10-5 10 5-10 5-10-5 M2 13l10 5 10-5 M2 18l10 5 10-5'],
- ['work','Projects','Active development and core platforms','projects','M12 2l10 5v11l-10 5-10-5V7l10-5 M2 7l10 5 10-5 M12 12v11'],
- ['portfolio','Portfolio','Selected work, applications, and engineering artifacts','portfolio','M2 2h8v8H2z M14 2h8v8h-8z M2 14h8v8H2z M14 14h8v8h-8z'],
- ['writing','Fieldnotes','Ideas, analysis, reading, and long-form work','fieldnotes','M12 5Q6 1 2 3v18q4-2 10 2 6-4 10-2V3q-4-2-10 2v18'],
+ ['work','Work','Operations, engineering, selected systems and real project evidence.','work','M3 19V5h8l3 4h7v10H3 M7 14h10 M7 10h3'],
+ ['experience','Research','Methods, mathematical models, computational inquiry and fieldnotes.','research','M2 16q5-14 10-2t10-2 M2 20h20 M12 2v20'],
 ];
 function destinationCards(){
  return destinations.map(([key,title,description,art,path],index)=>
  '<a class="lab-destination lab-destination--'+art+'" href="'+LABORATORY_ROUTES[key]+'" data-one-go="'+key+'" data-lab-destination="'+key+'">'+
- '<span class="lab-destination-index" aria-hidden="true">'+String(index+1).padStart(2,'0')+' / 05</span>'+
+ '<span class="lab-destination-index" aria-hidden="true">'+String(index+1).padStart(2,'0')+' / 02</span>'+
  '<span class="lab-card-print" aria-hidden="true">'+String(index+1).padStart(2,'0')+'</span>'+
  '<span class="lab-card-rule" aria-hidden="true"></span>'+
  '<svg class="lab-destination-glyph" viewBox="0 0 24 24" aria-hidden="true" fill="none"><path d="'+path+'" stroke="currentColor" stroke-width="1.1" stroke-linejoin="round"/></svg>'+
@@ -131,16 +131,16 @@ export function renderResearchFacilityHome({initialView='home',canonicalPath='/'
  '<h1>Build what matters.<br><em>Study what comes next.</em></h1>'+
  '<p class="lab-portfolio-statement">OPERATIONS &amp; TECHNOLOGY LEADERSHIP AT NONA NEUROPSYCHOLOGY.<br>INDEPENDENT SOFTWARE DEVELOPMENT &amp; RESEARCH ENGINEERING.</p>'+
  '<p class="lab-hero-deck">Improving real organizations and building independent software, while pursuing the mathematical and computational foundations of complex systems.</p>'+
- '<div class="lab-portfolio-actions">'+goto('portfolio','Explore my work',true)+goto('experience','Enter the research lab')+'</div>'+
+ '<div class="lab-portfolio-actions">'+goto('work','Explore my work',true)+goto('experience','Enter the research lab')+'</div>'+
  '<p class="lab-hero-method"><span class="lab-hero-method-line" aria-hidden="true"></span>Documented work. Open questions. No manufactured signals.</p>'+
  '<noscript><nav class="lab-nojs" aria-label="Alternative navigation"><a href="/work/">Work</a><a href="/research/">Research</a><a href="/contact/">Contact</a></nav></noscript></div></section>'+
  '<section class="lab-focus" aria-label="Current work and professional focus"><div class="lab-focus-heading"><span>THE WORK / PRESENT</span><p>One practice. Three connected disciplines.</p></div>'+
  '<div class="lab-focus-grid">'+
- '<a class="lab-focus-card lab-focus-card--nona" href="/portfolio/" data-one-go="portfolio"><span class="lab-focus-number">01 / PRINCIPAL FOCUS</span><strong>Nona Neuropsychology</strong><p>Nonclinical operations, digital experience, and dependable systems supporting professional care.</p><span class="lab-focus-bottom">OPERATIONS &amp; TECHNOLOGY <b aria-hidden="true">↗</b></span></a>'+
+ '<a class="lab-focus-card lab-focus-card--nona" href="/work/" data-one-go="work"><span class="lab-focus-number">01 / PRINCIPAL FOCUS</span><strong>Nona Neuropsychology</strong><p>Nonclinical operations, digital experience, and dependable systems supporting professional care.</p><span class="lab-focus-bottom">OPERATIONS &amp; TECHNOLOGY <b aria-hidden="true">↗</b></span></a>'+
  '<a class="lab-focus-card lab-focus-card--engineering" href="/work/" data-one-go="work"><span class="lab-focus-number">02 / ENGINEERING</span><strong>Independent development</strong><p>Open-source-oriented software, thoughtful architecture, resilient tools and practical product delivery.</p><span class="lab-focus-bottom">BUILDING &amp; SHIPPING <b aria-hidden="true">↗</b></span></a>'+
  '<a class="lab-focus-card lab-focus-card--research" href="/research/" data-one-go="experience"><span class="lab-focus-number">03 / RESEARCH DIRECTION</span><strong>Scientific computing</strong><p>Mathematics, physics, computational neuroscience and AI infrastructure—studied through reproducible models.</p><span class="lab-focus-bottom">INQUIRY &amp; EXPERIMENTS <b aria-hidden="true">↗</b></span></a>'+
  '</div></section>'+
- '<section class="lab-portfolio-selected" aria-label="Explore five destinations"><div class="lab-explore-heading"><div><span>INDEX / 01—05</span><h2>Explore the laboratory.</h2></div><p>Research, systems, projects, selected work, and fieldnotes—each with its own evidence and scope.</p></div><div class="lab-destinations">'+destinationCards()+'</div></section>'+
+ '<section class="lab-portfolio-selected" aria-label="Two primary destinations"><div class="lab-explore-heading"><div><span>SELECT A DIRECTION / 01—02</span><h2>Two paths. One practice.</h2></div><p>See what exists and is being delivered, or explore the questions and methods shaping what comes next.</p></div><div class="lab-destinations">'+destinationCards()+'</div></section>'+
  compactSignals()+'</div>');
   const research=view('experience',
     '<div class="lab-secondary lab-research">'+
@@ -158,12 +158,21 @@ export function renderResearchFacilityHome({initialView='home',canonicalPath='/'
       studyCard('01','MATHEMATICAL PHYSICS','Nonlinear dynamics','ODEs, coupled oscillators, numerical stability and physical simulation.','STUDY DIRECTION')+
       studyCard('02','COMPUTATIONAL NEUROSCIENCE','Excitable systems','From membrane models to reproducible simulations of neural behavior.','PROPOSED EXPERIMENT')+
       studyCard('03','SCIENTIFIC COMPUTING','Accelerated methods','Test numerical algorithms, CPU/GPU correctness and workload-specific performance.','PROPOSED BENCHMARKS')+
-      '</div><p class="lab-secondary-note">Sources: <a href="https://mathworld.wolfram.com/LissajousCurve.html" target="_blank" rel="noopener noreferrer">Lissajous curve definition</a> · <a href="https://doi.org/10.1113/jphysiol.1952.sp004764" target="_blank" rel="noopener noreferrer">Hodgkin & Huxley (1952)</a>. The latter is a study reference, not an implemented simulation.</p></div>');
+      '</div><section class="lab-research-journal" aria-label="Fieldnotes and methods"><div class="lab-work-heading"><span>FIELDNOTES / IN CONTEXT</span><h2>The question is the beginning.</h2><p>Short, source-aware explanations accompany the interactive model rather than living behind a maze of pages.</p></div><div class="lab-research-notes"><details><summary>What does this curve actually demonstrate?</summary><p>A Lissajous curve shows the interaction of two periodic coordinates. Its geometry is determined by frequencies and phase; it is not a recording of neural activity or a validated neuroscience result.</p></details><details><summary>What counts as research evidence?</summary><p>Equations, assumptions and reproducible calculations explain a model. Observations, validation and independent review are separate requirements before scientific conclusions can be claimed.</p></details></div><a class="lab-text-link" href="/fieldnotes/" data-one-go="writing">Explore the full fieldnotes archive ↗</a></section><p class="lab-secondary-note">Sources: <a href="https://mathworld.wolfram.com/LissajousCurve.html" target="_blank" rel="noopener noreferrer">Lissajous curve definition</a> · <a href="https://doi.org/10.1113/jphysiol.1952.sp004764" target="_blank" rel="noopener noreferrer">Hodgkin & Huxley (1952)</a>. The latter is a study reference, not an implemented simulation.</p></div>');
   const projects=view('work',
-    '<div class="lab-secondary lab-systems"><div class="lab-section-intro">'+
-    '<p class="lab-overline">ENGINEERING / OPEN SOURCE</p><h1>Projects with <em>evidence.</em></h1>'+
-    '<p>Existing software and operational work are distinct from future scientific infrastructure. Every project should show its maturity and source.</p></div>'+
-    projectCatalog()+'<p class="lab-secondary-note">The proposed AI compute laboratory is a research direction, not a deployed cloud or a published GPU benchmark.</p></div>');
+    '<div class="lab-secondary lab-systems lab-work-hub"><div class="lab-section-intro">'+
+    '<p class="lab-overline">WORK / THE PUBLIC RECORD</p><h1>Systems built for <em>real life.</em></h1>'+
+    '<p>Operational leadership and independent software belong in the same conversation: define a real problem, design a durable system, and show the evidence of delivery.</p>'+
+    '<div class="lab-status-pair"><span>NONCLINICAL OPERATIONS / SOFTWARE ENGINEERING</span><span>RELEASE STATUS LABELED PER PROJECT</span></div></div>'+
+    '<section class="lab-work-feature" aria-labelledby="lab-work-feature-title"><div class="lab-work-feature-index">01 / PRINCIPAL WORK</div>'+
+    '<div><h2 id="lab-work-feature-title">Nona Neuropsychology</h2><p>Leading nonclinical operations and technology improvements with a focus on administrative reliability, the referral experience and well-designed digital systems. Clinical decisions and patient information remain outside this public portfolio.</p>'+
+    '<a class="lab-text-link" href="/work/operations/">Read the nonclinical operations case study ↗</a></div>'+
+    '<div class="lab-work-feature-aside"><span>OPERATING DISCIPLINES</span><span>OPERATIONS</span><span>PRODUCT DESIGN</span><span>SECURE SYSTEMS</span></div></section>'+
+    '<section class="lab-work-collection" aria-label="Independent software projects"><div class="lab-work-heading"><span>02 / SELECTED ENGINEERING</span><h2>Inspectable projects.</h2><p>Source links, stages and scope are reported individually—not invented as live activity.</p></div>'+projectCatalog()+'</section>'+
+    '<section class="lab-work-method" aria-label="Engineering method"><div><span>03 / METHODOLOGY</span><h2>From problem to proof.</h2><p>Understand the work, make changes incrementally, test what matters and document what actually shipped.</p></div>'+
+    '<ol><li><b>01</b><strong>Understand</strong><span>Define scope and constraints</span></li><li><b>02</b><strong>Build</strong><span>Create accessible, maintainable systems</span></li><li><b>03</b><strong>Verify</strong><span>Inspect code, tests and actual UI</span></li><li><b>04</b><strong>Document</strong><span>Link work to visible evidence</span></li></ol></section>'+
+    '<div class="lab-work-resources"><a href="/systems/" data-one-go="systems">Detailed systems architecture ↗</a><a href="/portfolio/" data-one-go="portfolio">Selected practice and case studies ↗</a><a href="https://github.com/devonalanakins" target="_blank" rel="noopener noreferrer">Verified public GitHub history ↗</a></div>'+
+    '<p class="lab-secondary-note">AI compute infrastructure and scientific acceleration remain research directions, not deployed products or established performance benchmarks.</p></div>');
   const systems=view('systems',
     '<div class="lab-secondary lab-systems"><div class="lab-section-intro"><p class="lab-overline">SYSTEMS / ENGINEERING PRACTICE</p>'+
     '<h1>Architecture for <em>independence.</em></h1><svg class="lab-architecture" viewBox="0 0 460 160" role="img" aria-labelledby="lab-architecture-title"><title id="lab-architecture-title">Public data passes from approved sources through a consent and privacy projection to the Worker API and browser. Private data stays outside the public projection.</title><g fill="#102a2e" stroke="#8cbfb1"><rect x="2" y="45" width="130" height="65" rx="4"/><rect x="165" y="45" width="130" height="65" rx="4"/><rect x="328" y="45" width="130" height="65" rx="4"/><path d="M132 77h33m130 0h33"/></g><g fill="#d8ebe4" font-size="12" font-family="sans-serif" text-anchor="middle"><text x="67" y="74">Approved sources</text><text x="230" y="74">Consent projection</text><text x="393" y="74">Worker → Browser</text><text x="230" y="95">Public fields only</text></g></svg><p>I build source-controlled systems with explicit data boundaries, observable behavior, and a path back when a change fails.</p></div>'+
@@ -240,7 +249,7 @@ export function renderResearchFacilityHome({initialView='home',canonicalPath='/'
     '<a class="one-skip lab-skip" href="#one-stage">Skip to content</a>'+
     '<div class="lab-background" aria-hidden="true"><div class="lab-background-grid"></div>'+
     '<div class="lab-background-glow"></div></div>'+
-    '<header class="lab-header"><a href="/" class="lab-brand" title="Devon Alan Akins home">'+atomMark()+'<span class="lab-brand-caption">DEVONAKINS.COM<small>THE COMPUTATIONAL LABORATORY</small></span></a>'+nav('desktop')+'<div class="lab-header-end"><span class="lab-hatch" aria-hidden="true"></span><button type="button" class="lab-desktop-menu" data-lab-menu-open aria-controls="lab-menu" aria-expanded="false" aria-label="DA / 001 — Open contact and motion menu">DA / 001</button></div><button type="button" class="lab-menu-toggle" data-lab-menu-open aria-controls="lab-menu" aria-expanded="false" aria-label="Open navigation menu"><span></span><span></span><span></span></button></header>'+
+    '<header class="lab-header"><a href="/" class="lab-brand" title="Devon Alan Akins home">'+atomMark()+'<span class="lab-brand-caption">DEVONAKINS.COM<small>THE COMPUTATIONAL LABORATORY</small></span></a>'+nav('desktop')+'<div class="lab-header-end"><a class="lab-header-contact" href="mailto:hello@devonakins.com">Contact ↗</a><button type="button" class="lab-desktop-menu" data-lab-menu-open aria-controls="lab-menu" aria-expanded="false" aria-label="DA / 001 — Open contact and motion menu">DA / 001</button></div><button type="button" class="lab-menu-toggle" data-lab-menu-open aria-controls="lab-menu" aria-expanded="false" aria-label="Open navigation menu"><span></span><span></span><span></span></button></header>'+
     '<dialog id="lab-menu" aria-labelledby="lab-menu-title"><div class="lab-menu-heading"><h2 id="lab-menu-title">Explore the laboratory</h2><button data-lab-menu-close aria-label="Close navigation menu">Close <span aria-hidden="true">×</span></button></div>'+nav('mobile')+'<button type="button" class="lab-motion" data-lab-motion aria-pressed="true">MOTION ON</button><a href="mailto:hello@devonakins.com">hello@devonakins.com</a></dialog>'+
     '<main id="one-stage" class="one-stage lab-stage" tabindex="-1">'+
     (notFound?view('home','<div class="lab-secondary"><div class="lab-section-intro"><p class="lab-overline">404 / WAYFINDING</p><h1>That page is <em>not here.</em></h1><p>Explore the public portfolio or return to the laboratory.</p><a class="lab-action" href="/">Return home →</a></div></div>'):home)+research+systems+projects+portfolio+activity+notes+contact+'</main>'+
