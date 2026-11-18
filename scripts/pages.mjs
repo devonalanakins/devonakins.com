@@ -1,3 +1,5 @@
+// Recreate the checked-in identity assets with the current site palette for every build.
+import "./assets.mjs";
 import { mkdir, readFile, readdir, writeFile } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import { execFileSync } from "node:child_process";

@@ -241,8 +241,14 @@ export function renderResearchFacilityHome({initialView='home',canonicalPath='/'
     '<meta name="description" content="'+escapeHtml(introduction)+'">'+
     '<meta property="og:type" content="website"><meta property="og:title" content="'+escapeHtml(pageTitle)+'">'+
     '<meta property="og:url" content="https://devonakins.com'+escapeHtml(canonicalPath)+'"><meta property="og:description" content="'+escapeHtml(introduction)+'">'+
+    '<meta property="og:image" content="https://devonakins.com/social-card.jpg"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630">'+
+    '<meta property="og:image:alt" content="Devon Alan Akins — CEO and independent software developer">'+
+    '<meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="'+escapeHtml(pageTitle)+'">'+
+    '<meta name="twitter:description" content="'+escapeHtml(introduction)+'"><meta name="twitter:image" content="https://devonakins.com/social-card.jpg">'+
     '<link rel="canonical" href="https://devonakins.com'+escapeHtml(canonicalPath)+'">'+(notFound?'<meta name="robots" content="noindex">':'')+
-    '<link rel="icon" href="/favicon-32.png"><title>'+escapeHtml(pageTitle)+'</title>'+
+    '<link rel="icon" type="image/svg+xml" href="/favicon.svg"><link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">'+
+    '<link rel="apple-touch-icon" href="/apple-touch-icon.png"><link rel="manifest" href="/manifest.webmanifest">'+
+    '<title>'+escapeHtml(pageTitle)+'</title>'+
     '<link rel="stylesheet" href="/src/professional/site.css">'+
     '<link rel="stylesheet" href="/src/professional/one-screen.css">'+
     '<link rel="stylesheet" href="/src/professional/social-presence.css">'+
