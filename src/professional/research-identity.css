@@ -1,5 +1,5 @@
-/* Original interface / laboratory identity. No generated illustrations.
-   Progressive WebGL is decorative; the same composition works without GPU. */
+/* Original, entirely two-dimensional laboratory identity.
+   No models, generated illustrations or GPU-rendered scene. */
 .lab-body{--lab-ink:#040b12;--lab-paper:#f0f4ef;--lab-mist:#a8c0c0;--lab-cyan:#8de4d9;--lab-brass:#d7ac80}
 .lab-body .lab-background{background:radial-gradient(ellipse 75% 42% at 71% 12%,#12343854,transparent 73%),#040c12;opacity:1}
 .lab-body .lab-background-grid{display:block;position:absolute;inset:0;opacity:.13;background-image:linear-gradient(#b0c9c81d 1px,transparent 1px),linear-gradient(90deg,#b0c9c81d 1px,transparent 1px);background-size:64px 64px;mask-image:linear-gradient(to bottom,#000,transparent 76%)}
@@ -7,7 +7,7 @@
 .lab-body .lab-portfolio-hero:before{z-index:-1;background:linear-gradient(90deg,#040b12f5 1%,#040b12c7 43%,#040b1214 83%),linear-gradient(0deg,#040b12 0%,transparent 17%)}
 .lab-body .lab-hero-field{position:absolute;inset:0;z-index:-3;overflow:hidden;pointer-events:none}
 .lab-body .lab-field-grid{position:absolute;inset:0;opacity:.32;background-image:linear-gradient(#a7dbd317 1px,transparent 1px),linear-gradient(90deg,#a7dbd317 1px,transparent 1px);background-size:46px 46px;mask-image:linear-gradient(90deg,transparent 19%,#000 93%)}
-.lab-body .lab-field-sheet{position:absolute;right:-2%;top:10%;width:min(62vw,920px);border:1px solid #b5d7cf31;background:linear-gradient(145deg,#0b262a40,#06141c15);box-shadow:inset 0 1px #e4f9ec0d;overflow:hidden;opacity:.83}
+.lab-body .lab-field-sheet{position:absolute;right:2%;top:10%;width:min(60vw,900px);border:1px solid #b5d7cf31;background:linear-gradient(145deg,#0b262a40,#06141c15);box-shadow:inset 0 1px #e4f9ec0d;overflow:hidden;opacity:.83}
 .lab-body .lab-field-sheet:before{content:"";position:absolute;left:0;top:0;width:40px;height:1px;background:#e9c39e}
 .lab-body .lab-field-sheet-head,.lab-body .lab-field-sheet-foot{display:flex;justify-content:space-between;gap:20px;padding:15px 18px;font:500 9px/1.4 ui-monospace,monospace;letter-spacing:.13em;color:#a5c8c6}
 .lab-body .lab-field-sheet-foot{border-top:1px solid #9bcdc326;color:#bf9d81}
@@ -82,7 +82,8 @@
 @media(max-width:760px){
  .lab-body .lab-portfolio-hero{min-height:0;height:auto}
  .lab-body .lab-portfolio-hero-content{padding:clamp(126px,23svh,214px) 6% 54px;min-height:0;height:auto}
- .lab-body .lab-field-sheet{top:13px;right:-22%;width:140%;opacity:.45}
+ .lab-body .lab-field-sheet{top:22px;right:-18%;width:136%;opacity:.48;border:0;background:none;box-shadow:none;mask-image:linear-gradient(to bottom,#000 0%,#000 43%,transparent 100%)}
+ .lab-body .lab-field-sheet-head,.lab-body .lab-field-sheet-foot,.lab-body .lab-field-measure{display:none}
  .lab-body .lab-field-measure{font-size:7px;right:4%}
  .lab-body .lab-field-measure--top{top:19px}
  .lab-body .lab-field-measure--bottom{top:310px;bottom:auto}
