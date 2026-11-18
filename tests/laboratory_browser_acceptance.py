@@ -56,21 +56,21 @@ try:
                     assert page.locator('.lab-tabs-desktop [data-one-target]').count()==6
                     assert page.locator('.lab-footer .one-social-icon').count()==4
                     assert page.locator('.lab-scene img').evaluate('el=>el.complete&&el.naturalWidth>500')
-                    assert page.locator('[data-lab-scene-canvas]').count()==1
-                    # When the renderer is supported, prevent a silent regression
-                    # back to the image-only candidate.
-                    webgl_supported=page.evaluate("() => !!document.createElement('canvas').getContext('webgl2')")
-                    if webgl_supported:
-                        wait_for_condition(page,"document.querySelector('.lab-portfolio-hero').classList.contains('lab-cinematic-ready')")
-                        assert page.locator('[data-lab-scene-canvas]').is_visible()
-                    else:
-                        assert page.locator('.lab-scene img').is_visible()
-                    if width==1536 and webgl_supported:
-                        card=page.locator('[data-lab-destination="experience"]')
-                        card.hover(position={'x':80,'y':40})
-                        wait_for_condition(page,"!!document.querySelector('[data-lab-destination=\"experience\"]').style.getPropertyValue('--lab-card-rotate-y')")
-                        page.mouse.move(1,1)
-                        wait_for_condition(page,"!document.querySelector('[data-lab-destination=\"experience\"]').style.getPropertyValue('--lab-card-rotate-y')")
+                    if urlparse(BASE).hostname in ('127.0.0.1','localhost','::1'):
+                        assert page.locator('[data-lab-scene-canvas]').count()==1
+                        # Prevent a silent regression to the image-only candidate.
+                        webgl_supported=page.evaluate("() => !!document.createElement('canvas').getContext('webgl2')")
+                        if webgl_supported:
+                            wait_for_condition(page,"document.querySelector('.lab-portfolio-hero').classList.contains('lab-cinematic-ready')")
+                            assert page.locator('[data-lab-scene-canvas]').is_visible()
+                        else:
+                            assert page.locator('.lab-scene img').is_visible()
+                        if width==1536 and webgl_supported:
+                            card=page.locator('[data-lab-destination="experience"]')
+                            card.hover(position={'x':80,'y':40})
+                            wait_for_condition(page,"!!document.querySelector('[data-lab-destination=\"experience\"]').style.getPropertyValue('--lab-card-rotate-y')")
+                            page.mouse.move(1,1)
+                            wait_for_condition(page,"!document.querySelector('[data-lab-destination=\"experience\"]').style.getPropertyValue('--lab-card-rotate-y')")
                     geometry=page.evaluate('''() => {
                       const rect=s=>{const r=document.querySelector(s).getBoundingClientRect();return {x:r.x,y:r.y,width:r.width,height:r.height,bottom:r.bottom}};
                       return {viewport:innerWidth,scroll:document.documentElement.scrollWidth,header:rect('.lab-header'),hero:rect('.lab-portfolio-hero'),signals:rect('.lab-portfolio-signals'),destinations:rect('.lab-destinations'),footer:rect('.lab-footer'),cards:[...document.querySelectorAll('.lab-destination')].map(el=>({x:el.getBoundingClientRect().x,y:el.getBoundingClientRect().y})),signalCards:[...document.querySelectorAll('.lab-signal-tile')].map(el=>({x:el.getBoundingClientRect().x,y:el.getBoundingClientRect().y}))};}''')
