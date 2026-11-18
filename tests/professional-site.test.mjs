@@ -209,7 +209,8 @@ test("selected work preserves real destinations and nonclinical publication boun
   assert.match(work,/nonclinical/i);
   assert.doesNotMatch(work,/Nona Neuropsychology|Cristy Russo|CEO of Nona|report turnaround improved by/);
   const operations=renderProfessionalProjectPage("operations");
-  assert.match(operations,/Clients, patients, partners, financial records/);
+  assert.match(operations,/No patient or referral records, personnel details, confidential practice metrics/);
+  assert.match(operations,/Clinical evaluations, interpretation, diagnoses and report conclusions remain with licensed professionals/);
 });
 
 test("responsive curated gallery keeps keyboard focus and reduced-motion styles",async()=>{
