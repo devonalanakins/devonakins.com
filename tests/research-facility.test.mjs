@@ -31,8 +31,9 @@ test('laboratory candidate is independently navigable, semantic and source-hones
   assert.match(page,/Build what matters/);
   assert.match(page,/class="lab-hero-field"/);
   assert.doesNotMatch(page,/<picture|class="lab-scene"|\/professional\/cinematic\/[^"']+\.webp/);
-  assert.match(page,/data-lab-scene-canvas/);
-  assert.match(page,/src="\/src\/professional\/cinematic-environment\.ts"/);
+  assert.match(page,/class="lab-field-traces"/);
+  assert.equal((page.match(/class="lab-card-print"/g)||[]).length,5);
+  assert.doesNotMatch(page,/data-lab-scene-canvas|cinematic-environment\.ts|lab-field-reticle|lab-card-geometry|WebGLRenderer/i);
   for(const key of ['experience','systems','work','portfolio','writing']){
     assert.match(page,new RegExp('href="'+LABORATORY_ROUTES[key]+'" data-one-go="'+key+'" data-lab-destination="'+key+'"'));
   }
@@ -73,10 +74,13 @@ test('the candidate uses first-party interactions and an explicit build gate',as
   assert.match(portfolioStyle,/\.lab-portfolio-signal-grid/);
   assert.match(portfolioStyle,/\.lab-explore-heading/);
   assert.match(portfolioStyle,/grid-template-columns:repeat\(2,minmax\(0,1fr\)\)/);
-  assert.match(portfolioStyle,/\.lab-live-scene/);
+  assert.doesNotMatch(portfolioStyle,/\.lab-live-scene|perspective\(|rotateX\(|rotateY\(|transform-style:preserve-3d/);
   const identityStyle=await readFile(new URL('../src/professional/research-identity.css',import.meta.url),'utf8');
   assert.match(identityStyle,/\.lab-focus-grid/);
-  assert.match(identityStyle,/\.lab-field-reticle/);
+  assert.match(identityStyle,/\.lab-field-traces/);
+  assert.match(identityStyle,/@keyframes lab-ink-flow/);
+  assert.doesNotMatch(identityStyle,/\.lab-field-reticle|\.lab-card-geometry|perspective\(|rotateX\(|rotateY\(/);
+  assert.doesNotMatch(stylesheet,/perspective\(|rotateX\(|rotateY\(/);
   assert.doesNotMatch(identityStyle,/\.webp|url\(\s*['"]?https?:/);
   assert.match(portfolioStyle,/prefers-reduced-motion/);
   assert.match(portfolioStyle,/@media\(max-width:760px\)/);
