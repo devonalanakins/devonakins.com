@@ -36,7 +36,9 @@ export function renderHomeSocialHub(){
   return '<div class="studio-social-dock"><span class="studio-social-dock-label">FIND ME / VERIFIED CHANNELS</span>'+
     renderSocialChannels()+'</div>';
 }
-export function renderHomeThreadsSignal(){
+export function renderHomeThreadsSignal(destination='contact'){
+  const target=destination==='activity'?'activity':'contact';
+  const actionLabel=target==='contact'?'View all approved Threads updates':'View public Threads updates';
   return '<section class="studio-threads-inline" data-public-threads data-threads-presentation="home"'+
     ' aria-label="Latest approved public Threads update">'+
     '<div class="studio-threads-inline-head"><strong>THREADS / LATEST</strong>'+
@@ -45,7 +47,7 @@ export function renderHomeThreadsSignal(){
     '<div class="studio-threads-inline-actions">'+
       '<a data-threads-link href="'+THREADS_PROFILE_URL+'" target="_blank" rel="noopener noreferrer"'+
       ' referrerpolicy="no-referrer">Open Threads profile ↗</a>'+
-      '<button type="button" data-one-go="contact" aria-label="View all approved Threads updates">Full feed ↗</button>'+
+      '<button type="button" data-one-go="'+target+'" aria-label="'+actionLabel+'">Full feed ↗</button>'+
     '</div></section>';
 }
 export function renderThreadsPreview(){

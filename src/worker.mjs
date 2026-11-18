@@ -1,3 +1,4 @@
+import {LABORATORY_REDIRECTS} from "./professional/laboratory-routes.mjs";
 import { renderPublishedField } from "./v5/field-response.mjs";
 import { createProfessionalGithubReader } from "./professional/github-public.mjs";
 import { projectPublicGithubEvents, unavailablePublicGithub, projectPublicTelemetry, validPublicGithubSignal, githubCooldownMs } from "./public-telemetry.mjs";
@@ -253,6 +254,20 @@ export function createHandler(assets, release, options = {}) {
         });
       // Same-origin public projection; privacy OFF until the owner explicitly
       // opts in through server-side environment settings. Never cache in CDN.
+      if(options.laboratoryCandidate===true){
+        let decodedPath;
+        try{decodedPath=decodeURIComponent(url.pathname)}catch{return new Response('Bad request',{status:400,headers:securityHeaders})}
+        const normalized=decodedPath.replace(/\/index\.html$/,'/');
+        const alias=normalized.endsWith('/')?normalized:normalized+'/';
+        if(Object.hasOwn(LABORATORY_REDIRECTS,alias)){
+          url.pathname=LABORATORY_REDIRECTS[alias];
+          const response=redirect(url.href);
+          response.headers.set('Cache-Control','no-store');
+          return response;
+        }
+        if(/^\/gpt(?:\/|$)/.test(decodedPath)||['/v2','/v2/','/v2/index.html','/v2/usage-snapshot.json'].includes(decodedPath))
+          return new Response(request.method==='HEAD'?null:'Not found',{status:404,headers:{...securityHeaders,'Content-Type':'text/plain; charset=utf-8','Cache-Control':'no-store'}});
+      }
       if(url.pathname==='/api/listening/collections') {
         if(request.method==='HEAD')return secured(new Response(null,{headers:{'Cache-Control':'no-store'}}),true);
         return secured(await collectionsApi.public(env));
@@ -283,9 +298,9 @@ export function createHandler(assets, release, options = {}) {
       }
       if(url.pathname==='/api/activity/v4') {
         const headers={...securityHeaders,'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store','CDN-Cache-Control':'no-store'};
-        return new Response(request.method==='HEAD'?null:JSON.stringify(await liveSignal(env)),{headers});
+        return new Response(request.method==='HEAD'?null:JSON.stringify(options.laboratoryCandidate===true?((({gpt,...publicSignals})=>publicSignals)(await liveSignal(env))):await liveSignal(env)),{headers});
       }
-      if (options.professionalCandidate === true && url.pathname === "/api/github/public-feed") {
+      if ((options.professionalCandidate === true || options.laboratoryCandidate===true) && url.pathname === "/api/github/public-feed") {
         const headers = {
           ...securityHeaders,
           "Content-Type": "application/json; charset=utf-8",
@@ -318,7 +333,7 @@ export function createHandler(assets, release, options = {}) {
         try {
           const at = now();
           const data = projectPublicTelemetry(await snapshot(), await githubSignal(at), at);
-          return new Response(JSON.stringify(data), {headers});
+          return new Response(JSON.stringify(options.laboratoryCandidate===true?((({gpt,...publicSignals})=>publicSignals)(data)):data), {headers});
         } catch {
           return new Response(JSON.stringify({error: "Telemetry unavailable"}), {
             status: 503, headers: {...headers, "Cache-Control": "no-store"},
@@ -400,8 +415,8 @@ export function createHandler(assets, release, options = {}) {
       // The browser-direct GitHub resilience path is permitted only on
       // explicitly public professional HTML. Owner/private V2/legacy pages
       // retain the original self-only connect-src policy.
-      if (options.professionalCandidate === true && status === 200 && isHtml &&
-          (path === "/" ||
+      if ((options.professionalCandidate === true || options.laboratoryCandidate===true) && status === 200 && isHtml &&
+          (options.laboratoryCandidate===true || path === "/" ||
            /^\/(?:activity|experience|work|writing|about|contact|gpt|listening)(?:\/|$)/.test(path))) {
         headers.set("Content-Security-Policy",
           securityHeaders["Content-Security-Policy"].replace(

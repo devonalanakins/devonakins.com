@@ -1,0 +1,60 @@
+[
+  {
+    "engine": "chromium",
+    "viewport": [
+      1536,
+      720
+    ],
+    "history": "passed",
+    "deep_links": "passed",
+    "modified_click": "passed",
+    "scroll_restore": 133,
+    "dynamic_reduced_motion": "passed"
+  },
+  {
+    "engine": "chromium",
+    "viewport": [
+      390,
+      844
+    ],
+    "history": "passed",
+    "deep_links": "passed",
+    "modified_click": "passed",
+    "scroll_restore": 113,
+    "dynamic_reduced_motion": "passed"
+  },
+  {
+    "engine": "chromium",
+    "cover_referrer": "absent",
+    "revocation": "cleared"
+  },
+  {
+    "engine": "webkit",
+    "viewport": [
+      1536,
+      720
+    ],
+    "history": "passed",
+    "deep_links": "passed",
+    "modified_click": "passed",
+    "scroll_restore": 133,
+    "dynamic_reduced_motion": "passed"
+  },
+  {
+    "engine": "webkit",
+    "viewport": [
+      390,
+      844
+    ],
+    "history": "passed",
+    "deep_links": "passed",
+    "modified_click": "passed",
+    "scroll_restore": 110,
+    "dynamic_reduced_motion": "passed"
+  },
+  {
+    "engine": "webkit",
+    "cover_referrer": "absent",
+    "revocation": "cleared"
+  }
+]

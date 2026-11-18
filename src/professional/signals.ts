@@ -77,7 +77,7 @@ function renderListening(value:unknown){
         link.target="_blank";
         link.rel="noopener noreferrer";
       }else{
-        link.textContent="About listening ↗";
+        link.textContent=card.dataset.spotifyPresentation==="listening"?"View public activity ↗":"About listening ↗";
         link.removeAttribute("target");
         link.removeAttribute("rel");
       }
@@ -132,10 +132,12 @@ function renderWork(snapshot:unknown){
     explanation="Devon's owner-defined rule: Spotify playing means he's coding. Source: recent public playback; editor activity has not been independently observed.";
   }
   for(const card of workCards){
-    update(card,"[data-work-state]",state);
-    update(card,"[data-work-title]",label);
-    update(card,"[data-work-detail]",explanation);
-    card.dataset.workMode=state==="NO ACTIVE SIGNAL"?"idle":"active";
+    const editorOnly=card.dataset.workPresentation==='editor';
+    const editorObserved=state==='EDITOR OBSERVED';
+    update(card,"[data-work-state]",editorOnly&&!editorObserved?'NO VERIFIED EDITOR':state);
+    update(card,"[data-work-title]",editorOnly&&!editorObserved?"No verified editor session":label);
+    update(card,"[data-work-detail]",editorOnly&&!editorObserved?"Only an authorized, fresh editor reporter establishes editor presence. Public commits, music and owner declarations remain separate sources.":explanation);
+    card.dataset.workMode=editorOnly?(editorObserved?"active":"idle"):state==="NO ACTIVE SIGNAL"?"idle":"active";
   }
 }
 function renderGpt(snapshot:unknown){

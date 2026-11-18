@@ -91,7 +91,7 @@ test("professional UI source attribution and limited CSP are present in the real
   assert.match(client,/BROWSER_GITHUB_SOURCE/);
   assert.match(worker,/connect-src 'self' https:\/\/api\.github\.com;/);
   assert.match(worker,/securityHeaders\["Content-Security-Policy"\]\.replace/);
-  assert.match(worker,/options\.professionalCandidate === true && status === 200 && isHtml/);
+  assert.match(worker,/\(options\.professionalCandidate === true \|\| options\.laboratoryCandidate===true\) && status === 200 && isHtml/);
   assert.doesNotMatch(worker,/connect-src [^;]*https:\/\/github\.com/);
 });
 

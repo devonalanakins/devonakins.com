@@ -35,3 +35,11 @@ __pycache__/
 /knowledge/
 /v5-review-screenshots/
 /browser-qa/
+
+# Generated cinematic public route HTML (source lives in src/professional).
+/activity/
+/experience/
+/fieldnotes/
+/portfolio/
+/projects/
+/systems/

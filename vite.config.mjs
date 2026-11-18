@@ -1,3 +1,4 @@
+import {LABORATORY_ROUTES,LABORATORY_REDIRECTS} from "./src/professional/laboratory-routes.mjs";
 import { defineConfig } from "vite";
 import {PROFESSIONAL_ROUTES} from "./src/professional/site.mjs";
 import { resolve } from "node:path";
@@ -7,6 +8,7 @@ import { pages, projects } from "./src/content.mjs";
 import { v5PreviewPlugin } from "./src/v5/preview-plugin.mjs";
 const paths = [...new Set([
   ...pages.map((p) => p.path),
+  ...(process.env.LABORATORY_SITE_CANDIDATE === "1"?[...Object.values(LABORATORY_ROUTES),...Object.keys(LABORATORY_REDIRECTS),"/listening/"]:[]),
   ...(process.env.PROFESSIONAL_SITE_CANDIDATE === "1" ? Object.values(PROFESSIONAL_ROUTES) : []),
   ...projects.map((p) => `/work/${p.slug}/`),
   "/404/",

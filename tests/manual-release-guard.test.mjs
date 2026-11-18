@@ -241,3 +241,15 @@ test("manual workflow exposes separate owner approval and source acceptance for 
     workflow.indexOf("node scripts/verify-live-threads.mjs"));
   assert.match(workflow,/environment: production/);
 });
+
+test('cinematic cutover is exclusive, explicitly confirmed and cannot change provider publication gates',()=>{
+ const selection={...base,releaseVariant:'laboratory',laboratoryBuildFlag:'1',laboratoryConfirmation:'LABORATORY-CUTOVER-APPROVED'};
+ assert.equal(manualReleaseError(selection),null);
+ for(const change of [{laboratoryBuildFlag:'0'},{laboratoryConfirmation:''},{laboratoryConfirmation:'yes'},{v5BuildFlag:'1'},{professionalBuildFlag:'1'},{oneScreenBuildFlag:'1'},{v5Confirmation:'V5-CUTOVER-APPROVED'},{professionalConfirmation:'PROFESSIONAL-CUTOVER-APPROVED'},{oneScreenConfirmation:'ONE-SCREEN-CUTOVER-APPROVED'},{githubOidcAction:'enable',githubOidcConfirmation:'GITHUB-OIDC-ENABLE-APPROVED'},{threadsPublishAction:'enable',threadsPublishConfirmation:'THREADS-PUBLIC-FEED-APPROVED'}])assert.ok(manualReleaseError({...selection,...change}));
+ for(const selection of [base,{...base,releaseVariant:'v5',v5BuildFlag:'1',v5Confirmation:'V5-CUTOVER-APPROVED'},{...base,releaseVariant:'professional',professionalBuildFlag:'1',professionalConfirmation:'PROFESSIONAL-CUTOVER-APPROVED'},{...base,releaseVariant:'one-screen',professionalBuildFlag:'1',oneScreenBuildFlag:'1',oneScreenConfirmation:'ONE-SCREEN-CUTOVER-APPROVED'}]){
+  assert.ok(manualReleaseError({...selection,laboratoryBuildFlag:'1'}));assert.ok(manualReleaseError({...selection,laboratoryConfirmation:'LABORATORY-CUTOVER-APPROVED'}));
+ }
+ const workflow=readFileSync(new URL('../.github/workflows/deploy.yml',import.meta.url),'utf8');
+ for(const value of ['- laboratory','LABORATORY_CONFIRMATION:','laboratory_confirmation:','LABORATORY_SITE_CANDIDATE=0 PROFESSIONAL_SITE_CANDIDATE=0','node scripts/verify-live-laboratory.mjs','node scripts/verify-research-facility-candidate.mjs','Verify exact-main cinematic release in pinned browsers before deployment'])assert.ok(workflow.includes(value),value);
+ assert.ok(workflow.indexOf('Verify exact-main cinematic release in pinned browsers before deployment')<workflow.indexOf('wrangler@4.151.3 deploy'));
+});

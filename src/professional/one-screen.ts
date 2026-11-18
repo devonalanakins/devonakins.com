@@ -1,12 +1,16 @@
+import {LABORATORY_ROUTES,laboratoryViewForPath} from "./laboratory-routes.mjs";
 /**
- * One-viewport client. This controls only the visual tab shell; live GitHub
+ * Shared section navigation for the viewport shell and long-scroll candidate; GitHub
  * and Spotify/GPT rendering remain the existing independent, consent-aware
  * professional clients. No telemetry or owner state is written here.
  */
-type TabName="home"|"experience"|"work"|"activity"|"writing"|"contact";
-const names:TabName[]=["home","experience","work","activity","writing","contact"];
+type TabName="systems"|"portfolio"|"home"|"experience"|"work"|"activity"|"writing"|"contact";
+const laboratory=document.body.classList.contains("lab-body");
+const names:TabName[]=laboratory?
+  ["home","experience","systems","work","portfolio","activity","writing","contact"]:
+  ["home","experience","work","activity","writing","contact"];
 const tabs=[...document.querySelectorAll<HTMLButtonElement>("[data-one-target]")];
-const buttons=[...document.querySelectorAll<HTMLButtonElement>("[data-one-go]")];
+const buttons=[...document.querySelectorAll<HTMLButtonElement|HTMLAnchorElement>("[data-one-go]")];
 const panels=[...document.querySelectorAll<HTMLElement>("[data-one-view]")];
 // A fixed viewport cannot show an unbounded list. Match the public event
 // summary to the number of rows the visible panel can actually accommodate.
@@ -35,14 +39,36 @@ function fitGitHubFeedToViewport(){
 }
 fitGitHubFeedToViewport();
 window.addEventListener("resize",fitGitHubFeedToViewport);
-const known=(value:string|null):value is TabName=>!!value&&names.includes(value as TabName);
+const known=(value:string|null|undefined):value is TabName=>!!value&&names.includes(value as TabName);
 const currentHash=():TabName=>{
-  const raw=location.hash.slice(1).toLowerCase();
-  return known(raw)?raw:"home";
+  let raw=location.hash.slice(1).toLowerCase();
+  if(laboratory){
+    raw=raw.replace(/^one-panel-/,"");
+    raw=({research:"experience",projects:"work",fieldnotes:"writing"} as Record<string,string>)[raw]||raw;
+  }
+  const route=laboratory?laboratoryViewForPath(location.pathname):null;
+  return known(raw)?raw:known(route)?route:laboratory&&known(document.body.dataset.labInitial)?document.body.dataset.labInitial:"home";
 };
 let current:TabName="home";
+// The long-scroll candidate owns same-document history. Other variants keep
+// their existing replace-only tab shell and browser scroll behavior.
+if(laboratory)history.scrollRestoration="manual";
 function show(next:TabName,focus=false,updateUrl=true){
+  if(laboratory&&updateUrl&&document.body.dataset.labNative==='true'){
+    location.assign(LABORATORY_ROUTES[next]+location.search);return;
+  }
+  const changed=next!==current;
+  if(laboratory&&updateUrl&&changed){
+    history.replaceState({...history.state,laboratoryScrollY:window.scrollY},"");
+  }
   current=next;
+  if(laboratory&&document.body.dataset.labNative!=='true'){
+    const label=document.querySelector<HTMLElement>('[data-one-target="'+next+'"] .one-tab-label')?.textContent?.trim()||'Portfolio';
+    const title=next==='home'?'Devon Alan Akins — Software, Systems & Research':label+' — Devon Alan Akins';
+    document.title=title;
+    document.querySelector('meta[property="og:title"]')?.setAttribute('content',title);
+    document.querySelector('link[rel="canonical"]')?.setAttribute('href','https://devonakins.com'+LABORATORY_ROUTES[next]);
+  }
   for(const panel of panels){
     const selected=panel.dataset.oneView===next;
     panel.hidden=!selected;
@@ -53,10 +79,16 @@ function show(next:TabName,focus=false,updateUrl=true){
     const selected=tab.dataset.oneTarget===next;
     tab.setAttribute("aria-selected",String(selected));
     tab.tabIndex=selected?0:-1;
+    if(selected&&tab.closest(".lab-tabs-mobile"))tab.scrollIntoView({block:"nearest",inline:"nearest",behavior:"instant"});
   }
   if(updateUrl){
     const suffix=next==="home"?"":"#"+next;
-    history.replaceState(null,"",location.pathname+location.search+suffix);
+    const url=laboratory?LABORATORY_ROUTES[next]+location.search:location.pathname+location.search+suffix;
+    if(laboratory){
+      if(changed)history.pushState({laboratoryScrollY:0},"",url);
+      else history.replaceState(history.state,"",url);
+      window.scrollTo({top:0,behavior:"instant"});
+    }else history.replaceState(null,"",url);
   }
 }
 tabs.forEach(tab=>{
@@ -65,21 +97,45 @@ tabs.forEach(tab=>{
     if(known(next))show(next,false);
   });
   tab.addEventListener("keydown",event=>{
+    const group=tab.closest<HTMLElement>(".one-tabs");
+    const groupNames=[...group?.querySelectorAll<HTMLElement>("[data-one-target]")||[]].map(t=>t.dataset.oneTarget).filter(known);
     const delta=event.key==="ArrowRight"||event.key==="ArrowDown"?1:
       event.key==="ArrowLeft"||event.key==="ArrowUp"?-1:0;
-    const target=event.key==="Home"?0:event.key==="End"?names.length-1:
-      delta?(names.indexOf(current)+delta+names.length)%names.length:-1;
+    const target=event.key==="Home"?0:event.key==="End"?groupNames.length-1:
+      delta?(groupNames.indexOf(current)+delta+groupNames.length)%groupNames.length:-1;
     if(target<0)return;
     event.preventDefault();
-    show(names[target]);
-    const group=tab.closest<HTMLElement>(".one-tabs");
-    group?.querySelector<HTMLButtonElement>('[data-one-target="'+names[target]+'"]')?.focus();
+    show(groupNames[target]);
+    group?.querySelector<HTMLButtonElement>('[data-one-target="'+groupNames[target]+'"]')?.focus();
   });
 });
-buttons.forEach(button=>button.addEventListener("click",()=>{
+buttons.forEach(button=>button.addEventListener("click",event=>{
+  if(button instanceof HTMLAnchorElement&&event instanceof MouseEvent&&
+      (event.metaKey||event.ctrlKey||event.shiftKey||event.altKey||event.button!==0))return;
   const next=button.dataset.oneGo||"";
-  if(known(next))show(next,true);
+  if(known(next)){event.preventDefault();show(next,true);}
 }));
-window.addEventListener("hashchange",()=>show(currentHash(),false,false));
-window.addEventListener("popstate",()=>show(currentHash(),false,false));
+let historyFrame=0;
+function restoreLocation(){
+  const next=currentHash();
+  show(next,false,false);
+  if(laboratory){
+    const saved=history.state?.laboratoryScrollY;
+    const top=typeof saved==="number"&&Number.isFinite(saved)&&saved>=0?saved:0;
+    cancelAnimationFrame(historyFrame);
+    historyFrame=requestAnimationFrame(()=>{
+      if(currentHash()!==next)return;
+      document.querySelector<HTMLElement>('[data-one-view="'+next+'"]')?.focus({preventScroll:true});
+      window.scrollTo({top,behavior:"instant"});
+    });
+  }
+}
+window.addEventListener("hashchange",restoreLocation);
+window.addEventListener("popstate",restoreLocation);
+if(laboratory){
+  window.addEventListener("pagehide",()=>history.replaceState({...history.state,laboratoryScrollY:window.scrollY},""));
+  window.addEventListener("pageshow",event=>{
+    if(event.persisted||typeof history.state?.laboratoryScrollY==="number")restoreLocation();
+  });
+}
 show(currentHash(),false,false);

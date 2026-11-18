@@ -5,6 +5,7 @@
  * Does not assume someone must be listening or coding during each CI check.
  */
 import assert from "node:assert/strict";
+import {validatePublicAnalytics} from './validate-public-analytics.mjs';
 
 const origin = "https://devonakins.com";
 const forbidden = /(?:^|_)(?:refresh_cipher|access_cipher|access_token|refresh_token|client_secret|email|oauth|private_text|session_id|task_token|source_token|prompt|command_output|file_path|file_name|connection_key)(?:$|_)/i;
@@ -62,17 +63,7 @@ assert.ok(typeof signal.spotify?.mode === "string" && signal.spotify.mode.length
 assert.ok(["hidden", "public"].includes(signal.work?.visibility), "Work projection must be gated");
 assert.ok(["hidden", "public"].includes(signal.remote?.visibility), "Remote task projection must be gated");
 assert.ok(Array.isArray(signal.remote?.tasks) && signal.remote.tasks.length <= 16);
-if (signal.gpt?.state === "snapshot") {
-  const g = signal.gpt;
-  assert.match(g.metric || "", /^(?:profile_7d_tokens|profile_lifetime_tokens_approx|profile_7d_messages|profile_streak_days|work_codex_credits_remaining|work_codex_credits_used|business_7d_messages|business_7d_credits_used)$/);
-  assert.ok(Number.isFinite(g.count) && g.count >= 0);
-  assert.ok(Number.isFinite(Date.parse(g.asOf)));
-  assert.equal(g.sourceUpdatedAt, null, "Owner capture is never an OpenAI provider update");
-  assert.ok(["recent", "historical"].includes(g.freshness));
-} else {
-  assert.equal(signal.gpt?.state, "disconnected");
-  assert.equal(signal.gpt?.count, null);
-}
+validatePublicAnalytics(signal, health);
 if (signal.remote?.visibility === "public") {
   for (const task of signal.remote.tasks) {
     assert.ok(["github-actions", "codex", "chatgpt-work"].includes(task.source));
@@ -84,8 +75,8 @@ if (signal.remote?.visibility === "public") {
 assert.ok(typeof listening.mode === "string" && listening.mode.length <= 40);
 assert.ok(!("audio" in listening), "No audio broadcast");
 console.log("Anonymous public V4 check passed: health, release schema, bounded sources, and no private fields.");
-console.log("Observed modes: GPT=" + signal.gpt?.state +
-  ", Spotify=" + listening.mode +
+console.log("Observed modes: " + (health.variant === "laboratory" ? "" : "GPT=" + signal.gpt?.state + ", ") +
+  "Spotify=" + listening.mode +
   ", work=" + signal.work.visibility +
   ", remote=" + signal.remote.visibility +
   ", tasks=" + signal.remote.tasks.length + ".");
