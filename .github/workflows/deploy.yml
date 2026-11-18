@@ -69,7 +69,11 @@ jobs:
   deploy:
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-24.04
-    timeout-minutes: 35
+    # The pinned Playwright --with-deps step depends on Ubuntu package mirrors.
+    # On 2026-11-18, apt took ~32 minutes before browser verification could
+    # begin, causing the earlier 35-minute guarded release to time out.
+    # Keep all preflight and post-deploy checks; bound slow installs separately.
+    timeout-minutes: 60
     environment: production
     # Also inherited by wrangler's configured build command: a V5 build
     # must not silently turn back into V4 during deployment.
@@ -152,8 +156,10 @@ jobs:
         if: inputs.release_variant == 'laboratory'
         run: |
           python3 -m pip install --disable-pip-version-check playwright==1.57.0
-          python3 -m playwright install --with-deps chromium webkit
-          LABORATORY_RUNTIME_BROWSER_CHECK=1 node scripts/verify-laboratory-runtime.mjs
+          # Fail closed if mirrors stall; never skip pinned browser dependencies.
+          timeout -k 60s 45m python3 -m playwright install --with-deps chromium webkit
+          # Keep the exact-main packaged-Worker browser acceptance mandatory.
+          timeout -k 60s 10m env LABORATORY_RUNTIME_BROWSER_CHECK=1 node scripts/verify-laboratory-runtime.mjs
       - name: Preserve cinematic production release evidence
         if: always() && inputs.release_variant == 'laboratory'
         uses: actions/upload-artifact@v4
