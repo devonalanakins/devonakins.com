@@ -18,7 +18,7 @@ SIZES = ((320,568),(375,667),(390,844),(393,852),(428,926),(768,1024),
 server = None if os.environ.get('LABORATORY_TEST_ORIGIN') else subprocess.Popen(['./node_modules/.bin/vite','preview','--host','127.0.0.1','--port','4179','--strictPort'],stdout=subprocess.DEVNULL,stderr=subprocess.STDOUT)
 
 def navigate(page,key,width):
-    if width<=760:
+    if width<=1100:
         page.locator('.lab-menu-toggle').click()
         page.locator(f'#lab-menu [data-one-target="{key}"]').click()
         assert not page.locator('#lab-menu').is_visible()
@@ -100,6 +100,13 @@ try:
                         assert page.locator('#lab-menu').is_hidden()
                         wait_for_condition(page,"document.querySelector('.lab-menu-toggle').getAttribute('aria-expanded')==='false'")
                         assert page.evaluate("document.activeElement.hasAttribute('data-lab-menu-open')")
+                    elif width<=1100:
+                        assert page.locator('.lab-tabs-desktop').is_hidden()
+                        assert page.locator('.lab-menu-toggle').is_visible()
+                        page.locator('.lab-menu-toggle').click()
+                        assert page.locator('#lab-menu').is_visible()
+                        page.keyboard.press('Escape')
+                        assert page.locator('#lab-menu').is_hidden()
                     else:
                         assert page.locator('.lab-tabs-desktop').is_visible()
                     if width==1536:
@@ -138,7 +145,7 @@ try:
                     for key in ('activity','contact'):
                         navigate(page,key,width)
                         navigate(page,'home',width)
-                    page.locator('.lab-menu-toggle' if width<=760 else '.lab-desktop-menu').click()
+                    page.locator('.lab-menu-toggle' if width<=1100 else '.lab-desktop-menu').click()
                     motion=page.locator('#lab-menu [data-lab-motion]')
                     if width==375: assert motion.is_disabled()
                     else:
