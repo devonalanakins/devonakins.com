@@ -6,6 +6,7 @@
 import {LABORATORY_ROUTES} from './laboratory-routes.mjs';
 import {listeningCollections} from './signal-cards.mjs';
 import {brandIcon} from './brand-icons.mjs';
+import {renderNonaOperatingBrief} from './nona-operating-brief.mjs';
 import {approvedPublicProjects} from '../publication-manifest.mjs';
 import {renderHomeSocialHub, renderSocialChannels} from './social-presence.mjs';
 
@@ -268,11 +269,12 @@ function renderLaboratoryCaseStudy(project){
   const p=project;
   const text=value=>escapeHtml(value||'');
   const source=p.url&&p.publication?.sourceLinkApproved===true?'<a class="lab-action" href="'+text(p.url)+'" target="_blank" rel="noopener noreferrer">Inspect public source →</a>':'';
+  const nonaBrief=p.slug==='operations'?renderNonaOperatingBrief():'';
   return '<article class="lab-secondary lab-case-study"><div class="lab-section-intro"><p class="lab-overline">PORTFOLIO / '+text(p.publication.category)+'</p><h1>'+text(p.title)+'</h1><p>'+text(p.summary)+'</p><div class="lab-portfolio-actions"><a class="lab-action lab-action-primary" href="/projects/">All public projects →</a>'+source+'</div></div><div class="lab-case-sections">'+
     '<section class="lab-study"><span>CONTEXT / PUBLIC SCOPE</span><h2>Purpose & context</h2><p>'+text(p.description)+'</p></section>'+
     '<section class="lab-study"><span>STATUS / '+text(p.publication.stage)+'</span><h2>What exists</h2><p>'+text(p.detail)+'</p><dl><dt>Role</dt><dd>'+text(p.role)+'</dd><dt>Current stage</dt><dd>'+text(p.status)+'</dd></dl></section>'+
     '<section class="lab-study"><span>BOUNDARIES / EVIDENCE</span><h2>What is not claimed</h2><p>'+text(p.boundary)+'</p></section>'+
-    '<section class="lab-study"><span>NEXT / NOT A RELEASE CLAIM</span><h2>Next step</h2><p>'+text(p.next)+'</p></section></div></article>';
+    '<section class="lab-study"><span>NEXT / NOT A RELEASE CLAIM</span><h2>Next step</h2><p>'+text(p.next)+'</p></section></div>'+nonaBrief+'</article>';
 }
 function renderLaboratoryListening(){
   return '<div class="lab-secondary"><div class="lab-section-intro"><p class="lab-overline">LISTENING / CONSENT-QUALIFIED SOURCE</p><h1>A soundtrack for <em>making.</em></h1><p>Only owner-approved playback is shown. Listening is separate from public engineering history; no audio autoplays here.</p></div><section class="lab-study" data-public-spotify data-spotify-presentation="listening"><h2 data-spotify-title>Checking approved playback</h2><p data-spotify-state role="status">Checking source</p><p data-spotify-artist></p><img data-spotify-cover alt="" width="96" height="96" referrerpolicy="no-referrer" loading="lazy" decoding="async" hidden><progress data-spotify-progress aria-label="Track playback progress" hidden></progress><p data-spotify-note></p><a data-spotify-link href="/listening/">Playback source →</a></section>'+listeningCollections()+'</div>';
