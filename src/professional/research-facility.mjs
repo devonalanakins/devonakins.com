@@ -33,8 +33,8 @@ export function lissajousPath(a=3,b=4,phase=Math.PI/2) {
 }
 function renderNavigation(kind,activeView){
   return '<nav class="one-tabs lab-tabs lab-tabs-'+kind+'" aria-label="'+
-    (kind==='desktop'?'Laboratory navigation':'Mobile laboratory navigation')+'">'+
-    '<div class="one-tablist" role="tablist" aria-label="Laboratory sections">'+
+    (kind==='desktop'?'Primary navigation':'Mobile primary navigation')+'">'+
+    '<div class="one-tablist" role="tablist" aria-label="Primary pages">'+
     primarySections.map(([key,label])=>'<button type="button" role="tab" id="one-'+kind+'-'+key+
       '" aria-controls="one-panel-'+key+'" aria-selected="'+(key===activeView?'true':'false')+
       '" tabindex="'+(key===activeView?'0':'-1')+'" data-one-target="'+key+'">'+
@@ -117,7 +117,7 @@ function compactSignals(){return '<section class="lab-portfolio-signals" aria-la
  * from a third-party host. */
 function portraitIntroduction(){return '<section class="lab-personal" aria-labelledby="lab-personal-title">'+
  '<div class="lab-personal-inner">'+
- '<figure class="lab-personal-portrait"><img src="/professional/devon-portrait.avif" width="420" height="560" alt="Devon outdoors wearing a backwards dark cap and gray T-shirt" loading="lazy" decoding="async">'+
+ '<figure class="lab-personal-portrait"><img src="/professional/devon-portrait.avif" width="420" height="560" alt="Devon outdoors wearing a backward dark cap and a gray graphic hoodie with green trim" loading="lazy" decoding="async">'+
  '<figcaption><span>IN PERSON</span><span>2026</span></figcaption></figure>'+
  '<div class="lab-personal-story"><p class="lab-personal-eyebrow">ABOUT ME</p>'+
  '<h2 id="lab-personal-title">Father. Builder. Writer.</h2>'+
@@ -259,7 +259,7 @@ export function renderResearchFacilityHome({initialView='home',canonicalPath='/'
     '<header class="lab-header"><a href="/" class="lab-brand" title="Devon Alan Akins home"><span class="da-monogram" aria-hidden="true">da.</span><span class="lab-brand-caption">DEVONAKINS.COM<small>INDEPENDENT / PERSONAL</small></span></a>'+nav('desktop')+'<div class="lab-header-end"><a class="lab-header-contact" href="mailto:hello@devonakins.com">Contact ↗︎</a><button type="button" class="lab-desktop-menu" data-lab-menu-open aria-controls="lab-menu" aria-expanded="false" aria-label="Open contact and motion menu">Menu</button></div><button type="button" class="lab-menu-toggle" data-lab-menu-open aria-controls="lab-menu" aria-expanded="false" aria-label="Open navigation menu"><span></span><span></span><span></span></button></header>'+
     '<dialog id="lab-menu" aria-labelledby="lab-menu-title"><div class="lab-menu-heading"><h2 id="lab-menu-title">Explore</h2><button data-lab-menu-close aria-label="Close navigation menu">Close <span aria-hidden="true">×</span></button></div>'+nav('mobile')+'<button type="button" class="lab-motion" data-lab-motion aria-pressed="true">MOTION ON</button><a href="mailto:hello@devonakins.com">hello@devonakins.com</a></dialog>'+
     '<main id="one-stage" class="one-stage lab-stage" tabindex="-1">'+
-    (notFound?view('home','<div class="lab-secondary"><div class="lab-section-intro"><p class="lab-overline">404 / WAYFINDING</p><h1>That page is <em>not here.</em></h1><p>Explore the public portfolio or return to the laboratory.</p><a class="lab-action" href="/">Return home →</a></div></div>'):home)+research+systems+projects+portfolio+activity+notes+contact+'</main>'+
+    (notFound?view('home','<div class="lab-secondary"><div class="lab-section-intro"><p class="lab-overline">404 / WAYFINDING</p><h1>That page is <em>not here.</em></h1><p>Explore the work or return to the homepage.</p><a class="lab-action" href="/">Return home →</a></div></div>'):home)+research+systems+projects+portfolio+activity+notes+contact+'</main>'+
     '<footer class="lab-footer"><div class="lab-footer-identity"><span>Devon Alan Akins</span><small>SCIENCE / SOFTWARE / SYSTEMS / EXPLORATION</small></div>'+renderSocialChannels(true)+'<div class="lab-footer-status"><span aria-hidden="true"></span>DEVON ALAN AKINS<small>Independent software, inquiry &amp; original work</small></div></footer>'+
     '</body></html>';
 }
