@@ -35,6 +35,29 @@ const home=await(await get('/')).text();
 assert.match(home,/class="lab-personal"/);
 assert.match(home,/src="\/professional\/devon-portrait\.avif"/);
 assert.doesNotMatch(home,/\/professional\/cinematic\/[^"]+\.webp|data-lab-scene-canvas|cinematic-environment\.ts/);
+// Ensure social scrapers and installed PWA clients receive the intended new identity.
+assert.ok(home.includes('property="og:image" content="https://devonakins.com/social-card.jpg"'),'Open Graph image is declared');
+assert.ok(home.includes('name="twitter:card" content="summary_large_image"'),'Twitter large card is declared');
+assert.ok(home.includes('rel="apple-touch-icon" href="/apple-touch-icon.png"'),'iOS icon is declared');
+assert.ok(home.includes('rel="manifest" href="/manifest.webmanifest"'),'PWA manifest is declared');
+const shareImage=await get('/social-card.jpg');
+assert.equal(shareImage.status,200,'Social preview image exists');
+assert.match(shareImage.headers.get('content-type')||'',/^image\/jpeg/);
+const shareBytes=new Uint8Array(await shareImage.arrayBuffer());
+assert.ok(shareBytes.length>12000&&shareBytes.length<300000,'Social image is complete and optimized');
+assert.equal(shareBytes[0],0xff);
+assert.equal(shareBytes[1],0xd8);
+for(const route of ['/favicon.svg','/favicon-32.png','/apple-touch-icon.png','/icon-192.png','/icon-512.png','/icon-maskable-512.png']){
+ const asset=await get(route);
+ assert.equal(asset.status,200,'Required branded asset '+route);
+ assert.equal(asset.headers.get('x-content-type-options'),'nosniff',route);
+}
+const favicon=await(await get('/favicon.svg')).text();
+assert.match(favicon,/#2948d3/i);
+assert.match(favicon,/>da\.<\/text>/);
+const appManifest=await(await get('/manifest.webmanifest')).json();
+assert.equal(appManifest.theme_color,'#f3f1e9');
+assert.equal(appManifest.background_color,'#f3f1e9');
 const photo=await get('/professional/devon-portrait.avif');
 assert.equal(photo.status,200,'Approved portrait asset');
 assert.match(photo.headers.get('content-type')||'',/^image\/avif\b/);
