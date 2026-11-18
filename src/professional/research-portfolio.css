@@ -1,7 +1,7 @@
 /* Approved cinematic composition. All interface text and controls remain DOM. */
 html.lab-html{height:auto;overflow:auto;scrollbar-gutter:stable}
 body.lab-body{height:auto;min-height:100dvh;overflow:visible;background:#030d10;color:#e8eeeb;font-family:Arial,Helvetica,sans-serif}
-.lab-body .lab-background{background:#030e11 url('/professional/cinematic/chamber-wide.webp') center top/100% auto no-repeat;opacity:.35}
+.lab-body .lab-background{background:#030e11;opacity:.35}
 .lab-body .lab-background-grid{display:none}
 .lab-body .lab-header{height:62px;padding:0 3%;display:flex;justify-content:space-between;gap:24px;background:#030c0ee8;backdrop-filter:blur(12px);border-bottom:1px solid #72999470}
 .lab-body .lab-brand{gap:18px;flex:none}
