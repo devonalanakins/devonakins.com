@@ -133,7 +133,7 @@ try:
             page = context.new_page()
             for route, expected in (
                 ("/experience/", "Experience"),
-                ("/work/operations/", "Business operations"),
+                ("/work/operations/", "Nona Neuropsychology — Operations"),
                 ("/contact/", "useful work"),
             ):
                 response = page.goto(BASE + route, wait_until="domcontentloaded")
