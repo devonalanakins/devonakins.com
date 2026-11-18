@@ -44,6 +44,10 @@ try:
                         page.reload(wait_until='networkidle');selected(page,key)
                     page.goto(BASE+'/?keep=query',wait_until='networkidle');selected(page,'home')
                     page.evaluate('window.scrollTo(0,document.documentElement.scrollHeight)')
+                    # Playwright scrolls a link into view *before* click handlers run.
+                    # Record the position at the actual interaction, not the earlier
+                    # page-bottom offset, which changes with the shorter two-card site.
+                    page.locator('[data-lab-destination="experience"]').scroll_into_view_if_needed()
                     before=page.evaluate('scrollY')
                     assert before>20,(engine,width,before)
                     page.locator('[data-lab-destination="experience"]').click();selected(page,'experience')
