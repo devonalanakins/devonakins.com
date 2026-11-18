@@ -58,6 +58,21 @@ test('laboratory candidate is independently navigable, semantic and source-hones
   assert.doesNotMatch(page,/GPU speedup: \d+|active neural network|trained model deployed|LIVE NOW/i);
   assert.doesNotMatch(page,/<iframe|headshot-concept\.webp|Patient:|access_token|private repository/i);
 });
+test('approved portrait section renders only when a real first-party image is packaged',()=>{
+  assert.doesNotMatch(page,/class="lab-personal"|devon-portrait\.avif/,
+    'No empty portrait card or broken image may appear in the default candidate');
+  const approved=renderResearchFacilityHome({portraitAvailable:true});
+  assert.equal((approved.match(/class="lab-personal"/g)||[]).length,1);
+  assert.match(approved,/<figure class="lab-personal-portrait"><img src="\/professional\/devon-portrait\.avif"/);
+  assert.match(approved,/alt="Devon outdoors wearing a backwards dark cap and gray hoodie"/);
+  assert.match(approved,/loading="lazy" decoding="async"/);
+  assert.match(approved,/Independent by design\./);
+  assert.match(approved,/THE PERSON BEHIND THE WORK/);
+  assert.match(approved,/Nonclinical operations/);
+  assert.doesNotMatch(approved,/data:image\/|src="https?:\/\/[^\"]+\.(?:jpg|png|webp|avif)"/);
+  assert.throws(()=>renderResearchFacilityHome({portraitAvailable:'yes'}),TypeError);
+});
+
 test('the mathematical figure is deterministic, bounded, and derived from its stated formula',()=>{
   const path=lissajousPath(3,4);
   assert.equal(path,lissajousPath(3,4));
@@ -86,6 +101,9 @@ test('the candidate uses first-party interactions and an explicit build gate',as
   assert.doesNotMatch(portfolioStyle,/\.lab-live-scene|perspective\(|rotateX\(|rotateY\(|transform-style:preserve-3d/);
   const identityStyle=await readFile(new URL('../src/professional/research-identity.css',import.meta.url),'utf8');
   assert.match(identityStyle,/\.lab-focus-grid/);
+  assert.match(identityStyle,/\.lab-personal-inner/);
+  assert.match(identityStyle,/\.lab-personal-portrait img/);
+  assert.match(identityStyle,/@media\(max-width:760px\)/);
   assert.match(identityStyle,/\.lab-work-feature/);
   assert.match(identityStyle,/\.lab-research-notes/);
   assert.match(identityStyle,/\.lab-field-traces/);
@@ -110,6 +128,8 @@ test('the candidate uses first-party interactions and an explicit build gate',as
   assert.match(client,/data-lab-motion/);
   assert.doesNotMatch(client,/fetch\(|localStorage|sessionStorage|innerHTML/);
   assert.match(generator,/LABORATORY_SITE_CANDIDATE/);
+  assert.match(generator,/laboratoryPortraitAvailable/);
+  assert.match(generator,/existsSync\('public\/professional\/devon-portrait\.avif'\)/);
   assert.match(generator,/laboratoryCandidate \? renderResearchFacilityHome/);
   assert.match(generator,/oneScreenCandidate \? renderOneScreenHome/);
   assert.match(page,/mailto:hello@devonakins\.com/);
