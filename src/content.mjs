@@ -127,7 +127,7 @@ export const projects = [
     description:
       "I have a published book I plan to revise, alongside newer fiction and manuscripts in progress. Future works are not presented as released books.",
     detail:
-      "Writing is a priority alongside raising my family. I work on the pages, the characters, and the worlds behind them. Some of that storytelling also connects to ANEVUM.",
+      "Writing is a priority alongside raising my family. Earlier fiction and worldbuilding remain part of my creative work, separate from ANEVUM's current Open Institute direction.",
     boundary:
       "Unpublished drafts and private family material stay private. I'll share revised editions and new publication details when they're ready.",
     tags: ["Writing", "Books", "Fiction"],
@@ -135,23 +135,23 @@ export const projects = [
   },
   {
     slug: "anevum",
-    title: "Anevum",
-    category: "creative",
-    label: "Family creative project",
-    status: "Ongoing project",
-    role: "Founder & creator",
+    title: "ANEVUM — The Open Institute",
+    category: "research",
+    label: "Free STEM learning and open inquiry",
+    status: "Educational prototype · not launched",
+    role: "Founder & developer",
     icon: "anevum",
-    summary: "A creative world for stories, games, and things I make with my boys.",
+    summary: "An open, free-to-learn STEM institute in development, combining rigorous study with hands-on computing and scientific experiments.",
     description:
-      "Anevum is my independent creative project, built around fiction, worldbuilding, and games. It is something I want to keep creating and growing with my sons.",
+      "ANEVUM — The Open Institute is my developing vision for freely accessible, continuing STEM education and practical research. Its focus spans AI and software engineering, computing infrastructure, neuroscience, physics, mathematics and related sciences.",
     detail:
-      "The writing and the interactive work share a world, but the larger ideas are not finished products. My aim is to turn that work into readable stories and playable experiences, one release at a time.",
+      "A public draft in the ANEVUM web repository implements an isolated Academy preview, introductory electronics and Boolean-logic lessons, and an interactive AND-gate exercise. This is a source-level learning prototype, not an operating online institute, public course platform or completed research program.",
     boundary:
-      "Only material that has been made public belongs here. Unpublished manuscripts, private creative notes, and family information remain private.",
-    tags: ["Fiction", "Worldbuilding", "Games"],
+      "The institute is independent and non-accredited. Public enrollment, learner profiles, awards, certificates, research publication and a physical campus are not operational. Earlier fiction, creative and bonsai projects remain preserved as separate historical directions.",
+    tags: ["Open education", "AI and computing", "Neuroscience", "Physics", "Mathematics"],
     url: "https://anevum.com",
-    urlLabel: "Visit ANEVUM",
-    next: "Finish smaller stories and playable pieces instead of endlessly expanding the plans.",
+    urlLabel: "Visit current ANEVUM website (Institute not yet launched)",
+    next: "Review the first learning prototype, complete an accessible foundational course and verify the learning experience before publishing the Institute.",
   },
   {
     slug: "ideaflow",
