@@ -123,7 +123,7 @@ export function renderResearchFacilityHome({initialView='home',canonicalPath='/'
   const introduction=project?project.summary:listening?'Owner-approved Spotify playback and selected public playlists, with independent source and privacy controls.':notFound?'This page is unavailable. Explore Devon Alan Akins’s public software and research portfolio.':introductions[initialView];
   const home=view('home',
  '<div class="lab-overview lab-portfolio-layout">'+
- '<section class="lab-portfolio-hero" aria-label="Personal portfolio introduction"><picture class="lab-scene"><source media="(max-width:760px)" srcset="/professional/cinematic/chamber-mobile.webp"><img src="/professional/cinematic/chamber-wide.webp" width="1672" height="941" alt="" fetchpriority="high" decoding="async"></picture><div class="lab-scene-light" aria-hidden="true"></div>'+
+ '<section class="lab-portfolio-hero" aria-label="Personal portfolio introduction"><picture class="lab-scene"><source media="(max-width:760px)" srcset="/professional/cinematic/chamber-mobile.webp"><img src="/professional/cinematic/chamber-wide.webp" width="1672" height="941" alt="" fetchpriority="high" decoding="async"></picture><canvas class="lab-live-scene" data-lab-scene-canvas aria-hidden="true"></canvas><div class="lab-scene-light" aria-hidden="true"></div>'+
  '<div class="lab-portfolio-hero-content"><p class="lab-hero-name">DEVON ALAN AKINS</p><h1>Independent<br>Research <em>&amp;</em> Engineering</h1><p class="lab-portfolio-statement">UNDERSTANDING COMPLEX SYSTEMS.<br>BUILDING THE MACHINES TO EXPLORE THEM.</p><ul class="lab-disciplines"><li>Scientific Computing</li><li>AI Infrastructure</li><li>Physics</li><li>Mathematics</li><li>Neuroscience</li></ul><div class="lab-portfolio-actions">'+goto('work','Explore work',true)+goto('portfolio','View portfolio')+'</div><noscript><nav class="lab-nojs" aria-label="Alternative navigation"><a href="/work/">Work</a><a href="/about/">About</a><a href="/contact/">Contact</a></nav></noscript></div></section>'+
  compactSignals()+'<section class="lab-portfolio-selected" aria-label="Explore five destinations"><div class="lab-destinations">'+destinationCards()+'</div></section></div>');
   const research=view('experience',
@@ -218,7 +218,7 @@ export function renderResearchFacilityHome({initialView='home',canonicalPath='/'
     '<link rel="stylesheet" href="/src/professional/research-portfolio.css">'+
     '<script type="module" src="/src/professional/client.ts"></script>'+
     '<script type="module" src="/src/professional/one-screen.ts"></script>'+
-    '<script type="module" src="/src/professional/research-facility.ts"></script>'+
+    '<script type="module" src="/src/professional/research-facility.ts"></script><script type="module" src="/src/professional/cinematic-environment.ts"></script>'+
     '<noscript><style>html.lab-html,body.lab-body{height:auto;overflow:auto}.lab-body .lab-stage{height:auto;overflow:visible}.lab-body .lab-stage>.lab-view[hidden]{display:block!important}.lab-body .lab-view{height:auto;min-height:100vh}.lab-body .lab-secondary{height:auto}.lab-tabs,.lab-motion,.lab-menu-toggle,.lab-desktop-menu{display:none!important}</style></noscript>'+
     '</head><body class="p-body one-body lab-body" data-lab-initial="'+initialView+'"'+(project||listening||notFound?' data-lab-native="true"':'')+'>'+
     '<a class="one-skip lab-skip" href="#one-stage">Skip to content</a>'+
