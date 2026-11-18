@@ -219,7 +219,7 @@ def main():
                 search.fill('')
                 for kind, expected in [
                     ('archive','Vesper Legacy'),('writing','Books & writing'),
-                    ('operations','Business operations'),
+                    ('operations','Nona Neuropsychology — Operations'),
                 ]:
                     category.select_option(kind)
                     cards=page.locator('[data-v5-project-card]:visible')

@@ -102,18 +102,22 @@ export const projects = [
   },
   {
     slug: "operations",
-    title: "Business operations",
+    title: "Nona Neuropsychology — Operations",
     category: "business",
-    label: "Family ventures",
-    status: "Active work",
-    role: "Operations & technology",
+    label: "Executive · nonclinical practice operations",
+    status: "Active nonclinical leadership",
+    role: "CEO · Nonclinical operations & technology",
     icon: "work",
-    summary: "Helping family businesses work better behind the scenes.",
-    description: "I help improve the day-to-day systems supporting family businesses, from planning and operations to technology and clearer workflows.",
-    detail: "The work is about practical problems: organizing decisions, reducing repetitive administration, improving tools, and making important work easier to follow through on.",
-    boundary: "Clients, patients, partners, financial records, internal tools, and private operational details are not published here.",
-    tags: ["Operations", "Technology", "Workflows"],
-    next: "Continue improving the processes and tools that the businesses actually use.",
+    summary: "Leading the administrative operations and technology supporting a neuropsychology practice, with clinical decisions reserved for licensed professionals.",
+    description:
+      "As CEO of Nona Neuropsychology, I focus on the nonclinical work that allows a professional practice to operate reliably: communications, referral coordination, scheduling handoffs, administrative report tracking, staffing workflows and digital experience.",
+    detail:
+      "The current operating mandate is to establish clear ownership of administrative tasks, improve workflow visibility, document actual capacity and delays, and evaluate reliable technology. Operational targets and proposed staff software are not presented as completed systems or proven performance improvements.",
+    boundary:
+      "Clinical evaluations, interpretation, diagnoses and report conclusions remain with licensed professionals. No patient or referral records, personnel details, confidential practice metrics, financial statements, insurer contracts or private systems are published here.",
+    tags: ["Practice operations", "Technology", "Administrative reliability", "Privacy"],
+    next:
+      "Measure administrative baselines first-hand in approved internal systems, implement small verified workflow improvements and publish only appropriately reviewed nonclinical evidence.",
   },
   {
     slug: "writing",
