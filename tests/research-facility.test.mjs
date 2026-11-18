@@ -24,9 +24,9 @@ test('laboratory candidate is independently navigable, semantic and source-hones
   assert.match(page,/class="lab-work-method"/);
   assert.match(page,/class="lab-research-journal"/);
   for(const term of ['Devon Alan Akins','MATHEMATICS','PHYSICS','COMPUTATIONAL NEUROSCIENCE',
-    'Independent','Build what matters.','ANALYTIC MODEL',
-    'NO MEASURED DATA','EXPERIMENT','PROPOSED','scientific computing']){
-    assert.ok(page.toLowerCase().includes(term.toLowerCase()),term);
+    'Independent','Anevum Open Institute','ANALYTIC MODEL',
+    'NO MEASURED DATA','unmerged','Planned initiative','scientific computing']){
+    assert.ok(page.replace(/<[^>]*>/g,' ').toLowerCase().includes(term.toLowerCase()),term);
   }
   assert.match(page,/data-public-github-feed/);
   assert.match(page,/data-public-spotify/);
@@ -37,19 +37,23 @@ test('laboratory candidate is independently navigable, semantic and source-hones
   assert.equal((page.match(/data-lab-destination="/g)||[]).length,2);
   assert.equal((page.match(/class="lab-focus-card /g)||[]).length,3);
   assert.match(page,/Nona Neuropsychology/);
-  assert.match(page,/Build what matters/);
-  assert.match(page,/class="lab-hero-field"/);
+  assert.match(page,/Devon<br>Alan Akins/);
+  assert.match(page,/Own the model/);
+  assert.match(page,/rhen\/pull\/1/);
+  assert.match(page,/merit\/blob\/main\/lib\/assess.mjs/);
+  assert.doesNotMatch(page,/RESEARCH \/ PROGRAM 001|Nonlinear dynamics|Excitable systems|Accelerated methods|LABORATORY ONLINE|SCHEMATIC \/ NOT MEASURED DATA/);
+  assert.doesNotMatch(page,/class="lab-hero-field"/);
   assert.doesNotMatch(page,/<picture|class="lab-scene"|\/professional\/cinematic\/[^"']+\.webp/);
-  assert.match(page,/class="lab-field-traces"/);
+  assert.match(page,/class="da-directions"/);
   assert.equal((page.match(/class="lab-card-print"/g)||[]).length,2);
   assert.doesNotMatch(page,/data-lab-scene-canvas|cinematic-environment\.ts|lab-field-reticle|lab-card-geometry|WebGLRenderer/i);
   for(const key of ['work','experience']){
     assert.match(page,new RegExp('href="'+LABORATORY_ROUTES[key]+'" data-one-go="'+key+'" data-lab-destination="'+key+'"'));
   }
   assert.equal((page.match(/class="lab-signal-tile /g)||[]).length,2);
-  assert.match(page,/INDEPENDENT SOFTWARE DEVELOPMENT/i);
+  assert.match(page,/INDEPENDENT SOFTWARE DEVELOPER/i);
   assert.match(page,/class="lab-explore-heading"/);
-  assert.match(page,/THE PUBLIC RECORD/);
+  assert.match(page,/Selected public sources/);
   assert.match(page,/class="lab-signal-tile lab-signal-github"/);
   assert.match(page,/class="lab-signal-tile lab-signal-spotify"/);
   assert.match(page,/one-social-icon--threads/);
@@ -66,8 +70,8 @@ test('approved portrait section renders only when a real first-party image is pa
   assert.match(approved,/<figure class="lab-personal-portrait"><img src="\/professional\/devon-portrait\.avif"/);
   assert.match(approved,/alt="Devon outdoors wearing a backwards dark cap and gray T-shirt"/);
   assert.match(approved,/loading="lazy" decoding="async"/);
-  assert.match(approved,/Independent by design\./);
-  assert.match(approved,/THE PERSON BEHIND THE WORK/);
+  assert.match(approved,/Father\. Builder\. Writer\./);
+  assert.match(approved,/ABOUT ME/);
   assert.match(approved,/Nonclinical operations/);
   assert.doesNotMatch(approved,/data:image\/|src="https?:\/\/[^\"]+\.(?:jpg|png|webp|avif)"/);
   assert.throws(()=>renderResearchFacilityHome({portraitAvailable:'yes'}),TypeError);
@@ -115,7 +119,7 @@ test('the candidate uses first-party interactions and an explicit build gate',as
   assert.match(portfolioStyle,/@media\(max-width:760px\)/);
   assert.doesNotMatch(portfolioStyle,/@import|url\(\s*["']?https?:|https:\/\/fonts\./);
   assert.match(page,/href="\/src\/professional\/research-portfolio.css"/);
-  assert.match(page,/href="\/src\/professional\/research-identity.css"/);
+  assert.doesNotMatch(page,/href="\/src\/professional\/research-identity.css"/);
   const studioStyle=await readFile(new URL('../src/professional/research-studio.css',import.meta.url),'utf8');
   assert.doesNotMatch(studioStyle,/perspective\(|rotateX\(|rotateY\(|translate3d\(|preserve-3d|WebGLRenderer|@import|url\(/);
   assert.match(studioStyle,/prefers-reduced-motion/);

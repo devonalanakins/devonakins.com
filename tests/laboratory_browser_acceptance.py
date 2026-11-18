@@ -53,7 +53,7 @@ try:
                     page.locator('.lab-brand').focus()
                     assert page.evaluate("getComputedStyle(document.querySelector('.one-skip')).clipPath !== 'none'")
                     assert page.title()=='Devon Alan Akins — Operations, Engineering & Research'
-                    assert 'Build what matters.' in page.locator('.lab-portfolio-hero h1').inner_text()
+                    assert 'Devon' in page.locator('.lab-portfolio-hero h1').inner_text() and 'Alan Akins' in page.locator('.lab-portfolio-hero h1').inner_text()
                     assert page.locator('.lab-focus-card').count()==3
                     # The personal photograph is an optional packaged first-party
                     # asset: never show a broken image or a placeholder if absent.
@@ -72,13 +72,13 @@ try:
                           const hero=document.querySelector('.lab-portfolio-hero').getBoundingClientRect();
                           const personal=document.querySelector('.lab-personal').getBoundingClientRect();
                           const focus=document.querySelector('.lab-focus').getBoundingClientRect();
-                          return hero.bottom<=personal.top+3 && personal.bottom<=focus.top+3;
+                          return Math.max(hero.bottom,personal.bottom)<=focus.top+3 && (innerWidth>760 || hero.bottom<=personal.top+3);
                         }"""),(engine,width,'portrait should follow hero and precede work focus')
                     else:
                         assert page.locator('img[src="/professional/devon-portrait.avif"]').count()==0
                     assert page.locator('.lab-focus-card--nona').is_visible()
-                    assert page.locator('.lab-hero-field').count()==1
-                    assert 'DEVON ALAN AKINS' in page.locator('.lab-hero-name').inner_text()
+                    assert page.locator('.lab-hero-field').count()==0
+                    assert 'INDEPENDENT SOFTWARE DEVELOPER' in page.locator('.lab-hero-name').inner_text()
                     assert page.locator('.lab-destination').count()==2
                     assert page.locator('.lab-signal-tile').count()==2
                     assert page.locator('[data-one-view]').count()==8
@@ -99,20 +99,11 @@ try:
                     # The authored design is a native two-dimensional SVG/CSS experience.
                     # No Three.js, WebGL scene, 3D orbital sculpture, or perspective cards.
                     assert page.locator('[data-lab-scene-canvas],.lab-live-scene,.lab-field-reticle,.lab-card-geometry').count()==0
-                    assert page.locator('.lab-field-traces').count()==1
-                    assert page.locator('.lab-trace').count()==3
+                    assert page.locator('.lab-field-traces').count()==0
+                    assert page.locator('.lab-trace').count()==0
                     assert page.locator('.lab-card-print').count()==2
                     assert page.evaluate("""() => [...document.querySelectorAll('script[src]')].every(s=>!s.src.includes('cinematic-environment'))""")
-                    assert page.locator('.lab-field-sheet-foot').inner_text().find('NOT MEASURED DATA')>=0
-                    if width<=760:
-                        # On phones, micro-labels must not leak into the first viewport
-                        # or obscure the main identity and calls to action.
-                        assert page.locator('.lab-field-sheet-head').is_hidden()
-                        assert page.locator('.lab-field-sheet-foot').is_hidden()
-                        assert page.locator('.lab-field-measure').first.is_hidden()
-                    else:
-                        assert page.locator('.lab-field-sheet-head').is_visible()
-                        assert page.evaluate("document.querySelector('.lab-field-sheet').getBoundingClientRect().right<=innerWidth+1")
+                    assert page.locator('.da-name').is_visible()
                     geometry=page.evaluate('''() => {
                       const rect=s=>{const r=document.querySelector(s).getBoundingClientRect();return {x:r.x,y:r.y,width:r.width,height:r.height,bottom:r.bottom}};
                       return {viewport:innerWidth,scroll:document.documentElement.scrollWidth,header:rect('.lab-header'),hero:rect('.lab-portfolio-hero'),focus:rect('.lab-focus'),signals:rect('.lab-portfolio-signals'),explore:rect('.lab-explore-heading'),selected:rect('.lab-portfolio-selected'),destinations:rect('.lab-destinations'),footer:rect('.lab-footer'),cards:[...document.querySelectorAll('.lab-destination')].map(el=>({x:el.getBoundingClientRect().x,y:el.getBoundingClientRect().y})),signalCards:[...document.querySelectorAll('.lab-signal-tile')].map(el=>({x:el.getBoundingClientRect().x,y:el.getBoundingClientRect().y}))};}''')
@@ -147,7 +138,7 @@ try:
                         assert page.locator('.lab-tabs-desktop').is_visible()
                     if width==1536:
                         # Responsive editorial content flows instead of fixed image-era landmarks.
-                        assert abs(geometry['header']['height']-62)<=8
+                        assert abs(geometry['header']['height']-76)<=8
                         assert geometry['signals']['y']-geometry['destinations']['y']>=100
                     (OUT/f'{engine}-landmarks-{width}.json').write_text(json.dumps(geometry,indent=2))
                     page.mouse.click(width-2,65)
@@ -161,20 +152,25 @@ try:
                                 assert page.evaluate("""() => {
                                   const container=document.querySelector('.lab-research');
                                   const journal=container.querySelector('.lab-research-journal').getBoundingClientRect();
-                                  const sources=['.lab-section-intro','.lab-research-instrument','.lab-research-stack'];
+                                  const sources=['.lab-section-intro','.da-directions','.da-investigations'];
                                   const bottom=Math.max(...sources.map(s=>container.querySelector(s).getBoundingClientRect().bottom));
                                   return journal.top>=bottom-5 && journal.width>container.clientWidth*.75;
                                 }"""),(engine,width,'Research journal must follow the instrument, full width')
+                            assert page.locator('.da-directions .da-direction').count()==3
+                            assert 'Anevum Open Institute' in page.locator('.da-directions').inner_text().replace('\n',' ')
+                            assert not page.locator('.lab-research-instrument').is_visible()
+                            page.locator('.da-sketch > summary').click()
                             curve=page.locator('[data-lab-curve="interactive"]')
                             before=curve.get_attribute('d')
                             page.locator('[data-lab-axis="a"]').fill('5')
                             assert curve.get_attribute('d')!=before
                             assert 'a = 5' in page.locator('[data-lab-model-caption]').inner_text()
+                            page.locator('.da-sketch > summary').click()
                         if key=='work':
                             if width in (390,1536):
                                 assert page.evaluate("""() => {
                                   const root=document.querySelector('.lab-work-hub');
-                                  const blocks=['.lab-section-intro','.lab-work-feature','.lab-work-collection','.lab-work-method'].map(s=>root.querySelector(s).getBoundingClientRect());
+                                  const blocks=['.lab-section-intro','.lab-work-feature','.da-selected','.lab-work-collection','.lab-work-method'].map(s=>root.querySelector(s).getBoundingClientRect());
                                   return blocks.every((r,i)=>i===0||r.top>=blocks[i-1].bottom-5);
                                 }"""),(engine,width,'Work sections must read top to bottom')
                             search=page.locator('[data-lab-project-search]')
@@ -222,6 +218,7 @@ try:
                 sample=fallback.new_page();sample.goto(BASE,wait_until='networkidle')
                 assert sample.locator('.lab-portfolio-hero h1').is_visible()
                 sample.locator('[data-lab-destination="experience"]').click()
+                sample.locator('.da-sketch > summary').click()
                 assert sample.locator('[data-lab-axis="a"]').is_visible()
                 fallback.close()
                 context=browser.new_context(ignore_https_errors=LOCAL_TLS,viewport={'width':390,'height':844},java_script_enabled=False)

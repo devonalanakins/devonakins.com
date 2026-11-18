@@ -110,8 +110,7 @@ if('IntersectionObserver' in window){
       entrances.unobserve(target);
     }
   },{threshold:.08});
-  entranceTargets.forEach((target,index)=>{
-    target.style.setProperty('--studio-delay',String(index%3*70)+'ms');
+  entranceTargets.forEach(target=>{
     entrances.observe(target);
   });
 }
