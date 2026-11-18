@@ -104,7 +104,7 @@ function destinationCards(){
  '<span class="lab-card-rule" aria-hidden="true"></span>'+
  '<svg class="lab-destination-glyph" viewBox="0 0 24 24" aria-hidden="true" fill="none"><path d="'+path+'" stroke="currentColor" stroke-width="1.1" stroke-linejoin="round"/></svg>'+
  '<div class="lab-destination-copy"><strong>'+title+'</strong><small>'+description+'</small></div>'+
- '<span class="lab-destination-arrow" aria-hidden="true">↗</span></a>').join('');
+ '<span class="lab-destination-arrow" aria-hidden="true"><svg viewBox="0 0 32 32" fill="none"><path d="M7 25L25 7M7 7h18v18" stroke="currentColor" stroke-width="1.5"/></svg></span></a>').join('');
 }
 function atomMark(){return '<svg viewBox="0 0 90 50" aria-hidden="true" fill="none"><ellipse cx="45" cy="25" rx="40" ry="10" transform="rotate(-24 45 25)" stroke="#a8dad3"/><ellipse cx="45" cy="25" rx="40" ry="10" transform="rotate(24 45 25)" stroke="#dfaa75"/><path d="M45 2v46" stroke="#8ca7a0" stroke-width=".5"/><circle cx="45" cy="25" r="3" fill="#fff0d3"/></svg>'}
 function compactSignals(){return '<section class="lab-portfolio-signals" aria-label="Selected public sources">'+
@@ -125,7 +125,7 @@ function portraitIntroduction(){return '<section class="lab-personal" aria-label
  '<p>I lead nonclinical operations and technology work, develop independent software, and study the mathematics and science of complex systems.</p>'+
  '<div class="lab-personal-rule" aria-hidden="true"></div>'+
  '<p>Away from the screen: fatherhood, writing, hands-on projects, and the questions that make lifelong learning worthwhile.</p>'+
- '<div class="lab-personal-links"><a href="https://github.com/devonalanakins" target="_blank" rel="noopener noreferrer">GitHub ↗</a><a href="mailto:hello@devonakins.com">Get in touch ↗</a></div></div>'+
+ '<div class="lab-personal-links"><a href="https://github.com/devonalanakins" target="_blank" rel="noopener noreferrer">GitHub ↗︎</a><a href="mailto:hello@devonakins.com">Get in touch ↗︎</a></div></div>'+
  '<aside class="lab-personal-aside" aria-label="Professional and personal focus"><div><span>NOW / PRACTICE</span><p>Nonclinical operations &amp; technology</p></div><div><span>ALWAYS / APPROACH</span><p>Curiosity, experimentation, craft</p></div></aside>'+
  '</div></section>'}
 function projectCatalog(){return '<div class="lab-project-browser"><label for="lab-project-search">Search public projects</label><input type="search" id="lab-project-search" data-lab-project-search placeholder="Search by name or area"><label for="lab-project-filter">Area</label><select id="lab-project-filter" data-lab-project-filter><option value="all">All areas</option>'+[...new Set(approvedPublicProjects.map(p=>p.publication.category))].map(c=>'<option>'+escapeHtml(c)+'</option>').join('')+'</select><p role="status" data-lab-project-count>'+approvedPublicProjects.length+' public projects</p><div class="lab-system-grid">'+approvedPublicProjects.map(p=>'<a class="lab-system-card" data-lab-project data-category="'+escapeHtml(p.publication.category)+'" href="/work/'+p.slug+'/"><span>'+escapeHtml(p.publication.category)+' / '+escapeHtml(p.publication.stage)+'</span><h3>'+escapeHtml(p.title)+'</h3><p>'+escapeHtml(p.summary)+'</p><small>'+escapeHtml(p.status)+' · PUBLIC OVERVIEW →</small></a>').join('')+'</div></div>'}
@@ -153,9 +153,9 @@ export function renderResearchFacilityHome({initialView='home',canonicalPath='/'
  (portraitAvailable?portraitIntroduction():'')+
  '<section class="lab-focus" aria-label="Current work and professional focus"><div class="lab-focus-heading"><span>THE WORK / PRESENT</span><p>One practice. Three connected disciplines.</p></div>'+
  '<div class="lab-focus-grid">'+
- '<a class="lab-focus-card lab-focus-card--nona" href="/work/" data-one-go="work"><span class="lab-focus-number">01 / PRINCIPAL FOCUS</span><strong>Nona Neuropsychology</strong><p>Nonclinical operations, digital experience, and dependable systems supporting professional care.</p><span class="lab-focus-bottom">OPERATIONS &amp; TECHNOLOGY <b aria-hidden="true">↗</b></span></a>'+
- '<a class="lab-focus-card lab-focus-card--engineering" href="/work/" data-one-go="work"><span class="lab-focus-number">02 / ENGINEERING</span><strong>Independent development</strong><p>Open-source-oriented software, thoughtful architecture, resilient tools and practical product delivery.</p><span class="lab-focus-bottom">BUILDING &amp; SHIPPING <b aria-hidden="true">↗</b></span></a>'+
- '<a class="lab-focus-card lab-focus-card--research" href="/research/" data-one-go="experience"><span class="lab-focus-number">03 / RESEARCH DIRECTION</span><strong>Scientific computing</strong><p>Mathematics, physics, computational neuroscience and AI infrastructure—studied through reproducible models.</p><span class="lab-focus-bottom">INQUIRY &amp; EXPERIMENTS <b aria-hidden="true">↗</b></span></a>'+
+ '<a class="lab-focus-card lab-focus-card--nona" href="/work/" data-one-go="work"><span class="lab-focus-number">01 / PRINCIPAL FOCUS</span><strong>Nona Neuropsychology</strong><p>Nonclinical operations, digital experience, and dependable systems supporting professional care.</p><span class="lab-focus-bottom">OPERATIONS &amp; TECHNOLOGY <b aria-hidden="true">↗︎</b></span></a>'+
+ '<a class="lab-focus-card lab-focus-card--engineering" href="/work/" data-one-go="work"><span class="lab-focus-number">02 / ENGINEERING</span><strong>Independent development</strong><p>Open-source-oriented software, thoughtful architecture, resilient tools and practical product delivery.</p><span class="lab-focus-bottom">BUILDING &amp; SHIPPING <b aria-hidden="true">↗︎</b></span></a>'+
+ '<a class="lab-focus-card lab-focus-card--research" href="/research/" data-one-go="experience"><span class="lab-focus-number">03 / RESEARCH DIRECTION</span><strong>Scientific computing</strong><p>Mathematics, physics, computational neuroscience and AI infrastructure—studied through reproducible models.</p><span class="lab-focus-bottom">INQUIRY &amp; EXPERIMENTS <b aria-hidden="true">↗︎</b></span></a>'+
  '</div></section>'+
  '<section class="lab-portfolio-selected" aria-label="Two primary destinations"><div class="lab-explore-heading"><div><span>SELECT A DIRECTION / 01—02</span><h2>Two paths. One practice.</h2></div><p>See what exists and is being delivered, or explore the questions and methods shaping what comes next.</p></div><div class="lab-destinations">'+destinationCards()+'</div></section>'+
  compactSignals()+'</div>');
@@ -175,7 +175,7 @@ export function renderResearchFacilityHome({initialView='home',canonicalPath='/'
       studyCard('01','MATHEMATICAL PHYSICS','Nonlinear dynamics','ODEs, coupled oscillators, numerical stability and physical simulation.','STUDY DIRECTION')+
       studyCard('02','COMPUTATIONAL NEUROSCIENCE','Excitable systems','From membrane models to reproducible simulations of neural behavior.','PROPOSED EXPERIMENT')+
       studyCard('03','SCIENTIFIC COMPUTING','Accelerated methods','Test numerical algorithms, CPU/GPU correctness and workload-specific performance.','PROPOSED BENCHMARKS')+
-      '</div><section class="lab-research-journal" aria-label="Fieldnotes and methods"><div class="lab-work-heading"><span>FIELDNOTES / IN CONTEXT</span><h2>The question is the beginning.</h2><p>Short, source-aware explanations accompany the interactive model rather than living behind a maze of pages.</p></div><div class="lab-research-notes"><details><summary>What does this curve actually demonstrate?</summary><p>A Lissajous curve shows the interaction of two periodic coordinates. Its geometry is determined by frequencies and phase; it is not a recording of neural activity or a validated neuroscience result.</p></details><details><summary>What counts as research evidence?</summary><p>Equations, assumptions and reproducible calculations explain a model. Observations, validation and independent review are separate requirements before scientific conclusions can be claimed.</p></details></div><a class="lab-text-link" href="/fieldnotes/" data-one-go="writing">Explore the full fieldnotes archive ↗</a></section><p class="lab-secondary-note">Sources: <a href="https://mathworld.wolfram.com/LissajousCurve.html" target="_blank" rel="noopener noreferrer">Lissajous curve definition</a> · <a href="https://doi.org/10.1113/jphysiol.1952.sp004764" target="_blank" rel="noopener noreferrer">Hodgkin & Huxley (1952)</a>. The latter is a study reference, not an implemented simulation.</p></div>');
+      '</div><section class="lab-research-journal" aria-label="Fieldnotes and methods"><div class="lab-work-heading"><span>FIELDNOTES / IN CONTEXT</span><h2>The question is the beginning.</h2><p>Short, source-aware explanations accompany the interactive model rather than living behind a maze of pages.</p></div><div class="lab-research-notes"><details><summary>What does this curve actually demonstrate?</summary><p>A Lissajous curve shows the interaction of two periodic coordinates. Its geometry is determined by frequencies and phase; it is not a recording of neural activity or a validated neuroscience result.</p></details><details><summary>What counts as research evidence?</summary><p>Equations, assumptions and reproducible calculations explain a model. Observations, validation and independent review are separate requirements before scientific conclusions can be claimed.</p></details></div><a class="lab-text-link" href="/fieldnotes/" data-one-go="writing">Explore the full fieldnotes archive ↗︎</a></section><p class="lab-secondary-note">Sources: <a href="https://mathworld.wolfram.com/LissajousCurve.html" target="_blank" rel="noopener noreferrer">Lissajous curve definition</a> · <a href="https://doi.org/10.1113/jphysiol.1952.sp004764" target="_blank" rel="noopener noreferrer">Hodgkin & Huxley (1952)</a>. The latter is a study reference, not an implemented simulation.</p></div>');
   const projects=view('work',
     '<div class="lab-secondary lab-systems lab-work-hub"><div class="lab-section-intro">'+
     '<p class="lab-overline">WORK / THE PUBLIC RECORD</p><h1>Systems built for <em>real life.</em></h1>'+
@@ -183,12 +183,12 @@ export function renderResearchFacilityHome({initialView='home',canonicalPath='/'
     '<div class="lab-status-pair"><span>NONCLINICAL OPERATIONS / SOFTWARE ENGINEERING</span><span>RELEASE STATUS LABELED PER PROJECT</span></div></div>'+
     '<section class="lab-work-feature" aria-labelledby="lab-work-feature-title"><div class="lab-work-feature-index">01 / PRINCIPAL WORK</div>'+
     '<div><h2 id="lab-work-feature-title">Nona Neuropsychology</h2><p>Leading nonclinical operations and technology improvements with a focus on administrative reliability, the referral experience and well-designed digital systems. Clinical decisions and patient information remain outside this public portfolio.</p>'+
-    '<a class="lab-text-link" href="/work/operations/">Read the nonclinical operations case study ↗</a></div>'+
+    '<a class="lab-text-link" href="/work/operations/">Read the nonclinical operations case study ↗︎</a></div>'+
     '<div class="lab-work-feature-aside"><span>OPERATING DISCIPLINES</span><span>OPERATIONS</span><span>PRODUCT DESIGN</span><span>SECURE SYSTEMS</span></div></section>'+
     '<section class="lab-work-collection" aria-label="Independent software projects"><div class="lab-work-heading"><span>02 / SELECTED ENGINEERING</span><h2>Inspectable projects.</h2><p>Source links, stages and scope are reported individually—not invented as live activity.</p></div>'+projectCatalog()+'</section>'+
     '<section class="lab-work-method" aria-label="Engineering method"><div><span>03 / METHODOLOGY</span><h2>From problem to proof.</h2><p>Understand the work, make changes incrementally, test what matters and document what actually shipped.</p></div>'+
     '<ol><li><b>01</b><strong>Understand</strong><span>Define scope and constraints</span></li><li><b>02</b><strong>Build</strong><span>Create accessible, maintainable systems</span></li><li><b>03</b><strong>Verify</strong><span>Inspect code, tests and actual UI</span></li><li><b>04</b><strong>Document</strong><span>Link work to visible evidence</span></li></ol></section>'+
-    '<div class="lab-work-resources"><a href="/systems/" data-one-go="systems">Detailed systems architecture ↗</a><a href="/portfolio/" data-one-go="portfolio">Selected practice and case studies ↗</a><a href="https://github.com/devonalanakins" target="_blank" rel="noopener noreferrer">Verified public GitHub history ↗</a></div>'+
+    '<div class="lab-work-resources"><a href="/systems/" data-one-go="systems">Detailed systems architecture ↗︎</a><a href="/portfolio/" data-one-go="portfolio">Selected practice and case studies ↗︎</a><a href="https://github.com/devonalanakins" target="_blank" rel="noopener noreferrer">Verified public GitHub history ↗︎</a></div>'+
     '<p class="lab-secondary-note">AI compute infrastructure and scientific acceleration remain research directions, not deployed products or established performance benchmarks.</p></div>');
   const systems=view('systems',
     '<div class="lab-secondary lab-systems"><div class="lab-section-intro"><p class="lab-overline">SYSTEMS / ENGINEERING PRACTICE</p>'+
@@ -203,10 +203,10 @@ export function renderResearchFacilityHome({initialView='home',canonicalPath='/'
     '<div class="lab-secondary lab-systems"><div class="lab-section-intro"><p class="lab-overline">PORTFOLIO / SELECTED PRACTICE</p>'+
     '<h1>Software that supports <em>real work.</em></h1><p>Independent development and practical operations, with public scope and project maturity made explicit.</p></div>'+
     '<div class="lab-system-grid">'+
-    '<a class="lab-system-card" href="/work/operations/"><span>01 / NONCLINICAL OPERATIONS</span><h3>Nona Neuropsychology</h3><p>Service coordination, administrative workflows and digital experience. This public overview contains no clinical records or patient information.</p><small>PUBLIC OPERATIONS OVERVIEW ↗</small></a>'+
-    '<a class="lab-system-card" href="/work/devonstation/"><span>02 / PERSONAL SOFTWARE</span><h3>DevonStation</h3><p>Independent tools and owner-controlled infrastructure, currently in development.</p><small>PUBLIC PROJECT OVERVIEW ↗</small></a>'+
-    '<a class="lab-system-card" href="https://github.com/devonalanakins/devonakins.com" target="_blank" rel="noopener noreferrer"><span>03 / WEB ENGINEERING</span><h3>DevonAkins.com</h3><p>Personal portfolio, research exploration and consent-aware public presence.</p><small>INSPECT PUBLIC SOURCE ↗</small></a>'+
-    '<a class="lab-system-card" href="https://github.com/devonalanakins/merit" target="_blank" rel="noopener noreferrer"><span>04 / SOFTWARE INTEGRITY</span><h3>Merit</h3><p>Experimental tools for evidence-based software review.</p><small>EXPERIMENTAL PUBLIC SOURCE ↗</small></a>'+
+    '<a class="lab-system-card" href="/work/operations/"><span>01 / NONCLINICAL OPERATIONS</span><h3>Nona Neuropsychology</h3><p>Service coordination, administrative workflows and digital experience. This public overview contains no clinical records or patient information.</p><small>PUBLIC OPERATIONS OVERVIEW ↗︎</small></a>'+
+    '<a class="lab-system-card" href="/work/devonstation/"><span>02 / PERSONAL SOFTWARE</span><h3>DevonStation</h3><p>Independent tools and owner-controlled infrastructure, currently in development.</p><small>PUBLIC PROJECT OVERVIEW ↗︎</small></a>'+
+    '<a class="lab-system-card" href="https://github.com/devonalanakins/devonakins.com" target="_blank" rel="noopener noreferrer"><span>03 / WEB ENGINEERING</span><h3>DevonAkins.com</h3><p>Personal portfolio, research exploration and consent-aware public presence.</p><small>INSPECT PUBLIC SOURCE ↗︎</small></a>'+
+    '<a class="lab-system-card" href="https://github.com/devonalanakins/merit" target="_blank" rel="noopener noreferrer"><span>04 / SOFTWARE INTEGRITY</span><h3>Merit</h3><p>Experimental tools for evidence-based software review.</p><small>EXPERIMENTAL PUBLIC SOURCE ↗︎</small></a>'+
     '</div></div>');
   const activity=view('activity',listening?renderLaboratoryListening():
     '<div class="lab-secondary lab-activity"><div class="lab-section-intro">'+
@@ -215,7 +215,7 @@ export function renderResearchFacilityHome({initialView='home',canonicalPath='/'
       '<p>A dated record of public engineering changes. Explore the actual source, then follow the research and systems behind it.</p></div>'+
     '<div class="lab-activity-grid">'+
     '<section class="lab-data-panel"><div class="lab-data-title"><strong>GITHUB / PUBLIC HISTORY</strong>'+
-    '<a href="https://github.com/devonalanakins" target="_blank" rel="noopener noreferrer">OPEN GITHUB ↗</a></div>'+
+    '<a href="https://github.com/devonalanakins" target="_blank" rel="noopener noreferrer">OPEN GITHUB ↗︎</a></div>'+
     '<div class="lab-activity-filters" role="group" aria-label="Filter GitHub activity">'+
     '<button type="button" data-github-filter="all" aria-pressed="true">All</button>'+
     '<button type="button" data-github-filter="push" aria-pressed="false">Pushes</button>'+
@@ -225,7 +225,7 @@ export function renderResearchFacilityHome({initialView='home',canonicalPath='/'
     '<div class="lab-activity-side">'+
     '<section class="lab-data-panel lab-evidence-guide"><strong>SOURCE / INTEGRITY</strong>'+
     '<h2>Read the work, not a status light.</h2><p>Public commits and pull requests are dated evidence of changes, not proof of activity at this moment. Systems, research and project pages explain scope and maturity.</p>'+
-    '<a class="lab-text-link" href="https://github.com/devonalanakins">Inspect the public GitHub profile ↗</a><a class="lab-text-link" href="/research/">Explore the research direction →</a>'+
+    '<a class="lab-text-link" href="https://github.com/devonalanakins">Inspect the public GitHub profile ↗︎</a><a class="lab-text-link" href="/research/">Explore the research direction →</a>'+
     '</section></div></div></div>');
   const notes=view('writing',
     '<div class="lab-secondary lab-notes"><div class="lab-section-intro">'+
@@ -235,15 +235,15 @@ export function renderResearchFacilityHome({initialView='home',canonicalPath='/'
     '<article class="lab-study"><span>01 / MATHEMATICAL NOTE</span><h3>A curve is not a measurement</h3><p>The Research instrument evaluates x = sin(a·t), y = sin(b·t + π/2) over 0 ≤ t ≤ 2π. Integer frequencies close the trajectory over that interval. Changing their ratio changes the geometry.</p><details><summary>Read the assumptions</summary><p>Each coordinate is bounded by −1 and 1 before display scaling. The path joins 301 samples with straight segments; it is a visual approximation of an analytic curve. It contains no neural recordings and cannot establish anything about a biological system.</p></details><small>ANALYTIC EXPLANATION · NOT AN EXPERIMENT</small></article>'+
     '<article class="lab-study"><span>02 / ENGINEERING NOTE</span><h3>What public evidence proves</h3><p>A timestamped GitHub event documents a public repository change. It does not establish current activity, research validation or the maturity of a project.</p><details><summary>Read the evidence boundary</summary><p>Unavailable sources remain unavailable. Playback metadata describes approved listening; decorative graphics are illustrations. Project maturity, test results and release status must each have their own evidence.</p></details><small>PUBLIC SOURCE INTERPRETATION</small></article>'+
     studyCard('03','ORIGINAL WRITING','Books & worlds','Long-form creative work remains part of my life, without defining the technical research specialization.','ONGOING CREATIVE WORK')+
-    '</div><a class="lab-text-link" href="/work/writing/">Books and manuscripts overview ↗</a></div>');
+    '</div><a class="lab-text-link" href="/work/writing/">Books and manuscripts overview ↗︎</a></div>');
   const contact=view('contact',
     '<div class="lab-secondary lab-contact"><div class="lab-section-intro">'+
       '<p class="lab-overline">CONTACT / DEVON ALAN AKINS</p><h1>Let’s discuss a <em>real problem.</em></h1>'+
       '<p>For open-source software, scientific computing, infrastructure engineering, technical collaboration or professional operations.</p>'+
-      '<a class="lab-contact-email" href="mailto:hello@devonakins.com">hello@devonakins.com <span aria-hidden="true">↗</span></a>'+
+      '<a class="lab-contact-email" href="mailto:hello@devonakins.com">hello@devonakins.com <span aria-hidden="true">↗︎</span></a>'+
       '<p class="lab-secondary-note">Do not send confidential medical, patient, employee or other protected information through this public contact route.</p></div>'+
       '<div class="lab-contact-social">'+renderHomeSocialHub()+
-      '<a class="lab-text-link" href="mailto:hello@devonakins.com">Write to Devon ↗</a></div></div>');
+      '<a class="lab-text-link" href="mailto:hello@devonakins.com">Write to Devon ↗︎</a></div></div>');
   return '<!doctype html><html lang="en" class="one-html lab-html"><head>'+
     '<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">'+
     '<meta name="theme-color" content="#071013"><meta name="color-scheme" content="dark">'+
@@ -258,6 +258,7 @@ export function renderResearchFacilityHome({initialView='home',canonicalPath='/'
     '<link rel="stylesheet" href="/src/professional/research-facility.css">'+
     '<link rel="stylesheet" href="/src/professional/research-portfolio.css">'+
     '<link rel="stylesheet" href="/src/professional/research-identity.css">'+
+    '<link rel="stylesheet" href="/src/professional/research-studio.css">'+
     '<script type="module" src="/src/professional/client.ts"></script>'+
     '<script type="module" src="/src/professional/one-screen.ts"></script>'+
     '<script type="module" src="/src/professional/research-facility.ts"></script>'+
@@ -266,7 +267,7 @@ export function renderResearchFacilityHome({initialView='home',canonicalPath='/'
     '<a class="one-skip lab-skip" href="#one-stage">Skip to content</a>'+
     '<div class="lab-background" aria-hidden="true"><div class="lab-background-grid"></div>'+
     '<div class="lab-background-glow"></div></div>'+
-    '<header class="lab-header"><a href="/" class="lab-brand" title="Devon Alan Akins home">'+atomMark()+'<span class="lab-brand-caption">DEVONAKINS.COM<small>THE COMPUTATIONAL LABORATORY</small></span></a>'+nav('desktop')+'<div class="lab-header-end"><a class="lab-header-contact" href="mailto:hello@devonakins.com">Contact ↗</a><button type="button" class="lab-desktop-menu" data-lab-menu-open aria-controls="lab-menu" aria-expanded="false" aria-label="DA / 001 — Open contact and motion menu">DA / 001</button></div><button type="button" class="lab-menu-toggle" data-lab-menu-open aria-controls="lab-menu" aria-expanded="false" aria-label="Open navigation menu"><span></span><span></span><span></span></button></header>'+
+    '<header class="lab-header"><a href="/" class="lab-brand" title="Devon Alan Akins home">'+atomMark()+'<span class="lab-brand-caption">DEVONAKINS.COM<small>THE COMPUTATIONAL LABORATORY</small></span></a>'+nav('desktop')+'<div class="lab-header-end"><a class="lab-header-contact" href="mailto:hello@devonakins.com">Contact ↗︎</a><button type="button" class="lab-desktop-menu" data-lab-menu-open aria-controls="lab-menu" aria-expanded="false" aria-label="DA / 001 — Open contact and motion menu">DA / 001</button></div><button type="button" class="lab-menu-toggle" data-lab-menu-open aria-controls="lab-menu" aria-expanded="false" aria-label="Open navigation menu"><span></span><span></span><span></span></button></header>'+
     '<dialog id="lab-menu" aria-labelledby="lab-menu-title"><div class="lab-menu-heading"><h2 id="lab-menu-title">Explore the laboratory</h2><button data-lab-menu-close aria-label="Close navigation menu">Close <span aria-hidden="true">×</span></button></div>'+nav('mobile')+'<button type="button" class="lab-motion" data-lab-motion aria-pressed="true">MOTION ON</button><a href="mailto:hello@devonakins.com">hello@devonakins.com</a></dialog>'+
     '<main id="one-stage" class="one-stage lab-stage" tabindex="-1">'+
     (notFound?view('home','<div class="lab-secondary"><div class="lab-section-intro"><p class="lab-overline">404 / WAYFINDING</p><h1>That page is <em>not here.</em></h1><p>Explore the public portfolio or return to the laboratory.</p><a class="lab-action" href="/">Return home →</a></div></div>'):home)+research+systems+projects+portfolio+activity+notes+contact+'</main>'+

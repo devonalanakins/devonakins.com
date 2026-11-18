@@ -95,3 +95,28 @@ function filterProjects(){
 }
 search?.addEventListener('input',filterProjects);
 category?.addEventListener('change',filterProjects);
+
+// One-shot editorial entrances. Never hide content while waiting for JS,
+// never move keyboard focus, and never run a continuous scroll handler.
+const entranceTargets=document.querySelectorAll<HTMLElement>(
+  '.lab-personal-inner,.lab-focus-card,.lab-destination,.lab-work-feature,.lab-work-method,.lab-research-instrument,.lab-research-journal'
+);
+if('IntersectionObserver' in window){
+  const entrances=new IntersectionObserver(entries=>{
+    for(const entry of entries){
+      if(!entry.isIntersecting)continue;
+      const target=entry.target as HTMLElement;
+      if(!reduce.matches&&!userPause)target.setAttribute('data-studio-entered','');
+      entrances.unobserve(target);
+    }
+  },{threshold:.08});
+  entranceTargets.forEach((target,index)=>{
+    target.style.setProperty('--studio-delay',String(index%3*70)+'ms');
+    entrances.observe(target);
+  });
+}
+function syncDocumentVisibility(){
+  document.body.classList.toggle('lab-document-hidden',document.hidden);
+}
+document.addEventListener('visibilitychange',syncDocumentVisibility);
+syncDocumentVisibility();
