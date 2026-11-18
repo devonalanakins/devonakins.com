@@ -69,7 +69,6 @@
 .lab-body .lab-destination strong{font:500 clamp(16px,1.3vw,21px)/1.17 Arial,sans-serif;letter-spacing:.005em}
 .lab-body .lab-destination small{font:400 12px/1.45 Arial,sans-serif;max-width:30ch;color:#c5d8d1}
 .lab-body .lab-destination-arrow{position:absolute;right:16px;bottom:18px;color:#b6e8db;font-size:24px}
-.lab-body .lab-destination:hover .lab-card-geometry{opacity:1}
 .lab-body .lab-destination:hover{border-color:#c4e7d8}
 .lab-body .lab-destination:focus-visible,.lab-body .lab-focus-card:focus-visible{outline:2px solid #d4f7e9;outline-offset:4px}
 @media(max-width:1100px){
