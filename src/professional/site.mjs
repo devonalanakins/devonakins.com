@@ -159,7 +159,7 @@ function writing(){
   card("code","TOPIC · IN DEVELOPMENT","Software that lasts","Notes on maintainable engineering, verification and durable independent tools.")+
   card("research","TOPIC · IN DEVELOPMENT","Math, physics & cognition","Research questions and technical learning, with hypotheses distinguished from confirmed results.")+
   card("layers","TOPIC · IN DEVELOPMENT","Independent operating systems","How focused technical systems can support complex responsibilities without unnecessary complexity.")+
-  card("book","FICTION · CREATIVE STUDIO","ANEVUM","Long-running fictional worldbuilding and creative work, developed alongside family priorities.","/work/anevum/","View public overview")+
+  card("research","OPEN EDUCATION · PROTOTYPE","ANEVUM — The Open Institute","Free continuing STEM learning, scientific inquiry and a hands-on computing curriculum prototype. The institute is not launched or accredited.","/work/anevum/","View public overview")+
   '</div></section><section class="p-section p-inline-cta"><div><p class="p-eyebrow">ABOUT THE AUTHOR</p><h2>Curiosity, grounded in execution.</h2><p>I am interested in the ideas behind systems, but even more in whether they help people build useful things.</p></div>'+button("/about/","About Devon",true)+'</section>';
 }
 function about(){
