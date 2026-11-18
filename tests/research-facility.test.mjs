@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 import {LABORATORY_ROUTES} from '../src/professional/laboratory-routes.mjs';
 import {renderResearchFacilityHome,lissajousPath} from '../src/professional/research-facility.mjs';
+import {approvedPublicProjects} from '../src/publication-manifest.mjs';
 
 const page=renderResearchFacilityHome();
 
@@ -74,6 +75,26 @@ test('laboratory candidate is independently navigable, semantic and source-hones
   assert.match(unknown,/Explore the work or return to the homepage\./);
   assert.doesNotMatch(unknown,/return to the laboratory/i);
 });
+test('Nona executive case study is public, nonclinical, and isolated to its approved project',()=>{
+  const entry=approvedPublicProjects.find(p=>p.slug==='operations');
+  const other=approvedPublicProjects.find(p=>p.slug==='merit');
+  assert.ok(entry && other);
+  const nona=renderResearchFacilityHome({project:entry,initialView:'portfolio'});
+  const merit=renderResearchFacilityHome({project:other,initialView:'portfolio'});
+  assert.match(nona,/Nona Neuropsychology — Operations/);
+  assert.match(nona,/CEO · Nonclinical operations &amp; technology/);
+  assert.match(nona,/PUBLIC OPERATING BRIEF \/ NONCLINICAL/);
+  assert.equal((nona.match(/class="da-nona-stream-head"/g)||[]).length,4);
+  for(const phrase of ['The first response matters','Make the next step visible',
+    'Give work a clear owner','Protect what matters',
+    'MEASUREMENT IN PROGRESS','Clinical authority &amp; privacy',
+    'Licensed clinicians control evaluations']) assert.ok(nona.includes(phrase),phrase);
+  assert.doesNotMatch(nona,/\b(?:reduced|improved) wait times by \d+%|payer contracts signed|patient testimonial/i);
+  assert.doesNotMatch(nona, /<script[^>]+src="https?:/);
+  assert.doesNotMatch(merit,/da-nona-brief|PUBLIC OPERATING BRIEF/);
+  assert.doesNotMatch(page,/da-nona-brief/);
+});
+
 test('owner leadership and proven delivery remain first-class without clinical or invented performance claims',()=>{
   assert.match(page,/CEO · NONA NEUROPSYCHOLOGY \/ INDEPENDENT SOFTWARE DEVELOPER/);
   assert.match(page,/CEO, Nona Neuropsychology/);

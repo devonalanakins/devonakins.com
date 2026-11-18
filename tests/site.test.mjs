@@ -369,7 +369,7 @@ test("every canonical internal page uses the immersive portrait shell, never the
   }
   for (const [route, phrase] of [
     ["/work/", "DevonStation"],
-    ["/work/operations/", "family businesses"],
+    ["/work/operations/", "Nona Neuropsychology"],
     ["/work/writing/", "Books &amp; writing"],
     ["/work/anevum/", "ANEVUM"],
     ["/work/ideaflow/", "IdeaFlow"],
