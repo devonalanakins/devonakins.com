@@ -129,6 +129,8 @@ test('the candidate uses first-party interactions and an explicit build gate',as
   assert.doesNotMatch(client,/fetch\(|localStorage|sessionStorage|innerHTML/);
   assert.match(generator,/LABORATORY_SITE_CANDIDATE/);
   assert.match(generator,/laboratoryPortraitAvailable/);
+  assert.match(generator,/Invalid first-party portrait asset: expected optimized AVIF/);
+  assert.match(generator,/bytes\.length>220_000/);
   assert.match(generator,/existsSync\('public\/professional\/devon-portrait\.avif'\)/);
   assert.match(generator,/laboratoryCandidate \? renderResearchFacilityHome/);
   assert.match(generator,/oneScreenCandidate \? renderOneScreenHome/);
