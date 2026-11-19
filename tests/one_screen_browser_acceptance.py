@@ -41,7 +41,7 @@ try:
                 assert page.locator('[data-public-threads]').count()==2,(
                     engine,width,height,"two first-party social surfaces")
                 assert page.locator('.one-social-channels a[href="https://www.threads.com/@devonalanakins"]').count()==1
-                assert page.locator('.one-social-channels a[href="https://fb.com/devonalanakins"]').count()==1
+                assert page.locator('.one-social-channels a[href="https://www.facebook.com/devonalanakins"]').count()==1
                 assert page.locator(".one-social-channels").count()==1,(
                     engine,width,height,"one social navigation, no footer duplicates")
                 assert page.locator("footer").count()==0

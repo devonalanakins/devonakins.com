@@ -4,7 +4,7 @@
  * A public profile link is NOT consent to republish posts on DevonAkins.com.
  * Facebook links only to the owner's explicitly supplied personal profile URL.
  */
-export const FACEBOOK_PROFILE_URL="https://fb.com/devonalanakins";
+export const FACEBOOK_PROFILE_URL="https://www.facebook.com/devonalanakins";
 export const THREADS_PROFILE_URL="https://www.threads.com/@devonalanakins";
 const verified=Object.freeze([
   ["GitHub","https://github.com/devonalanakins"],

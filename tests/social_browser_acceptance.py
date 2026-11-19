@@ -75,7 +75,7 @@ try:
                 assert dock.locator('a[href="https://github.com/devonalanakins"]').count() == 1
                 assert dock.locator('a[href="https://www.instagram.com/devonalanakins/"]').count() == 1
                 assert dock.locator('a[href="https://www.threads.com/@devonalanakins"]').count() == 1
-                assert dock.locator('a[href="https://fb.com/devonalanakins"]').count() == 1
+                assert dock.locator('a[href="https://www.facebook.com/devonalanakins"]').count() == 1
                 assert dock.locator("a.one-social-icon").count() == 4
                 for icon in dock.locator("a.one-social-icon").all():
                     assert icon.locator("svg path").count() == 1
