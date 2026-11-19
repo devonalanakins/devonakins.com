@@ -165,6 +165,11 @@ try:
                             page.locator('[data-lab-axis="a"]').fill('5')
                             assert curve.get_attribute('d')!=before
                             assert 'a = 5' in page.locator('[data-lab-model-caption]').inner_text()
+                            # The complete sampled curve must remain visible beyond the decorative dash length.
+                            page.locator('[data-lab-axis="a"]').fill('2')
+                            page.locator('[data-lab-axis="b"]').fill('3')
+                            assert curve.evaluate("path => path.getTotalLength() > 1200")
+                            assert curve.evaluate("path => { const style = getComputedStyle(path); return style.strokeDasharray === 'none' && parseFloat(style.strokeDashoffset) === 0 && style.animationName === 'none'; }")
                             page.locator('.da-sketch > summary').click()
                         if key=='work':
                             if width in (390,1536):
