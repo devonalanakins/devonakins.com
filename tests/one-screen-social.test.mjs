@@ -11,7 +11,7 @@ test("verified social profiles and Threads signal appear on the initial Living S
   assert.match(html,/href="https:\/\/github\.com\/devonalanakins"/);
   assert.match(html,/href="https:\/\/www\.instagram\.com\/devonalanakins\/"/);
   assert.match(html,/href="https:\/\/www\.threads\.com\/@devonalanakins"/);
-  assert.match(html,/href="https:\/\/fb\.com\/devonalanakins"/);
+  assert.match(html,/href="https:\/\/www\.facebook\.com\/devonalanakins"/);
   assert.doesNotMatch(html,/Facebook · pending/);
   assert.equal((html.match(/role="tabpanel"/g)||[]).length,6);
   assert.equal((html.match(/data-public-threads/g)||[]).length,2);
@@ -42,12 +42,12 @@ test("public social profiles are separate from approved post display",()=>{
   const home=renderHomeSocialHub();
   const signal=renderHomeThreadsSignal();
   assert.equal(THREADS_PROFILE_URL,"https://www.threads.com/@devonalanakins");
-  assert.equal(FACEBOOK_PROFILE_URL,"https://fb.com/devonalanakins");
+  assert.equal(FACEBOOK_PROFILE_URL,"https://www.facebook.com/devonalanakins");
   for(const markup of [full,compact,home,signal,renderThreadsPreview()]){
     if([full,compact,home,signal].includes(markup))
       assert.match(markup,/https:\/\/www\.threads\.com\/@devonalanakins/);
     if([full,compact,home].includes(markup))
-      assert.match(markup,/https:\/\/fb\.com\/devonalanakins/);
+      assert.match(markup,/https:\/\/www\.facebook\.com\/devonalanakins/);
     assert.doesNotMatch(markup,/access_token|client_secret|private grant|bearer/i);
   }
   assert.doesNotMatch(renderThreadsPreview(),/one-threads-profile/,
