@@ -65,6 +65,7 @@ body.lab-body *{box-sizing:border-box}
 .lab-instrument-top,.lab-instrument-foot{display:flex;justify-content:space-between;gap:14px;color:#80aaa3;font:600 9px ui-monospace,monospace;letter-spacing:.1em}
 .lab-instrument-svg{width:100%;height:100%;min-height:0;filter:drop-shadow(0 0 17px #65c7b665)}
 .lab-instrument-svg [data-lab-curve]{stroke-dasharray:1200;stroke-dashoffset:0;animation:lab-trace 20s ease-in-out infinite alternate}
+.lab-instrument-svg [data-lab-curve="interactive"]{stroke-dasharray:none;stroke-dashoffset:0;animation:none}
 @keyframes lab-trace{to{stroke-dashoffset:110}}
 .lab-field>.lab-instrument .lab-instrument-top,.lab-field>.lab-instrument .lab-instrument-foot{display:none}
 .lab-field-annotation{position:absolute;left:24px;right:24px;bottom:25px;border-top:1px solid #85b4ac59;padding-top:16px}
