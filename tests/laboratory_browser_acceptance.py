@@ -165,7 +165,7 @@ try:
                             page.locator('[data-lab-axis="a"]').fill('5')
                             assert curve.get_attribute('d')!=before
                             assert 'a = 5' in page.locator('[data-lab-model-caption]').inner_text()
-                            # A complete analytic curve must remain visible beyond the decorative dash length.
+                            # The complete sampled curve must remain visible beyond the decorative dash length.
                             page.locator('[data-lab-axis="a"]').fill('3')
                             page.locator('[data-lab-axis="b"]').fill('4')
                             assert curve.evaluate("path => path.getTotalLength() > 1200")
