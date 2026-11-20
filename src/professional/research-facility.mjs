@@ -118,7 +118,7 @@ function compactSignals(){return '<section class="lab-portfolio-signals" aria-la
  * from a third-party host. */
 function portraitIntroduction(){return '<section class="lab-personal" aria-labelledby="lab-personal-title">'+
  '<div class="lab-personal-inner">'+
- '<figure class="lab-personal-portrait"><img src="/professional/devon-portrait.avif" width="420" height="560" alt="Devon outdoors wearing a backward dark cap and a gray graphic hoodie with green trim" loading="lazy" decoding="async">'+
+ '<figure class="lab-personal-portrait"><img src="/professional/devon-portrait.avif" width="420" height="560" alt="Devon indoors wearing a forest-green hoodie and black headphones around his neck, with arms folded" loading="lazy" decoding="async">'+
  '<figcaption><span>IN PERSON</span><span>2026</span></figcaption></figure>'+
  '<div class="lab-personal-story"><p class="lab-personal-eyebrow">ABOUT ME</p>'+
  '<h2 id="lab-personal-title">Father. Builder. Writer.</h2>'+

@@ -116,7 +116,7 @@ test('approved portrait section renders only when a real first-party image is pa
   const approved=renderResearchFacilityHome({portraitAvailable:true});
   assert.equal((approved.match(/class="lab-personal"/g)||[]).length,1);
   assert.match(approved,/<figure class="lab-personal-portrait"><img src="\/professional\/devon-portrait\.avif"/);
-  assert.match(approved,/alt="Devon outdoors wearing a backward dark cap and a gray graphic hoodie with green trim"/);
+  assert.match(approved,/alt="Devon indoors wearing a forest-green hoodie and black headphones around his neck, with arms folded"/);
   assert.match(approved,/loading="lazy" decoding="async"/);
   assert.match(approved,/Father\. Builder\. Writer\./);
   assert.match(approved,/ABOUT ME/);
