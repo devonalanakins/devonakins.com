@@ -237,8 +237,10 @@ try:
                 assert theme_page.locator('html').get_attribute('data-theme')=='dark'
                 assert theme_page.evaluate("getComputedStyle(document.body).backgroundColor")=='rgb(12, 17, 26)'
                 theme_page.emulate_media(color_scheme='light')
-                assert theme_page.locator('html').get_attribute('data-theme')=='light'
+                assert not theme_page.evaluate("matchMedia('(prefers-color-scheme: dark)').matches")
+                wait_for_condition(theme_page,"document.documentElement.dataset.theme==='light'")
                 theme_page.emulate_media(color_scheme='dark')
+                wait_for_condition(theme_page,"document.documentElement.dataset.theme==='dark'")
                 theme_page.locator('.lab-menu-toggle').click()
                 theme_picker=theme_page.locator('#lab-menu [data-lab-theme-select]')
                 assert theme_picker.input_value()=='system'
