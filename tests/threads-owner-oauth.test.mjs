@@ -101,7 +101,7 @@ test("owner callback binds Meta account identity and encrypts long token at rest
   assert.equal(body.get("redirect_uri"),entry.target.searchParams.get("redirect_uri"));
   assert.equal(body.get("client_secret"),f.env.THREADS_APP_SECRET);
   assert.equal(short[1].redirect,"manual");
-  assert.equal(new URL(long[0]).origin,"https://graph.threads.com");
+  assert.equal(new URL(long[0]).origin,"https://graph.threads.net");
   assert.equal(new URL(long[0]).searchParams.get("grant_type"),"th_exchange_token");
   assert.equal(long[1].redirect,"manual");
   assert.equal(profile[1].redirect,"manual");
@@ -152,7 +152,7 @@ test("OAuth refuses wrong accounts, invalid provider payload and preexisting con
 });
 
 
-test("Workers-compatible manual redirect policy permits same-host OAuth success without auto-follow",async()=>{
+test("Workers-compatible manual redirect policy permits allowlisted Meta Graph hosts without auto-follow",async()=>{
   const observed=[];
   const f=fixture(true,async (url,init)=>{
     observed.push({url,init});
@@ -171,7 +171,9 @@ test("Workers-compatible manual redirect policy permits same-host OAuth success 
   assert.equal(result.headers.get("Location"),"/owner/presence/?threads=connected");
   assert.equal(observed.length,3);
   assert.ok(observed.every(item=>item.init.redirect==="manual"));
-  assert.ok(observed.every(item=>new URL(item.url).origin==="https://graph.threads.com"));
+  assert.deepEqual(observed.map(item=>new URL(item.url).origin),[
+    "https://graph.threads.com", "https://graph.threads.net", "https://graph.threads.com"
+  ]);
   assert.equal((await storedThreadsStatus(f.env,now)).connected,true);
 });
 
@@ -350,6 +352,55 @@ test("private connection verification reads encrypted D1, rejects wrong audience
   assert.doesNotMatch(await (await check(endpoint,f.env,owner)).text(),/DO_NOT_RETURN|l{96}/);
 });
 
+test("reauthorization never discards an existing grant when a replacement fails",async()=>{
+  let failExchange=false;
+  const f=fixture(true,async(url)=>{
+    const path=new URL(url).pathname;
+    if(path==="/oauth/access_token")
+      return failExchange?Response.json({error:{code:100,message:"PRIVATE_META_MESSAGE"}},{status:400}):
+        Response.json({access_token:"s".repeat(96),user_id:"123456789012345"});
+    if(path==="/access_token")
+      return Response.json({access_token:"l".repeat(96),token_type:"bearer",expires_in:5184000});
+    if(path==="/v1.0/me")
+      return Response.json({id:"123456789012345",username:"DevonFixture"});
+    throw Error("Unexpected provider request");
+  });
+  assert.equal((await f.callback(await f.auth())).status,303);
+  const before=f.sql.prepare("SELECT revision,token_cipher,token_expires_at,verified_at FROM threads_connection WHERE id=1").get();
+  assert.equal((await storedThreadsStatus(f.env,now)).connected,true);
+  const retry=await f.auth();
+  assert.deepEqual(f.sql.prepare("SELECT revision,token_cipher,token_expires_at,verified_at FROM threads_connection WHERE id=1").get(),before,
+    "Beginning reauthorization cannot revoke an existing credential");
+  failExchange=true;
+  const result=await f.callback(retry);
+  assert.equal(result.headers.get("Location"),"/owner/presence/?threads=exchange&detail=http-400-meta-100");
+  assert.deepEqual(f.sql.prepare("SELECT revision,token_cipher,token_expires_at,verified_at FROM threads_connection WHERE id=1").get(),before,
+    "Failed reauthorization must preserve the prior token and release consent");
+  assert.equal((await storedThreadsStatus(f.env,now)).connected,true);
+});
+
+test("reauthorization refuses to silently replace the account with a different identity",async()=>{
+  let selected="123456789012345";
+  const f=fixture(true,async(url)=>{
+    const path=new URL(url).pathname;
+    if(path==="/oauth/access_token")
+      return Response.json({access_token:"s".repeat(96),user_id:selected});
+    if(path==="/access_token")
+      return Response.json({access_token:"l".repeat(96),token_type:"bearer",expires_in:5184000});
+    if(path==="/v1.0/me")
+      return Response.json({id:selected,username:"DevonFixture"});
+    throw Error("Unexpected provider request");
+  });
+  const first=await f.callback(await f.auth());
+  assert.equal(first.headers.get("Location"),"/owner/presence/?threads=connected");
+  const before=f.sql.prepare("SELECT revision,token_cipher,threads_user_id FROM threads_connection WHERE id=1").get();
+  selected="999999999999999";
+  const second=await f.callback(await f.auth());
+  assert.equal(second.headers.get("Location"),"/owner/presence/?threads=profile");
+  assert.deepEqual(f.sql.prepare("SELECT revision,token_cipher,threads_user_id FROM threads_connection WHERE id=1").get(),before);
+  assert.equal((await storedThreadsStatus(f.env,now)).connected,true);
+});
+
 test("owner renews a mature unexpired private Threads token without public sharing",async()=>{
   const f=fixture();
   await f.callback(await f.auth());
@@ -372,7 +423,7 @@ test("owner renews a mature unexpired private Threads token without public shari
   const calls=f.requests.slice(before);
   assert.equal(calls.length,2);
   const endpoint=new URL(calls[0][0]);
-  assert.equal(endpoint.origin,"https://graph.threads.com");
+  assert.equal(endpoint.origin,"https://graph.threads.net");
   assert.equal(endpoint.pathname,"/refresh_access_token");
   assert.equal(endpoint.searchParams.get("grant_type"),"th_refresh_token");
   assert.equal(endpoint.searchParams.get("access_token"),"l".repeat(96));
@@ -427,6 +478,70 @@ test("renewal rejects expired credentials, malformed provider results and wrong 
     assert.deepEqual(f.sql.prepare("SELECT revision,token_cipher,verified_at FROM threads_connection").get(),before,
       "failed refresh cannot replace the credential");
   }
+});
+
+test("renewal reports safe, actionable Meta rejection without changing the private token",async()=>{
+  for(const scenario of [
+    {status:400,code:190,expect:/rejected the saved Threads authorization.*Meta code 190/i,http:409},
+    {status:401,code:null,expect:/rejected the saved Threads authorization/i,http:409},
+    {status:429,code:4,expect:/rate-limited.*Meta code 4/i,http:429},
+    {status:503,code:null,expect:/temporarily unavailable.*HTTP 503/i,http:503},
+    {status:400,code:100,expect:/declined Threads renewal.*HTTP 400.*Meta code 100/i,http:502},
+  ]){
+    const f=fixture(true,async(url)=>{
+      const path=new URL(url).pathname;
+      if(path==="/oauth/access_token")
+        return Response.json({access_token:"s".repeat(96),user_id:"123456789012345"});
+      if(path==="/access_token")
+        return Response.json({access_token:"l".repeat(96),token_type:"bearer",expires_in:5184000});
+      if(path==="/v1.0/me")
+        return Response.json({id:"123456789012345",username:"DevonFixture"});
+      if(path==="/refresh_access_token")
+        return Response.json({error:{
+          code:scenario.code??undefined,
+          message:"SENSITIVE_PROVIDER_MESSAGE_WITH_SECRET",
+          fbtrace_id:"SENSITIVE_TRACE"
+        },access_token:"DO_NOT_DISPLAY"},{status:scenario.status});
+      throw Error("Unexpected request");
+    });
+    await f.callback(await f.auth());
+    f.advance(25*60*60_000);
+    const before=f.sql.prepare("SELECT revision,token_cipher,token_expires_at,verified_at FROM threads_connection WHERE id=1").get();
+    const result=await f.post("/api/threads/auth/renew");
+    assert.equal(result.status,scenario.http);
+    const body=await result.text();
+    assert.match(JSON.parse(body).error,scenario.expect);
+    assert.doesNotMatch(body,/SENSITIVE|DO_NOT_DISPLAY|fbtrace_id|access_token/);
+    assert.deepEqual(f.sql.prepare("SELECT revision,token_cipher,token_expires_at,verified_at FROM threads_connection WHERE id=1").get(),before);
+  }
+});
+
+test("renewal handles transport failures without overwriting valid credentials",async()=>{
+  let refreshing=false;
+  const f=fixture(true,async(url)=>{
+    const path=new URL(url).pathname;
+    if(path==="/oauth/access_token")
+      return Response.json({access_token:"s".repeat(96),user_id:"123456789012345"});
+    if(path==="/access_token")
+      return Response.json({access_token:"l".repeat(96),token_type:"bearer",expires_in:5184000});
+    if(path==="/v1.0/me")
+      return Response.json({id:"123456789012345",username:"DevonFixture"});
+    if(path==="/refresh_access_token"){
+      refreshing=true;
+      throw TypeError("SENSITIVE_NETWORK_ENDPOINT");
+    }
+    throw Error("Unexpected request");
+  });
+  await f.callback(await f.auth());
+  f.advance(25*60*60_000);
+  const before=f.sql.prepare("SELECT revision,token_cipher FROM threads_connection WHERE id=1").get();
+  const response=await f.post("/api/threads/auth/renew");
+  assert.equal(response.status,503);
+  const body=await response.text();
+  assert.match(body,/Unable to reach Meta/i);
+  assert.doesNotMatch(body,/SENSITIVE_NETWORK_ENDPOINT/);
+  assert.equal(refreshing,true);
+  assert.deepEqual(f.sql.prepare("SELECT revision,token_cipher FROM threads_connection WHERE id=1").get(),before);
 });
 
 test("disconnect and replacement grants cannot be undone by in-flight renewal",async()=>{
