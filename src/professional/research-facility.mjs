@@ -235,9 +235,11 @@ export function renderResearchFacilityHome({initialView='home',canonicalPath='/'
       '<p class="lab-secondary-note">Do not send confidential medical, patient, employee or other protected information through this public contact route.</p></div>'+
       '<div class="lab-contact-social">'+renderHomeSocialHub()+
       '<a class="lab-text-link" href="mailto:hello@devonakins.com">Write to Devon ↗︎</a></div></div>');
+  const appearanceControl='<label class="lab-appearance"><span>Appearance</span><select data-lab-theme-select aria-label="Color theme"><option value="system">System</option><option value="light">Light</option><option value="dark">Dark</option></select></label>';
   return '<!doctype html><html lang="en" class="one-html lab-html"><head>'+
     '<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">'+
-    '<meta name="theme-color" content="#f3f1e9"><meta name="color-scheme" content="light">'+
+    '<meta name="theme-color" content="#f3f1e9"><meta name="color-scheme" content="light dark">'+
+     '<script src="/laboratory-theme.js"></script>'+
     '<meta name="description" content="'+escapeHtml(introduction)+'">'+
     '<meta property="og:type" content="website"><meta property="og:title" content="'+escapeHtml(pageTitle)+'">'+
     '<meta property="og:url" content="https://devonakins.com'+escapeHtml(canonicalPath)+'"><meta property="og:description" content="'+escapeHtml(introduction)+'">'+
@@ -255,6 +257,7 @@ export function renderResearchFacilityHome({initialView='home',canonicalPath='/'
     '<link rel="stylesheet" href="/src/professional/research-facility.css">'+
     '<link rel="stylesheet" href="/src/professional/research-portfolio.css">'+
     '<link rel="stylesheet" href="/src/professional/research-studio.css">'+
+     '<link rel="stylesheet" href="/src/professional/research-theme.css">'+
     '<script type="module" src="/src/professional/client.ts"></script>'+
     '<script type="module" src="/src/professional/one-screen.ts"></script>'+
     '<script type="module" src="/src/professional/research-facility.ts"></script>'+
@@ -263,8 +266,8 @@ export function renderResearchFacilityHome({initialView='home',canonicalPath='/'
     '<a class="one-skip lab-skip" href="#one-stage">Skip to content</a>'+
     '<div class="lab-background" aria-hidden="true"><div class="lab-background-grid"></div>'+
     '<div class="lab-background-glow"></div></div>'+
-    '<header class="lab-header"><a href="/" class="lab-brand" title="Devon Alan Akins home"><span class="da-monogram" aria-hidden="true">da.</span><span class="lab-brand-caption">DEVONAKINS.COM<small>INDEPENDENT / PERSONAL</small></span></a>'+nav('desktop')+'<div class="lab-header-end"><a class="lab-header-contact" href="mailto:hello@devonakins.com">Contact ↗︎</a><button type="button" class="lab-desktop-menu" data-lab-menu-open aria-controls="lab-menu" aria-expanded="false" aria-label="Open contact and motion menu">Menu</button></div><button type="button" class="lab-menu-toggle" data-lab-menu-open aria-controls="lab-menu" aria-expanded="false" aria-label="Open navigation menu"><span></span><span></span><span></span></button></header>'+
-    '<dialog id="lab-menu" aria-labelledby="lab-menu-title"><div class="lab-menu-heading"><h2 id="lab-menu-title">Explore</h2><button data-lab-menu-close aria-label="Close navigation menu">Close <span aria-hidden="true">×</span></button></div>'+nav('mobile')+'<button type="button" class="lab-motion" data-lab-motion aria-pressed="true">MOTION ON</button><a href="mailto:hello@devonakins.com">hello@devonakins.com</a></dialog>'+
+    '<header class="lab-header"><a href="/" class="lab-brand" title="Devon Alan Akins home"><span class="da-monogram" aria-hidden="true">da.</span><span class="lab-brand-caption">DEVONAKINS.COM<small>INDEPENDENT / PERSONAL</small></span></a>'+nav('desktop')+'<div class="lab-header-end">'+appearanceControl+'<a class="lab-header-contact" href="mailto:hello@devonakins.com">Contact ↗︎</a><button type="button" class="lab-desktop-menu" data-lab-menu-open aria-controls="lab-menu" aria-expanded="false" aria-label="Open contact and motion menu">Menu</button></div><button type="button" class="lab-menu-toggle" data-lab-menu-open aria-controls="lab-menu" aria-expanded="false" aria-label="Open navigation menu"><span></span><span></span><span></span></button></header>'+
+    '<dialog id="lab-menu" aria-labelledby="lab-menu-title"><div class="lab-menu-heading"><h2 id="lab-menu-title">Explore</h2><button data-lab-menu-close aria-label="Close navigation menu">Close <span aria-hidden="true">×</span></button></div>'+nav('mobile')+appearanceControl+'<button type="button" class="lab-motion" data-lab-motion aria-pressed="true">MOTION ON</button><a href="mailto:hello@devonakins.com">hello@devonakins.com</a></dialog>'+
     '<main id="one-stage" class="one-stage lab-stage" tabindex="-1">'+
     (notFound?view('home','<div class="lab-secondary"><div class="lab-section-intro"><p class="lab-overline">404 / WAYFINDING</p><h1>That page is <em>not here.</em></h1><p>Explore the work or return to the homepage.</p><a class="lab-action" href="/">Return home →</a></div></div>'):home)+research+systems+projects+portfolio+activity+notes+contact+'</main>'+
     '<footer class="lab-footer"><div class="lab-footer-identity"><span>Devon Alan Akins</span><small>SCIENCE / SOFTWARE / SYSTEMS / EXPLORATION</small></div>'+renderSocialChannels(true)+'<div class="lab-footer-status"><span aria-hidden="true"></span>DEVON ALAN AKINS<small>Independent software, inquiry &amp; original work</small></div></footer>'+

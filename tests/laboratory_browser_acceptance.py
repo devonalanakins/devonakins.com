@@ -228,6 +228,45 @@ try:
                 for key in ('systems','portfolio','writing','contact'): assert page.locator(f'[data-one-view="{key}"]').is_visible()
                 page.screenshot(path=str(OUT/f'{engine}-nojs.png'),full_page=True)
                 context.close()
+                # System preference, live OS changes, persistent manual override and
+                # both menu controls are verified in each supported browser engine.
+                theme_context=browser.new_context(ignore_https_errors=LOCAL_TLS,
+                    viewport={'width':390,'height':844},color_scheme='dark')
+                theme_page=theme_context.new_page()
+                theme_page.goto(BASE,wait_until='networkidle')
+                assert theme_page.locator('html').get_attribute('data-theme')=='dark'
+                assert theme_page.evaluate("getComputedStyle(document.body).backgroundColor")=='rgb(12, 17, 26)'
+                theme_page.emulate_media(color_scheme='light')
+                assert not theme_page.evaluate("matchMedia('(prefers-color-scheme: dark)').matches")
+                wait_for_condition(theme_page,"document.documentElement.dataset.theme==='light'")
+                theme_page.emulate_media(color_scheme='dark')
+                wait_for_condition(theme_page,"document.documentElement.dataset.theme==='dark'")
+                theme_page.locator('.lab-menu-toggle').click()
+                theme_picker=theme_page.locator('#lab-menu [data-lab-theme-select]')
+                assert theme_picker.input_value()=='system'
+                theme_picker.select_option('light')
+                assert theme_page.locator('html').get_attribute('data-theme')=='light'
+                assert theme_page.evaluate("localStorage.getItem('devonakins.appearance.v1')")=='light'
+                theme_page.reload(wait_until='networkidle')
+                assert theme_page.locator('html').get_attribute('data-theme')=='light'
+                theme_page.locator('.lab-menu-toggle').click()
+                theme_picker=theme_page.locator('#lab-menu [data-lab-theme-select]')
+                assert theme_picker.input_value()=='light'
+                theme_picker.select_option('system')
+                assert theme_page.locator('html').get_attribute('data-theme')=='dark'
+                assert theme_page.evaluate("localStorage.getItem('devonakins.appearance.v1')") is None
+                theme_context.close()
+                desktop_theme=browser.new_context(ignore_https_errors=LOCAL_TLS,
+                    viewport={'width':1536,'height':900},color_scheme='light')
+                desktop_page=desktop_theme.new_page()
+                desktop_page.goto(BASE,wait_until='networkidle')
+                desktop_picker=desktop_page.locator('.lab-header-end [data-lab-theme-select]')
+                assert desktop_picker.is_visible()
+                desktop_picker.select_option('dark')
+                assert desktop_page.locator('html').get_attribute('data-theme')=='dark'
+                desktop_page.locator('.lab-desktop-menu').click()
+                assert desktop_page.locator('#lab-menu [data-lab-theme-select]').input_value()=='dark'
+                desktop_theme.close()
             finally: browser.close()
     print('Cinematic acceptance passed: Chromium/WebKit, 10 viewports, three primary destinations, two public source cards, historical direct links, no editor/Threads feed requests, modal/Escape/focus, project search, analytic model, reduced motion, no-JS and WCAG audit.')
 finally:

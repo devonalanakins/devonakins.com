@@ -172,6 +172,10 @@ test('the candidate uses first-party interactions and an explicit build gate',as
   assert.doesNotMatch(studioStyle,/perspective\(|rotateX\(|rotateY\(|translate3d\(|preserve-3d|WebGLRenderer|@import|url\(/);
   assert.match(studioStyle,/prefers-reduced-motion/);
   assert.match(page,/href="\/src\/professional\/research-studio.css"/);
+  assert.match(page,/href="\/src\/professional\/research-theme.css"/);
+  assert.match(page,/<script src="\/laboratory-theme\.js"><\/script>/);
+  assert.match(page,/<meta name="color-scheme" content="light dark">/);
+  assert.equal((page.match(/data-lab-theme-select/g)||[]).length,2);
   assert.match(stylesheet,/\.lab-header \.lab-tabs-desktop\{display:none\}/);
   assert.match(stylesheet,/\.lab-body>\.lab-tabs-mobile \.one-tablist\{display:grid/);
   assert.doesNotMatch(stylesheet,/\.lab-header \.one-tabs-desktop|\.lab-body>\.one-tabs-mobile/);

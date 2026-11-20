@@ -1,0 +1,150 @@
+/* Theme layer for the approved flat editorial identity. Loaded last.
+   Existing ivory/cobalt styling remains the light variant. */
+html.lab-html { color-scheme: light; }
+.lab-body .lab-appearance {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  color: var(--muted);
+  font: 600 10px/1.3 Arial, sans-serif;
+  letter-spacing: .05em;
+  white-space: nowrap;
+}
+.lab-body .lab-appearance select {
+  min-height: 44px;
+  max-width: 115px;
+  padding: 0 8px;
+  border: 1px solid var(--line);
+  border-radius: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font: 600 12px Arial, sans-serif;
+  cursor: pointer;
+}
+.lab-body #lab-menu .lab-appearance {
+  display: flex;
+  justify-content: space-between;
+  border-top: 1px solid var(--line);
+  margin: 15px 0;
+  padding-top: 15px;
+}
+.lab-body #lab-menu .lab-appearance select { min-width: 130px; }
+@media(max-width:1250px) {
+  .lab-body .lab-header-end .lab-appearance { display: none; }
+}
+html.lab-html[data-theme="dark"] {
+  color-scheme: dark;
+  background: #0c111a;
+  scrollbar-color: #61768b #0c111a;
+}
+html.lab-html[data-theme="dark"] .lab-body {
+  --ink: #edf2f5;
+  --paper: #0c111a;
+  --muted: #b0bfce;
+  --line: #435061;
+  --blue: #b1c3ff;
+  --accent-solid: #3557d8;
+  color-scheme: dark;
+  color: var(--ink);
+  background: var(--paper) !important;
+}
+html.lab-html[data-theme="dark"] .lab-body .lab-header {
+  background: #0c111af5;
+  border-color: var(--line);
+}
+html.lab-html[data-theme="dark"] .lab-body .lab-brand-caption {
+  color: var(--ink) !important;
+}
+html.lab-html[data-theme="dark"] .lab-body .lab-header .one-tablist button {
+  color: var(--muted);
+}
+html.lab-html[data-theme="dark"] .lab-body .lab-header .one-tablist button[aria-selected="true"] {
+  color: #fff;
+  background: #2b3e65;
+}
+html.lab-html[data-theme="dark"] .lab-body .lab-header .lab-header-contact,
+html.lab-html[data-theme="dark"] .lab-body .lab-header .lab-desktop-menu {
+  color: var(--ink) !important;
+}
+html.lab-html[data-theme="dark"] .lab-body #lab-menu {
+  color: var(--ink);
+  background: #131f2b;
+  border-color: var(--line);
+}
+html.lab-html[data-theme="dark"] .lab-body #lab-menu [role="tab"] {
+  color: var(--ink);
+  border-color: var(--line);
+}
+html.lab-html[data-theme="dark"] .lab-body #lab-menu [aria-selected="true"] {
+  background: var(--accent-solid);
+  border-color: var(--accent-solid);
+  color: #fff;
+}
+html.lab-html[data-theme="dark"] .lab-body .lab-appearance select,
+html.lab-html[data-theme="dark"] .lab-body .lab-project-browser input,
+html.lab-html[data-theme="dark"] .lab-body .lab-project-browser select {
+  color: var(--ink);
+  background: #182635;
+  border-color: #617186;
+}
+html.lab-html[data-theme="dark"] .lab-body .lab-action-primary,
+html.lab-html[data-theme="dark"] .lab-body .lab-destination--research,
+html.lab-html[data-theme="dark"] .lab-body .lab-work-feature {
+  background: var(--accent-solid);
+  color: #fff;
+  border-color: var(--accent-solid);
+}
+html.lab-html[data-theme="dark"] .lab-body .lab-action-primary:hover,
+html.lab-html[data-theme="dark"] .lab-body .lab-destination--research:hover {
+  background: #2746b3;
+  border-color: #2746b3;
+  color: #fff;
+}
+html.lab-html[data-theme="dark"] .lab-body .lab-action:not(.lab-action-primary):hover {
+  background: var(--ink);
+  color: var(--paper);
+  border-color: var(--ink);
+}
+html.lab-html[data-theme="dark"] .lab-body .lab-destination:not(.lab-destination--research) {
+  background: #1d2a39;
+  border: 1px solid var(--line);
+  color: #fff;
+}
+html.lab-html[data-theme="dark"] .lab-body .lab-destination:not(.lab-destination--research):hover {
+  background: #293b4f;
+}
+html.lab-html[data-theme="dark"] .lab-body .lab-personal-portrait {
+  background: #1c2a36;
+}
+html.lab-html[data-theme="dark"] .lab-body .lab-system-card:hover {
+  background: #1b2835;
+}
+html.lab-html[data-theme="dark"] .lab-body .da-process,
+html.lab-html[data-theme="dark"] .lab-body .da-project-question,
+html.lab-html[data-theme="dark"] .lab-body .da-sketch,
+html.lab-html[data-theme="dark"] .lab-body .lab-data-panel,
+html.lab-html[data-theme="dark"] .lab-body .lab-study {
+  background: #1b2937;
+  color: var(--ink);
+  border-color: var(--line);
+}
+html.lab-html[data-theme="dark"] .lab-body .da-process li {
+  border-color: var(--line);
+}
+html.lab-html[data-theme="dark"] .lab-body .da-direction p {
+  color: var(--muted);
+}
+html.lab-html[data-theme="dark"] .lab-body .lab-research-instrument {
+  background: #172534;
+}
+html.lab-html[data-theme="dark"] .lab-body .lab-signal-tile {
+  color: var(--ink);
+  border-color: var(--line);
+}
+html.lab-html[data-theme="dark"] .lab-body a:focus-visible,
+html.lab-html[data-theme="dark"] .lab-body button:focus-visible,
+html.lab-html[data-theme="dark"] .lab-body select:focus-visible,
+html.lab-html[data-theme="dark"] .lab-body input:focus-visible,
+html.lab-html[data-theme="dark"] .lab-body summary:focus-visible {
+  outline-color: #b1c3ff;
+}
