@@ -1,4 +1,4 @@
-import {LABORATORY_ROUTES,laboratoryViewForPath} from "./laboratory-routes.mjs";
+import {LABORATORY_HOME_TITLE,LABORATORY_ROUTES,laboratoryViewForPath} from "./laboratory-routes.mjs";
 /**
  * Shared section navigation for the viewport shell and long-scroll candidate; GitHub
  * and Spotify/GPT rendering remain the existing independent, consent-aware
@@ -67,7 +67,7 @@ function show(next:TabName,focus=false,updateUrl=true){
   current=next;
   if(laboratory&&document.body.dataset.labNative!=='true'){
     const label=({home:'Home',experience:'Research',systems:'Systems',work:'Work',portfolio:'Portfolio',activity:'Activity',writing:'Fieldnotes',contact:'Contact'} as Record<TabName,string>)[next];
-    const title=next==='home'?'Devon Alan Akins — CEO, Software Engineering & Research':label+' — Devon Alan Akins';
+    const title=next==='home'?LABORATORY_HOME_TITLE:label+' — Devon Alan Akins';
     document.title=title;
     document.querySelector('meta[property="og:title"]')?.setAttribute('content',title);
     document.querySelector('link[rel="canonical"]')?.setAttribute('href','https://devonakins.com'+LABORATORY_ROUTES[next]);

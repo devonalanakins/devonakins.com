@@ -24,11 +24,11 @@ const social=`<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" 
 <path d="M70 118H1130M70 564H1130" stroke="${rule}" stroke-width="1"/>
 <text x="70" y="92" fill="${blue}" font-family="Arial,Helvetica,sans-serif" font-size="59" font-weight="800" letter-spacing="-6">da.</text>
 <text x="1130" y="84" text-anchor="end" fill="${muted}" font-family="Arial,Helvetica,sans-serif" font-weight="700" font-size="12" letter-spacing="2.3">DEVONAKINS.COM</text>
-<text x="70" y="174" fill="${muted}" font-family="Arial,Helvetica,sans-serif" font-size="13" font-weight="700" letter-spacing="1.25">CEO / NONA NEUROPSYCHOLOGY</text>
-<text x="70" y="200" fill="${muted}" font-family="Arial,Helvetica,sans-serif" font-size="13" font-weight="700" letter-spacing="1.25">INDEPENDENT SOFTWARE DEVELOPER</text>
+<text x="70" y="174" fill="${muted}" font-family="Arial,Helvetica,sans-serif" font-size="13" font-weight="700" letter-spacing="1.25">INDEPENDENT SOFTWARE DEVELOPER</text>
+<text x="70" y="200" fill="${muted}" font-family="Arial,Helvetica,sans-serif" font-size="13" font-weight="700" letter-spacing="1.25">WRITING &amp; RESEARCH</text>
 <text x="63" y="339" fill="${ink}" font-family="Arial,Helvetica,sans-serif" font-size="117" font-weight="800" letter-spacing="-9">Devon</text>
 <text x="63" y="453" fill="${ink}" font-family="Arial,Helvetica,sans-serif" font-size="108" font-weight="800" letter-spacing="-8">Alan Akins<tspan fill="${blue}">.</tspan></text>
-<text x="70" y="516" fill="${ink}" font-family="Arial,Helvetica,sans-serif" font-size="25">Operations. Software. Research.</text>
+<text x="70" y="516" fill="${ink}" font-family="Arial,Helvetica,sans-serif" font-size="25">Software. Writing. Research.</text>
 <text x="70" y="597" fill="${muted}" font-family="Arial,Helvetica,sans-serif" font-size="12" font-weight="700" letter-spacing="1.5">PERSONAL / INDEPENDENT</text>
 <text x="1130" y="597" text-anchor="end" fill="${blue}" font-family="Arial,Helvetica,sans-serif" font-size="12" font-weight="700" letter-spacing="1.2">HOME / WORK / RESEARCH</text>
 <rect x="822" y="145" width="321" height="401" fill="#dadfd9"/>
@@ -44,7 +44,7 @@ await writeFile(
       id: "/",
       name: "Devon Alan Akins",
       short_name: "Devon",
-      description: "CEO, independent software developer, and systems researcher.",
+      description: "Independent software developer, writer, and systems researcher.",
       start_url: "/",
       scope: "/",
       display: "standalone",

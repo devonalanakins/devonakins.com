@@ -52,7 +52,7 @@ try:
                     assert page.evaluate("getComputedStyle(document.querySelector('.one-skip')).clipPath === 'none'")
                     page.locator('.lab-brand').focus()
                     assert page.evaluate("getComputedStyle(document.querySelector('.one-skip')).clipPath !== 'none'")
-                    assert page.title()=='Devon Alan Akins — CEO, Software Engineering & Research'
+                    assert page.title()=='Devon Alan Akins — Software, Writing & Research'
                     assert 'Devon' in page.locator('.lab-portfolio-hero h1').inner_text() and 'Alan Akins' in page.locator('.lab-portfolio-hero h1').inner_text()
                     assert page.locator('.lab-focus-card').count()==3
                     # The personal photograph is an optional packaged first-party
@@ -91,6 +91,9 @@ try:
                     assert page.locator('[data-public-gpt],a[href="/gpt/"]').count()==0
                     assert page.locator('.lab-tabs-desktop [data-one-target]').count()==3
                     assert page.locator('#lab-menu [data-one-target]').count()==3
+                    if width<=1100:
+                        menu_icon=page.locator('.lab-menu-toggle span').first.bounding_box()
+                        assert menu_icon and menu_icon['width']>=20 and menu_icon['height']>=1,(engine,width,'Menu icon has no visible stroke')
                     assert page.locator('.lab-work-feature').count()==1
                     assert page.locator('.lab-research-journal').count()==1
                     assert page.locator('.lab-footer .one-social-icon').count()==4
@@ -164,6 +167,7 @@ try:
                             before=curve.get_attribute('d')
                             page.locator('[data-lab-axis="a"]').fill('5')
                             assert curve.get_attribute('d')!=before
+                            assert curve.evaluate("node => getComputedStyle(node).strokeDasharray")=="none"
                             assert 'a = 5' in page.locator('[data-lab-model-caption]').inner_text()
                             page.locator('.da-sketch > summary').click()
                         if key=='work':
@@ -181,9 +185,14 @@ try:
                             assert 'No matching' in page.locator('[data-lab-project-count]').inner_text()
                             search.fill('')
                             assert page.locator('[data-lab-project]:visible').count()>4
+                            stage=page.locator('[data-lab-project-stage]')
+                            stage.select_option('experimental')
+                            assert page.locator('[data-lab-project]:visible').count()>0
+                            assert page.locator('[data-lab-project]:visible:not([data-stage="experimental"])').count()==0
+                            stage.select_option('all')
                         if width in (390,1536): page.screenshot(path=str(OUT/f'{engine}-{key}-{width}.png'),full_page=True)
                         navigate(page,'home',width)
-                        assert page.title()=='Devon Alan Akins — CEO, Software Engineering & Research', (engine,width,'Homepage title must survive tab navigation')
+                        assert page.title()=='Devon Alan Akins — Software, Writing & Research', (engine,width,'Homepage title must survive tab navigation')
                     # Real source details independently expand and retain their provenance.
                     for card in page.locator('.lab-signal-tile').all():
                         card.locator('summary').click()
@@ -192,7 +201,9 @@ try:
                     # Historical routes remain reachable but are not primary tabs.
                     for route,key in (('/systems/','systems'),('/portfolio/','portfolio'),('/fieldnotes/','writing'),('/activity/','activity'),('/contact/','contact')):
                         page.goto(BASE+route,wait_until='networkidle')
-                        assert page.locator(f'[data-one-view="{key}"]').is_visible()
+                        assert page.locator(f'[data-one-view="{key}"]').is_visible(),(engine,width,route)
+                        if key=='writing':
+                            assert page.evaluate('document.documentElement.scrollWidth<=innerWidth'),(engine,width,route,'Writing layout overflow')
                     page.goto(BASE,wait_until='networkidle')
                     page.locator('.lab-menu-toggle' if width<=1100 else '.lab-desktop-menu').click()
                     motion=page.locator('#lab-menu [data-lab-motion]')

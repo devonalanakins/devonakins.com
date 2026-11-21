@@ -1,3 +1,5 @@
+import {CREATOR_ROUTES,creatorPaths} from "../src/professional/creator-pages.mjs";
+import {FIELDNOTES} from "../src/professional/fieldnotes.mjs";
 /** Read-only post-release acceptance; never changes a provider, token or owner preference. */
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
@@ -15,7 +17,7 @@ for(let i=0;i<10;i++){
  if(i<9)await new Promise(resolve=>setTimeout(resolve,4000));
 }
 assert.ok(serving,'Expected cinematic commit is not serving');
-const paths=[...Object.values(LABORATORY_ROUTES),'/listening/',...approvedPublicProjects.map(p=>'/work/'+p.slug+'/')];
+const paths=[...Object.values(LABORATORY_ROUTES),'/listening/',...Object.keys(FIELDNOTES),...approvedPublicProjects.map(p=>'/work/'+p.slug+'/')];
 for(const path of paths){
  const r=await get(path);assert.equal(r.status,200,path);const html=await r.text();
  assert.match(html,/lab-body/);assert.match(html,new RegExp('rel="canonical" href="https://devonakins.com'+path+'"'));
@@ -23,6 +25,15 @@ for(const path of paths){
  assert.equal(r.headers.get('x-content-type-options'),'nosniff');
  assert.match(r.headers.get('content-security-policy')||'',/frame-ancestors 'none'/);
  assert.match(r.headers.get('content-security-policy')||'',/connect-src 'self' https:\/\/api\.github\.com;/);
+}
+for (const path of creatorPaths) {
+ const response = await get(path);
+ assert.equal(response.status, 200, path);
+ assert.match(response.headers.get('content-security-policy') || '', /media-src 'self'/);
+ const html = await response.text();
+ assert.ok(html.includes('href="https://devonakins.com' + path + '"'), path);
+ assert.doesNotMatch(html, /<iframe|autoplay|TEST FIXTURE/);
+ if (path === CREATOR_ROUTES.podcast) assert.match(html, /<title>Devon Alan Akins — Podcast<\/title>/);
 }
 for(const [from,to]of Object.entries(LABORATORY_REDIRECTS)){
  const r=await get(from);assert.equal(r.status,308,from);assert.equal(new URL(r.headers.get('location'),origin).pathname,to);
