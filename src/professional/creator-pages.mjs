@@ -166,7 +166,7 @@ function renderWatch(watch, podcast) {
     '<p class="pc-lede">Conversations, recordings, lessons, and the things I make. All in one place, on my own website.</p>' +
     (!items.length ? '<p class="pc-state">No videos published yet</p>' : '') +
     '<div class="pc-actions">' + button('/podcast/', 'Explore the podcast', true) +
-    button('/courses/', 'Browse courses') + '</div></div>' +
+    button('/courses/', 'Browse courses') + button('/live/', 'Check the live studio') + '</div></div>' +
     '<div class="pc-watch-art" aria-hidden="true"><span class="pc-watch-art-label">DA / ORIGINAL MEDIA</span>' +
     '<span class="pc-watch-art-orbit"></span><span class="pc-watch-art-orbit pc-watch-art-orbit-alt"></span>' +
     '<span class="pc-watch-art-sign">da.</span><span class="pc-watch-art-bottom">01 — PLAYBACK / HERE</span></div></header>' +

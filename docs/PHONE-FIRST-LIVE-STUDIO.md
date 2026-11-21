@@ -13,7 +13,7 @@
 ## Website: what this candidate does
 
 - Adds the real creator route `/live/` to the **existing Laboratory candidate** and links it from the personal homepage and creator navigation. Other site variants retain their existing route gates.
-- Renders an accessible, responsive, cinematic page with an honest offline state **even without JavaScript**, no fake countdown, no viewer count, no implied recordings, and no camera permissions.
+- Renders an accessible, responsive, cinematic page with an honest offline state **even without JavaScript**, no fake countdown, no viewer count, no implied recordings, and no camera permissions. Links from the offline theater and replay section go to the first-party Watch library, not a substitute platform.
 - Polls `GET /api/creator/live` only while visible, about every 45 seconds. A publicly enabled stream must pass Cloudflare's documented `/<INPUT_ID>/lifecycle` check with `isInput:true`, `live:true`, and a valid `videoUID`.
 - Exposes **only** the verified customer-specific Cloudflare Stream iframe URL. No RTMPS URL, ingest key, video recording ID, admin credential, or private account data is emitted. Error, malformed response, and missing authorization all yield a non-live state.
 - Allows a customer-specific `frame-src` only on the live page *after* the publication configuration is explicitly approved. The baseline CSP and all private routes remain unchanged.

@@ -12,6 +12,9 @@ test('default channel stays offline and never invokes the provider',async()=>{
  assert.match(html,/<h1 id="pc-live-title">Live from/);
  assert.match(html,/NOT BROADCASTING/);
  assert.match(html,/data-live-player hidden/);
+ assert.equal((html.match(/href="\/watch\/"/g)||[]).length,2);
+ assert.match(html,/Watch library/);
+ assert.match(html,/href="\/podcast\/"/);
  assert.doesNotMatch(html,/<iframe|stream key|Cloudflare API|Patient|autoplay/i);
  let requested=false;
  const reply=await readPublicLiveStatus(request(),{CLOUDFLARE_STREAM_READ_TOKEN:'private'},{fetchImpl:()=>{requested=true;throw Error('unexpected provider request')}});

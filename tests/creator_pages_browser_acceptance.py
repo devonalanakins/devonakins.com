@@ -66,6 +66,7 @@ try:
                             assert page.locator("[data-live-player] iframe").count()==0
                             assert page.locator("iframe, video, audio").count()==0
                             assert page.locator("a[href=\"/podcast/\"]").count()>=1
+                            assert page.locator('.pc-live a[href="/watch/"]').count()>=2
                         else:
                             assert page.locator(".pc-product").count()==8
                             assert page.locator(".pc-product-status-future").count()==1
