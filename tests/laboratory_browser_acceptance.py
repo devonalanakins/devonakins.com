@@ -164,6 +164,7 @@ try:
                             before=curve.get_attribute('d')
                             page.locator('[data-lab-axis="a"]').fill('5')
                             assert curve.get_attribute('d')!=before
+                            assert curve.evaluate("node => getComputedStyle(node).strokeDasharray")=="none"
                             assert 'a = 5' in page.locator('[data-lab-model-caption]').inner_text()
                             page.locator('.da-sketch > summary').click()
                         if key=='work':
@@ -181,6 +182,11 @@ try:
                             assert 'No matching' in page.locator('[data-lab-project-count]').inner_text()
                             search.fill('')
                             assert page.locator('[data-lab-project]:visible').count()>4
+                            stage=page.locator('[data-lab-project-stage]')
+                            stage.select_option('experimental')
+                            assert page.locator('[data-lab-project]:visible').count()>0
+                            assert page.locator('[data-lab-project]:visible:not([data-stage="experimental"])').count()==0
+                            stage.select_option('all')
                         if width in (390,1536): page.screenshot(path=str(OUT/f'{engine}-{key}-{width}.png'),full_page=True)
                         navigate(page,'home',width)
                         assert page.title()=='Devon Alan Akins — CEO, Software Engineering & Research', (engine,width,'Homepage title must survive tab navigation')

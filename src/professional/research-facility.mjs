@@ -3,6 +3,7 @@
  * Deliberately separate from the production V4 and approved one-screen builds.
  * Mathematical figures are analytic, not measured experiments or live telemetry.
  */
+import {FIELDNOTES} from './fieldnotes.mjs';
 import {LABORATORY_ROUTES} from './laboratory-routes.mjs';
 import {listeningCollections} from './signal-cards.mjs';
 import {brandIcon} from './brand-icons.mjs';
@@ -128,24 +129,44 @@ function portraitIntroduction(){return '<section class="lab-personal" aria-label
  '<div class="lab-personal-links"><a href="https://github.com/devonalanakins" target="_blank" rel="noopener noreferrer">GitHub ↗︎</a><a href="mailto:hello@devonakins.com">Get in touch ↗︎</a></div></div>'+
  '<aside class="lab-personal-aside" aria-label="Professional and personal focus"><div><span>NOW / PRACTICE</span><p>Nonclinical operations &amp; technology</p></div><div><span>ALWAYS / APPROACH</span><p>Curiosity, experimentation, craft</p></div></aside>'+
  '</div></section>'}
-function projectCatalog(){return '<div class="lab-project-browser"><label for="lab-project-search">Search public projects</label><input type="search" id="lab-project-search" data-lab-project-search placeholder="Search by name or area"><label for="lab-project-filter">Area</label><select id="lab-project-filter" data-lab-project-filter><option value="all">All areas</option>'+[...new Set(approvedPublicProjects.map(p=>p.publication.category))].map(c=>'<option>'+escapeHtml(c)+'</option>').join('')+'</select><p role="status" data-lab-project-count>'+approvedPublicProjects.length+' public projects</p><div class="lab-system-grid">'+approvedPublicProjects.map(p=>'<a class="lab-system-card" data-lab-project data-category="'+escapeHtml(p.publication.category)+'" href="/work/'+p.slug+'/"><span>'+escapeHtml(p.publication.category)+' / '+escapeHtml(p.publication.stage)+'</span><h3>'+escapeHtml(p.title)+'</h3><p>'+escapeHtml(p.summary)+'</p><small>'+escapeHtml(p.status)+' · PUBLIC OVERVIEW →</small></a>').join('')+'</div></div>'}
+function projectCatalog(){
+  const categories=[...new Set(approvedPublicProjects.map(project=>project.publication.category))];
+  const stages={maintained:'Active / maintained',experimental:'Experimental','reviewed-prototype':'Prototype',research:'Research concept',draft:'Draft',archived:'Archived'};
+  return '<div class="lab-project-browser"><label for="lab-project-search">Search public projects</label><input type="search" id="lab-project-search" data-lab-project-search placeholder="Search by name or area">'+
+    '<div class="lab-project-filters"><label>Area<select data-lab-project-filter><option value="all">All areas</option>'+
+    categories.map(category=>'<option>'+escapeHtml(category)+'</option>').join('')+'</select></label>'+
+    '<label>Stage<select data-lab-project-stage><option value="all">All stages</option>'+
+    Object.entries(stages).map(([stage,label])=>'<option value="'+stage+'">'+label+'</option>').join('')+'</select></label></div>'+
+    '<p role="status" data-lab-project-count>'+approvedPublicProjects.length+' public projects</p><div class="lab-system-grid">'+
+    approvedPublicProjects.map(project=>'<a class="lab-system-card" data-lab-project data-category="'+escapeHtml(project.publication.category)+
+      '" data-stage="'+escapeHtml(project.publication.stage)+'" href="/work/'+project.slug+'/"><span>'+escapeHtml(project.publication.category)+' / '+
+      escapeHtml(stages[project.publication.stage]??project.publication.stage)+'</span><h3>'+escapeHtml(project.title)+'</h3><p>'+escapeHtml(project.summary)+
+      '</p><small>'+escapeHtml(project.status)+' · PUBLIC OVERVIEW →</small></a>').join('')+'</div></div>';
+}
+function renderFieldnote(note){
+  return '<article class="lab-secondary lab-reading"><div class="lab-section-intro"><p class="lab-overline">'+escapeHtml(note.kind)+
+    ' / <a href="/fieldnotes/">Writing</a></p><h1>'+escapeHtml(note.title)+'</h1><p>'+escapeHtml(note.summary)+'</p></div>'+
+    '<div class="lab-reading-body">'+note.body.map(([heading,paragraph])=>'<section><h2>'+escapeHtml(heading)+'</h2><p>'+escapeHtml(paragraph)+'</p></section>').join('')+
+    '<nav aria-label="Fieldnote references"><ul>'+note.links.map(([url,label])=>'<li><a href="'+escapeHtml(url)+'">'+escapeHtml(label)+'</a></li>').join('')+'</ul></nav></div></article>';
+}
 export function renderResearchFacilityHome({initialView='home',canonicalPath='/',project=null,listening=false,notFound=false,portraitAvailable=false}={}){
   if(project&&!approvedPublicProjects.includes(project))throw new Error('Project publication is not approved');
   if(typeof portraitAvailable!=='boolean')throw new TypeError('Portrait publication gate must be a boolean');
   if(!Object.hasOwn(LABORATORY_ROUTES,initialView))throw new Error('Unknown cinematic view');
+  const fieldnote=Object.hasOwn(FIELDNOTES,canonicalPath)?FIELDNOTES[canonicalPath]:null;
   const view=(key,content)=>renderView(key,content,initialView);
   const nav=kind=>renderNavigation(kind,initialView);
-  const pageTitle=project?project.title+' — Devon Alan Akins':notFound?'Page not found — Devon Alan Akins':listening?'Listening — Devon Alan Akins':initialView==='home'?'Devon Alan Akins — CEO, Software Engineering & Research':sections.find(([key])=>key===initialView)[1]+' — Devon Alan Akins';
+  const pageTitle=fieldnote?fieldnote.title+' — Devon Alan Akins':project?project.title+' — Devon Alan Akins':notFound?'Page not found — Devon Alan Akins':listening?'Listening — Devon Alan Akins':initialView==='home'?'Devon Alan Akins — CEO, Software Engineering & Research':sections.find(([key])=>key===initialView)[1]+' — Devon Alan Akins';
   const introductions={home:'Devon Alan Akins is CEO of Nona Neuropsychology, leading nonclinical operations and technology. He independently develops software and studies AI infrastructure, mathematics and scientific computing.',experience:'Interactive mathematical models, scientific questions, assumptions and citations from Devon Alan Akins.',systems:'Documented software architecture, privacy boundaries and independent infrastructure engineering.',work:'Explore approved public software projects, source links, categories and honest implementation status.',portfolio:'Selected software and nonclinical professional operations, including operational and digital-experience work for Nona Neuropsychology.',activity:'Dated public engineering changes, with source provenance and clear project boundaries.',writing:'Mathematical explanations, engineering notes, original writing and books in development.',contact:'Contact Devon Alan Akins about nonclinical operations, independent software development, and research computing. Do not send protected information.'};
-  const introduction=project?project.summary:listening?'Owner-approved Spotify playback and selected public playlists, with independent source and privacy controls.':notFound?'This page is unavailable. Explore Devon Alan Akins’s public software and research portfolio.':introductions[initialView];
+  const introduction=fieldnote?fieldnote.summary:project?project.summary:listening?'Owner-approved Spotify playback and selected public playlists, with independent source and privacy controls.':notFound?'This page is unavailable. Explore Devon Alan Akins’s public software and research portfolio.':introductions[initialView];
   const home=view('home',
  '<div class="lab-overview lab-portfolio-layout">'+
  '<section class="lab-portfolio-hero" aria-label="Personal introduction and current professional focus">'+
- '<div class="lab-portfolio-hero-content"><p class="lab-hero-name">CEO · NONA NEUROPSYCHOLOGY / INDEPENDENT SOFTWARE DEVELOPER</p>'+
+ '<div class="lab-portfolio-hero-content"><p class="lab-hero-name">NONCLINICAL OPERATIONS · INDEPENDENT SOFTWARE DEVELOPER · WRITING</p>'+
  '<h1 class="da-name">Devon<br>Alan Akins<span>.</span></h1>'+
- '<p class="lab-hero-deck">I lead the business systems behind a neuropsychology practice and build independent software that makes complex work easier to do.</p>'+
- '<p class="lab-portfolio-statement">CEO, Nona Neuropsychology · Founder, ANEVUM — The Open Institute (in development).</p>'+
- '<div class="lab-portfolio-actions">'+goto('work','Explore the work',true)+goto('experience','Follow the questions')+'<a class="lab-action" href="/podcast/">The Mark They Make <span aria-hidden="true">→</span></a></div></div></section>'+
+ '<p class="lab-hero-deck">I’m a father, author and independent software developer. I lead nonclinical operations and technology as CEO of Nona Neuropsychology.</p>'+
+ '<p class="lab-portfolio-statement">I founded ANEVUM. I study mathematics, physics and the systems we use to investigate them.</p>'+
+ '<div class="lab-portfolio-actions">'+goto('work','Explore the work',true)+goto('experience','Explore research')+'<a class="lab-action" href="/podcast/">Podcast <span aria-hidden="true">→</span></a></div></div></section>'+
  (portraitAvailable?portraitIntroduction():'')+
  '<section class="lab-focus" aria-label="Current work"><div class="lab-focus-heading"><span>WHAT I DO</span><p>Professional responsibility. Independent work. Original ideas.</p></div><div class="lab-focus-grid">'+
  '<a class="lab-focus-card lab-focus-card--nona" href="/work/operations/"><span class="lab-focus-number">01 / CEO &amp; NONCLINICAL OPERATIONS</span><strong>Nona Neuropsychology</strong><p>I lead nonclinical operations and technology supporting reliable, professional care.</p><span class="lab-focus-bottom">OPERATIONS &amp; TECHNOLOGY <b aria-hidden="true">→</b></span></a>'+
@@ -153,13 +174,14 @@ export function renderResearchFacilityHome({initialView='home',canonicalPath='/'
  '<a class="lab-focus-card lab-focus-card--research" href="/work/anevum/"><span class="lab-focus-number">03 / OPEN EDUCATION</span><strong>ANEVUM Open Institute</strong><p>Free STEM learning and practical scientific inquiry, beginning with a hands-on engineering curriculum prototype.</p><span class="lab-focus-bottom">EDUCATION &amp; RESEARCH <b aria-hidden="true">→</b></span></a>'+
  '</div></section>'+
  '<section class="lab-portfolio-selected" aria-label="Two primary destinations"><div class="lab-explore-heading"><div><span>KEEP GOING</span><h2>What exists.<br>What comes next.</h2></div><p>The work has a source. The ambition has a direction.</p></div><div class="lab-destinations">'+destinationCards()+'</div></section>'+
+ '<nav class="lab-editorial-links" aria-label="More from Devon"><a href="/fieldnotes/"><strong>Writing</strong><span>Essays, books and manuscripts</span></a><a href="/podcast/"><strong>Podcast</strong><span>Interviews and occasional solo episodes</span></a><a href="/setup/"><strong>My Setup</strong><span>Recording, editing and research gear</span></a></nav>'+
  compactSignals()+'</div>');
   const research=view('experience',
     '<div class="lab-secondary lab-research da-research">'+
     '<div class="lab-section-intro"><p class="lab-overline">RESEARCH &amp; DIRECTION</p><h1>Build the means<br>to <em>investigate.</em></h1>'+
     '<p>My interests connect mathematics, physics, intelligence and the machines we use to study them. Here is the direction I am pursuing—and where it connects to work you can inspect.</p></div>'+
     '<section class="da-directions" aria-label="Owner-described research directions">'+
-    '<article class="da-direction"><span>01 / MODELS &amp; MACHINES</span><h2>Own the model.<br>Understand the machine.</h2><p>My direction includes Lambda GPU/AI infrastructure, developing my own AI models, and building the hardware and compute systems to support them. That means understanding the whole stack: model behavior, training, inference and the equipment underneath.</p><small>Personal development direction · hardware builds and model results are not published here yet.</small></article>'+
+    '<article class="da-direction"><span>01 / MODELS &amp; MACHINES</span><h2>Own the model.<br>Understand the machine.</h2><p>I’m studying how GPU architecture, memory and software affect local model training and inference. The longer-term goal is independent research infrastructure. The Blackwell Lab setup documents the hardware I’m considering.</p><small>Research direction · <a href="/setup/#lab">Blackwell Lab build notes</a></small></article>'+
     '<article class="da-direction"><span>02 / OPEN LEARNING</span><h2>Anevum<br>Open Institute.</h2><p>An independent, free-to-learn STEM initiative spanning AI, computing infrastructure, neuroscience, physics and mathematics. A draft Academy and interactive electronics lessons exist as a source-level preview; the wider institute remains in development.</p><small>Prototype curriculum · not an operating or accredited institution.</small></article>'+
     '<article class="da-direction"><span>03 / MATHEMATICS &amp; PHYSICS</span><h2>Follow the question<br>past the interface.</h2><p>Mathematics, theoretical physics, scientific computing and computational neuroscience are enduring interests. I want the explanations and the underlying mechanisms—not only the output of a tool.</p><small>Study interests · no new scientific discovery or validated biological model is claimed.</small></article>'+
     '</section>'+
@@ -172,7 +194,7 @@ export function renderResearchFacilityHome({initialView='home',canonicalPath='/'
     '<div class="lab-controls"><div class="lab-control"><label for="lab-axis-a">X frequency <output for="lab-axis-a" data-lab-value="a">3</output></label><input id="lab-axis-a" type="range" min="1" max="6" step="1" value="3" data-lab-axis="a"></div>'+
     '<div class="lab-control"><label for="lab-axis-b">Y frequency <output for="lab-axis-b" data-lab-value="b">4</output></label><input id="lab-axis-b" type="range" min="1" max="6" step="1" value="4" data-lab-axis="b"></div>'+
     '<p role="status" data-lab-model-caption>Analytic Lissajous model: a = 3, b = 4, phase = π/2. Calculated locally.</p>'+
-    '<p>Two sine functions, 301 sampled points. No measured data or neuroscience result. <a href="https://mathworld.wolfram.com/LissajousCurve.html" target="_blank" rel="noopener noreferrer">Definition and equations →</a></p></div></div></details></section></div>');
+    '<p>The plot samples x = sin(at) and y = sin(bt + π/2) at 301 points on 0 ≤ t ≤ 2π. Integer frequencies ensure the curve closes. Try a = b = 1, then hold a fixed and change b. <a href="https://mathworld.wolfram.com/LissajousCurve.html" target="_blank" rel="noopener noreferrer">Definition and equations →</a> · <a href="/fieldnotes/">Read the mathematical note →</a></p></div></div></details></section></div>');
   const projects=view('work',
     '<div class="lab-secondary lab-systems lab-work-hub"><div class="lab-section-intro"><p class="lab-overline">WORK</p><h1>Made for<br><em>real use.</em></h1><p>I lead nonclinical operations and build software, from released systems to focused experiments. Every project has its own scope, constraints and current state.</p></div>'+
     '<section class="lab-work-feature" aria-labelledby="lab-work-feature-title"><div class="lab-work-feature-index">CEO / CURRENT PROFESSIONAL FOCUS</div><div><h2 id="lab-work-feature-title">Nona<br>Neuropsychology</h2><p>As CEO, I lead nonclinical operations and technology: improving administrative reliability, referral coordination and digital systems. Clinical decisions remain with licensed professionals.</p><a class="lab-text-link" href="/work/operations/">Explore the public operations overview →</a></div><div class="lab-work-feature-aside"><span>EXECUTIVE / NONCLINICAL</span><span>Operations</span><span>Technology</span><span>Digital experience</span></div></section>'+
@@ -191,8 +213,8 @@ export function renderResearchFacilityHome({initialView='home',canonicalPath='/'
     studyCard('04','RESEARCH COMPUTING','Reproducible methods','Numerical correctness and documented assumptions come before performance claims. GPU benchmarks and scientific results remain proposed work.','RESEARCH DIRECTION')+
     '</div></div>');
   const portfolio=view('portfolio',project?renderLaboratoryCaseStudy(project):
-    '<div class="lab-secondary lab-systems"><div class="lab-section-intro"><p class="lab-overline">PORTFOLIO / SELECTED PRACTICE</p>'+
-    '<h1>Software that supports <em>real work.</em></h1><p>Independent development and practical operations, with public scope and project maturity made explicit.</p></div>'+
+    '<div class="lab-secondary lab-systems"><div class="lab-section-intro"><p class="lab-overline">ABOUT / SELECTED PRACTICE</p>'+
+    '<h1>About <em>Devon.</em></h1><p>I’m an independent developer, author, father, and founder of ANEVUM. At Nona Neuropsychology I lead nonclinical operations and technology. Away from that work, I study mathematics and physics, build software, and write fiction.</p></div>'+
     '<div class="lab-system-grid">'+
     '<a class="lab-system-card" href="/work/operations/"><span>01 / NONCLINICAL OPERATIONS</span><h3>Nona Neuropsychology</h3><p>Service coordination, administrative workflows and digital experience. This public overview contains no clinical records or patient information.</p><small>PUBLIC OPERATIONS OVERVIEW ↗︎</small></a>'+
     '<a class="lab-system-card" href="/work/devonstation/"><span>02 / PERSONAL SOFTWARE</span><h3>DevonStation</h3><p>Independent tools and owner-controlled infrastructure, currently in development.</p><small>PUBLIC PROJECT OVERVIEW ↗︎</small></a>'+
@@ -218,21 +240,21 @@ export function renderResearchFacilityHome({initialView='home',canonicalPath='/'
     '<h2>Read the work, not a status light.</h2><p>Public commits and pull requests are dated evidence of changes, not proof of activity at this moment. Systems, research and project pages explain scope and maturity.</p>'+
     '<a class="lab-text-link" href="https://github.com/devonalanakins">Inspect the public GitHub profile ↗︎</a><a class="lab-text-link" href="/research/">Explore the research direction →</a>'+
     '</section></div></div></div>');
-  const notes=view('writing',
+  const notes=view('writing',fieldnote?renderFieldnote(fieldnote):
     '<div class="lab-secondary lab-notes"><div class="lab-section-intro">'+
-      '<p class="lab-overline">FIELDNOTES / PUBLIC WRITING</p><h1>Think rigorously.<br><em>Write clearly.</em></h1>'+
-      '<p>Technical research notes, mathematical derivations, engineering reports, and original writing. Published results must remain distinguishable from hypotheses.</p></div>'+
+      '<p class="lab-overline">FIELDNOTES / PUBLIC WRITING</p><h1>Writing.</h1>'+
+      '<p>Mathematical notes, engineering essays, and the fiction and manuscripts I’m working on.</p></div>'+
     '<div class="lab-notes-grid">'+
-    '<article class="lab-study"><span>01 / MATHEMATICAL NOTE</span><h3>A curve is not a measurement</h3><p>The Research instrument evaluates x = sin(a·t), y = sin(b·t + π/2) over 0 ≤ t ≤ 2π. Integer frequencies close the trajectory over that interval. Changing their ratio changes the geometry.</p><details><summary>Read the assumptions</summary><p>Each coordinate is bounded by −1 and 1 before display scaling. The path joins 301 samples with straight segments; it is a visual approximation of an analytic curve. It contains no neural recordings and cannot establish anything about a biological system.</p></details><small>ANALYTIC EXPLANATION · NOT AN EXPERIMENT</small></article>'+
-    '<article class="lab-study"><span>02 / ENGINEERING NOTE</span><h3>What public evidence proves</h3><p>A timestamped GitHub event documents a public repository change. It does not establish current activity, research validation or the maturity of a project.</p><details><summary>Read the evidence boundary</summary><p>Unavailable sources remain unavailable. Playback metadata describes approved listening; decorative graphics are illustrations. Project maturity, test results and release status must each have their own evidence.</p></details><small>PUBLIC SOURCE INTERPRETATION</small></article>'+
-    studyCard('03','ORIGINAL WRITING','Books & worlds','Long-form creative work remains part of my life, without defining the technical research specialization.','ONGOING CREATIVE WORK')+
+    Object.entries(FIELDNOTES).map(([path,note])=>'<article class="lab-study"><span>'+escapeHtml(note.kind)+'</span><h2>'+escapeHtml(note.title)+
+      '</h2><p>'+escapeHtml(note.summary)+'</p><a class="lab-text-link" href="'+path+'">Read the fieldnote →</a></article>').join('')+
+    studyCard('03','ORIGINAL WRITING','Books & manuscripts','A previously published book is in revision. New fiction and manuscripts are in development.','REVISION & DRAFTS')+
     '</div><a class="lab-text-link" href="/work/writing/">Books and manuscripts overview ↗︎</a></div>');
   const contact=view('contact',
     '<div class="lab-secondary lab-contact"><div class="lab-section-intro">'+
-      '<p class="lab-overline">CONTACT / DEVON ALAN AKINS</p><h1>Let’s discuss a <em>real problem.</em></h1>'+
-      '<p>For open-source software, scientific computing, infrastructure engineering, technical collaboration or professional operations.</p>'+
+      '<p class="lab-overline">CONTACT / DEVON ALAN AKINS</p><h1>Get in <em>touch.</em></h1>'+
+      '<p>For software and research collaborations, writing, podcast conversations, and business operations.</p>'+
       '<a class="lab-contact-email" href="mailto:hello@devonakins.com">hello@devonakins.com <span aria-hidden="true">↗︎</span></a>'+
-      '<p class="lab-secondary-note">Do not send confidential medical, patient, employee or other protected information through this public contact route.</p></div>'+
+      '<p class="lab-secondary-note">For appointments, referrals or clinical questions, contact Nona Neuropsychology through its practice channels. Please keep medical and other confidential information out of this inbox.</p></div>'+
       '<div class="lab-contact-social">'+renderHomeSocialHub()+
       '<a class="lab-text-link" href="mailto:hello@devonakins.com">Write to Devon ↗︎</a></div></div>');
   const appearanceControl='<label class="lab-appearance"><span>Appearance</span><select data-lab-theme-select aria-label="Color theme"><option value="system">System</option><option value="light">Light</option><option value="dark">Dark</option></select></label>';
@@ -262,12 +284,12 @@ export function renderResearchFacilityHome({initialView='home',canonicalPath='/'
     '<script type="module" src="/src/professional/one-screen.ts"></script>'+
     '<script type="module" src="/src/professional/research-facility.ts"></script>'+
     '<noscript><style>html.lab-html,body.lab-body{height:auto;overflow:auto}.lab-body .lab-stage{height:auto;overflow:visible}.lab-body .lab-stage>.lab-view[hidden]{display:block!important}.lab-body .lab-view{height:auto;min-height:100vh}.lab-body .lab-secondary{height:auto}.lab-tabs,.lab-motion,.lab-menu-toggle,.lab-desktop-menu{display:none!important}</style></noscript>'+
-    '</head><body class="p-body one-body lab-body" data-lab-initial="'+initialView+'"'+(project||listening||notFound?' data-lab-native="true"':'')+'>'+
+    '</head><body class="p-body one-body lab-body" data-lab-initial="'+initialView+'"'+(project||fieldnote||listening||notFound?' data-lab-native="true"':'')+'>'+
     '<a class="one-skip lab-skip" href="#one-stage">Skip to content</a>'+
     '<div class="lab-background" aria-hidden="true"><div class="lab-background-grid"></div>'+
     '<div class="lab-background-glow"></div></div>'+
     '<header class="lab-header"><a href="/" class="lab-brand" title="Devon Alan Akins home"><span class="da-monogram" aria-hidden="true">da.</span><span class="lab-brand-caption">DEVONAKINS.COM<small>INDEPENDENT / PERSONAL</small></span></a>'+nav('desktop')+'<div class="lab-header-end">'+appearanceControl+'<a class="lab-header-contact" href="/podcast/">Podcast ↗︎</a><a class="lab-header-contact" href="mailto:hello@devonakins.com">Contact ↗︎</a><button type="button" class="lab-desktop-menu" data-lab-menu-open aria-controls="lab-menu" aria-expanded="false" aria-label="Open contact and motion menu">Menu</button></div><button type="button" class="lab-menu-toggle" data-lab-menu-open aria-controls="lab-menu" aria-expanded="false" aria-label="Open navigation menu"><span></span><span></span><span></span></button></header>'+
-    '<dialog id="lab-menu" aria-labelledby="lab-menu-title"><div class="lab-menu-heading"><h2 id="lab-menu-title">Explore</h2><button data-lab-menu-close aria-label="Close navigation menu">Close <span aria-hidden="true">×</span></button></div>'+nav('mobile')+'<div class="lab-creator-menu-links"><a href="/podcast/">The Mark They Make</a><a href="/setup/">My Setup</a></div>'+appearanceControl+'<button type="button" class="lab-motion" data-lab-motion aria-pressed="true">MOTION ON</button><a href="mailto:hello@devonakins.com">hello@devonakins.com</a></dialog>'+
+    '<dialog id="lab-menu" aria-labelledby="lab-menu-title"><div class="lab-menu-heading"><h2 id="lab-menu-title">Explore</h2><button data-lab-menu-close aria-label="Close navigation menu">Close <span aria-hidden="true">×</span></button></div>'+nav('mobile')+'<div class="lab-creator-menu-links"><a href="/fieldnotes/">Writing</a><a href="/podcast/">Podcast</a><a href="/setup/">My Setup</a><a href="/about/">About</a><a href="/contact/">Contact</a></div>'+appearanceControl+'<button type="button" class="lab-motion" data-lab-motion aria-pressed="true">MOTION ON</button><a href="mailto:hello@devonakins.com">hello@devonakins.com</a></dialog>'+
     '<main id="one-stage" class="one-stage lab-stage" tabindex="-1">'+
     (notFound?view('home','<div class="lab-secondary"><div class="lab-section-intro"><p class="lab-overline">404 / WAYFINDING</p><h1>That page is <em>not here.</em></h1><p>Explore the work or return to the homepage.</p><a class="lab-action" href="/">Return home →</a></div></div>'):home)+research+systems+projects+portfolio+activity+notes+contact+'</main>'+
     '<footer class="lab-footer"><div class="lab-footer-identity"><span>Devon Alan Akins</span><small>SCIENCE / SOFTWARE / SYSTEMS / EXPLORATION</small></div>'+renderSocialChannels(true)+'<div class="lab-footer-status"><span aria-hidden="true"></span>DEVON ALAN AKINS<small>Independent software, inquiry &amp; original work</small></div></footer>'+

@@ -1,15 +1,18 @@
+import {FIELDNOTES} from "./src/professional/fieldnotes.mjs";
 import {LABORATORY_ROUTES,LABORATORY_REDIRECTS} from "./src/professional/laboratory-routes.mjs";
-import {CREATOR_ROUTES} from "./src/professional/creator-pages.mjs";
+import {creatorPaths} from "./src/professional/creator-pages.mjs";
 import { defineConfig } from "vite";
 import {PROFESSIONAL_ROUTES} from "./src/professional/site.mjs";
+import { rm } from "node:fs/promises";
 import { resolve } from "node:path";
 import { V5_PUBLIC_ROUTES } from "./src/v5/public-routes.mjs";
 import { publicNotes } from "./src/v5/public-notes.mjs";
 import { pages, projects } from "./src/content.mjs";
 import { v5PreviewPlugin } from "./src/v5/preview-plugin.mjs";
+const laboratoryCandidate = process.env.LABORATORY_SITE_CANDIDATE === "1";
 const paths = [...new Set([
   ...pages.map((p) => p.path),
-  ...(process.env.LABORATORY_SITE_CANDIDATE === "1"?[...Object.values(LABORATORY_ROUTES),...Object.values(CREATOR_ROUTES),...Object.keys(LABORATORY_REDIRECTS),"/listening/"]:[]),
+  ...(laboratoryCandidate?[...Object.values(LABORATORY_ROUTES),...creatorPaths,...Object.keys(FIELDNOTES),...Object.keys(LABORATORY_REDIRECTS),"/listening/"]:[]),
   ...(process.env.PROFESSIONAL_SITE_CANDIDATE === "1" ? Object.values(PROFESSIONAL_ROUTES) : []),
   ...projects.map((p) => `/work/${p.slug}/`),
   "/404/",
@@ -17,7 +20,18 @@ const paths = [...new Set([
   "/v2/", // Isolated immersive preview, not the production homepage.
 ])];
 export default defineConfig({
-  plugins: [v5PreviewPlugin()],
+  plugins: [
+    v5PreviewPlugin(),
+    {
+      name: "exclude-creator-media-from-other-builds",
+      apply: "build",
+      async writeBundle(options) {
+        if (!laboratoryCandidate && options.dir) {
+          await rm(resolve(options.dir, "podcast-media"), {recursive: true, force: true});
+        }
+      },
+    },
+  ],
   build: {
     target: "es2022",
     // Keep legacy site styles out of the portrait interface. Its global

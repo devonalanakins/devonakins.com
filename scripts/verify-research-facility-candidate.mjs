@@ -3,7 +3,8 @@ import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 import site from '../.release/worker.mjs';
 import {LABORATORY_ROUTES,LABORATORY_REDIRECTS} from '../src/professional/laboratory-routes.mjs';
-import {CREATOR_ROUTES,CREATOR_GEAR} from '../src/professional/creator-pages.mjs';
+import {CREATOR_ROUTES,CREATOR_GEAR,creatorPaths} from '../src/professional/creator-pages.mjs';
+import {FIELDNOTES} from '../src/professional/fieldnotes.mjs';
 import {approvedPublicProjects} from '../src/publication-manifest.mjs';
 const runtime=process.env.LABORATORY_VERIFY_ORIGIN;
 if(runtime)assert.match(runtime,/^https:\/\/127\.0\.0\.1:\d+$/);
@@ -20,7 +21,7 @@ for(const [view,path] of Object.entries(LABORATORY_ROUTES)){
  assert.match(response.headers.get('content-security-policy'),/connect-src 'self' https:\/\/api\.github\.com;/);
 }
 // The creator pages must be packaged as first-party HTML, not merely generated source.
-for(const path of Object.values(CREATOR_ROUTES)){
+for(const path of creatorPaths){
  const response=await get(path);
  assert.equal(response.status,200,path);
  assert.match(response.headers.get('content-type')||'',/^text\/html\b/);
@@ -32,12 +33,19 @@ for(const path of Object.values(CREATOR_ROUTES)){
 }
 const setupPage=await(await get(CREATOR_ROUTES.setup)).text();
 assert.equal((setupPage.match(/class="pc-product"/g)||[]).length,CREATOR_GEAR.length);
-assert.match(setupPage,/Ownership unverified/);
-assert.match(setupPage,/None configured/);
+assert.match(setupPage,/Ownership is still being inventoried/);
+assert.equal((setupPage.match(/data-gear-status="future"/g)||[]).length,1);
 const podcastPage=await(await get(CREATOR_ROUTES.podcast)).text();
-assert.match(podcastPage,/IN DEVELOPMENT · NO EPISODES RELEASED/);
-assert.match(podcastPage,/NO PUBLIC EPISODES YET/);
-for(const path of Object.values(CREATOR_ROUTES)){
+assert.match(podcastPage,/<title>Devon Alan Akins — Podcast<\/title>/);
+if (creatorPaths.length === 2) assert.match(podcastPage,/No episodes published yet/);
+for (const path of Object.keys(FIELDNOTES)) {
+ const response = await get(path);
+ assert.equal(response.status,200,path);
+ assert.match(await response.text(),/class="lab-reading-body"/);
+}
+assert.equal((await get('/podcast/never-published/')).status,404);
+assert.equal((await get('/podcast-media/unapproved.mp3')).status,404);
+for(const path of creatorPaths){
  const redirectResponse=await get(path.slice(0,-1));
  assert.equal(redirectResponse.status,308,path);
  assert.equal(new URL(redirectResponse.headers.get('location')).pathname,path);

@@ -1,13 +1,14 @@
+import {FIELDNOTES} from "../src/professional/fieldnotes.mjs";
 // Recreate the checked-in identity assets with the current site palette for every build.
 import "./assets.mjs";
-import { mkdir, readFile, readdir, writeFile } from "node:fs/promises";
+import { mkdir, readFile, readdir, stat, writeFile } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import { execFileSync } from "node:child_process";
 import {renderProfessionalPage, renderProfessionalProjectPage, PROFESSIONAL_ROUTES} from "../src/professional/site.mjs";
 import {renderOneScreenHome} from "../src/professional/one-screen.mjs";
 import {LABORATORY_ROUTES,LABORATORY_REDIRECTS,laboratoryViewForPath} from "../src/professional/laboratory-routes.mjs";
 import {renderResearchFacilityHome} from "../src/professional/research-facility.mjs";
-import {CREATOR_ROUTES,renderCreatorPage} from "../src/professional/creator-pages.mjs";
+import {creatorPaths,creatorMediaFiles,renderCreatorPage} from "../src/professional/creator-pages.mjs";
 import { pages } from "../src/content.mjs";
 import { approvedPublicProjects as projects } from "../src/publication-manifest.mjs";
 import { promotePortraitHome } from "../src/portrait-home.mjs";
@@ -80,10 +81,28 @@ function repairProfessionalLegacyNavigation(html) {
   });
 }
 
+// Treat podcast media as an explicit publication set. A draft dropped in
+// public/ must fail the build instead of becoming a directly accessible asset.
+if (existsSync("public/podcast-media")) {
+  const files = await readdir("public/podcast-media", {withFileTypes:true});
+  const approved = laboratoryCandidate ? new Set(creatorMediaFiles) : new Set();
+  for (const file of files) {
+    const path = "/podcast-media/" + file.name;
+    // The standard build excludes the approved media directory in Vite.
+    if (!file.isFile() || !creatorMediaFiles.includes(path)) throw new Error("Unapproved podcast asset: " + path);
+    if (/\.(?:mp3|mp4)$/.test(path) && (await stat("public" + path)).size > 2_500_000) {
+      throw new Error("Use verified external playback for full-length podcast media: " + path);
+    }
+    approved.delete(path);
+  }
+  if (approved.size) throw new Error("Approved podcast assets are missing: " + [...approved].join(", "));
+} else if (laboratoryCandidate && creatorMediaFiles.length) {
+  throw new Error("Approved podcast assets directory is missing");
+}
 await writeFile("index.html", laboratoryCandidate ? renderResearchFacilityHome({portraitAvailable:laboratoryPortraitAvailable}) : oneScreenCandidate ? renderOneScreenHome({datedCapture:datedGptCapture,motionAssetAvailable}) : professionalCandidate ? renderProfessionalPage("home",publicGptContext) : fullV5Candidate ? renderV5PublicPage("home") : v5Candidate ? renderV5PublicHomepage() : home);
 const all = [...new Set([
   ...pages.map(({ path }) => path),
-  ...(laboratoryCandidate?[...Object.values(LABORATORY_ROUTES),...Object.values(CREATOR_ROUTES),...Object.keys(LABORATORY_REDIRECTS),"/listening/"]:[]),
+  ...(laboratoryCandidate?[...Object.values(LABORATORY_ROUTES),...creatorPaths,...Object.keys(FIELDNOTES),...Object.keys(LABORATORY_REDIRECTS),"/listening/"]:[]),
   ...(professionalCandidate ? [...professionalPaths.keys()] : []),
   ...projects.map((project) => "/work/" + project.slug + "/"),
   "/404/",
@@ -97,8 +116,8 @@ for (const path of all) {
   const topic=publicNotes.find(n=>path==="/knowledge/"+n.slug+"/");
   const project=projects.find(p=>path==="/work/"+p.slug+"/");
   const laboratoryPath=LABORATORY_REDIRECTS[path]||path;
-  const laboratoryView=laboratoryViewForPath(laboratoryPath)||'portfolio';
-  const html=laboratoryCandidate && Object.values(CREATOR_ROUTES).includes(path) ? renderCreatorPage(path) : laboratoryCandidate?renderResearchFacilityHome({initialView:project?'portfolio':path==='/listening/'?'activity':path==='/404/'?'home':laboratoryView,canonicalPath:project?path:laboratoryPath,project,listening:path==='/listening/',notFound:path==='/404/',portraitAvailable:laboratoryPortraitAvailable}):professionalCandidate && professionalPaths.has(path) ? renderProfessionalPage(professionalPaths.get(path),publicGptContext) :
+  const laboratoryView=Object.hasOwn(FIELDNOTES,path)?'writing':laboratoryViewForPath(laboratoryPath)||'portfolio';
+  const html=laboratoryCandidate && creatorPaths.includes(path) ? renderCreatorPage(path) : laboratoryCandidate?renderResearchFacilityHome({initialView:project?'portfolio':path==='/listening/'?'activity':path==='/404/'?'home':laboratoryView,canonicalPath:project?path:laboratoryPath,project,listening:path==='/listening/',notFound:path==='/404/',portraitAvailable:laboratoryPortraitAvailable}):professionalCandidate && professionalPaths.has(path) ? renderProfessionalPage(professionalPaths.get(path),publicGptContext) :
     fullV5Candidate && routeKey ? renderV5PublicPage(routeKey) :
     fullV5Candidate && topic ? renderV5PublicPage("knowledge",{topic:topic.slug,publicPath:path}) :
     professionalCandidate && project ? renderProfessionalProjectPage(project.slug) :

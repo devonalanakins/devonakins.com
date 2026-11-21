@@ -165,7 +165,9 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: cinematic-release-evidence
-          path: browser-qa/laboratory/
+          path: |
+            browser-qa/laboratory/
+            browser-qa/creator/
           retention-days: 14
       - name: Verify approved GitHub repository links remain public
         env:
@@ -213,15 +215,19 @@ jobs:
         if: inputs.release_variant == 'laboratory'
         env:
           LABORATORY_TEST_ORIGIN: https://devonakins.com
+          CREATOR_TEST_ORIGIN: https://devonakins.com
         run: |
           python3 tests/laboratory_browser_acceptance.py
           python3 tests/cinematic_navigation_acceptance.py
+          python3 tests/creator_pages_browser_acceptance.py
       - name: Preserve live cinematic browser evidence
         if: always() && inputs.release_variant == 'laboratory'
         uses: actions/upload-artifact@v4
         with:
           name: cinematic-live-browser-evidence
-          path: browser-qa/laboratory/
+          path: |
+            browser-qa/laboratory/
+            browser-qa/creator/
           retention-days: 14
       - name: Verify live read-only Threads feed or owner-triggered hiding
         if: inputs.threads_publication_action != 'preserve'

@@ -96,11 +96,11 @@ test('Nona executive case study is public, nonclinical, and isolated to its appr
 });
 
 test('owner leadership and proven delivery remain first-class without clinical or invented performance claims',()=>{
-  assert.match(page,/CEO · NONA NEUROPSYCHOLOGY \/ INDEPENDENT SOFTWARE DEVELOPER/);
-  assert.match(page,/CEO, Nona Neuropsychology/);
+  assert.match(page,/I’m a father, author and independent software developer/);
+  assert.match(page,/CEO of Nona Neuropsychology/);
   assert.match(page,/CEO \/ CURRENT PROFESSIONAL FOCUS/);
   assert.match(page,/Clinical decisions remain with licensed professionals\./);
-  assert.match(page,/Founder, ANEVUM — The Open Institute \(in development\)/);
+  assert.match(page,/I founded ANEVUM/);
   assert.match(page,/02 \/ PRODUCTION WEB ENGINEERING/);
   assert.match(page,/Live personal website · deployment verified November 2026/);
   assert.match(page,/github\.com\/devonalanakins\/devonakins\.com\/actions\/runs\/44384435946/);
