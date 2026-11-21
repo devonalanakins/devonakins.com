@@ -27,7 +27,7 @@ test("prelaunch presents the final title and honest format without fictional pub
   assert.match(podcast, /Watch and listen/);
   assert.match(podcast, /href="https:\/\/www\.patreon\.com\/cw\/DevonAlanAkins" target="_blank" rel="noopener noreferrer">Follow my work on Patreon/);
   assert.match(podcast, /og:image" content="https:\/\/devonakins\.com\/professional\/podcast-share\.jpg"/);
-  assert.deepEqual(creatorPaths, ["/watch/", "/podcast/", "/courses/", "/setup/", "/live/"]);
+  assert.deepEqual(creatorPaths, ["/watch/", "/podcast/", "/courses/", "/setup/", "/live/", "/courses/man-of-the-house/start/"]);
 });
 
 test("only approved, dated episodes and configured feeds render, with escaped text and accessible playback", () => {

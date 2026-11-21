@@ -33,7 +33,7 @@ try:
                     ))
                     errors=[]
                     page.on("pageerror",lambda error:errors.append(str(error)))
-                    for path in ("/watch/","/podcast/","/courses/","/setup/","/live/"):
+                    for path in ("/watch/","/podcast/","/courses/","/courses/man-of-the-house/start/","/setup/","/live/"):
                         response=page.goto(BASE+path,wait_until="networkidle")
                         assert response and response.status==200,(engine,width,path,"unavailable")
                         assert page.locator("main#pc-main").is_visible()
@@ -73,6 +73,17 @@ try:
                             assert page.locator('a[href="/podcast/"]').count()>=2
                             assert "No courses are available for enrollment" in page.locator("main").inner_text()
                             assert page.locator("audio,video,iframe,form").count()==0
+                        elif path=="/courses/man-of-the-house/start/":
+                            assert page.locator(".pc-lesson").is_visible()
+                            assert "Start with a" in page.locator("h1").inner_text()
+                            assert page.locator(".pc-lesson-reading section").count()==7
+                            assert page.locator(".pc-lesson-toc a").count()==6
+                            assert page.locator('a[href="/courses/"][aria-current="page"]').count()==1
+                            assert page.locator("audio,video,iframe,form").count()==0
+                            assert "no account tracking or saved course progress" in page.locator("main").inner_text()
+                            if width==320:
+                                page.locator('.pc-lesson-toc a[href="#lesson-finish"]').focus()
+                                assert page.evaluate("document.activeElement.getAttribute('href')")=="#lesson-finish"
                         elif path=="/live/":
                             assert page.locator("[data-mobile-live]").count()==1
                             assert page.locator("[data-live-status]").count()==1
@@ -88,7 +99,7 @@ try:
                             assert page.locator(".pc-jump").is_visible()
                             assert page.locator(".pc-product-status-considering").count()==7
                             assert page.locator(".pc-product a[target='_blank']").count()>=8
-                        name=path.strip("/")
+                        name=path.strip("/").replace("/","-")
                         page.screenshot(path=str(OUT/f"{engine}-{name}-{width}-light.png"),full_page=True)
                         if width==390:
                             page.evaluate(Path("node_modules/axe-core/axe.min.js").read_text())
