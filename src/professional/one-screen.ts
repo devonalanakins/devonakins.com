@@ -1,4 +1,5 @@
 import {LABORATORY_HOME_TITLE,LABORATORY_ROUTES,laboratoryViewForPath} from "./laboratory-routes.mjs";
+import {selectedPrimaryHref} from "./site-navigation.mjs";
 /**
  * Shared section navigation for the viewport shell and long-scroll candidate; GitHub
  * and Spotify/GPT rendering remain the existing independent, consent-aware
@@ -65,6 +66,17 @@ function show(next:TabName,focus=false,updateUrl=true){
     history.replaceState({...history.state,laboratoryScrollY:window.scrollY},"");
   }
   current=next;
+  if(laboratory){
+    // Panel navigation updates the URL without a document reload. Keep the
+    // site's selected destination accurate on click, Back and Forward.
+    // Native detail pages retain the selected parent from their real path.
+    const path=document.body.dataset.labNative==='true'?location.pathname:LABORATORY_ROUTES[next];
+    const selectedHref=selectedPrimaryHref(path);
+    for(const link of document.querySelectorAll<HTMLAnchorElement>('.lab-site-nav a')){
+      if(link.getAttribute('href')===selectedHref)link.setAttribute('aria-current','page');
+      else link.removeAttribute('aria-current');
+    }
+  }
   if(laboratory&&document.body.dataset.labNative!=='true'){
     const label=({home:'Home',experience:'Research',systems:'Systems',work:'Work',portfolio:'Portfolio',activity:'Activity',writing:'Fieldnotes',contact:'Contact'} as Record<TabName,string>)[next];
     const title=next==='home'?LABORATORY_HOME_TITLE:label+' — Devon Alan Akins';
