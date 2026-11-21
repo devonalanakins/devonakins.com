@@ -1,6 +1,7 @@
 import {renderMobileLive} from "./mobile-live.mjs";
 import {PATREON_CREATOR_URL, PODCAST_TITLE, PODCAST_DESCRIPTION, PODCAST_SHARE_IMAGE, podcastPublication, publicWebUrl} from "./podcast-publication.mjs";
 import {WATCH_KINDS, watchPublication} from "./watch-publication.mjs";
+import {PRACTICAL_START_ROUTE, renderPracticalStartLesson} from "./first-practical-lesson.mjs";
 
 export const CREATOR_ROUTES = Object.freeze({watch: "/watch/", podcast: "/podcast/", courses: "/courses/", setup: "/setup/", live: "/live/"});
 export const CREATOR_CATEGORIES = Object.freeze([
@@ -39,7 +40,7 @@ const statusText = Object.freeze({owned: "Owned and verified", selected: "Select
 const escapeHtml = value => String(value ?? "").replace(/[&<>"']/g, character => ({"&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;"}[character]));
 const configuredPodcast = podcastPublication();
 const configuredWatch = watchPublication();
-export const creatorPaths = [CREATOR_ROUTES.watch, CREATOR_ROUTES.podcast, CREATOR_ROUTES.courses, CREATOR_ROUTES.setup, CREATOR_ROUTES.live, ...configuredPodcast.episodes.map(episode => episode.route), ...configuredWatch.videos.map(video => video.route)];
+export const creatorPaths = [CREATOR_ROUTES.watch, CREATOR_ROUTES.podcast, CREATOR_ROUTES.courses, CREATOR_ROUTES.setup, CREATOR_ROUTES.live, PRACTICAL_START_ROUTE, ...configuredPodcast.episodes.map(episode => episode.route), ...configuredWatch.videos.map(video => video.route)];
 export const creatorMediaFiles = configuredPodcast.mediaFiles;
 const podcastFormats = {interview: "Interview", solo: "Solo", trailer: "Trailer"};
 const podcastDate = new Intl.DateTimeFormat("en-US", {dateStyle: "long", timeZone: "UTC"});
@@ -254,7 +255,9 @@ function renderCourses() {
     '<p>Learn the mathematics, use it to understand physical laws, and test what you understand with numerical experiments. AI can help write simulation code, but the models, assumptions, and results still have to make sense.</p>' +
     '<p>This is a work in progress, not a finished course or a paid offer.</p>' + button("/podcast/", "Explore the podcast") + '</div></section>' +
     '<section class="pc-section pc-two-column"><div><p class="pc-eyebrow">Proposed course series</p><h2>Man of the House.</h2></div><div class="pc-prose">' +
-    '<p>An idea for practical lessons on running a household, keeping things in good repair, and knowing when a job calls for a professional.</p></div></section>' +
+    '<p>A course in development on household tools, safety, maintenance, food, organization and shared responsibility. It is about competence and care, not gender performance.</p>' +
+    '<p>The complete written starting lesson is free. The rest of the course is not yet available for enrollment or purchase.</p>' +
+    button(PRACTICAL_START_ROUTE, "Read the free first lesson") + '</div></section>' +
     '<section class="pc-section"><div class="pc-section-heading"><h2>How I want lessons to work</h2><p>A proposed format for each unit, subject to real course production and testing.</p></div>' +
     '<div class="pc-course-steps"><article><span>01 / Watch</span><h3>Start with the idea</h3><p>A clear video lesson with mathematical context, not just a collection of prompts.</p></article>' +
     '<article><span>02 / Experiment</span><h3>Run the model</h3><p>Reproducible simulations and exercises, including AI-assisted code where appropriate.</p></article>' +
@@ -278,6 +281,11 @@ export function renderCreatorPage(path, publication = configuredPodcast, watch =
   }
   if (path === CREATOR_ROUTES.courses) {
     return shell({path, title: "Courses — " + PODCAST_TITLE, description: "Courses in development with Devon Alan Akins, beginning with mathematical physics and AI-assisted scientific simulation.", current: path}, renderCourses());
+  }
+  if (path === PRACTICAL_START_ROUTE) {
+    return shell({path, title: "Start with a walk-through — Man of the House — " + PODCAST_TITLE,
+      description: "A free, practical 15-minute home walk-through lesson about safe observation, useful action and shared household responsibility.",
+      current: CREATOR_ROUTES.courses}, renderPracticalStartLesson());
   }
   if (path === CREATOR_ROUTES.live) {
     return shell({path, title: "Live — " + PODCAST_TITLE, description: "Live conversations, building sessions and narrated screen lessons with Devon Alan Akins.", current: path}, renderMobileLive());
