@@ -430,6 +430,13 @@ export function createHandler(assets, release, options = {}) {
         const streamOrigin = streamPlaybackOrigin();
         if (streamOrigin) headers.set("Content-Security-Policy", headers.get("Content-Security-Policy") + " frame-src " + streamOrigin + ";");
       }
+      // The public Watch library is the only other creator route allowed to
+      // embed approved public video; every other route keeps its prior CSP.
+      if (options.laboratoryCandidate === true && status === 200 && isHtml &&
+          path.startsWith("/watch/")) {
+        headers.set("Content-Security-Policy",
+          headers.get("Content-Security-Policy") + "; frame-src https://iframe.videodelivery.net");
+      }
       if (status === 404) headers.set("Cache-Control", "no-store");
       if (
         status === 200 &&

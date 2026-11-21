@@ -1,7 +1,8 @@
 import {renderMobileLive} from "./mobile-live.mjs";
 import {PATREON_CREATOR_URL, PODCAST_TITLE, PODCAST_DESCRIPTION, PODCAST_SHARE_IMAGE, podcastPublication, publicWebUrl} from "./podcast-publication.mjs";
+import {WATCH_KINDS, watchPublication} from "./watch-publication.mjs";
 
-export const CREATOR_ROUTES = Object.freeze({podcast: "/podcast/", courses: "/courses/", setup: "/setup/", live: "/live/"});
+export const CREATOR_ROUTES = Object.freeze({watch: "/watch/", podcast: "/podcast/", courses: "/courses/", setup: "/setup/", live: "/live/"});
 export const CREATOR_CATEGORIES = Object.freeze([
   {id: "field", label: "Field Kit", description: "A portable recording chain for interviews away from the studio."},
   {id: "stage", label: "The Stage", description: "Camera, lighting and stands for a two-person recording room. The room, seating and acoustic treatment are still open decisions."},
@@ -37,7 +38,8 @@ export const CREATOR_GEAR = Object.freeze([
 const statusText = Object.freeze({owned: "Owned and verified", selected: "Selected but not purchased", considering: "Considering", future: "Future"});
 const escapeHtml = value => String(value ?? "").replace(/[&<>"']/g, character => ({"&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;"}[character]));
 const configuredPodcast = podcastPublication();
-export const creatorPaths = [CREATOR_ROUTES.podcast, CREATOR_ROUTES.courses, CREATOR_ROUTES.setup, CREATOR_ROUTES.live, ...configuredPodcast.episodes.map(episode => episode.route)];
+const configuredWatch = watchPublication();
+export const creatorPaths = [CREATOR_ROUTES.watch, CREATOR_ROUTES.podcast, CREATOR_ROUTES.courses, CREATOR_ROUTES.setup, CREATOR_ROUTES.live, ...configuredPodcast.episodes.map(episode => episode.route), ...configuredWatch.videos.map(video => video.route)];
 export const creatorMediaFiles = configuredPodcast.mediaFiles;
 const podcastFormats = {interview: "Interview", solo: "Solo", trailer: "Trailer"};
 const podcastDate = new Intl.DateTimeFormat("en-US", {dateStyle: "long", timeZone: "UTC"});
@@ -85,10 +87,10 @@ function shell({path, title, description, current, rss, image}, main) {
     '<body class="creator-body"><a class="pc-skip" href="#pc-main">Skip to content</a>' +
     '<header class="pc-header"><div class="pc-wrap pc-header-row"><a class="pc-brand" href="/" aria-label="da. Devon Alan Akins home"><span aria-hidden="true">da.</span><small>Devon Alan Akins</small></a>' +
     '<nav class="pc-nav" aria-label="Primary navigation">' +
-    link("/work/", "Work", current) + link("/research/", "Research", current) + link("/live/", "Live", current) + link("/podcast/", "Podcast", current) + link("/courses/", "Courses", current) + link("/setup/", "My Setup", current) +
+    link("/work/", "Work", current) + link("/research/", "Research", current) + link("/watch/", "Watch", current) + link("/live/", "Live", current) + link("/podcast/", "Podcast", current) + link("/courses/", "Courses", current) + link("/setup/", "My Setup", current) +
     '</nav></div></header><main id="pc-main" tabindex="-1">' + main + '</main>' +
     '<footer class="pc-footer pc-wrap"><div><a href="/" aria-label="da. Devon Alan Akins home">da.</a><p>Devon Alan Akins</p></div>' +
-    '<nav aria-label="Footer navigation"><a href="/fieldnotes/">Writing</a><a href="/courses/">Courses</a><a href="/about/">About</a><a href="/contact/">Contact</a></nav>' +
+    '<nav aria-label="Footer navigation"><a href="/watch/">Watch</a><a href="/live/">Live</a><a href="/fieldnotes/">Writing</a><a href="/courses/">Courses</a><a href="/about/">About</a><a href="/contact/">Contact</a></nav>' +
     themeControl() + '</footer></body></html>';
 }
 function episodeMeta(episode) {
@@ -130,7 +132,7 @@ function renderPodcast({episodes, outlets}) {
     '<p class="pc-eyebrow">The podcast</p><h1 id="pc-title">Devon <em>Alan Akins</em></h1>' +
     '<p class="pc-lede">I mostly sit down with people I want to talk to. Sometimes it’s just me working through a question or talking about something I’m making.</p>' +
     (!featured ? '<p class="pc-state">No episodes published yet</p>' : '') +
-    '<div class="pc-actions">' + button('#episodes', featured ? 'Browse episodes' : 'About the show', true) + button('/courses/', 'Explore courses') + button('/setup/', 'See my setup') + '</div></div>' +
+    '<div class="pc-actions">' + button('#episodes', featured ? 'Browse episodes' : 'About the show', true) + button('/courses/', 'Explore courses') + button('/setup/', 'See my setup') + button('/watch/', 'Watch videos') + '</div></div>' +
     '<div class="pc-hero-art"><img src="/professional/podcast-cover.webp" width="960" height="960" alt="" decoding="async"></div></section>' +
     '<section class="pc-section pc-two-column" id="episodes" aria-labelledby="pc-episodes-title"><div><h2 id="pc-episodes-title">Episodes</h2></div>' +
     (featured ? '<div class="pc-episodes">' + episodeCard(featured, true) + episodes.slice(1).map(episode => episodeCard(episode)).join('') + '</div>' :
@@ -142,6 +144,61 @@ function renderPodcast({episodes, outlets}) {
     '<p>' + external(PATREON_CREATOR_URL, 'Follow my work on Patreon') + '</p></div></section>' +
     '<section class="pc-section pc-two-column pc-studio-teaser"><div><h2>How I’m putting it together</h2></div><div class="pc-prose"><p>I’m working out what I need to record in the field, shoot in a room, and edit afterward.</p>' +
     button('/setup/', 'Explore My Setup') + '</div></section></div>';
+}
+function watchCard(item) {
+  return '<article class="pc-watch-card"><a href="' + escapeHtml(item.route) + '" class="pc-watch-card-link">' +
+    '<span class="pc-watch-card-art" aria-hidden="true"><span>da.</span></span>' +
+    '<span class="pc-watch-card-copy"><span class="pc-watch-card-kind">' + escapeHtml(item.label) + '</span>' +
+    '<strong>' + escapeHtml(item.title) + '</strong><span class="pc-watch-card-summary">' + escapeHtml(item.summary) + '</span>' +
+    '<span class="pc-watch-card-meta"><time datetime="' + item.date + '">' + podcastDate.format(new Date(item.date)) +
+    '</time> · ' + episodeDuration(item.durationSeconds) + ' · View recording →</span></span></a></article>';
+}
+function renderWatch(watch, podcast) {
+  const items = [
+    ...watch.videos.map(video => ({...video, label: WATCH_KINDS[video.kind]})),
+    ...podcast.episodes.filter(episode => episode.video || episode.videoPreview).map(episode => ({
+      ...episode, label: episode.videoPreview ? 'Podcast preview' : 'Podcast episode'
+    }))
+  ].sort((a,b) => b.date.localeCompare(a.date) || a.title.localeCompare(b.title));
+  return '<div class="pc-wrap pc-watch-wrap"><header class="pc-watch-hero">' +
+    '<div class="pc-watch-hero-copy"><p class="pc-eyebrow">Devonakins.com / original media</p>' +
+    '<h1 id="pc-title">Watch<span>.</span></h1>' +
+    '<p class="pc-lede">Conversations, recordings, lessons, and the things I make. All in one place, on my own website.</p>' +
+    (!items.length ? '<p class="pc-state">No videos published yet</p>' : '') +
+    '<div class="pc-actions">' + button('/podcast/', 'Explore the podcast', true) +
+    button('/courses/', 'Browse courses') + '</div></div>' +
+    '<div class="pc-watch-art" aria-hidden="true"><span class="pc-watch-art-label">DA / ORIGINAL MEDIA</span>' +
+    '<span class="pc-watch-art-orbit"></span><span class="pc-watch-art-orbit pc-watch-art-orbit-alt"></span>' +
+    '<span class="pc-watch-art-sign">da.</span><span class="pc-watch-art-bottom">01 — PLAYBACK / HERE</span></div></header>' +
+    '<section class="pc-section pc-watch-library" id="videos" aria-labelledby="pc-videos-title">' +
+    '<div class="pc-section-heading"><h2 id="pc-videos-title">The library</h2><p>Public recordings only. New work appears here when it is actually released.</p></div>' +
+    (items.length ? '<div class="pc-watch-grid">' + items.map(watchCard).join('') + '</div>' :
+      '<div class="pc-watch-empty"><p class="pc-eyebrow">Library / prelaunch</p>' +
+      '<h3>Nothing staged as an episode.</h3><p>I’m building the publishing system before putting content in it. Once a recording is approved and playable, it will have a permanent home here.</p></div>') +
+    '</section><section class="pc-section pc-two-column pc-watch-outlets"><div><h2>The full experience lives here.</h2></div>' +
+    '<div class="pc-prose"><p>Video and replays are for this site. I’m using Spotify for podcast audio and Patreon for memberships, not sending everyone to YouTube or Twitch.</p>' +
+    '<p>Member-only recordings will remain on Patreon until protected playback is implemented and verified here.</p>' +
+    '<p>' + external(PATREON_CREATOR_URL, 'Follow on Patreon') + '</p></div></section></div>';
+}
+function renderWatchVideo(video) {
+  const notes = video.notes.length ? '<section class="pc-section"><h2>Notes</h2>' +
+    video.notes.map(line => '<p>' + escapeHtml(line) + '</p>').join('') + '</section>' : '';
+  const chapters = video.chapters.length ? '<section class="pc-section"><h2>Chapters</h2><ol class="pc-chapters">' +
+    video.chapters.map(chapter => '<li><time datetime="PT' + chapter.startSeconds + 'S">' +
+    Math.floor(chapter.startSeconds / 60) + ':' + String(chapter.startSeconds % 60).padStart(2,'0') +
+    '</time> ' + escapeHtml(chapter.title) + '</li>').join('') + '</ol></section>' : '';
+  const transcript = video.transcript.length ? '<section class="pc-section"><h2>Transcript</h2>' +
+    video.transcript.map(line => '<p>' + escapeHtml(line) + '</p>').join('') + '</section>' : '';
+  return '<article class="pc-wrap pc-watch-detail"><header><p class="pc-eyebrow"><a href="/watch/">Watch / Devon Alan Akins</a></p>' +
+    '<h1>' + escapeHtml(video.title) + '</h1><p class="pc-episode-meta">' +
+    escapeHtml(WATCH_KINDS[video.kind]) + ' · <time datetime="' + video.date + '">' +
+    podcastDate.format(new Date(video.date)) + '</time> · ' + episodeDuration(video.durationSeconds) +
+    '</p><p class="pc-lede">' + escapeHtml(video.summary) + '</p></header>' +
+    '<div class="pc-watch-player"><iframe title="Watch: ' + escapeHtml(video.title) +
+    '" src="https://iframe.videodelivery.net/' + video.streamUid +
+    '" loading="lazy" referrerpolicy="strict-origin-when-cross-origin" allow="encrypted-media; picture-in-picture" allowfullscreen></iframe></div>' +
+    '<p class="pc-watch-note">This public video is hosted for playback on devonakins.com. Captions are provided in the player.</p>' +
+    notes + chapters + transcript + '</article>';
 }
 function glyph(kind){
   const shapes={
@@ -205,8 +262,15 @@ function renderCourses() {
     '<p>No purchase buttons, prices, or member-only video files are published here before those services and lessons are ready.</p>' +
     button("/podcast/", "Back to the podcast") + '</div></section></div>';
 }
-export function renderCreatorPage(path, publication = configuredPodcast) {
+export function renderCreatorPage(path, publication = configuredPodcast, watch = configuredWatch) {
   const rss = publication.outlets.find(outlet => outlet.key === "rss");
+  if (path === CREATOR_ROUTES.watch) {
+    return shell({path, title: "Watch — " + PODCAST_TITLE, description: "Original video, conversations, classes and replays on Devon Alan Akins’s own website.", current: path}, renderWatch(watch, publication));
+  }
+  const watchVideo = watch.videos.find(entry => entry.route === path);
+  if (watchVideo) {
+    return shell({path, title: watchVideo.title + " — Watch — " + PODCAST_TITLE, description: watchVideo.summary, current: CREATOR_ROUTES.watch}, renderWatchVideo(watchVideo));
+  }
   if (path === CREATOR_ROUTES.podcast) {
     return shell({path, title: PODCAST_TITLE + " — Podcast", description: PODCAST_DESCRIPTION, current: path, rss, image: PODCAST_SHARE_IMAGE}, renderPodcast(publication));
   }

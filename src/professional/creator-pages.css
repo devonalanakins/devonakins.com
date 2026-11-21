@@ -163,3 +163,48 @@ body.creator-body { margin: 0; color: var(--pc-ink); background: var(--pc-paper)
 @media (prefers-reduced-motion: reduce) {
   .creator-body * { animation: none !important; transition: none !important; }
 }
+
+/* Original-video library: no fake video artwork or remote assets on prelaunch. */
+.pc-watch-hero { display:grid; grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr); border-bottom:1px solid var(--pc-line); min-height: min(625px,80svh); }
+.pc-watch-hero-copy { display:flex; flex-direction:column; align-items:flex-start; justify-content:center; min-width:0; padding:clamp(58px,8vw,110px) clamp(15px,3vw,45px) clamp(48px,7vw,85px) 0; }
+.pc-watch-hero h1 { margin:0 0 28px; font:800 clamp(72px,12vw,178px)/.85 Arial,Helvetica,sans-serif; letter-spacing:-.095em; }
+.pc-watch-hero h1 span { color:var(--pc-blue); }
+.pc-watch-art { position:relative; display:grid; place-items:center; min-height:380px; overflow:hidden; isolation:isolate; border-left:1px solid var(--pc-line); background:radial-gradient(ellipse at 65% 40%,#526bb0 0%,#12233d 36%,#080e19 78%); color:#eef3ff; }
+.pc-watch-art:after { content:""; position:absolute; inset:0; opacity:.18; background:linear-gradient(#b9c9ef38 1px,transparent 1px),linear-gradient(90deg,#b9c9ef38 1px,transparent 1px); background-size:32px 32px; }
+.pc-watch-art-orbit { position:absolute; width:86%; aspect-ratio:1; border:1px solid #9bb9fc80; border-radius:50%; transform:rotateX(63deg) rotateZ(-37deg); }
+.pc-watch-art-orbit-alt { width:72%; transform:rotateY(64deg) rotateZ(31deg); }
+.pc-watch-art-sign { z-index:1; font:800 clamp(100px,17vw,260px)/1 Arial,sans-serif; letter-spacing:-.095em; }
+.pc-watch-art-label,.pc-watch-art-bottom { position:absolute; z-index:1; left:26px; font:700 11px/1.4 Arial,sans-serif; letter-spacing:.16em; }
+.pc-watch-art-label { top:27px; } .pc-watch-art-bottom { bottom:27px; }
+.pc-watch-library { min-height:300px; }
+.pc-watch-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:17px; }
+.pc-watch-card { border:1px solid var(--pc-line); min-width:0; background:var(--pc-card); }
+.pc-watch-card-link { display:block; text-decoration:none; height:100%; }
+.pc-watch-card-link:hover strong { color:var(--pc-blue); text-decoration:underline; text-underline-offset:4px; }
+.pc-watch-card-art { display:flex; align-items:end; padding:20px; aspect-ratio:16/9; background:radial-gradient(ellipse at 65% 40%,#445e98,#17243c 55%,#0a101c); color:#e5ecff; }
+.pc-watch-card-art span { font-size:clamp(38px,6vw,88px); font-weight:800; letter-spacing:-.09em; }
+.pc-watch-card-copy { display:flex; flex-direction:column; gap:12px; padding:25px; }
+.pc-watch-card-kind { font-size:12px; letter-spacing:.11em; text-transform:uppercase; color:var(--pc-blue); font-weight:700; }
+.pc-watch-card-copy strong { font-size:clamp(22px,2vw,31px); line-height:1.13; letter-spacing:-.04em; overflow-wrap:anywhere; }
+.pc-watch-card-summary { color:var(--pc-muted); }
+.pc-watch-card-meta { font-size:12px; color:var(--pc-muted); }
+.pc-watch-empty { max-width:760px; padding:clamp(26px,5vw,64px); border:1px solid var(--pc-line); background:var(--pc-panel); }
+.pc-watch-empty h3 { margin:0 0 12px; font-size:clamp(26px,3vw,44px); letter-spacing:-.05em; }
+.pc-watch-empty p:last-child { max-width:52ch; color:var(--pc-muted); }
+.pc-watch-detail { padding-block:clamp(48px,7vw,110px); }
+.pc-watch-detail h1 { max-width:16ch; font-size:clamp(46px,8vw,110px); line-height:.98; letter-spacing:-.065em; overflow-wrap:anywhere; margin:0 0 22px; }
+.pc-watch-detail .pc-lede { max-width:64ch; }
+.pc-watch-player { position:relative; width:100%; aspect-ratio:16/9; margin-top:clamp(28px,5vw,65px); background:#080e19; }
+.pc-watch-player iframe { display:block; width:100%; height:100%; border:0; }
+.pc-watch-note { color:var(--pc-muted); font-size:13px; }
+.pc-watch-detail .pc-section { max-width:880px; }
+.pc-watch-detail .pc-section p { max-width:76ch; }
+@media (max-width:900px) { .pc-watch-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+@media (max-width:760px) {
+  .pc-watch-hero { grid-template-columns:1fr; min-height:0; }
+  .pc-watch-hero-copy { padding:52px 0 38px; }
+  .pc-watch-hero h1 { font-size:clamp(68px,18vw,122px); }
+  .pc-watch-art { min-height:260px; border:1px solid var(--pc-line); }
+  .pc-watch-grid { grid-template-columns:1fr; }
+  .pc-watch-detail h1 { font-size:clamp(43px,12vw,78px); }
+}
