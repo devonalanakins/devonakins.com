@@ -13,6 +13,14 @@ export const CREATOR_CATEGORIES = Object.freeze([
   {id: "lab", label: "Blackwell Lab", description: "Future local AI and scientific computing hardware."}
 ]);
 export const CREATOR_GEAR = Object.freeze([
+  // Ownership is confirmed by the creator, not by a receipt or a device audit.
+  // Do not infer a specific iPhone or headset model from the generic category.
+  {id: "existing-iphone", category: "field", kind: "camera", name: "My current iPhone", spec: "Phone-first capture · exact model omitted",
+    use: "Current camera, screen recorder, editing and publishing device. Live broadcasts remain a planned workflow until a real end-to-end recording is tested.",
+    quantity: "1 · owner-confirmed", status: "owned"},
+  {id: "existing-sony-headset", category: "field", kind: "headphones", name: "My Sony headset", spec: "Existing headset · model not independently checked",
+    use: "Initial voice and monitoring test. App-specific microphone selection, levels and recording quality still need real-device verification.",
+    quantity: "1 · owner-confirmed", status: "owned"},
   {id: "p4next", category: "field", kind: "recorder", name: "Zoom PodTrak P4next", spec: "4 XLR inputs · 4 headphone outputs · 24-bit/48 kHz WAV",
     use: "Separate mic tracks and independent headphone monitoring for the host and guest.", quantity: "1 under consideration", status: "considering",
     url: "https://zoomcorp.com/en/us/podtrak-recorders/podcast-recorders/podtrak-p4next/", retailer: "https://www.sweetwater.com/store/detail/P4NEXT--zoom-podtrak-p4next-audio-interface"},
@@ -38,7 +46,7 @@ export const CREATOR_GEAR = Object.freeze([
     use: "A future option for local inference and small-scale AI experiments. Check Arm software compatibility and benchmark a real workload before choosing hardware.", status: "future",
     url: "https://www.nvidia.com/en-us/products/workstations/dgx-spark/", retailer: "https://marketplace.nvidia.com/en-us/enterprise/personal-ai-supercomputers/dgx-spark/"}
 ]);
-const statusText = Object.freeze({owned: "Owned and verified", selected: "Selected but not purchased", considering: "Considering", future: "Future"});
+const statusText = Object.freeze({owned: "Owned · owner-confirmed", selected: "Selected but not purchased", considering: "Considering", future: "Future"});
 const escapeHtml = value => String(value ?? "").replace(/[&<>"']/g, character => ({"&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;"}[character]));
 const configuredPodcast = podcastPublication();
 const configuredWatch = watchPublication();
@@ -220,13 +228,14 @@ function glyph(kind){
 }
 function renderGear(product) {
   const photo = product.approvedPhoto;
+  const links = [product.url ? external(product.url, product.linkLabel ?? 'Manufacturer', product.name) : '',
+    product.retailer ? external(product.retailer, product.category === "lab" ? "Marketplace" : "Retailer", product.name) : ''].join('');
   return '<article class="pc-product" data-gear-id="' + product.id + '" data-gear-status="' + product.status + '">' +
     '<div class="pc-product-plate">' + (photo ? '<img src="' + escapeHtml(photo.src) + '" alt="' + escapeHtml(photo.alt) + '" loading="lazy" decoding="async">' : glyph(product.kind)) + '</div>' +
     '<div class="pc-product-info"><span class="pc-product-status pc-product-status-' + product.status + '">' + statusText[product.status] + '</span>' +
     '<h3>' + escapeHtml(product.name) + '</h3><p class="pc-product-spec">' + escapeHtml(product.spec) + '</p><p>' + escapeHtml(product.use) + '</p>' +
     (product.quantity ? '<p class="pc-product-meta">' + escapeHtml(product.quantity) + (product.shared ? ' · Shared with The Stage' : '') + '</p>' : '') +
-    '<div class="pc-product-links">' + external(product.url, product.linkLabel ?? 'Manufacturer', product.name) +
-    (product.retailer ? external(product.retailer, product.category === "lab" ? "Marketplace" : "Retailer", product.name) : '') + '</div></div></article>';
+    (links ? '<div class="pc-product-links">' + links + '</div>' : '') + '</div></article>';
 }
 function renderSetup() {
   const groups = CREATOR_CATEGORIES.map(category => {
@@ -239,13 +248,13 @@ function renderSetup() {
   }).join('');
   return '<div class="pc-wrap"><header class="pc-setup-hero"><p class="pc-eyebrow">Studio build</p><h1>My Setup<span>.</span></h1>' +
     '<div class="pc-setup-intro"><p>At first, this whole studio runs on my iPhone. The phone records, the Sony headset gets tested as my audio input, and software handles the overlays. Bigger cameras and microphones can wait.</p>' +
-    '<p>Phone-first recording is the active production plan. The catalog below shows unpurchased possibilities, not the equipment needed to start.</p></div></header>' +
+    '<p>My current kit is labeled separately from unpurchased possibilities. Specific hardware models and app-level audio compatibility stay unverified until tested.</p></div></header>' +
     '<nav class="pc-jump" aria-label="Setup sections">' + CREATOR_CATEGORIES.map(category => link('#' + category.id, category.label)).join('') + '</nav>' + groups +
     '<section class="pc-section pc-two-column" id="build-log"><div><h2>Build notes</h2></div><div class="pc-prose">' +
     '<article><h3>Start with what I own</h3><p>Film with iPhone Camera, capture narrated tutorials with iPhone Screen Recording, and test PRISM Live Studio for broadcasts. The Sony headset is the first audio test, not a promise that every app will use its mic correctly.</p></article>' +
     '<article><h3>Test the room before adding cameras</h3><p>A single wide shot is simpler to record and edit. Extra angles mean more media, synchronization and editing time. The room and a two-person test will determine what makes sense.</p></article></div></section>' +
     '<section class="pc-section pc-two-column pc-ethics"><h2>Catalog status</h2><div class="pc-prose">' +
-    '<dl><dt>Owned and verified</dt><dd>In my inventory and checked.</dd><dt>Selected but not purchased</dt><dd>Chosen for the build and still to be bought.</dd>' +
+    '<dl><dt>Owned · owner-confirmed</dt><dd>Equipment I have reported owning. Exact model and full recording-chain verification may still be pending.</dd><dt>Selected but not purchased</dt><dd>Chosen for the build and still to be bought.</dd>' +
     '<dt>Considering</dt><dd>On the shortlist while I check fit.</dd><dt>Future</dt><dd>A longer-range idea.</dd></dl>' +
     '<p>Manufacturer and retailer links are ordinary references. I earn no commission from them.</p>' + button('/podcast/', 'Go to the podcast') + '</div></section></div>';
 }
