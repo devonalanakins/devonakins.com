@@ -310,6 +310,7 @@ jobs:
         run: |
           python3 tests/laboratory_browser_acceptance.py
           python3 tests/cinematic_navigation_acceptance.py
+          python3 tests/creator_pages_browser_acceptance.py
       - name: Preserve screenshots for owner visual acceptance
         if: always()
         uses: actions/upload-artifact@v4
@@ -318,5 +319,6 @@ jobs:
           path: |
             dist/
             browser-qa/laboratory/
+            browser-qa/creator/
           if-no-files-found: warn
           retention-days: 14
