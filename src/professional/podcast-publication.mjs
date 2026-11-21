@@ -37,6 +37,8 @@ export function podcastPublication(episodes = approvedEpisodes, distribution = a
     }
     if (date > today) return [];
     slugs.add(slug);
+    const videoAccess = episode.videoAccess ?? "public";
+    if (!["public", "members"].includes(videoAccess)) throw new Error("Invalid podcast video access");
     const audio = path(episode.audio, ["mp3"]);
     const video = path(episode.video, ["mp4"]);
     const captions = path(episode.captions, ["vtt"]);
@@ -49,8 +51,14 @@ export function podcastPublication(episodes = approvedEpisodes, distribution = a
     if (Boolean(video) !== Boolean(captions) || (!audio && !video && !playbackLinks.length)) {
       throw new Error("Podcast episodes require playable media and captions for native video");
     }
+    if (videoAccess === "members") {
+      if (video) throw new Error("Members-only video cannot be shipped as a public asset");
+      if (!playbackLinks.some(({href}) => ["patreon.com", "www.patreon.com"].includes(new URL(href).hostname))) {
+        throw new Error("Members-only video requires a verified Patreon playback link");
+      }
+    }
     return [{slug, title, summary, date, durationSeconds, format, guests, notes, links, transcript,
-      audio, video, captions, thumbnail, playbackLinks, route: "/podcast/" + slug + "/"}];
+      audio, video, captions, thumbnail, playbackLinks, videoAccess, route: "/podcast/" + slug + "/"}];
   });
   const outlets = [
     ["patreon", "Patreon", ["patreon.com", "www.patreon.com"]],
@@ -61,7 +69,10 @@ export function podcastPublication(episodes = approvedEpisodes, distribution = a
   ].flatMap(([key, label, hosts]) => {
     if (!distribution[key]) return [];
     const href = publicWebUrl(distribution[key]);
-    if (!href || (hosts && !hosts.includes(new URL(href).hostname))) throw new Error("Invalid podcast distribution URL");
+    if (!href || (hosts && !hosts.includes(new URL(href).hostname)) ||
+        (key === "rss" && (new URL(href).search || new URL(href).hash || new URL(href).hostname.endsWith("patreon.com")))) {
+      throw new Error("Invalid podcast distribution URL");
+    }
     return [{key, label, href}];
   });
   published.sort((a, b) => b.date.localeCompare(a.date) || a.slug.localeCompare(b.slug));
