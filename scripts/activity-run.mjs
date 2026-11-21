@@ -43,10 +43,13 @@ export function activityFailureReason(error) {
 }
 export function projectFromRemote(remote) {
   if (typeof remote !== "string") return null;
+  const origin = remote.trim().toLowerCase();
+  // A private organization repository maps to a public project label only.
+  // No remote URL, commit message, filename or workspace identifier is sent.
+  if (/^(?:https:\/\/github\.com\/|git@github\.com:|ssh:\/\/git@github\.com\/)nonaneuropsychology\/nona-neuropsychology(?:\.git)?$/.test(origin))
+    return "nona";
   const match =
-    /^(?:https:\/\/github\.com\/|git@github\.com:|ssh:\/\/git@github\.com\/)devonalanakins\/([a-z0-9.-]+?)(?:\.git)?$/.exec(
-      remote.trim(),
-    );
+    /^(?:https:\/\/github\.com\/|git@github\.com:|ssh:\/\/git@github\.com\/)devonalanakins\/([a-z0-9.-]+?)(?:\.git)?$/.exec(origin);
   return match && Object.hasOwn(PUBLIC_REPOSITORIES, match[1])
     ? PUBLIC_REPOSITORIES[match[1]]
     : null;

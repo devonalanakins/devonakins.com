@@ -295,3 +295,18 @@ test("trusted reporter emits only allowlisted JWKS failure categories, never unt
     e.jwksCategory==="upstream-rate-limited" &&
     !String(e).includes("NEVER LOG"));
 });
+
+test('only the exact Nona organization origin may be reported as Nona',async()=>{
+ const {projectFromRemote}=await import('../scripts/activity-run.mjs');
+ for(const url of ['git@github.com:nonaneuropsychology/nona-neuropsychology.git',
+   'https://github.com/nonaneuropsychology/nona-neuropsychology',
+   'ssh://git@github.com/nonaneuropsychology/nona-neuropsychology.git']){
+   assert.equal(projectFromRemote(url),'nona');
+ }
+ for(const url of ['https://github.com/someone/nona-neuropsychology',
+   'https://github.com/nonaneuropsychology/patient-data',
+   'https://github.com/nonaneuropsychology/nona-neuropsychology-other',
+   'https://evil.example/nonaneuropsychology/nona-neuropsychology']){
+   assert.equal(projectFromRemote(url),null);
+ }
+});

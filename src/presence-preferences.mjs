@@ -11,7 +11,7 @@ function validPersistedProjects(row) {
   try {
     const value = JSON.parse(row.public_projects_json);
     return Array.isArray(value) &&
-      value.length <= PRESENCE_PROJECTOR_POLICY.publicProjects.length &&
+      value.length <= Object.keys(PUBLIC_PRESENCE_PROJECTS).length &&
       new Set(value).size === value.length &&
       value.every((slug) => typeof slug === "string" &&
         Object.hasOwn(PUBLIC_PRESENCE_PROJECTS, slug))

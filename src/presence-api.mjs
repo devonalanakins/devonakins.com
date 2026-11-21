@@ -203,7 +203,7 @@ export function nextPresenceState(row, data, at) {
   if (data.action === "projects") {
     if (
       !Array.isArray(data.projects) ||
-      data.projects.length > PRESENCE_PROJECTOR_POLICY.publicProjects.length ||
+      data.projects.length > Object.keys(PUBLIC_PRESENCE_PROJECTS).length ||
       new Set(data.projects).size !== data.projects.length ||
       !data.projects.every((slug) =>
         Object.hasOwn(PUBLIC_PRESENCE_PROJECTS, slug),

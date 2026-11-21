@@ -89,6 +89,12 @@ export function createGithubEditorCatalog({ clock = Date.now } = {}) {
         repositories = Object.entries(PUBLIC_REPOSITORIES)
           .filter(([, s]) => projects.includes(s))
           .map(([name, projectSlug]) => ({ owner: OWNER, name, projectSlug }));
+      // A trusted editor may recognize this exact private organization remote
+      // only after the owner explicitly enables the Nona project. No private
+      // repository content or GitHub events enter public discovery.
+      if (projects.includes("nona")) repositories.push({
+        owner: "nonaneuropsychology", name: "nona-neuropsychology", projectSlug: "nona",
+      });
       let discovered = [];
       if (config(env)) {
         discovered = await all(

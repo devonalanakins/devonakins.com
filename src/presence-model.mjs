@@ -13,6 +13,7 @@ const ALLOWED_PROJECTS = Object.freeze({
   squelch: "Squelch",
   anevum: "Anevum",
   knowledge: "Knowledge",
+  nona: "Nona Neuropsychology",
   "devonakins-com": "DevonAkins.com",
 });
 const MANUAL_STATUSES = new Set([
@@ -115,6 +116,9 @@ export function projectPublicPresence(input, now = Date.now()) {
     active &&
     session.publicProject === true &&
     Object.hasOwn(ALLOWED_PROJECTS, session.projectSlug) &&
+    // Private-organization work is never disclosed without a saved allowlist.
+    (session.projectSlug !== "nona" ||
+      (Array.isArray(input.allowedProjects) && input.allowedProjects.includes("nona"))) &&
     (!Array.isArray(input.allowedProjects) ||
       input.allowedProjects.includes(session.projectSlug))
       ? ALLOWED_PROJECTS[session.projectSlug]
@@ -139,7 +143,8 @@ export function projectPublicPresence(input, now = Date.now()) {
 }
 
 export const PRESENCE_PROJECTOR_POLICY = Object.freeze({
-  publicProjects: Object.keys(ALLOWED_PROJECTS),
+  // Private-organization reporting requires an explicit owner selection.
+  publicProjects: Object.keys(ALLOWED_PROJECTS).filter(slug => slug !== "nona"),
   sessionTtlSeconds: HEARTBEAT_TTL_MS / 1000,
   playbackTtlSeconds: PLAYBACK_TTL_MS / 1000,
   manualTtlSeconds: MANUAL_TTL_MS / 1000,
