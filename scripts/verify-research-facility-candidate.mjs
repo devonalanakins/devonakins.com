@@ -31,6 +31,13 @@ for(const path of creatorPaths){
  assert.match(html,/href="\/setup\/"/);
  assert.doesNotMatch(html,/<iframe|<form|<script[^>]+src="https?:/);
 }
+// The actual packaged Worker must serve an honest no-provider prelaunch
+// state, independently of browser fixtures and before any Stream enrollment.
+const prelaunch=await get('/api/creator/live');
+assert.equal(prelaunch.status,200);
+assert.match(prelaunch.headers.get('content-type')||'',/^application\/json/);
+assert.equal(prelaunch.headers.get('cache-control'),'no-store');
+assert.deepEqual(await prelaunch.json(),{state:'prelaunch'});
 const setupPage=await(await get(CREATOR_ROUTES.setup)).text();
 assert.equal((setupPage.match(/class="pc-product"/g)||[]).length,CREATOR_GEAR.length);
 assert.match(setupPage,/Phone-first recording is the active production plan/);
