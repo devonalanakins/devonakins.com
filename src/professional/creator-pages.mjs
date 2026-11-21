@@ -139,7 +139,7 @@ function renderPodcast({episodes, outlets}) {
       '<div class="pc-prose"><p>I’m still getting the show going. Interviews will be mostly unscripted. We could get into science, business, games, or whatever comes up.</p><p>Published episodes will appear here.</p></div>') + '</section>' +
     (outlets.length ? '<section class="pc-section pc-two-column"><h2>Follow the show</h2><ul class="pc-media-links">' +
       outlets.map(({label, href}) => '<li>' + external(href, label) + '</li>').join('') + '</ul></section>' : '') +
-    '<section class="pc-section pc-two-column"><div><h2>Watch and listen</h2></div><div class="pc-prose"><p>I plan to release the audio publicly and share full video with eligible Patreon members. Episode pages will have listening links, show notes, and transcripts when available.</p>' +
+    '<section class="pc-section pc-two-column"><div><h2>Watch and listen</h2></div><div class="pc-prose"><p>Public episodes will be watchable here on my website, with the audio on Spotify. Patreon is for member-only material. Episode pages will have listening links, show notes, and transcripts when available.</p>' +
     (outlets.length ? '' : '<p>Listening links will appear here once the show is available.</p>') +
     '<p>' + external(PATREON_CREATOR_URL, 'Follow my work on Patreon') + '</p></div></section>' +
     '<section class="pc-section pc-two-column pc-studio-teaser"><div><h2>How I’m putting it together</h2></div><div class="pc-prose"><p>I’m working out what I need to record in the field, shoot in a room, and edit afterward.</p>' +
