@@ -277,3 +277,41 @@ body.creator-body { margin: 0; color: var(--pc-ink); background: var(--pc-paper)
   .pc-lesson-reading section { break-inside: avoid; }
   .pc-lesson-safety, .pc-lesson-example, .pc-lesson-triage div { border: 1px solid #555; background: white; }
 }
+
+/* Independent public biography; editorial content without third-party assets. */
+.pc-about { padding-block: clamp(45px, 7vw, 110px) clamp(60px, 8vw, 130px); }
+.pc-about-hero { max-width: 1000px; padding-bottom: clamp(52px, 7vw, 108px); }
+.pc-about-hero h1 { margin: 0 0 35px; max-width: 14ch; font: 600 clamp(54px, 8.2vw, 120px)/1.02 Georgia, "Times New Roman", serif; letter-spacing: -.067em; text-wrap: balance; }
+.pc-about-hero h1 em { color: var(--pc-blue); }
+.pc-about-lede { max-width: 33ch; margin: 0 0 25px; font: 400 clamp(22px, 2.45vw, 36px)/1.39 Georgia, serif; }
+.pc-about-intro { max-width: 73ch; margin: 0 0 32px; color: var(--pc-muted); font: 400 17px/1.76 Arial,sans-serif; }
+.pc-about-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; }
+.pc-about-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 clamp(36px, 7vw, 130px); border-top: 1px solid var(--pc-line); }
+.pc-about-grid section { padding-block: clamp(36px, 5vw, 72px); border-bottom: 1px solid var(--pc-line); }
+.pc-about-grid h2, .pc-about-principles h2, .pc-about-contact h2 { margin: 0 0 24px; font: 600 clamp(34px, 3.8vw, 60px)/1.1 Georgia, "Times New Roman", serif; letter-spacing: -.045em; }
+.pc-about-grid p { max-width: 65ch; font-size: 16px; line-height: 1.78; }
+.pc-about-grid a { color: var(--pc-blue); font-weight: 700; text-underline-offset: 4px; }
+.pc-about-principles { display: grid; grid-template-columns: minmax(0, .75fr) minmax(0, 1.25fr); gap: 30px 80px; margin-block: clamp(60px, 8vw, 130px); }
+.pc-about-principles ol { list-style: none; padding: 0; margin: 0; }
+.pc-about-principles li { display: grid; grid-template-columns: minmax(0, .85fr) minmax(0, 1.15fr); gap: 25px; padding: 23px 0; border-bottom: 1px solid var(--pc-line); }
+.pc-about-principles li:first-child { border-top: 1px solid var(--pc-line); }
+.pc-about-principles li strong { font-size: 15px; }
+.pc-about-principles li span { color: var(--pc-muted); line-height: 1.6; font-size: 14px; }
+.pc-about-contact { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 30px 75px; padding: clamp(28px, 5vw, 70px); background: var(--pc-panel); }
+.pc-about-contact p { max-width: 55ch; color: var(--pc-muted); font-size: 15px; line-height: 1.7; }
+.pc-about-contact a { display: inline-flex; gap: 8px; min-height: 44px; align-items: center; overflow-wrap: anywhere; font-weight: 700; color: var(--pc-blue); text-underline-offset: 4px; }
+.pc-about-contact > div:last-child { min-width: 0; }
+@media (max-width: 800px) {
+  .pc-about-grid, .pc-about-principles, .pc-about-contact { grid-template-columns: minmax(0, 1fr); }
+  .pc-about-grid { gap: 0; }
+  .pc-about-principles li { gap: 15px; }
+}
+@media (max-width: 420px) {
+  .pc-about-actions .pc-button { width: 100%; justify-content: space-between; }
+  .pc-about-principles li { grid-template-columns: 1fr; }
+}
+@media print {
+  .pc-about { padding: 0; }
+  .pc-about-grid section, .pc-about-principles li { break-inside: avoid; }
+  .pc-about-contact { background: white; border: 1px solid #555; }
+}
