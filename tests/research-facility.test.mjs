@@ -12,8 +12,9 @@ test('laboratory candidate is independently navigable, semantic and source-hones
   assert.equal((page.match(/role="tabpanel"/g)||[]).length,8);
   assert.equal((page.match(/role="tablist"/g)||[]).length,2);
   assert.match(page,/aria-label="Primary navigation"/);
-  assert.match(page,/aria-label="Mobile primary navigation"/);
-  assert.equal((page.match(/aria-label="Primary pages"/g)||[]).length,2);
+  assert.match(page,/aria-label="Mobile page sections"/);
+  assert.equal((page.match(/aria-label="Section tabs"/g)||[]).length,2);
+  assert.match(page,/aria-label="Page sections"/);
   assert.doesNotMatch(page,/aria-label="(?:Mobile )?[Ll]aboratory (?:navigation|sections)"/);
   assert.equal((page.match(/<h1(?:\s|>)/g)||[]).length,8);
   for(const key of ['home','experience','systems','work','portfolio','activity','writing','contact']){
@@ -77,7 +78,7 @@ test('laboratory candidate is independently navigable, semantic and source-hones
   assert.doesNotMatch(unknown,/return to the laboratory/i);
 });
 test('the Laboratory exposes the shared site navigation without losing its section tabs',()=>{
-  const primary=page.match(/<nav class="lab-site-nav" aria-label="Site navigation">([\s\S]*?)<\/nav>/)?.[1];
+  const primary=page.match(/<nav class="lab-site-nav" aria-label="Primary navigation">([\s\S]*?)<\/nav>/)?.[1];
   assert.ok(primary,'site navigation is present in the Laboratory shell');
   const hrefs=markup=>[...markup.matchAll(/href="([^"]+)"/g)].map(match=>match[1]);
   assert.deepEqual(hrefs(primary),SITE_PRIMARY_LINKS.map(link=>link.href));
@@ -91,7 +92,7 @@ test('the Laboratory exposes the shared site navigation without losing its secti
   assert.equal(selectedPrimaryHref("/"),null);
   for(const [path,view,expected] of [["/work/","work","/work/"],["/fieldnotes/","writing","/fieldnotes/"],["/research/","experience",null]]){
     const html=renderResearchFacilityHome({initialView:view,canonicalPath:path});
-    const nav=html.match(/<nav class="lab-site-nav" aria-label="Site navigation">([\s\S]*?)<\/nav>/)?.[1];
+    const nav=html.match(/<nav class="lab-site-nav" aria-label="Primary navigation">([\s\S]*?)<\/nav>/)?.[1];
     assert.ok(nav,path);
     const selected=[...nav.matchAll(/<a href="([^"]+)" aria-current="page">/g)].map(match=>match[1]);
     assert.deepEqual(selected,expected?[expected]:[],path+" selected primary route");
