@@ -110,6 +110,15 @@ test('owner leadership and proven delivery remain first-class without clinical o
   assert.doesNotMatch(page,/improved client outcomes by|\$[\d,]+ in savings|trained foundational model/i);
 });
 
+test('Apple platform work links to honestly labeled archived source',()=>{
+  assert.match(page,/class="lab-focus-card lab-focus-card--engineering" href="\/work\/"/);
+  assert.match(page,/id="apple-development"/);
+  assert.match(page,/Apple platforms/);
+  assert.match(page,/Historical source · archived client, not a current release/);
+  assert.match(page,/https:\/\/github\.com\/devonalanakins\/anevum-web\/tree\/main\/native\/iren-ios/);
+  assert.doesNotMatch(page,/Dadog.{0,80}(?:available|download|App Store)/i);
+});
+
 test('approved portrait section renders only when a real first-party image is packaged',()=>{
   assert.doesNotMatch(page,/class="lab-personal"|devon-portrait\.avif/,
     'No empty portrait card or broken image may appear in the default candidate');
