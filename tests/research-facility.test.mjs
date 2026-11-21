@@ -34,8 +34,9 @@ test('laboratory candidate is independently navigable, semantic and source-hones
     assert.ok(page.replace(/<[^>]*>/g,' ').toLowerCase().includes(term.toLowerCase()),term);
   }
   assert.match(page,/data-public-github-feed/);
-  assert.match(page,/data-public-spotify/);
-  assert.match(page,/<img data-spotify-cover[^>]+referrerpolicy="no-referrer"/);
+  assert.match(page,/data-public-apple-listening/);
+  assert.match(page,/data-apple-listening-state/);
+  assert.doesNotMatch(page,/data-public-spotify|spotify\.com|<audio/);
   assert.doesNotMatch(page,/data-public-work|data-work-presentation="editor"/);
   assert.doesNotMatch(page,/data-public-threads|data-threads-summary|data-threads-posts/);
   assert.doesNotMatch(page,/data-public-gpt|\/gpt\/|GPT analytics|token counts|GPT · CAPTURED/i);
@@ -65,7 +66,9 @@ test('laboratory candidate is independently navigable, semantic and source-hones
   assert.match(page,/class="lab-explore-heading"/);
   assert.match(page,/Selected public sources/);
   assert.match(page,/class="lab-signal-tile lab-signal-github"/);
-  assert.match(page,/class="lab-signal-tile lab-signal-spotify"/);
+  assert.match(page,/class="lab-signal-tile lab-signal-apple"/);
+  assert.match(page,/Apple Music/);
+  assert.match(page,/apple-listening-client\.ts/);
   assert.match(page,/one-social-icon--threads/);
   assert.doesNotMatch(page,/Recent authorized public Threads posts|No verified editor session/);
   assert.match(page,/Public events only/);
