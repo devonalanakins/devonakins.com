@@ -162,7 +162,7 @@ export function renderResearchFacilityHome({initialView='home',canonicalPath='/'
   const home=view('home',
  '<div class="lab-overview lab-portfolio-layout">'+
  '<section class="lab-portfolio-hero" aria-label="Personal introduction and current professional focus">'+
- '<div class="lab-portfolio-hero-content"><p class="lab-hero-name">SOFTWARE · WRITING · RESEARCH</p>'+
+ '<div class="lab-portfolio-hero-content"><p class="lab-hero-name">INDEPENDENT SOFTWARE DEVELOPER · WRITER</p>'+
  '<h1 class="da-name">Devon<br>Alan Akins<span>.</span></h1>'+
  '<p class="lab-hero-deck">I build software, write, learn things, and talk to interesting people.</p>'+
  '<p class="lab-portfolio-statement">I also lead nonclinical operations and technology at Nona Neuropsychology.</p>'+
