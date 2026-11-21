@@ -22,7 +22,7 @@ try:
         for engine in ("chromium","webkit"):
             browser=getattr(pw,engine).launch()
             try:
-                for width,height in ((390,844),(768,1024),(1440,900)):
+                for width,height in ((320,760),(390,844),(768,1024),(1440,900)):
                     context=browser.new_context(viewport={"width":width,"height":height},reduced_motion="reduce",ignore_https_errors=LOCAL_TLS)
                     page=context.new_page()
                     # This is a static Vite preview, not the deployed Worker API.
@@ -38,8 +38,16 @@ try:
                         assert response and response.status==200,(engine,width,path,"unavailable")
                         assert page.locator("main#pc-main").is_visible()
                         assert page.locator(".pc-skip").count()==1
-                        assert page.locator('.pc-nav a[aria-current="page"]').count()==1
+                        assert page.locator('.pc-header a[aria-current="page"]').count()==1
                         assert page.locator(".pc-nav").is_visible()
+                        assert page.locator(".pc-nav a").count()==6
+                        assert page.locator(".pc-context-nav").is_visible()
+                        assert page.locator(".pc-context-nav a").count()==6
+                        if width==320:
+                            page.locator('.pc-nav a[href="/about/"]').focus()
+                            assert page.evaluate("document.activeElement.getAttribute('href')")=="/about/"
+                            page.locator('.pc-context-nav a[href="/contact/"]').focus()
+                            assert page.evaluate("document.activeElement.getAttribute('href')")=="/contact/"
                         assert page.locator("h1").count()==1
                         assert page.evaluate("document.documentElement.scrollWidth<=innerWidth+1"),(
                             engine,width,path,"horizontal overflow",page.evaluate("document.documentElement.scrollWidth")
@@ -107,7 +115,7 @@ try:
                     context.close()
             finally:
                 browser.close()
-    print("Creator pages passed Chromium/WebKit at 390, 768, and 1440 px in both color modes.")
+    print("Creator pages passed Chromium/WebKit at 320, 390, 768, and 1440 px in both color modes.")
 finally:
     if server:
         server.terminate()
