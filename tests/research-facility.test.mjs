@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 import {LABORATORY_ROUTES} from '../src/professional/laboratory-routes.mjs';
+import {SITE_PRIMARY_LINKS, SITE_CONTEXT_LINKS, selectedPrimaryHref} from '../src/professional/site-navigation.mjs';
 import {renderResearchFacilityHome,lissajousPath} from '../src/professional/research-facility.mjs';
 import {approvedPublicProjects} from '../src/publication-manifest.mjs';
 
@@ -75,6 +76,28 @@ test('laboratory candidate is independently navigable, semantic and source-hones
   assert.match(unknown,/Explore the work or return to the homepage\./);
   assert.doesNotMatch(unknown,/return to the laboratory/i);
 });
+test('the Laboratory exposes the shared site navigation without losing its section tabs',()=>{
+  const primary=page.match(/<nav class="lab-site-nav" aria-label="Site navigation">([\\s\\S]*?)<\\/nav>/)?.[1];
+  assert.ok(primary,'site navigation is present in the Laboratory shell');
+  const hrefs=markup=>[...markup.matchAll(/href="([^"]+)"/g)].map(match=>match[1]);
+  assert.deepEqual(hrefs(primary),SITE_PRIMARY_LINKS.map(link=>link.href));
+  assert.equal((primary.match(/aria-current="page"/g)||[]).length,0,'the da. mark is the Home destination');
+  const menu=page.match(/<div class="lab-creator-menu-links">([\\s\\S]*?)<\\/div>/)?.[1];
+  assert.ok(menu,'mobile dialog still exposes destination links');
+  assert.deepEqual(hrefs(menu),[...SITE_PRIMARY_LINKS,...SITE_CONTEXT_LINKS].map(link=>link.href));
+  assert.equal((page.match(/role="tablist"/g)||[]).length,2,'existing three-tab panel controller survives');
+  assert.equal(selectedPrimaryHref("/work/merit/"),"/work/");
+  assert.equal(selectedPrimaryHref("/courses/man-of-the-house/start/"),"/courses/");
+  assert.equal(selectedPrimaryHref("/"),null);
+  for(const [path,view,expected] of [["/work/","work","/work/"],["/fieldnotes/","writing","/fieldnotes/"],["/research/","experience",null]]){
+    const html=renderResearchFacilityHome({initialView:view,canonicalPath:path});
+    const nav=html.match(/<nav class="lab-site-nav" aria-label="Site navigation">([\\s\\S]*?)<\\/nav>/)?.[1];
+    assert.ok(nav,path);
+    const selected=[...nav.matchAll(/<a href="([^"]+)" aria-current="page">/g)].map(match=>match[1]);
+    assert.deepEqual(selected,expected?[expected]:[],path+" selected primary route");
+  }
+});
+
 test('Nona executive case study is public, nonclinical, and isolated to its approved project',()=>{
   const entry=approvedPublicProjects.find(p=>p.slug==='operations');
   const other=approvedPublicProjects.find(p=>p.slug==='merit');
