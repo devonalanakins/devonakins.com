@@ -72,6 +72,11 @@ function show(next:TabName,focus=false,updateUrl=true){
     // Native detail pages retain the selected parent from their real path.
     const path=document.body.dataset.labNative==='true'?location.pathname:LABORATORY_ROUTES[next];
     const selectedHref=selectedPrimaryHref(path);
+    const brand=document.querySelector<HTMLAnchorElement>('.lab-brand');
+    if(brand){
+      if(path==='/')brand.setAttribute('aria-current','page');
+      else brand.removeAttribute('aria-current');
+    }
     for(const link of document.querySelectorAll<HTMLAnchorElement>('.lab-site-nav a')){
       if(link.getAttribute('href')===selectedHref)link.setAttribute('aria-current','page');
       else link.removeAttribute('aria-current');
