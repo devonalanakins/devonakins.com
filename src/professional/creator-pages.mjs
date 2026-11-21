@@ -87,8 +87,10 @@ function shell({path, title, description, current, rss, image}, main) {
     '<body class="creator-body"><a class="pc-skip" href="#pc-main">Skip to content</a>' +
     '<header class="pc-header"><div class="pc-wrap pc-header-row"><a class="pc-brand" href="/" aria-label="da. Devon Alan Akins home"><span aria-hidden="true">da.</span><small>Devon Alan Akins</small></a>' +
     '<nav class="pc-nav" aria-label="Primary navigation">' +
-    link("/work/", "Work", current) + link("/research/", "Research", current) + link("/watch/", "Watch", current) + link("/live/", "Live", current) + link("/podcast/", "Podcast", current) + link("/courses/", "Courses", current) + link("/setup/", "My Setup", current) +
-    '</nav></div></header><main id="pc-main" tabindex="-1">' + main + '</main>' +
+    link("/work/", "Work", current) + link("/watch/", "Watch", current) + link("/podcast/", "Podcast", current) + link("/courses/", "Learn", current) + link("/fieldnotes/", "Writing", current) + link("/about/", "About", current) +
+    '</nav></div><nav class="pc-context-nav" aria-label="More destinations"><div class="pc-wrap pc-context-track">' +
+    link("/live/", "Live", current) + link("/research/", "Research", current) + link("/activity/", "Activity", current) + link("/systems/", "Systems", current) + link("/setup/", "My Setup", current) + link("/contact/", "Contact", current) +
+    '</div></nav></header><main id="pc-main" tabindex="-1">' + main + '</main>' +
     '<footer class="pc-footer pc-wrap"><div><a href="/" aria-label="da. Devon Alan Akins home">da.</a><p>Devon Alan Akins</p></div>' +
     '<nav aria-label="Footer navigation"><a href="/watch/">Watch</a><a href="/live/">Live</a><a href="/fieldnotes/">Writing</a><a href="/courses/">Courses</a><a href="/about/">About</a><a href="/contact/">Contact</a></nav>' +
     themeControl() + '</footer></body></html>';
