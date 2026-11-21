@@ -261,7 +261,7 @@ function renderSetup() {
 function renderCourses() {
   return '<div class="pc-wrap"><header class="pc-setup-hero pc-courses-hero"><p class="pc-eyebrow">Learning / start with something useful</p><h1>Courses<span>.</span></h1>' +
     '<div class="pc-setup-intro"><p>Learn something practical. Try it in the real world. Understand why it works.</p>' +
-    '<p>A complete first written lesson is available free. No full courses are available for enrollment or purchase yet, and paid access is not active.</p></div></header>' +
+    '<p>No courses are available for enrollment or purchase yet. A complete first written lesson is available free, and paid access is not active.</p></div></header>' +
     '<section class="pc-section pc-two-column pc-course-feature" id="man-of-the-house"><div><p class="pc-eyebrow">Flagship course / in development</p><h2>Man of the House.</h2></div><div class="pc-prose">' +
     '<p>Tools, safe household maintenance, cooking, organization, partnership, fatherhood, responsibility and independence. The point is practical competence, kindness and accountability—not performing a gender role.</p>' +
     '<p>The first complete written lesson is free: a 15-minute walk-through of one part of your home, with safety boundaries, a low-risk improvement and three clear follow-up actions. No account or payment is needed to read it.</p>' +
