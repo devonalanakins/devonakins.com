@@ -422,6 +422,13 @@ export function createHandler(assets, release, options = {}) {
           securityHeaders["Content-Security-Policy"].replace(
             "connect-src 'self';","connect-src 'self' https://api.github.com;"));
       }
+      // Only approved Watch pages may embed the configured public Stream player.
+      // Member-only playback remains outside these public routes.
+      if (options.laboratoryCandidate === true && status === 200 && isHtml &&
+          path.startsWith("/watch/")) {
+        headers.set("Content-Security-Policy",
+          headers.get("Content-Security-Policy") + "; frame-src https://iframe.videodelivery.net");
+      }
       if (status === 404) headers.set("Cache-Control", "no-store");
       if (
         status === 200 &&
