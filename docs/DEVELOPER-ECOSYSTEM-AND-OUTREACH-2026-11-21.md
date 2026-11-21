@@ -22,11 +22,11 @@ Keep Nona Neuropsychology's clinical/business systems, accounts and sensitive da
 | Program | Official destination | What can be done now | Proof required before a public claim |
 | --- | --- | --- | --- |
 | Apple Developer Program | https://developer.apple.com/programs/enroll/ | Prepare a free Apple developer account and native demo; paid enrollment later | Active membership confirmation, not a planned charge |
-| GitHub Developer Program | https://developer.github.com/program/ | Verify actual API integration and sign-up eligibility | Registration confirmation and developer-program profile status |
+| GitHub Developer Program | https://github.com/developer/register (requirements: https://docs.github.com/en/integrations/concepts/github-developer-program) | Verify actual API integration and sign-up eligibility; enrollment terms require owner review | Registration confirmation and developer-program profile status |
 | GitHub Sponsors | https://github.com/sponsors | Prepare open-source funding purpose and payout/tax prerequisites | Approved sponsor profile and sponsor page |
 | OpenAI Codex for Open Source | https://developers.openai.com/community/codex-for-oss | Use a maintained public project, real usage evidence and a bounded application | Written acceptance from program |
-| Cloudflare for Startups | https://www.cloudflare.com/forstartups/ | Evaluate legal/business eligibility before applying | Approved credits visible in the designated Cloudflare account |
-| Cloudflare Ambassadors | https://developers.cloudflare.com/community/ambassadors/ | Share truthful technical educational content and check openings | Program acceptance |
+| Cloudflare for Startups | https://www.cloudflare.com/startups/ | For eligible incorporated product startups only; personal blogs and consultancies are excluded | Approved credits visible in the designated Cloudflare account |
+| Cloudflare Ambassadors | https://www.cloudflare.com/community/ | Prepare tutorial/community evidence and check the next cohort window (the 2026 deadline has passed) | Program acceptance |
 | GitHub Certifications | https://resources.github.com/learn/certifications/ | Study relevant curriculum; prioritize Actions/Advanced Security only if useful | Awarded, verifiable certificate or badge |
 
 **Eligibility:** Program rules, award sizes, and application windows can change. No enrollment payment, account application, tax agreement, grant award, or credit claim was made as part of this work.
