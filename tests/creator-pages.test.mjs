@@ -152,13 +152,13 @@ test("creator pages are first-party, accessible and connected to the established
 });
 
 test("live theater stays offline without publishing an unapproved player or recordings", () => {
-  assert.match(live, /https:\\/\\/devonakins\\.com\\/live\\//);
-  assert.match(live, /Live from <em>wherever I am/);
-  assert.match(live, /NOT BROADCASTING/);
-  assert.match(live, /There is no archive published here yet/);
-  assert.match(live, /data-live-player hidden/);
-  assert.match(live, /mobile-live-client\\.ts/);
-  assert.match(live, /mobile-live\\.css/);
+  assert.ok(live.includes('href="https://devonakins.com/live/"'));
+  assert.ok(live.includes("Live from <em>wherever I am"));
+  assert.ok(live.includes("NOT BROADCASTING"));
+  assert.ok(live.includes("There is no archive published here yet"));
+  assert.ok(live.includes("data-live-player hidden"));
+  assert.ok(live.includes("mobile-live-client.ts"));
+  assert.ok(live.includes("mobile-live.css"));
   assert.doesNotMatch(live, /<iframe|streamKey|token=|autoplay|private recording/i);
 });
 
