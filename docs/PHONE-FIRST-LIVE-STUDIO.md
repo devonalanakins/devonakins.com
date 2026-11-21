@@ -7,7 +7,7 @@
 1. **Record:** iPhone Camera for spoken pieces, built-in iOS Screen Recording for narrated demonstrations, PRISM Live Studio for camera-based lives and custom RTMPS. Validate the Sony headset as the actual mic in *each* application; Bluetooth audio routing and screen-broadcast limitations differ by application.
 2. **Review:** Inspect the actual clip for sound, readability, notifications, sensitive material, and rights/guest consent before publication. Keep original files and a backup. Screen recording a phone **will capture anything visible**; hide notifications and close business/client information first.
 3. **Brand:** Use one composited portrait/landscape overlay per mobile format. The OBS scene pack is design source/reference and is **not** installed in PRISM. On iPhone, screen broadcast with face camera inset cannot be assumed. A voice-over-screen lesson is a complete format.
-4. **Publish:** Use `devonakins.com/live/` for a public broadcast only after the gated first-broadcast acceptance checks. Put manually approved recorded pieces in `/podcast/` or `/courses/`. Patreon memberships and Spotify audio remain separate services.
+4. **Publish:** Use `devonakins.com/live/` for a public broadcast only after the gated first-broadcast acceptance checks. Put approved public videos in `/watch/`, link podcast episodes from `/podcast/`, and develop structured lessons in `/courses/`. Patreon memberships and Spotify audio remain separate services.
 5. **Batch:** A longer recording can become a lesson and a few short excerpts. Publish from a real reviewed content queue; do not promise an automated scheduler or an archive that does not exist.
 
 ## Website: what this candidate does
