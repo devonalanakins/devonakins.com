@@ -27,7 +27,7 @@ try:
                     page=context.new_page()
                     errors=[]
                     page.on("pageerror",lambda error:errors.append(str(error)))
-                    for path in ("/podcast/","/setup/"):
+                    for path in ("/podcast/","/courses/","/setup/"):
                         response=page.goto(BASE+path,wait_until="networkidle")
                         assert response and response.status==200,(engine,width,path,"unavailable")
                         assert page.locator("main#pc-main").is_visible()
@@ -48,6 +48,12 @@ try:
                                 assert page.locator(".pc-state").inner_text()=="No episodes published yet"
                             assert page.locator('a[href="/setup/"]').count()>=2
                             assert page.locator("audio,video,iframe").count()==0
+                        elif path=="/courses/":
+                            assert page.locator("h1").inner_text().strip()=="Courses."
+                            assert page.locator(".pc-course-steps article").count()==3
+                            assert page.locator('a[href="/podcast/"]').count()>=2
+                            assert "No courses are available for enrollment" in page.locator("main").inner_text()
+                            assert page.locator("audio,video,iframe,form").count()==0
                         else:
                             assert page.locator(".pc-product").count()==8
                             assert page.locator(".pc-product-status-future").count()==1
