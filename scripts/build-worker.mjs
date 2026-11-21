@@ -73,7 +73,7 @@ await writeFile(
 await writeFile(".release/handler.mjs", await readFile("src/worker.mjs"));
 await writeFile(".release/public-telemetry.mjs", await readFile("src/public-telemetry.mjs"));
 for (const module of [
-  "spotify-presence", "listening-crypto", "listening-owner-page",
+  "apple-listening", "spotify-presence", "listening-crypto", "listening-owner-page",
   "listening-owner-core", "listening-oauth-start", "listening-oauth-callback",
   "listening-owner-api", "listening-playback-probe", "listening-d1-presence",
   "presence-model", "presence-api", "presence-owner-page", "owner-source-readiness", "gpt-observation-bridge",
