@@ -218,7 +218,7 @@ test("creator pages are first-party, accessible and connected to the established
   assert.match(home, /href="\/watch\/">Watch/);
   assert.match(home, /href="\/podcast\/">Podcast/);
   assert.match(home, /href="\/setup\/">My Setup/);
-  assert.match(home, /href="\/courses\/">Courses/);
+  assert.match(home, /href="\/courses\/">Learn/);
   assert.match(home, /href="\/fieldnotes\/">Writing/);
 });
 

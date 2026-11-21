@@ -131,6 +131,24 @@ try:
                         theme.select_option("system")
                         assert page.evaluate("document.documentElement.dataset.theme")=="light"
                         assert not errors,(engine,width,path,errors)
+                    if width in (320, 390, 1440):
+                        page.goto(BASE+"/", wait_until="networkidle")
+                        assert page.locator(".lab-site-nav a").count()==6
+                        assert page.evaluate("document.documentElement.scrollWidth<=innerWidth+1")
+                        # Native cross-document links may commit navigation after
+                        # the click resolves in WebKit. Wait for the real URL and
+                        # loaded destination instead of sampling a transient URL.
+                        watch_link=page.locator('.lab-site-nav a[href="/watch/"]')
+                        assert watch_link.get_attribute("href")=="/watch/"
+                        watch_link.click()
+                        page.wait_for_url(BASE+"/watch/", wait_until="networkidle", timeout=15000)
+                        assert page.locator("main#pc-main").is_visible()
+                        assert page.locator("h1").inner_text().strip()=="Watch."
+                        assert page.locator('link[rel="canonical"]').get_attribute("href")=="https://devonakins.com/watch/"
+                        page.goto(BASE+"/work/", wait_until="networkidle")
+                        assert page.locator('.lab-site-nav a[href="/work/"][aria-current="page"]').count()==1
+                        page.goto(BASE+"/fieldnotes/", wait_until="networkidle")
+                        assert page.locator('.lab-site-nav a[href="/fieldnotes/"][aria-current="page"]').count()==1
                     context.close()
             finally:
                 browser.close()

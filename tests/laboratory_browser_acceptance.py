@@ -91,6 +91,14 @@ try:
                     assert page.locator('[data-public-gpt],a[href="/gpt/"]').count()==0
                     assert page.locator('.lab-tabs-desktop [data-one-target]').count()==3
                     assert page.locator('#lab-menu [data-one-target]').count()==3
+                    assert page.locator('.lab-site-nav').is_visible(),(engine,width,'site navigation missing')
+                    assert page.locator('.lab-site-nav a').count()==6
+                    assert page.locator('#lab-menu .lab-creator-menu-links nav').count()==2
+                    assert page.locator('#lab-menu .lab-creator-menu-links nav a').count()==12
+                    if width==320:
+                        page.locator('.lab-site-nav a[href="/about/"]').focus()
+                        assert page.evaluate("document.activeElement.getAttribute('href')")=="/about/"
+                        page.locator('.lab-brand').focus()
                     if width<=1100:
                         menu_icon=page.locator('.lab-menu-toggle span').first.bounding_box()
                         assert menu_icon and menu_icon['width']>=20 and menu_icon['height']>=1,(engine,width,'Menu icon has no visible stroke')
@@ -144,7 +152,8 @@ try:
                         assert abs(geometry['header']['height']-76)<=8
                         assert geometry['signals']['y']-geometry['destinations']['y']>=100
                     (OUT/f'{engine}-landmarks-{width}.json').write_text(json.dumps(geometry,indent=2))
-                    page.mouse.click(width-2,65)
+                    # Clear hover without activating the new site navigation row.
+                    page.mouse.move(width-2,65)
                     page.screenshot(path=str(OUT/f'{engine}-cinematic-{width}x{height}.png'),full_page=True)
                     for key in ('work','experience'):
                         page.locator(f'[data-lab-destination="{key}"]').click()

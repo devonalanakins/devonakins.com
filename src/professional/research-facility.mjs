@@ -10,6 +10,7 @@ import {brandIcon} from './brand-icons.mjs';
 import {renderNonaOperatingBrief} from './nona-operating-brief.mjs';
 import {approvedPublicProjects} from '../publication-manifest.mjs';
 import {renderHomeSocialHub, renderSocialChannels} from './social-presence.mjs';
+import {SITE_PRIMARY_LINKS, SITE_CONTEXT_LINKS, selectedPrimaryHref} from './site-navigation.mjs';
 
 const escapeHtml=value=>String(value ?? '').replace(/[&<>"']/g,
   c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -17,8 +18,8 @@ const sections=Object.freeze([
   ['home','Home'],['experience','Research'],['systems','Systems'],['work','Work'],['portfolio','Portfolio'],
   ['activity','Activity'],['writing','Fieldnotes'],['contact','Contact'],
 ]);
-// Only three public destinations; historical sections remain addressable for
-// bookmarks, case studies and direct links without cluttering the main nav.
+// Only three in-page section tabs; the six main site destinations are
+// rendered separately. Older panels still support bookmarks and deep links.
 const primarySections=Object.freeze([['home','Home'],['work','Work'],['experience','Research']]);
 /** Actual analytic Lissajous curve: x=sin(a*t), y=sin(b*t+phase).
  * Validated integer frequencies; no random data, inferred experiment or API.
@@ -35,13 +36,24 @@ export function lissajousPath(a=3,b=4,phase=Math.PI/2) {
 }
 function renderNavigation(kind,activeView){
   return '<nav class="one-tabs lab-tabs lab-tabs-'+kind+'" aria-label="'+
-    (kind==='desktop'?'Primary navigation':'Mobile primary navigation')+'">'+
-    '<div class="one-tablist" role="tablist" aria-label="Primary pages">'+
+    (kind==='desktop'?'Page sections':'Mobile page sections')+'">'+
+    '<div class="one-tablist" role="tablist" aria-label="Section tabs">'+
     primarySections.map(([key,label])=>'<button type="button" role="tab" id="one-'+kind+'-'+key+
       '" aria-controls="one-panel-'+key+'" aria-selected="'+(key===activeView?'true':'false')+
       '" tabindex="'+(key===activeView?'0':'-1')+'" data-one-target="'+key+'">'+
       '<span class="one-tab-label">'+escapeHtml(label)+'</span></button>').join('')+
     '</div></nav>';
+}
+function renderSiteNavigation(path){
+  const selected=selectedPrimaryHref(path);
+  return '<nav class="lab-site-nav" aria-label="Primary navigation"><div class="lab-site-nav-track">'+
+    SITE_PRIMARY_LINKS.map(({href,label})=>'<a href="'+href+'"'+(href===selected?' aria-current="page"':'')+'>'+escapeHtml(label)+'</a>').join('')+
+    '</div></nav>';
+}
+function renderMenuSiteLinks(){
+  const renderLinks=items=>items.map(({href,label})=>'<a href="'+href+'">'+escapeHtml(label)+'</a>').join('');
+  return '<div class="lab-creator-menu-links"><p class="lab-menu-group-title">Explore</p><nav aria-label="Site destinations">'+renderLinks(SITE_PRIMARY_LINKS)+'</nav>'+
+    '<p class="lab-menu-group-title">More destinations</p><nav aria-label="Additional destinations">'+renderLinks(SITE_CONTEXT_LINKS)+'</nav></div>';
 }
 function renderView(key,content,activeView){
   return '<section class="one-view lab-view lab-view-'+key+'" id="one-panel-'+key+
@@ -289,8 +301,8 @@ export function renderResearchFacilityHome({initialView='home',canonicalPath='/'
     '<a class="one-skip lab-skip" href="#one-stage">Skip to content</a>'+
     '<div class="lab-background" aria-hidden="true"><div class="lab-background-grid"></div>'+
     '<div class="lab-background-glow"></div></div>'+
-    '<header class="lab-header"><a href="/" class="lab-brand" title="Devon Alan Akins home"><span class="da-monogram" aria-hidden="true">da.</span><span class="lab-brand-caption">DEVONAKINS.COM<small>INDEPENDENT / PERSONAL</small></span></a>'+nav('desktop')+'<div class="lab-header-end">'+appearanceControl+'<a class="lab-header-contact" href="/watch/">Watch ↗︎</a><a class="lab-header-contact" href="mailto:hello@devonakins.com">Contact ↗︎</a><button type="button" class="lab-desktop-menu" data-lab-menu-open aria-controls="lab-menu" aria-expanded="false" aria-label="Open contact and motion menu">Menu</button></div><button type="button" class="lab-menu-toggle" data-lab-menu-open aria-controls="lab-menu" aria-expanded="false" aria-label="Open navigation menu"><span></span><span></span><span></span></button></header>'+
-    '<dialog id="lab-menu" aria-labelledby="lab-menu-title"><div class="lab-menu-heading"><h2 id="lab-menu-title">Explore</h2><button data-lab-menu-close aria-label="Close navigation menu">Close <span aria-hidden="true">×</span></button></div>'+nav('mobile')+'<div class="lab-creator-menu-links"><a href="/watch/">Watch</a><a href="/live/">Live</a><a href="/fieldnotes/">Writing</a><a href="/podcast/">Podcast</a><a href="/courses/">Courses</a><a href="/setup/">My Setup</a><a href="/about/">About</a><a href="/contact/">Contact</a></div>'+appearanceControl+'<button type="button" class="lab-motion" data-lab-motion aria-pressed="true">MOTION ON</button><a href="mailto:hello@devonakins.com">hello@devonakins.com</a></dialog>'+
+    '<header class="lab-header"><a href="/" class="lab-brand"'+(canonicalPath==='/'?' aria-current="page"':'')+' title="Devon Alan Akins home"><span class="da-monogram" aria-hidden="true">da.</span><span class="lab-brand-caption">DEVONAKINS.COM<small>INDEPENDENT / PERSONAL</small></span></a>'+nav('desktop')+'<div class="lab-header-end">'+appearanceControl+'<a class="lab-header-contact" href="/watch/">Watch ↗︎</a><a class="lab-header-contact" href="mailto:hello@devonakins.com">Contact ↗︎</a><button type="button" class="lab-desktop-menu" data-lab-menu-open aria-controls="lab-menu" aria-expanded="false" aria-label="Open contact and motion menu">Menu</button></div><button type="button" class="lab-menu-toggle" data-lab-menu-open aria-controls="lab-menu" aria-expanded="false" aria-label="Open navigation menu"><span></span><span></span><span></span></button></header>'+renderSiteNavigation(canonicalPath)+
+    '<dialog id="lab-menu" aria-labelledby="lab-menu-title"><div class="lab-menu-heading"><h2 id="lab-menu-title">Explore</h2><button data-lab-menu-close aria-label="Close navigation menu">Close <span aria-hidden="true">×</span></button></div>'+nav('mobile')+renderMenuSiteLinks()+appearanceControl+'<button type="button" class="lab-motion" data-lab-motion aria-pressed="true">MOTION ON</button><a href="mailto:hello@devonakins.com">hello@devonakins.com</a></dialog>'+
     '<main id="one-stage" class="one-stage lab-stage" tabindex="-1">'+
     (notFound?view('home','<div class="lab-secondary"><div class="lab-section-intro"><p class="lab-overline">404 / WAYFINDING</p><h1>That page is <em>not here.</em></h1><p>Explore the work or return to the homepage.</p><a class="lab-action" href="/">Return home →</a></div></div>'):home)+research+systems+projects+portfolio+activity+notes+contact+'</main>'+
     '<footer class="lab-footer"><div class="lab-footer-identity"><span>Devon Alan Akins</span><small>SCIENCE / SOFTWARE / SYSTEMS / EXPLORATION</small></div>'+renderSocialChannels(true)+'<div class="lab-footer-status"><span aria-hidden="true"></span>DEVON ALAN AKINS<small>Independent software, inquiry &amp; original work</small></div></footer>'+
