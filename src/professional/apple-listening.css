@@ -1,0 +1,20 @@
+/* Independent Apple Music editorial layer: no third-party artwork or music audio. */
+.lab-apple-glyph{display:grid;place-items:center;flex:none;width:38px;height:38px;border-radius:10px;border:1px solid #b4c5b67a;color:#e4d4b6;background:radial-gradient(circle at 72% 22%,#658d7670,transparent 60%),#142f2d;font:400 24px/1 Georgia,serif}
+.lab-signal-apple{border-color:#acb89a85!important;background:linear-gradient(120deg,#31493d91,#101e20dc)!important}
+.lab-signal-apple summary .lab-apple-glyph{width:34px;height:34px}
+.lab-apple-detail{display:grid;gap:6px}
+.lab-apple-state{font:700 10px/1.4 Arial,sans-serif;letter-spacing:.14em;color:#d9c29b}
+.lab-apple-detail p{margin:0;color:#d6e3db}
+.lab-apple-detail p[data-apple-listening-note]{font-size:11px;color:#aebdb1}
+.lab-apple-detail a{color:#efd0a5;text-underline-offset:5px}
+.lab-apple-detail a[hidden]{display:none!important}
+.lab-signal-apple[data-apple-listening-state="reported"] .lab-apple-glyph{border-color:#d8d0a6;box-shadow:0 0 16px #8baf8a38}
+.lab-apple-listening-page{padding:clamp(20px,3vw,50px);border-radius:13px;background:radial-gradient(ellipse at 95% 3%,#668b7041,transparent 60%),linear-gradient(130deg,#193632,#101c20);border:1px solid #8fa79b70;color:#f7f0df}
+.lab-apple-listening-page .lab-apple-header{display:flex;align-items:center;gap:17px;padding-bottom:25px;border-bottom:1px solid #a1b6a54c}
+.lab-apple-listening-page .lab-apple-header h2{font:400 clamp(26px,3vw,45px)/1.08 Georgia,serif;letter-spacing:-.03em;margin:0}
+.lab-apple-listening-page .lab-apple-detail{margin-top:21px}
+.lab-apple-listening-page .lab-apple-detail p{font-size:clamp(14px,1.4vw,18px);line-height:1.6}
+.lab-apple-listening-page .lab-apple-state{display:block;margin-bottom:8px}
+.lab-apple-disclosure{max-width:65ch;font-size:13px!important;line-height:1.7!important;color:#b9c7b9!important;margin:20px 0 0}
+@media(max-width:480px){.lab-signal-apple summary .lab-apple-glyph{width:31px;height:31px}.lab-apple-listening-page{padding:21px}.lab-apple-listening-page .lab-apple-header{gap:10px}}
+@media(prefers-reduced-motion:reduce){.lab-signal-apple,.lab-apple-listening-page{transition:none!important;animation:none!important}}

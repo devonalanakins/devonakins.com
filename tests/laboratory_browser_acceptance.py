@@ -84,7 +84,10 @@ try:
                     assert page.locator('[data-one-view]').count()==8
                     assert page.locator('[data-public-github-feed]').count()==2
                     assert page.locator('[data-public-work]').count()==0
-                    assert page.locator('[data-public-spotify]').count()==1
+                    assert page.locator('[data-public-apple-listening]').count()==1
+                    assert page.locator('[data-public-spotify]').count()==0
+                    assert page.locator('.lab-signal-apple').count()==1
+                    assert page.locator('audio,iframe').count()==0
                     assert page.locator('[data-public-threads]').count()==0
                     assert page.locator('.lab-footer .one-social-icon--threads').count()==1
                     assert page.locator('.lab-explore-heading').count()==1
@@ -204,6 +207,12 @@ try:
                         assert page.locator(f'[data-one-view="{key}"]').is_visible(),(engine,width,route)
                         if key=='writing':
                             assert page.evaluate('document.documentElement.scrollWidth<=innerWidth'),(engine,width,route,'Writing layout overflow')
+                    page.goto(BASE+'/listening/',wait_until='networkidle')
+                    assert page.locator('.lab-apple-listening-page').count()==1
+                    assert page.locator('.lab-apple-listening-page [data-apple-listening-state]').count()==1
+                    assert page.locator('.lab-apple-listening-page [data-apple-listening-title]').count()==1
+                    assert page.locator('[data-public-spotify],audio,iframe').count()==0
+                    assert page.evaluate('document.documentElement.scrollWidth<=innerWidth+1'),(engine,width,'Apple listening layout overflow')
                     page.goto(BASE,wait_until='networkidle')
                     page.locator('.lab-menu-toggle' if width<=1100 else '.lab-desktop-menu').click()
                     motion=page.locator('#lab-menu [data-lab-motion]')

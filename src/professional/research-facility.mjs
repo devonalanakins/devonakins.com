@@ -5,7 +5,6 @@
  */
 import {FIELDNOTES} from './fieldnotes.mjs';
 import {LABORATORY_HOME_TITLE, LABORATORY_ROUTES} from './laboratory-routes.mjs';
-import {listeningCollections} from './signal-cards.mjs';
 import {brandIcon} from './brand-icons.mjs';
 import {renderNonaOperatingBrief} from './nona-operating-brief.mjs';
 import {approvedPublicProjects} from '../publication-manifest.mjs';
@@ -112,7 +111,7 @@ function compactSignals(){return '<section class="lab-portfolio-signals" aria-la
  '<div class="lab-signals-label"><span class="lab-source-eyebrow">THE PUBLIC RECORD / 01</span><strong>Elsewhere.</strong><small>Source, changes and the occasional soundtrack.</small></div>'+
  '<div class="lab-portfolio-signal-grid">'+
  '<details class="lab-signal-tile lab-signal-github"><summary>'+brandIcon('github')+'<span><strong>Source &amp; changes</strong><small data-github-compact>Checking dated public history</small></span></summary><div class="lab-signal-expanded">'+feed('one-home-github',3)+'<button data-one-go="activity">Explore public record →</button></div></details>'+
- '<details class="lab-signal-tile lab-signal-spotify" data-public-spotify><summary>'+brandIcon('spotify')+'<span><strong>Listening room</strong><small data-spotify-title>Checking approved playback</small></span></summary><div class="lab-signal-expanded"><span data-spotify-state>Checking source</span><p data-spotify-artist>Only explicitly shared playback.</p><img data-spotify-cover alt="" width="48" height="48" referrerpolicy="no-referrer" decoding="async" loading="lazy" hidden><progress data-spotify-progress aria-label="Track progress" hidden></progress><p data-spotify-note>No autoplay audio.</p><a data-spotify-link href="/listening/">About listening →</a></div></details>'+
+ '<details class="lab-signal-tile lab-signal-apple" data-public-apple-listening><summary><span class="lab-apple-glyph" aria-hidden="true">♫</span><span><strong>Apple Music</strong><small data-apple-listening-title>Listening is private</small></span></summary><div class="lab-signal-expanded lab-apple-detail"><span class="lab-apple-state" data-apple-listening-state role="status">NOT SHARED</span><p data-apple-listening-detail>Only owner-approved reports appear here.</p><p data-apple-listening-note>No audio streams on this site.</p><a data-apple-listening-link hidden>Open in Apple Music ↗</a><a href="/listening/">The listening room →</a></div></details>'+
  '</div></section>'}
 /** Render this personal photograph only when its original, owner-approved
  * first-party image is actually packaged. Never invent a portrait or fetch one
@@ -158,7 +157,7 @@ export function renderResearchFacilityHome({initialView='home',canonicalPath='/'
   const nav=kind=>renderNavigation(kind,initialView);
   const pageTitle=fieldnote?fieldnote.title+' — Devon Alan Akins':project?project.title+' — Devon Alan Akins':notFound?'Page not found — Devon Alan Akins':listening?'Listening — Devon Alan Akins':initialView==='home'?LABORATORY_HOME_TITLE:sections.find(([key])=>key===initialView)[1]+' — Devon Alan Akins';
   const introductions={home:'Devon Alan Akins builds software for the web and Apple platforms, writes, studies mathematics and physics, and is developing a long-form podcast. He also leads nonclinical operations and technology at Nona Neuropsychology.',experience:'Interactive mathematical models, scientific questions, assumptions and citations from Devon Alan Akins.',systems:'Documented software architecture, privacy boundaries and independent infrastructure engineering.',work:'Explore approved public software projects, source links, categories and honest implementation status.',portfolio:'Selected software and nonclinical professional operations, including operational and digital-experience work for Nona Neuropsychology.',activity:'Dated public engineering changes, with source provenance and clear project boundaries.',writing:'Mathematical explanations, engineering notes, original writing and books in development.',contact:'Contact Devon Alan Akins about nonclinical operations, independent software development, and research computing. Do not send protected information.'};
-  const introduction=fieldnote?fieldnote.summary:project?project.summary:listening?'Owner-approved Spotify playback and selected public playlists, with independent source and privacy controls.':notFound?'This page is unavailable. Explore Devon Alan Akins’s public software and research portfolio.':introductions[initialView];
+  const introduction=fieldnote?fieldnote.summary:project?project.summary:listening?'Owner-reported Apple Music and Ambient Music updates, with freshness limits, private-source controls and no audio rebroadcast.':notFound?'This page is unavailable. Explore Devon Alan Akins’s public software and research portfolio.':introductions[initialView];
   const home=view('home',
  '<div class="lab-overview lab-portfolio-layout">'+
  '<section class="lab-portfolio-hero" aria-label="Personal introduction and current professional focus">'+
@@ -280,10 +279,12 @@ export function renderResearchFacilityHome({initialView='home',canonicalPath='/'
     '<link rel="stylesheet" href="/src/professional/research-facility.css">'+
     '<link rel="stylesheet" href="/src/professional/research-portfolio.css">'+
     '<link rel="stylesheet" href="/src/professional/research-studio.css">'+
+    '<link rel="stylesheet" href="/src/professional/apple-listening.css">'+
      '<link rel="stylesheet" href="/src/professional/research-theme.css">'+
     '<script type="module" src="/src/professional/client.ts"></script>'+
     '<script type="module" src="/src/professional/one-screen.ts"></script>'+
-    '<script type="module" src="/src/professional/research-facility.ts"></script>'+
+    '<script type="module" src="/src/professional/research-facility.ts"></script>'+ 
+    '<script type="module" src="/src/professional/apple-listening-client.ts"></script>'+
     '<noscript><style>html.lab-html,body.lab-body{height:auto;overflow:auto}.lab-body .lab-stage{height:auto;overflow:visible}.lab-body .lab-stage>.lab-view[hidden]{display:block!important}.lab-body .lab-view{height:auto;min-height:100vh}.lab-body .lab-secondary{height:auto}.lab-tabs,.lab-motion,.lab-menu-toggle,.lab-desktop-menu{display:none!important}</style></noscript>'+
     '</head><body class="p-body one-body lab-body" data-lab-initial="'+initialView+'"'+(project||fieldnote||listening||notFound?' data-lab-native="true"':'')+'>'+
     '<a class="one-skip lab-skip" href="#one-stage">Skip to content</a>'+
@@ -309,5 +310,6 @@ function renderLaboratoryCaseStudy(project){
     '<section class="lab-study"><span>NEXT / NOT A RELEASE CLAIM</span><h2>Next step</h2><p>'+text(p.next)+'</p></section></div>'+nonaBrief+'</article>';
 }
 function renderLaboratoryListening(){
-  return '<div class="lab-secondary"><div class="lab-section-intro"><p class="lab-overline">LISTENING / CONSENT-QUALIFIED SOURCE</p><h1>A soundtrack for <em>making.</em></h1><p>Only owner-approved playback is shown. Listening is separate from public engineering history; no audio autoplays here.</p></div><section class="lab-study" data-public-spotify data-spotify-presentation="listening"><h2 data-spotify-title>Checking approved playback</h2><p data-spotify-state role="status">Checking source</p><p data-spotify-artist></p><img data-spotify-cover alt="" width="96" height="96" referrerpolicy="no-referrer" loading="lazy" decoding="async" hidden><progress data-spotify-progress aria-label="Track playback progress" hidden></progress><p data-spotify-note></p><a data-spotify-link href="/listening/">Playback source →</a></section>'+listeningCollections()+'</div>';
+  return '<div class="lab-secondary"><div class="lab-section-intro"><p class="lab-overline">LISTENING / OWNER-REPORTED SIGNAL</p><h1>A soundtrack for <em>making.</em></h1><p>Apple Music and Ambient Music on my iPhone. Only the listening updates I choose to share appear here; reports expire quickly and no audio is rebroadcast.</p></div>'+ 
+    '<section class="lab-apple-listening-page" data-public-apple-listening aria-labelledby="lab-apple-heading"><div class="lab-apple-header"><span class="lab-apple-glyph" aria-hidden="true">♫</span><h2 id="lab-apple-heading" data-apple-listening-title>Listening is private</h2></div><div class="lab-apple-detail"><span class="lab-apple-state" data-apple-listening-state role="status">NOT SHARED</span><p data-apple-listening-detail>Only approved updates from my iPhone appear here.</p><p data-apple-listening-note>No music audio or listening history is shared.</p><a data-apple-listening-link hidden>Open in Apple Music ↗</a></div><p class="lab-apple-disclosure">This is a recent owner report, not automatic observation of everything playing on an iPhone. Ambient mode is labeled only when I explicitly choose to report it.</p></section></div>';
 }
