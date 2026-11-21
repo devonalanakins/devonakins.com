@@ -91,6 +91,9 @@ try:
                     assert page.locator('[data-public-gpt],a[href="/gpt/"]').count()==0
                     assert page.locator('.lab-tabs-desktop [data-one-target]').count()==3
                     assert page.locator('#lab-menu [data-one-target]').count()==3
+                    if width<=1100:
+                        menu_icon=page.locator('.lab-menu-toggle span').first.bounding_box()
+                        assert menu_icon and menu_icon['width']>=20 and menu_icon['height']>=1,(engine,width,'Menu icon has no visible stroke')
                     assert page.locator('.lab-work-feature').count()==1
                     assert page.locator('.lab-research-journal').count()==1
                     assert page.locator('.lab-footer .one-social-icon').count()==4

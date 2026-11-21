@@ -16,7 +16,7 @@ html.lab-html{background:#f3f1e9;scroll-padding-top:80px}
 .lab-body .lab-header-contact{font:600 12px Arial,sans-serif;color:var(--ink)}
 .lab-body .lab-desktop-menu{font:600 12px Arial,sans-serif!important;color:var(--ink);border:1px solid var(--line);min-width:44px;min-height:44px}
 .lab-body .lab-desktop-menu:after{content:none}
-.lab-body .lab-menu-toggle span{background:var(--ink);box-shadow:none}
+.lab-body .lab-menu-toggle span{display:block;width:25px;height:1px;background:var(--ink);box-shadow:none}
 .lab-body .lab-stage{background:var(--paper)}
 .lab-body .lab-stage .lab-overview.lab-portfolio-layout{display:grid;grid-template-columns:minmax(0,1fr) 320px;max-width:1800px;margin:auto;padding:0 5%;gap:0 5%}
 .lab-body .lab-portfolio-hero{min-height:0;height:auto;overflow:visible;background:none;border:0;isolation:auto}
