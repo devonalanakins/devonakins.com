@@ -213,3 +213,67 @@ body.creator-body { margin: 0; color: var(--pc-ink); background: var(--pc-paper)
   .pc-watch-grid { grid-template-columns:1fr; }
   .pc-watch-detail h1 { font-size:clamp(43px,12vw,78px); }
 }
+
+/* Free written lesson. No JS or account is required to read, print or complete it. */
+.pc-lesson { padding-block: clamp(36px, 6vw, 88px) clamp(60px, 9vw, 140px); }
+.pc-lesson-hero { max-width: 960px; padding-bottom: clamp(40px, 6vw, 74px); }
+.pc-lesson-hero .pc-eyebrow a { text-underline-offset: 4px; }
+.pc-lesson-status { display: inline-flex; border: 1px solid var(--pc-line); padding: 7px 12px; margin: 0 0 28px; color: var(--pc-muted); font: 700 12px/1.4 Arial,sans-serif; }
+.pc-lesson-hero h1 { max-width: 13ch; margin: 0 0 30px; font: 700 clamp(49px, 7vw, 112px)/1.03 Georgia, "Times New Roman", serif; letter-spacing: -.065em; text-wrap: balance; overflow-wrap: anywhere; }
+.pc-lesson-hero h1 em { color: var(--pc-blue); font-weight: 500; }
+.pc-lesson-deck { max-width: 31ch; margin: 0 0 22px; font: 400 clamp(22px, 2.3vw, 33px)/1.33 Georgia, serif; }
+.pc-lesson-note { max-width: 70ch; color: var(--pc-muted); font-size: 15px; }
+.pc-lesson-facts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); border-block: 1px solid var(--pc-line); gap: 20px; padding-block: 25px; margin: 44px 0 0; }
+.pc-lesson-facts div { min-width: 0; }
+.pc-lesson-facts dt { margin-bottom: 9px; color: var(--pc-muted); font: 700 11px/1.5 Arial,sans-serif; letter-spacing: .12em; text-transform: uppercase; }
+.pc-lesson-facts dd { margin: 0; font: 600 15px/1.5 Arial,sans-serif; }
+.pc-lesson-layout { display: grid; grid-template-columns: minmax(0, 220px) minmax(0, 1fr); gap: clamp(30px, 6vw, 108px); padding-top: 38px; }
+.pc-lesson-toc { position: sticky; top: 166px; align-self: start; border-top: 2px solid var(--pc-ink); padding-top: 20px; }
+.pc-lesson-toc strong { font: 700 12px/1.4 Arial,sans-serif; text-transform: uppercase; letter-spacing: .09em; }
+.pc-lesson-toc ol { margin: 14px 0 0; padding: 0; list-style: none; }
+.pc-lesson-toc li { border-bottom: 1px solid var(--pc-line); }
+.pc-lesson-toc a { display: block; min-height: 42px; padding: 10px 0; text-underline-offset: 4px; font: 600 13px/1.45 Arial,sans-serif; text-decoration: none; }
+.pc-lesson-toc a:hover { color: var(--pc-blue); text-decoration: underline; }
+.pc-lesson-reading { min-width: 0; max-width: 840px; }
+.pc-lesson-reading section { padding: 28px 0 clamp(33px, 5vw, 68px); border-bottom: 1px solid var(--pc-line); scroll-margin-top: 160px; }
+.pc-lesson-reading section:first-child { padding-top: 0; }
+.pc-lesson-reading h2 { max-width: 22ch; font: 600 clamp(31px, 3.3vw, 52px)/1.13 Georgia, "Times New Roman", serif; letter-spacing: -.035em; margin: 0 0 21px; }
+.pc-lesson-reading p, .pc-lesson-reading li { font-size: clamp(16px, 1.3vw, 18px); line-height: 1.72; }
+.pc-lesson-reading p { max-width: 71ch; margin: 0 0 18px; }
+.pc-lesson-index { color: var(--pc-blue); font: 700 11px/1.5 Arial,sans-serif !important; letter-spacing: .11em; text-transform: uppercase; margin-bottom: 16px !important; }
+.pc-lesson-steps { padding-left: 23px; }
+.pc-lesson-steps li + li { margin-top: 15px; }
+.pc-lesson-safety { margin: 32px 0; padding: clamp(22px, 3vw, 34px); background: var(--pc-panel); border-left: 4px solid var(--pc-blue); }
+.pc-lesson-safety strong { display: block; margin-bottom: 10px; font: 700 17px/1.4 Arial,sans-serif; }
+.pc-lesson-safety p { margin-bottom: 0; font-size: 15px; }
+.pc-lesson-triage { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin: 30px 0; }
+.pc-lesson-triage div { border: 1px solid var(--pc-line); padding: 21px; background: var(--pc-card); }
+.pc-lesson-triage strong { font: 700 15px/1.4 Arial,sans-serif; }
+.pc-lesson-triage p { margin: 10px 0 0; font-size: 14px; line-height: 1.57; color: var(--pc-muted); }
+.pc-lesson-example { padding: clamp(21px, 4vw, 38px); background: var(--pc-panel); margin: 28px 0; }
+.pc-lesson-example ol { padding-left: 23px; margin: 0; }
+.pc-lesson-example li + li { margin-top: 12px; }
+.pc-lesson-complete { background: var(--pc-card); padding-inline: clamp(20px, 4vw, 42px) !important; border: 1px solid var(--pc-line) !important; }
+.pc-lesson-complete ul { padding-left: 25px; margin: 0 0 20px; }
+.pc-lesson-complete li + li { margin-top: 11px; }
+.pc-lesson-end { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; padding-top: 36px; }
+@media (max-width: 900px) {
+  .pc-lesson-layout { grid-template-columns: minmax(0, 1fr); gap: 30px; }
+  .pc-lesson-toc { position: static; }
+  .pc-lesson-toc ol { display: flex; flex-wrap: wrap; gap: 6px 20px; }
+  .pc-lesson-toc li { border: 0; }
+}
+@media (max-width: 620px) {
+  .pc-lesson-facts { grid-template-columns: 1fr; gap: 17px; }
+  .pc-lesson-triage { grid-template-columns: 1fr; }
+  .pc-lesson-end .pc-button { width: 100%; justify-content: space-between; }
+}
+@media print {
+  html.lab-html, body.creator-body { background: white !important; color: black !important; }
+  .pc-header, .pc-footer, .pc-skip, .pc-lesson-toc, .pc-lesson-end { display: none !important; }
+  .pc-wrap { width: 100%; }
+  .pc-lesson { padding: 0; }
+  .pc-lesson-layout { display: block; }
+  .pc-lesson-reading section { break-inside: avoid; }
+  .pc-lesson-safety, .pc-lesson-example, .pc-lesson-triage div { border: 1px solid #555; background: white; }
+}
