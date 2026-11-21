@@ -45,7 +45,7 @@ const episodeDuration = seconds => {
   const remainder = seconds % 60;
   return (minutes ? minutes + " min " : "") + (remainder || !minutes ? remainder + " sec" : "");
 };
-const arrow = '<span aria-hidden="true">↗</span>';
+const arrow = '<span aria-hidden="true">→</span>';
 function link(path, label, current) {
   return '<a href="' + escapeHtml(path) + '"' + (path === current ? ' aria-current="page"' : "") + '>' + escapeHtml(label) + '</a>';
 }

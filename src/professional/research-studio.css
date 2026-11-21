@@ -324,3 +324,9 @@ html.lab-html{background:#f3f1e9;scroll-padding-top:80px}
 .lab-body .lab-reading-body section h2{font-size:clamp(1.25rem,3vw,1.9rem);line-height:1.2;margin:0 0 14px}
 .lab-body .lab-reading-body section p{margin:0}
 .lab-body .lab-reading-body a{color:var(--blue);text-underline-offset:4px}
+.lab-body :is(.lab-notes,.lab-reading){display:block}
+.lab-body .lab-notes .lab-section-intro{margin-bottom:34px}
+.lab-body .lab-notes-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));grid-template-rows:none;gap:14px;margin-bottom:24px}
+.lab-body .lab-notes .lab-study{padding:clamp(16px,2.5vw,32px)}
+.lab-body .lab-notes .lab-study :is(h2,h3){font:750 clamp(1.3rem,2.6vw,2.1rem)/1.13 Arial,sans-serif;letter-spacing:-.035em;margin:0}
+@media(max-width:880px){.lab-body .lab-notes-grid{grid-template-columns:minmax(0,1fr)}}

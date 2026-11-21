@@ -198,7 +198,9 @@ try:
                     # Historical routes remain reachable but are not primary tabs.
                     for route,key in (('/systems/','systems'),('/portfolio/','portfolio'),('/fieldnotes/','writing'),('/activity/','activity'),('/contact/','contact')):
                         page.goto(BASE+route,wait_until='networkidle')
-                        assert page.locator(f'[data-one-view="{key}"]').is_visible()
+                        assert page.locator(f'[data-one-view="{key}"]').is_visible(),(engine,width,route)
+                        if key=='writing':
+                            assert page.evaluate('document.documentElement.scrollWidth<=innerWidth'),(engine,width,route,'Writing layout overflow')
                     page.goto(BASE,wait_until='networkidle')
                     page.locator('.lab-menu-toggle' if width<=1100 else '.lab-desktop-menu').click()
                     motion=page.locator('#lab-menu [data-lab-motion]')
