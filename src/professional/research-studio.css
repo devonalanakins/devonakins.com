@@ -303,3 +303,9 @@ html.lab-html{background:#f3f1e9;scroll-padding-top:80px}
  .lab-body .da-nona-streams li{padding:22px 0 27px}
  .lab-body .da-nona-evidence{gap:22px}
 }
+
+/* Standalone creator pages: reachable without changing the three tab views. */
+.lab-body #lab-menu .lab-creator-menu-links{display:grid;gap:8px;margin:18px 0;padding:13px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.lab-body #lab-menu .lab-creator-menu-links a{display:block;padding:12px 14px;min-height:44px;border:1px solid var(--line);color:var(--ink);background:var(--paper);font:650 14px/1.35 Arial,sans-serif;text-decoration:none}
+.lab-body #lab-menu .lab-creator-menu-links a:hover{border-color:var(--blue);color:var(--blue)}
+.lab-body #lab-menu .lab-creator-menu-links a:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
