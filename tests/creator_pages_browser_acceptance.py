@@ -80,7 +80,7 @@ try:
                             assert page.locator(".pc-lesson-toc a").count()==6
                             assert page.locator('a[href="/courses/"][aria-current="page"]').count()==1
                             assert page.locator("audio,video,iframe,form").count()==0
-                            assert "No account tracking or saved course progress" in page.locator("main").inner_text()
+                            assert "no account tracking or saved course progress" in page.locator("main").inner_text()
                             if width==320:
                                 page.locator('.pc-lesson-toc a[href="#lesson-finish"]').focus()
                                 assert page.evaluate("document.activeElement.getAttribute('href')")=="#lesson-finish"
