@@ -129,7 +129,7 @@ test('development stack names platforms without inventing paid membership or spo
   assert.match(stack,/mailto:hello@devonakins\.com\?subject=Independent%20developer%20collaboration/);
   assert.match(stack,/NO APP STORE RELEASE CLAIMED/);
   assert.match(stack,/NOT AN OPENAI PARTNERSHIP/);
-  assert.doesNotMatch(stack,/(?:Apple Developer Program member|Apple-certified|official (?:OpenAI|Apple|GitHub|Cloudflare) partner|sponsored by)/i);
+  assert.doesNotMatch(stack,/(?:Apple Developer Program member|Apple-certified|official (?:OpenAI|Apple|GitHub|Cloudflare) partner|proudly sponsored by)/i);
 });
 
 test('approved portrait section renders only when a real first-party image is packaged',()=>{
