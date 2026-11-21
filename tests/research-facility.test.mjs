@@ -96,7 +96,17 @@ test('Nona executive case study is public, nonclinical, and isolated to its appr
 });
 
 test('owner leadership and proven delivery remain first-class without clinical or invented performance claims',()=>{
-  assert.match(page,/I build software, write, learn things, and talk to interesting people/);
+  assert.match(page,/I build software\. I tell stories\. I ask questions\./);
+  const hero=page.match(/<section class="lab-portfolio-hero"[\s\S]*?<\/section>/)?.[0];
+  assert.ok(hero,'creator-first hero remains a directly readable semantic section');
+  assert.match(hero,/independent software developer, writer, interviewer and lifelong student/);
+  assert.equal((hero.match(/class="lab-action/g)||[]).length,2,'hero has exactly two visitor actions');
+  assert.match(hero,/href="\/work\//);
+  assert.match(hero,/href="\/watch\//);
+  const discovery=page.match(/<nav class="lab-editorial-links" aria-label="Explore Devon’s work and content">([\s\S]*?)<\/nav>/)?.[1];
+  assert.ok(discovery,'the homepage has a direct creator discovery map');
+  assert.deepEqual([...discovery.matchAll(/href="([^"]+)"/g)].map(m=>m[1]),
+    ['/work/','/watch/','/podcast/','/courses/','/fieldnotes/']);
   assert.match(page,/lead nonclinical operations and technology at Nona Neuropsychology/);
   assert.match(page,/CURRENT PROFESSIONAL FOCUS/);
   assert.match(page,/Clinical decisions remain with licensed professionals\./);
