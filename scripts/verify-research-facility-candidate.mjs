@@ -33,7 +33,8 @@ for(const path of creatorPaths){
 }
 const setupPage=await(await get(CREATOR_ROUTES.setup)).text();
 assert.equal((setupPage.match(/class="pc-product"/g)||[]).length,CREATOR_GEAR.length);
-assert.match(setupPage,/Ownership is still being inventoried/);
+assert.match(setupPage,/Phone-first recording is the active production plan/);
+assert.match(setupPage,/Sony headset gets tested as my audio input/);
 assert.equal((setupPage.match(/data-gear-status="future"/g)||[]).length,1);
 const podcastPage=await(await get(CREATOR_ROUTES.podcast)).text();
 assert.match(podcastPage,/<title>Devon Alan Akins — Podcast<\/title>/);
