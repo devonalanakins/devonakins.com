@@ -83,6 +83,7 @@ test('the Laboratory exposes the shared site navigation without losing its secti
   const hrefs=markup=>[...markup.matchAll(/href="([^"]+)"/g)].map(match=>match[1]);
   assert.deepEqual(hrefs(primary),SITE_PRIMARY_LINKS.map(link=>link.href));
   assert.equal((primary.match(/aria-current="page"/g)||[]).length,0,'the da. mark is the Home destination');
+  assert.match(page,/<a href="\/" class="lab-brand" aria-label="Devon Alan Akins home" aria-current="page"/);
   const menu=page.match(/<div class="lab-creator-menu-links">([\s\S]*?)<\/div>/)?.[1];
   assert.ok(menu,'mobile dialog still exposes destination links');
   assert.deepEqual(hrefs(menu),[...SITE_PRIMARY_LINKS,...SITE_CONTEXT_LINKS].map(link=>link.href));
@@ -96,6 +97,7 @@ test('the Laboratory exposes the shared site navigation without losing its secti
     assert.ok(nav,path);
     const selected=[...nav.matchAll(/<a href="([^"]+)" aria-current="page">/g)].map(match=>match[1]);
     assert.deepEqual(selected,expected?[expected]:[],path+" selected primary route");
+    assert.doesNotMatch(html,/<a href="\/" class="lab-brand"[^>]*aria-current="page"/,path+" is not Home");
   }
 });
 
