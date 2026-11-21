@@ -74,6 +74,59 @@ export async function readPublicLiveStatus(request, env = {}, {
   }
 }
 
+// Reuse a recent public projection within one Worker isolate. This avoids an
+// upstream lifecycle request for each simultaneous viewer; it never caches
+// credentials in a response, and viewer-facing headers remain no-store.
+// A distributed/edge cache may still be warranted at substantial audience size.
+export function createLiveStatusReader({
+  publication = LIVE_PUBLICATION, fetchImpl = fetch,
+  now = Date.now, ttlMs = 10_000, errorTtlMs = 3_000,
+} = {}) {
+  let cache = null;
+  let inflight = null;
+  const ttl = Math.max(0, Math.min(ttlMs, 15_000));
+  const errorTtl = Math.max(0, Math.min(errorTtlMs, 5_000));
+  return async function publicLiveStatus(request, env = {}) {
+    if (!['GET','HEAD'].includes(request.method))
+      return jsonResponse(request, {state:'method-not-allowed'}, 405);
+    // Always check publication and credentials BEFORE reading the cache.
+    // Changing to private, losing credentials or rotating a token must not
+    // reuse a stale previously published player.
+    if (publication?.publicEnabled !== true)
+      return jsonResponse(request, {state:'prelaunch'});
+    const channel = validChannel(publication);
+    const secret = env.CLOUDFLARE_STREAM_READ_TOKEN;
+    if (!channel || typeof secret !== 'string' || !secret.trim())
+      return jsonResponse(request, {state:'unavailable'});
+    const key = channel.origin + '/' + channel.id;
+    const valid = entry => entry && entry.key === key && entry.secret === secret;
+    if (valid(cache) && cache.until > now())
+      return jsonResponse(request, cache.body);
+    if (valid(inflight))
+      return jsonResponse(request, await inflight.promise);
+    // HEAD responses have no body; use one internal GET for the projection.
+    const upstreamRequest = new Request(request.url, {method:'GET'});
+    const pending = (async () => {
+      const upstream = await readPublicLiveStatus(upstreamRequest, env, {
+        publication, fetchImpl,
+      });
+      return upstream.json();
+    })();
+    inflight = {key, secret, promise:pending};
+    try {
+      const body = await pending;
+      if (inflight?.promise === pending) {
+        cache = {key,secret,body,until:now() + (body.state === 'unavailable' ? errorTtl : ttl)};
+      }
+      return jsonResponse(request, body);
+    } catch {
+      return jsonResponse(request, {state:'unavailable'});
+    } finally {
+      if (inflight?.promise === pending) inflight = null;
+    }
+  };
+}
+
 // This HTML is intentionally useful without JavaScript: no fake live player,
 // countdown, audience count, video inventory, or imagined start time.
 export function renderMobileLive() {
