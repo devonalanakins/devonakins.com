@@ -11,8 +11,8 @@
 
 ## Creator account checklist (owner action, desktop preferred)
 
-1. Patreon’s logged-in creator dashboard was inspected on 2026-11-21: the **Devon Alan Akins** page exists, and **Podcast and audio** lists an existing show, **The Mark They Make**, with zero published episodes. Its exclusive Spotify toggle was off. This does not establish whether that show is the intended show under an older name or a separate project. Preserve it; resolve that relationship before renaming it or creating another show. Account state may change.
-2. Verify Patreon Video eligibility and prepare approved artwork and a suitable *public-facing* author email. After deciding which show to use, review **Settings → Podcasts and audio** and set the show title **Devon Alan Akins**, square podcast artwork, description, author name/email, language, format, explicit-content and category settings. If a separate new show is intended, use **New podcast** and choose **Not now** for an old feed only after confirming there is no feed to preserve.
+1. Patreon’s logged-in creator dashboard was inspected on 2026-11-21: the **Devon Alan Akins** page exists, and **Podcast and audio** lists the retired show name **The Mark They Make**, with zero published episodes. Its exclusive Spotify toggle was off. Devon confirmed that the old name is retired and the podcast is **Devon Alan Akins**. Reuse the existing show; its rename is still pending verification. Account state may change.
+2. Verify Patreon Video eligibility and prepare approved artwork and a suitable *public-facing* author email. In **Settings → Podcasts and audio**, update the existing show title to **Devon Alan Akins** and review its square podcast artwork, description, author name/email, language, format, explicit-content and category settings.
 3. In **Distribution**, choose whether public episodes are available on Spotify, enable access to exclusive episodes for members as needed, and enable the private member RSS feature for patrons. **Never copy an individual's private RSS URL into this repository or public website.**
 4. If enabling free public episodes, follow Patreon's public Spotify instructions in **Spotify for Creators** (Add a new show → Find an existing show → Somewhere else, then verify the public RSS), and add the resulting official Spotify show URL back in Patreon. If combining public and paid shows, set up **Synced Feeds** in Spotify for Creators on desktop after both feeds exist. Avoid creating multiple competing public show listings.
 5. Decide whether to offer free following and one simple paid membership; any price, charge, benefit promise or public enrollment requires explicit owner approval and real content. Do not advertise lessons or episodes as published until they are.
@@ -45,7 +45,7 @@
 ## Acceptance before public launch
 
 - [ ] Patreon page and show claimed by owner; media eligibility and accurate public creator email confirmed
-- [ ] Owner resolves whether the existing **The Mark They Make** show is the same project before any rename or new show is created
+- [ ] Rename the existing show **Devon Alan Akins** and verify the saved title; replace retired branding when approved artwork is ready
 - [ ] Legitimate Spotify public show URL verified with an actual public episode or trailer
 - [ ] Paid video viewable by eligible members; not viewable by public visitors
 - [ ] Public audio appears on Spotify without duplicating the paid full video post
