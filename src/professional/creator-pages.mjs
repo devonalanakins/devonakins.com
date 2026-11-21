@@ -37,7 +37,7 @@ export const CREATOR_GEAR = Object.freeze([
 const statusText = Object.freeze({owned: "Owned and verified", selected: "Selected but not purchased", considering: "Considering", future: "Future"});
 const escapeHtml = value => String(value ?? "").replace(/[&<>"']/g, character => ({"&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;"}[character]));
 const configuredPodcast = podcastPublication();
-export const creatorPaths = [CREATOR_ROUTES.podcast, CREATOR_ROUTES.courses, CREATOR_ROUTES.setup, ...configuredPodcast.episodes.map(episode => episode.route)];
+export const creatorPaths = [CREATOR_ROUTES.podcast, CREATOR_ROUTES.courses, CREATOR_ROUTES.setup, CREATOR_ROUTES.live, ...configuredPodcast.episodes.map(episode => episode.route)];
 export const creatorMediaFiles = configuredPodcast.mediaFiles;
 const podcastFormats = {interview: "Interview", solo: "Solo", trailer: "Trailer"};
 const podcastDate = new Intl.DateTimeFormat("en-US", {dateStyle: "long", timeZone: "UTC"});
