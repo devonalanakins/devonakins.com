@@ -221,6 +221,28 @@ test("creator pages are first-party, accessible and connected to the established
   assert.match(home, /href="\/fieldnotes\/">Writing/);
 });
 
+test("creator navigation keeps the January primary hierarchy and contextual destinations", () => {
+  const primaryPaths = ["/work/", "/watch/", "/podcast/", "/courses/", "/fieldnotes/", "/about/"];
+  const contextPaths = ["/live/", "/research/", "/activity/", "/systems/", "/setup/", "/contact/"];
+  const pages = [
+    ["/watch/", watch], ["/podcast/", podcast], ["/courses/", courses],
+    ["/setup/", setup], ["/live/", live]
+  ];
+  for (const [path, html] of pages) {
+    const header = html.match(/<header class="pc-header">([\s\S]*?)<\/header>/)?.[1];
+    assert.ok(header, path + " has a header");
+    const primary = header.match(/<nav class="pc-nav" aria-label="Primary navigation">([\s\S]*?)<\/nav>/)?.[1];
+    const context = header.match(/<nav class="pc-context-nav" aria-label="More destinations">([\s\S]*?)<\/nav>/)?.[1];
+    assert.ok(primary && context, path + " has both navigation levels");
+    const hrefs = section => [...section.matchAll(/href="([^"]+)"/g)].map(match => match[1]);
+    assert.deepEqual(hrefs(primary), primaryPaths, path + " primary hierarchy");
+    assert.deepEqual(hrefs(context), contextPaths, path + " context hierarchy");
+    assert.equal((header.match(/aria-current="page"/g) || []).length, 1, path + " single selected destination");
+    assert.ok(header.includes('href="' + path + '" aria-current="page"'), path + " selected destination");
+    assert.ok(header.includes('aria-label="da. Devon Alan Akins home"'), "logo is the home link");
+  }
+});
+
 test("live theater stays offline without publishing an unapproved player or recordings", () => {
   assert.ok(live.includes('href="https://devonakins.com/live/"'));
   assert.ok(live.includes("Live from <em>wherever I am"));
