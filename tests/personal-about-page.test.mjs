@@ -27,8 +27,8 @@ test("About tells a human, truthful story without leaking private identity syste
     "I am also a father", "not represented as a current App Store release",
     "Episodes will appear only after real recording",
     "still taking shape", "clinical judgments remain with licensed professionals",
-    "Dadog is my developing private AI counterpart", "No"] .slice(0,-1)) assert.ok(page.includes(s),s);
-  assert.match(page,/not proof of Apple Developer Program membership/);
+    "Dadog is my developing private AI counterpart"]) assert.ok(page.includes(s),s);
+  assert.match(page,/or proof of Apple Developer Program membership/);
   assert.match(page,/home walk-through/);
   assert.match(page,/Do not send medical records/);
   assert.match(page,/rel="noopener noreferrer"/);
