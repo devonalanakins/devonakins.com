@@ -1,4 +1,5 @@
 import {CREATOR_ROUTES,creatorPaths} from "../src/professional/creator-pages.mjs";
+import {watchPublication} from "../src/professional/watch-publication.mjs";
 import {FIELDNOTES} from "../src/professional/fieldnotes.mjs";
 /** Read-only post-release acceptance; never changes a provider, token or owner preference. */
 import assert from 'node:assert/strict';
@@ -26,15 +27,43 @@ for(const path of paths){
  assert.match(r.headers.get('content-security-policy')||'',/frame-ancestors 'none'/);
  assert.match(r.headers.get('content-security-policy')||'',/connect-src 'self' https:\/\/api\.github\.com;/);
 }
+const approvedWatchRoutes=new Set(watchPublication().videos.map(video=>video.route));
 for (const path of creatorPaths) {
  const response = await get(path);
  assert.equal(response.status, 200, path);
- assert.match(response.headers.get('content-security-policy') || '', /media-src 'self'/);
+ const csp=response.headers.get('content-security-policy')||'';
+ assert.match(csp,/media-src 'self'/);
+ if(path.startsWith(CREATOR_ROUTES.watch)){
+   assert.match(csp,/(?:^|;\s*)frame-src https:\/\/iframe\.videodelivery\.net(?:;|$)/,path);
+ }else assert.doesNotMatch(csp,/iframe\.videodelivery\.net/,path);
  const html = await response.text();
  assert.ok(html.includes('href="https://devonakins.com' + path + '"'), path);
- assert.doesNotMatch(html, /<iframe|autoplay|TEST FIXTURE/);
+ assert.doesNotMatch(html, /autoplay|TEST FIXTURE/);
+ if(approvedWatchRoutes.has(path)){
+   assert.match(html,/<iframe\b[^>]*src="https:\/\/iframe\.videodelivery\.net\/[a-f0-9]{32}"/,path);
+ }else assert.doesNotMatch(html,/<iframe\b/,path);
  if (path === CREATOR_ROUTES.podcast) assert.match(html, /<title>Devon Alan Akins — Podcast<\/title>/);
 }
+const liveStatus=await get('/api/creator/live');
+assert.equal(liveStatus.status,200);
+assert.equal(liveStatus.headers.get('cache-control'),'no-store');
+const liveInfo=await liveStatus.json();
+assert.ok(['prelaunch','offline','starting','unavailable','live'].includes(liveInfo.state));
+if(liveInfo.state==='live'){
+ assert.match(liveInfo.playerUrl||'',/^https:\/\/customer-[a-z0-9]+\.cloudflarestream\.com\/[a-f0-9]{32}\/iframe$/);
+}else assert.equal(Object.hasOwn(liveInfo,'playerUrl'),false);
+assert.doesNotMatch(JSON.stringify(liveInfo),/streamKey|Authorization|Bearer/i);
+assert.equal((await get('/api/creator/live',{method:'POST'})).status,405);
+const liveHead=await get('/api/creator/live',{method:'HEAD'});
+assert.equal(liveHead.status,200);
+assert.equal(await liveHead.text(),'');
+const watchIndex=await(await get(CREATOR_ROUTES.watch)).text();
+assert.match(watchIndex,/href="\/live\/"/);
+if(approvedWatchRoutes.size===0)assert.match(watchIndex,/No videos published yet/);
+const liveHtml=await(await get(CREATOR_ROUTES.live)).text();
+assert.match(liveHtml,/href="\/watch\/"/);
+assert.match(liveHtml,/No broadcast right now\./);
+
 for(const [from,to]of Object.entries(LABORATORY_REDIRECTS)){
  const r=await get(from);assert.equal(r.status,308,from);assert.equal(new URL(r.headers.get('location'),origin).pathname,to);
 }
