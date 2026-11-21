@@ -36,8 +36,8 @@ export function lissajousPath(a=3,b=4,phase=Math.PI/2) {
 }
 function renderNavigation(kind,activeView){
   return '<nav class="one-tabs lab-tabs lab-tabs-'+kind+'" aria-label="'+
-    (kind==='desktop'?'Primary navigation':'Mobile primary navigation')+'">'+
-    '<div class="one-tablist" role="tablist" aria-label="Primary pages">'+
+    (kind==='desktop'?'Page sections':'Mobile page sections')+'">'+
+    '<div class="one-tablist" role="tablist" aria-label="Section tabs">'+
     primarySections.map(([key,label])=>'<button type="button" role="tab" id="one-'+kind+'-'+key+
       '" aria-controls="one-panel-'+key+'" aria-selected="'+(key===activeView?'true':'false')+
       '" tabindex="'+(key===activeView?'0':'-1')+'" data-one-target="'+key+'">'+
@@ -46,7 +46,7 @@ function renderNavigation(kind,activeView){
 }
 function renderSiteNavigation(path){
   const selected=selectedPrimaryHref(path);
-  return '<nav class="lab-site-nav" aria-label="Site navigation"><div class="lab-site-nav-track">'+
+  return '<nav class="lab-site-nav" aria-label="Primary navigation"><div class="lab-site-nav-track">'+
     SITE_PRIMARY_LINKS.map(({href,label})=>'<a href="'+href+'"'+(href===selected?' aria-current="page"':'')+'>'+escapeHtml(label)+'</a>').join('')+
     '</div></nav>';
 }
