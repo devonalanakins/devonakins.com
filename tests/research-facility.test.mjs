@@ -82,7 +82,7 @@ test('Nona executive case study is public, nonclinical, and isolated to its appr
   const nona=renderResearchFacilityHome({project:entry,initialView:'portfolio'});
   const merit=renderResearchFacilityHome({project:other,initialView:'portfolio'});
   assert.match(nona,/Nona Neuropsychology — Operations/);
-  assert.match(nona,/CEO · Nonclinical operations &amp; technology/);
+  assert.match(nona,/Nonclinical operations &amp; technology/);
   assert.match(nona,/PUBLIC OPERATING BRIEF \/ NONCLINICAL/);
   assert.equal((nona.match(/class="da-nona-stream-head"/g)||[]).length,4);
   for(const phrase of ['The first response matters','Make the next step visible',
@@ -96,11 +96,11 @@ test('Nona executive case study is public, nonclinical, and isolated to its appr
 });
 
 test('owner leadership and proven delivery remain first-class without clinical or invented performance claims',()=>{
-  assert.match(page,/CEO · NONA NEUROPSYCHOLOGY \/ INDEPENDENT SOFTWARE DEVELOPER/);
-  assert.match(page,/CEO, Nona Neuropsychology/);
-  assert.match(page,/CEO \/ CURRENT PROFESSIONAL FOCUS/);
+  assert.match(page,/I build software, write, learn things, and talk to interesting people/);
+  assert.match(page,/lead nonclinical operations and technology at Nona Neuropsychology/);
+  assert.match(page,/CURRENT PROFESSIONAL FOCUS/);
   assert.match(page,/Clinical decisions remain with licensed professionals\./);
-  assert.match(page,/Founder, ANEVUM — The Open Institute \(in development\)/);
+  assert.match(page,/founder of ANEVUM/);
   assert.match(page,/02 \/ PRODUCTION WEB ENGINEERING/);
   assert.match(page,/Live personal website · deployment verified November 2026/);
   assert.match(page,/github\.com\/devonalanakins\/devonakins\.com\/actions\/runs\/44384435946/);

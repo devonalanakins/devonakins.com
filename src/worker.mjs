@@ -428,10 +428,9 @@ export function createHandler(assets, release, options = {}) {
         request.headers.get("If-None-Match") === selected.etag
       )
         return new Response(null, { status: 304, headers });
-      // Progressive MP4: Safari and mobile video players require byte ranges.
-      // This is a public, same-origin, short source-generated visual asset.
-      // Do not use the generic gzip streaming path for video Range responses.
-      if (status===200 && selected.type==="video/mp4") {
+      // Same-origin media clips need byte ranges for Safari playback. Full-length
+      // episodes can use approved external playback links.
+      if (status===200 && (selected.type==="video/mp4" || selected.type==="audio/mpeg")) {
         let media=mediaDecoded.get(selected.etag);
         if(!media){
           const zipped=Uint8Array.from(atob(selected.gzip),c=>c.charCodeAt(0));

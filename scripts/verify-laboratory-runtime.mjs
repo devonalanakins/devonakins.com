@@ -24,8 +24,8 @@ try{
  const result=await new Promise(resolve=>verifier.once('exit',resolve));
  if(result!==0)throw new Error('Isolated cinematic Worker acceptance failed');
  if(process.env.LABORATORY_RUNTIME_BROWSER_CHECK==='1'){
-  for(const script of ['tests/laboratory_browser_acceptance.py','tests/cinematic_navigation_acceptance.py']){
-   const browser=spawn('python3',[script],{env:{...process.env,LABORATORY_TEST_ORIGIN:origin},stdio:'inherit'});
+  for(const script of ['tests/laboratory_browser_acceptance.py','tests/cinematic_navigation_acceptance.py','tests/creator_pages_browser_acceptance.py']){
+   const browser=spawn('python3',[script],{env:{...process.env,LABORATORY_TEST_ORIGIN:origin,CREATOR_TEST_ORIGIN:origin},stdio:'inherit'});
    if(await new Promise(resolve=>browser.once('exit',resolve))!==0)throw new Error('Cinematic workerd browser acceptance failed');
   }
  }

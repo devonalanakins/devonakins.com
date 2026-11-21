@@ -277,7 +277,7 @@ jobs:
 
   laboratory_candidate:
     # Opt-in personal scientific identity. Does not deploy or modify default V4.
-    if: github.head_ref == 'design/computational-laboratory-2026-11-17' || github.ref == 'refs/heads/design/computational-laboratory-2026-11-17' || github.head_ref == 'fix/restore-live-cinematic-depth-2026-11-17' || github.ref == 'refs/heads/fix/restore-live-cinematic-depth-2026-11-17' || github.head_ref == 'feat/system-aware-light-dark-theme-20261120' || github.ref == 'refs/heads/feat/system-aware-light-dark-theme-20261120'
+    if: github.head_ref == 'design/computational-laboratory-2026-11-17' || github.ref == 'refs/heads/design/computational-laboratory-2026-11-17' || github.head_ref == 'fix/restore-live-cinematic-depth-2026-11-17' || github.ref == 'refs/heads/fix/restore-live-cinematic-depth-2026-11-17' || github.head_ref == 'feat/system-aware-light-dark-theme-20261120' || github.ref == 'refs/heads/feat/system-aware-light-dark-theme-20261120' || github.head_ref == 'feature/podcast-studio-setup-20261120' || github.ref == 'refs/heads/feature/podcast-studio-setup-20261120'
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     permissions:
@@ -310,6 +310,7 @@ jobs:
         run: |
           python3 tests/laboratory_browser_acceptance.py
           python3 tests/cinematic_navigation_acceptance.py
+          python3 tests/creator_pages_browser_acceptance.py
       - name: Preserve screenshots for owner visual acceptance
         if: always()
         uses: actions/upload-artifact@v4
@@ -318,5 +319,6 @@ jobs:
           path: |
             dist/
             browser-qa/laboratory/
+            browser-qa/creator/
           if-no-files-found: warn
           retention-days: 14

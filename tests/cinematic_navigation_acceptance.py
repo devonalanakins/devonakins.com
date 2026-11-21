@@ -44,13 +44,17 @@ try:
                         page.reload(wait_until='networkidle');selected(page,key)
                     page.goto(BASE+'/?keep=query',wait_until='networkidle');selected(page,'home')
                     page.evaluate('window.scrollTo(0,document.documentElement.scrollHeight)')
-                    # Playwright scrolls a link into view *before* click handlers run.
-                    # Record the position at the actual interaction, not the earlier
-                    # page-bottom offset, which changes with the shorter two-card site.
-                    page.locator('[data-lab-destination="experience"]').scroll_into_view_if_needed()
-                    before=page.evaluate('scrollY')
+                    destination=page.locator('[data-lab-destination="experience"]')
+                    destination.scroll_into_view_if_needed()
+                    # Click actionability can reposition an animated link. Capture
+                    # the scroll position before its navigation handler executes.
+                    destination.evaluate("""link => {
+                      link.addEventListener('click', () => { window.beforeLabNavigation = scrollY; },
+                                            {capture:true, once:true});
+                    }""")
+                    destination.click();selected(page,'experience')
+                    before=page.evaluate('window.beforeLabNavigation')
                     assert before>20,(engine,width,before)
-                    page.locator('[data-lab-destination="experience"]').click();selected(page,'experience')
                     assert page.evaluate('scrollY')==0
                     navigate(page,'work',width)
                     page.locator('[data-lab-project-search]').fill('Merit')

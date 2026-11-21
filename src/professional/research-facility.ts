@@ -80,6 +80,7 @@ menu?.addEventListener('click',event=>{
 });
 const search=document.querySelector<HTMLInputElement>('[data-lab-project-search]');
 const category=document.querySelector<HTMLSelectElement>('[data-lab-project-filter]');
+const stage=document.querySelector<HTMLSelectElement>('[data-lab-project-stage]');
 const projectCount=document.querySelector<HTMLElement>('[data-lab-project-count]');
 const projectCards=[...document.querySelectorAll<HTMLElement>('[data-lab-project]')];
 function filterProjects(){
@@ -87,7 +88,8 @@ function filterProjects(){
   let count=0;
   for(const card of projectCards){
     const visible=(!query||card.textContent?.toLocaleLowerCase().includes(query))&&
-      (!category?.value||category.value==='all'||card.dataset.category===category.value);
+      (!category?.value||category.value==='all'||card.dataset.category===category.value)&&
+      (!stage?.value||stage.value==='all'||card.dataset.stage===stage.value);
     card.hidden=!visible;
     if(visible)count++;
   }
@@ -95,6 +97,7 @@ function filterProjects(){
 }
 search?.addEventListener('input',filterProjects);
 category?.addEventListener('change',filterProjects);
+stage?.addEventListener('change',filterProjects);
 
 // One-shot editorial entrances. Never hide content while waiting for JS,
 // never move keyboard focus, and never run a continuous scroll handler.
