@@ -131,6 +131,17 @@ try:
                         theme.select_option("system")
                         assert page.evaluate("document.documentElement.dataset.theme")=="light"
                         assert not errors,(engine,width,path,errors)
+                    if width in (320, 390, 1440):
+                        page.goto(BASE+"/", wait_until="networkidle")
+                        assert page.locator(".lab-site-nav a").count()==6
+                        assert page.evaluate("document.documentElement.scrollWidth<=innerWidth+1")
+                        page.locator('.lab-site-nav a[href="/watch/"]').click()
+                        assert page.url.rstrip("/").endswith("/watch"), (engine,width,page.url)
+                        assert page.locator("main#pc-main").is_visible()
+                        page.goto(BASE+"/work/", wait_until="networkidle")
+                        assert page.locator('.lab-site-nav a[href="/work/"][aria-current="page"]').count()==1
+                        page.goto(BASE+"/fieldnotes/", wait_until="networkidle")
+                        assert page.locator('.lab-site-nav a[href="/fieldnotes/"][aria-current="page"]').count()==1
                     context.close()
             finally:
                 browser.close()
