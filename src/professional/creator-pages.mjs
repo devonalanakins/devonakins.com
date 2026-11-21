@@ -2,6 +2,7 @@ import {renderMobileLive} from "./mobile-live.mjs";
 import {PATREON_CREATOR_URL, PODCAST_TITLE, PODCAST_DESCRIPTION, PODCAST_SHARE_IMAGE, podcastPublication, publicWebUrl} from "./podcast-publication.mjs";
 import {WATCH_KINDS, watchPublication} from "./watch-publication.mjs";
 import {PRACTICAL_START_ROUTE, renderPracticalStartLesson} from "./first-practical-lesson.mjs";
+import {PERSONAL_ABOUT_ROUTE, renderPersonalAbout} from "./about-page.mjs";
 
 export const CREATOR_ROUTES = Object.freeze({watch: "/watch/", podcast: "/podcast/", courses: "/courses/", setup: "/setup/", live: "/live/"});
 export const CREATOR_CATEGORIES = Object.freeze([
@@ -40,7 +41,7 @@ const statusText = Object.freeze({owned: "Owned and verified", selected: "Select
 const escapeHtml = value => String(value ?? "").replace(/[&<>"']/g, character => ({"&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;"}[character]));
 const configuredPodcast = podcastPublication();
 const configuredWatch = watchPublication();
-export const creatorPaths = [CREATOR_ROUTES.watch, CREATOR_ROUTES.podcast, CREATOR_ROUTES.courses, CREATOR_ROUTES.setup, CREATOR_ROUTES.live, PRACTICAL_START_ROUTE, ...configuredPodcast.episodes.map(episode => episode.route), ...configuredWatch.videos.map(video => video.route)];
+export const creatorPaths = [CREATOR_ROUTES.watch, CREATOR_ROUTES.podcast, CREATOR_ROUTES.courses, CREATOR_ROUTES.setup, CREATOR_ROUTES.live, PRACTICAL_START_ROUTE, PERSONAL_ABOUT_ROUTE, ...configuredPodcast.episodes.map(episode => episode.route), ...configuredWatch.videos.map(video => video.route)];
 export const creatorMediaFiles = configuredPodcast.mediaFiles;
 const podcastFormats = {interview: "Interview", solo: "Solo", trailer: "Trailer"};
 const podcastDate = new Intl.DateTimeFormat("en-US", {dateStyle: "long", timeZone: "UTC"});
@@ -281,6 +282,11 @@ export function renderCreatorPage(path, publication = configuredPodcast, watch =
   }
   if (path === CREATOR_ROUTES.courses) {
     return shell({path, title: "Courses — " + PODCAST_TITLE, description: "Courses in development with Devon Alan Akins, beginning with mathematical physics and AI-assisted scientific simulation.", current: path}, renderCourses());
+  }
+  if (path === PERSONAL_ABOUT_ROUTE) {
+    return shell({path, title: "About — " + PODCAST_TITLE,
+      description: "Meet Devon Alan Akins, independent software developer, writer, interviewer, creator and father. Learn what he builds, publishes and values.",
+      current: path}, renderPersonalAbout());
   }
   if (path === PRACTICAL_START_ROUTE) {
     return shell({path, title: "Start with a walk-through — Man of the House — " + PODCAST_TITLE,

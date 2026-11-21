@@ -33,7 +33,7 @@ try:
                     ))
                     errors=[]
                     page.on("pageerror",lambda error:errors.append(str(error)))
-                    for path in ("/watch/","/podcast/","/courses/","/courses/man-of-the-house/start/","/setup/","/live/"):
+                    for path in ("/watch/","/podcast/","/courses/","/courses/man-of-the-house/start/","/setup/","/live/","/about/"):
                         response=page.goto(BASE+path,wait_until="networkidle")
                         assert response and response.status==200,(engine,width,path,"unavailable")
                         assert page.locator("main#pc-main").is_visible()
@@ -84,6 +84,14 @@ try:
                             if width==320:
                                 page.locator('.pc-lesson-toc a[href="#lesson-finish"]').focus()
                                 assert page.evaluate("document.activeElement.getAttribute('href')")=="#lesson-finish"
+                        elif path=="/about/":
+                            assert page.locator(".pc-about").is_visible()
+                            assert "The person behind" in page.locator("h1").inner_text()
+                            assert page.locator(".pc-about-grid section").count()==4
+                            assert page.locator(".pc-about-principles li").count()==4
+                            assert page.locator('a[href="/about/"][aria-current="page"]').count()==1
+                            assert page.locator("audio,video,iframe,form").count()==0
+                            assert "clinical judgments remain with licensed professionals" in page.locator("main").inner_text()
                         elif path=="/live/":
                             assert page.locator("[data-mobile-live]").count()==1
                             assert page.locator("[data-live-status]").count()==1

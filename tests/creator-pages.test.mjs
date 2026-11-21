@@ -12,6 +12,7 @@ const podcast = renderCreatorPage(CREATOR_ROUTES.podcast);
 const setup = renderCreatorPage(CREATOR_ROUTES.setup);
 const courses = renderCreatorPage(CREATOR_ROUTES.courses);
 const live = renderCreatorPage(CREATOR_ROUTES.live);
+const about = renderCreatorPage("/about/");
 
 test("prelaunch presents the final title and honest format without fictional publication", () => {
   assert.match(podcast, /<title>Devon Alan Akins — Podcast<\/title>/);
@@ -27,7 +28,7 @@ test("prelaunch presents the final title and honest format without fictional pub
   assert.match(podcast, /Watch and listen/);
   assert.match(podcast, /href="https:\/\/www\.patreon\.com\/cw\/DevonAlanAkins" target="_blank" rel="noopener noreferrer">Follow my work on Patreon/);
   assert.match(podcast, /og:image" content="https:\/\/devonakins\.com\/professional\/podcast-share\.jpg"/);
-  assert.deepEqual(creatorPaths, ["/watch/", "/podcast/", "/courses/", "/setup/", "/live/", "/courses/man-of-the-house/start/"]);
+  assert.deepEqual(creatorPaths, ["/watch/", "/podcast/", "/courses/", "/setup/", "/live/", "/courses/man-of-the-house/start/", "/about/"]);
 });
 
 test("only approved, dated episodes and configured feeds render, with escaped text and accessible playback", () => {
@@ -197,7 +198,7 @@ test("setup gives all eight candidates unique, sourced entries and clear states"
 });
 
 test("creator pages are first-party, accessible and connected to the established site", () => {
-  for (const html of [watch, podcast, courses, setup, live]) {
+  for (const html of [watch, podcast, courses, setup, live, about]) {
     assert.match(html, /<html lang="en" class="lab-html"/);
     assert.match(html, /<main id="pc-main" tabindex="-1">/);
     assert.match(html, /aria-label="Primary navigation"/);
@@ -226,7 +227,7 @@ test("creator navigation keeps the January primary hierarchy and contextual dest
   const contextPaths = ["/live/", "/research/", "/activity/", "/systems/", "/setup/", "/contact/"];
   const pages = [
     ["/watch/", watch], ["/podcast/", podcast], ["/courses/", courses],
-    ["/setup/", setup], ["/live/", live]
+    ["/setup/", setup], ["/live/", live], ["/about/", about]
   ];
   for (const [path, html] of pages) {
     const header = html.match(/<header class="pc-header">([\s\S]*?)<\/header>/)?.[1];
