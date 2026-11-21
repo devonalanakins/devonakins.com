@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 import site from '../.release/worker.mjs';
 import {LABORATORY_ROUTES,LABORATORY_REDIRECTS} from '../src/professional/laboratory-routes.mjs';
+import {CREATOR_ROUTES,CREATOR_GEAR} from '../src/professional/creator-pages.mjs';
 import {approvedPublicProjects} from '../src/publication-manifest.mjs';
 const runtime=process.env.LABORATORY_VERIFY_ORIGIN;
 if(runtime)assert.match(runtime,/^https:\/\/127\.0\.0\.1:\d+$/);
@@ -18,6 +19,30 @@ for(const [view,path] of Object.entries(LABORATORY_ROUTES)){
  assert.doesNotMatch(html,/data-public-gpt|GPT analytics|\/gpt\/|headshot-concept\.webp|SYNTHETIC QA FIXTURE/);
  assert.match(response.headers.get('content-security-policy'),/connect-src 'self' https:\/\/api\.github\.com;/);
 }
+// The creator pages must be packaged as first-party HTML, not merely generated source.
+for(const path of Object.values(CREATOR_ROUTES)){
+ const response=await get(path);
+ assert.equal(response.status,200,path);
+ assert.match(response.headers.get('content-type')||'',/^text\/html\b/);
+ const html=await response.text();
+ assert.match(html,new RegExp('rel="canonical" href="https://devonakins.com'+path+'"'));
+ assert.match(html,/href="\/podcast\/"/);
+ assert.match(html,/href="\/setup\/"/);
+ assert.doesNotMatch(html,/<iframe|<form|<script[^>]+src="https?:/);
+}
+const setupPage=await(await get(CREATOR_ROUTES.setup)).text();
+assert.equal((setupPage.match(/class="pc-product"/g)||[]).length,CREATOR_GEAR.length);
+assert.match(setupPage,/Ownership unverified/);
+assert.match(setupPage,/None configured/);
+const podcastPage=await(await get(CREATOR_ROUTES.podcast)).text();
+assert.match(podcastPage,/IN DEVELOPMENT · NO EPISODES RELEASED/);
+assert.match(podcastPage,/NO PUBLIC EPISODES YET/);
+for(const path of Object.values(CREATOR_ROUTES)){
+ const redirectResponse=await get(path.slice(0,-1));
+ assert.equal(redirectResponse.status,308,path);
+ assert.equal(new URL(redirectResponse.headers.get('location')).pathname,path);
+}
+
 // The owner-approved portrait must be part of the exact packaged Worker, not
 // merely a link in rendered HTML or a local-only build artifact.
 const portraitHome=await(await get('/')).text();
