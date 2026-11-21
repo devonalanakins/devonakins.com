@@ -25,7 +25,7 @@ test("the free first lesson has a discoverable canonical page and semantic readi
     assert.match(content, new RegExp('id="lesson-' + id + '"'));
     assert.match(content, new RegExp('href="#lesson-' + id + '"'));
   }
-  assert.equal((content.match(/class="pc-lesson-index"/g) || []).length, 7);
+  assert.equal((content.match(/class="pc-lesson-index"/g) || []).length, 8);
   assert.equal((content.match(/<section/g) || []).length, 7);
   assert.match(courseHub, /Read the free first lesson/);
   assert.match(courseHub, /href="\/courses\/man-of-the-house\/start\/"/);
