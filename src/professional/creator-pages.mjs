@@ -1,6 +1,6 @@
 import {PODCAST_TITLE, PODCAST_DESCRIPTION, podcastPublication, publicWebUrl} from "./podcast-publication.mjs";
 
-export const CREATOR_ROUTES = Object.freeze({podcast: "/podcast/", setup: "/setup/"});
+export const CREATOR_ROUTES = Object.freeze({podcast: "/podcast/", courses: "/courses/", setup: "/setup/"});
 export const CREATOR_CATEGORIES = Object.freeze([
   {id: "field", label: "Field Kit", description: "A portable recording chain for interviews away from the studio."},
   {id: "stage", label: "The Stage", description: "Camera, lighting and stands for a two-person recording room. The room, seating and acoustic treatment are still open decisions."},
@@ -36,7 +36,7 @@ export const CREATOR_GEAR = Object.freeze([
 const statusText = Object.freeze({owned: "Owned and verified", selected: "Selected but not purchased", considering: "Considering", future: "Future"});
 const escapeHtml = value => String(value ?? "").replace(/[&<>"']/g, character => ({"&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;"}[character]));
 const configuredPodcast = podcastPublication();
-export const creatorPaths = [CREATOR_ROUTES.podcast, CREATOR_ROUTES.setup, ...configuredPodcast.episodes.map(episode => episode.route)];
+export const creatorPaths = [CREATOR_ROUTES.podcast, CREATOR_ROUTES.courses, CREATOR_ROUTES.setup, ...configuredPodcast.episodes.map(episode => episode.route)];
 export const creatorMediaFiles = configuredPodcast.mediaFiles;
 const podcastFormat = episode => episode.format === "interview" ? "Interview" : "Solo";
 const podcastDate = new Intl.DateTimeFormat("en-US", {dateStyle: "long", timeZone: "UTC"});
@@ -79,10 +79,10 @@ function shell({path, title, description, current, rss, image}, main) {
     '<body class="creator-body"><a class="pc-skip" href="#pc-main">Skip to content</a>' +
     '<header class="pc-header"><div class="pc-wrap pc-header-row"><a class="pc-brand" href="/" aria-label="da. Devon Alan Akins home"><span aria-hidden="true">da.</span><small>Devon Alan Akins</small></a>' +
     '<nav class="pc-nav" aria-label="Primary navigation">' +
-    link("/work/", "Work", current) + link("/research/", "Research", current) + link("/podcast/", "Podcast", current) + link("/setup/", "My Setup", current) +
+    link("/work/", "Work", current) + link("/research/", "Research", current) + link("/podcast/", "Podcast", current) + link("/courses/", "Courses", current) + link("/setup/", "My Setup", current) +
     '</nav></div></header><main id="pc-main" tabindex="-1">' + main + '</main>' +
     '<footer class="pc-footer pc-wrap"><div><a href="/" aria-label="da. Devon Alan Akins home">da.</a><p>Devon Alan Akins</p></div>' +
-    '<nav aria-label="Footer navigation"><a href="/fieldnotes/">Writing</a><a href="/about/">About</a><a href="/contact/">Contact</a></nav>' +
+    '<nav aria-label="Footer navigation"><a href="/fieldnotes/">Writing</a><a href="/courses/">Courses</a><a href="/about/">About</a><a href="/contact/">Contact</a></nav>' +
     themeControl() + '</footer></body></html>';
 }
 function episodeMeta(episode) {
@@ -105,6 +105,7 @@ function renderEpisode(episode) {
       (episode.thumbnail ? ' poster="' + episode.thumbnail + '"' : '') + '><source src="' + episode.video + '" type="video/mp4">' +
       '<track kind="captions" srclang="en" label="English" src="' + episode.captions + '"><a href="' + episode.video + '">Download video</a></video>' : '') +
     (episode.audio ? '<audio controls preload="none" aria-label="Episode audio"><source src="' + episode.audio + '" type="audio/mpeg"><a href="' + episode.audio + '">Download audio</a></audio>' : '') +
+    (episode.videoAccess === "members" ? '<p class="pc-state">Full video is available to eligible Patreon members. Paid video files are not hosted publicly on this site.</p>' : '') +
     (episode.playbackLinks.length ? '<ul class="pc-media-links">' + episode.playbackLinks.map(({href, label}) => '<li>' + external(href, label) + '</li>').join('') + '</ul>' : '') +
     (episode.notes.length ? '<section class="pc-section"><h2>Show notes</h2>' + episode.notes.map(note => '<p>' + escapeHtml(note) + '</p>').join('') + '</section>' : '') +
     (related ? '<section class="pc-section"><h2>Links</h2><ul>' + related + '</ul></section>' : '') +
@@ -117,7 +118,7 @@ function renderPodcast({episodes, outlets}) {
     '<p class="pc-eyebrow">The podcast</p><h1 id="pc-title">Devon <em>Alan Akins</em></h1>' +
     '<p class="pc-lede">I mostly sit down with people I want to talk to. Sometimes it’s just me working through a question or talking about something I’m making.</p>' +
     (!featured ? '<p class="pc-state">No episodes published yet</p>' : '') +
-    '<div class="pc-actions">' + button('#episodes', featured ? 'Browse episodes' : 'About the show', true) + button('/setup/', 'See my setup') + '</div></div>' +
+    '<div class="pc-actions">' + button('#episodes', featured ? 'Browse episodes' : 'About the show', true) + button('/courses/', 'Explore courses') + button('/setup/', 'See my setup') + '</div></div>' +
     '<div class="pc-hero-art" aria-hidden="true"><svg viewBox="0 0 540 520" fill="none"><circle cx="270" cy="260" r="194"/><circle cx="270" cy="260" r="145"/><circle cx="270" cy="260" r="96"/>' +
     '<path d="M40 264h55l14-36 20 92 28-148 22 183 27-119 20 28h43l19-38 24 80 26-141 25 208 21-125 17 16h99"/><path d="M86 264h368M270 55v410"/></svg></div></section>' +
     '<section class="pc-section pc-two-column" id="episodes" aria-labelledby="pc-episodes-title"><div><h2 id="pc-episodes-title">Episodes</h2></div>' +
@@ -125,6 +126,8 @@ function renderPodcast({episodes, outlets}) {
       '<div class="pc-prose"><p>I’m still getting the show going. Interviews will be mostly unscripted. We could get into science, business, games, or whatever comes up.</p><p>Published episodes will appear here.</p></div>') + '</section>' +
     (outlets.length ? '<section class="pc-section pc-two-column"><h2>Follow the show</h2><ul class="pc-media-links">' +
       outlets.map(({label, href}) => '<li>' + external(href, label) + '</li>').join('') + '</ul></section>' : '') +
+    '<section class="pc-section pc-two-column"><div><h2>Watch and listen</h2></div><div class="pc-prose"><p>The plan is full video and member material through Patreon, with audio available through Patreon and Spotify. This site will hold the episode index, notes, transcripts where approved, and the path to watch or listen.</p>' +
+    (outlets.length ? '<p>Official show destinations appear above as they are verified and published.</p>' : '<p>The membership and listening links will appear after the accounts and feeds are connected.</p>') + '</div></section>' +
     '<section class="pc-section pc-two-column pc-studio-teaser"><div><h2>How I’m putting it together</h2></div><div class="pc-prose"><p>I’m working out what I need to record in the field, shoot in a room, and edit afterward.</p>' +
     button('/setup/', 'Explore My Setup') + '</div></section></div>';
 }
@@ -172,10 +175,29 @@ function renderSetup() {
     '<dt>Considering</dt><dd>On the shortlist while I check fit.</dd><dt>Future</dt><dd>A longer-range idea.</dd></dl>' +
     '<p>Manufacturer and retailer links are ordinary references. I earn no commission from them.</p>' + button('/podcast/', 'Go to the podcast') + '</div></section></div>';
 }
+function renderCourses() {
+  return '<div class="pc-wrap"><header class="pc-setup-hero pc-courses-hero"><p class="pc-eyebrow">Learning / in development</p><h1>Courses<span>.</span></h1>' +
+    '<div class="pc-setup-intro"><p>I want the research and conversations to become things you can actually work through, not just watch.</p>' +
+    '<p>No courses are available for enrollment or purchase yet. I’m developing the first curriculum, and I’ll publish it when there are real lessons to use.</p></div></header>' +
+    '<section class="pc-section pc-two-column pc-course-feature"><div><p class="pc-eyebrow">First curriculum / planned</p><h2>Mathematical physics, from first principles.</h2></div><div class="pc-prose">' +
+    '<p>Learn the mathematics, use it to understand physical laws, and test what you understand with numerical experiments. AI can help write simulation code, but the models, assumptions, and results still have to make sense.</p>' +
+    '<p>This is a work in progress, not a finished course or a paid offer.</p>' + button("/podcast/", "Explore the podcast") + '</div></section>' +
+    '<section class="pc-section"><div class="pc-section-heading"><h2>How I want lessons to work</h2><p>A proposed format for each unit, subject to real course production and testing.</p></div>' +
+    '<div class="pc-course-steps"><article><span>01 / Watch</span><h3>Start with the idea</h3><p>A clear video lesson with mathematical context, not just a collection of prompts.</p></article>' +
+    '<article><span>02 / Experiment</span><h3>Run the model</h3><p>Reproducible simulations and exercises, including AI-assisted code where appropriate.</p></article>' +
+    '<article><span>03 / Verify</span><h3>Check what happened</h3><p>Test units, assumptions, errors, and whether the numerical results agree with the underlying mathematics.</p></article></div></section>' +
+    '<section class="pc-section pc-two-column pc-ethics"><div><h2>Where courses will live</h2></div><div class="pc-prose">' +
+    '<p>This website will be the public course library. Patreon is the planned home for member lessons and collection-based access. Paid videos will open in Patreon until secure, membership-verified playback on this site is built and independently tested.</p>' +
+    '<p>No purchase buttons, prices, or member-only video files are published here before those services and lessons are ready.</p>' +
+    button("/podcast/", "Back to the podcast") + '</div></section></div>';
+}
 export function renderCreatorPage(path, publication = configuredPodcast) {
   const rss = publication.outlets.find(outlet => outlet.key === "rss");
   if (path === CREATOR_ROUTES.podcast) {
     return shell({path, title: PODCAST_TITLE + " — Podcast", description: PODCAST_DESCRIPTION, current: path, rss}, renderPodcast(publication));
+  }
+  if (path === CREATOR_ROUTES.courses) {
+    return shell({path, title: "Courses — " + PODCAST_TITLE, description: "Courses in development with Devon Alan Akins, beginning with mathematical physics and AI-assisted scientific simulation.", current: path}, renderCourses());
   }
   if (path === CREATOR_ROUTES.setup) {
     return shell({path, title: "My Setup — " + PODCAST_TITLE, description: "Devon Alan Akins’s studio build journal. Gear for interviews, editing and future independent AI computing.", current: path}, renderSetup());
