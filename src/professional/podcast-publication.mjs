@@ -53,14 +53,15 @@ export function podcastPublication(episodes = approvedEpisodes, distribution = a
       audio, video, captions, thumbnail, playbackLinks, route: "/podcast/" + slug + "/"}];
   });
   const outlets = [
-    ["spotify", "Spotify", "open.spotify.com"],
-    ["apple", "Apple Podcasts", "podcasts.apple.com"],
-    ["youtube", "YouTube", "www.youtube.com"],
+    ["patreon", "Patreon", ["patreon.com", "www.patreon.com"]],
+    ["spotify", "Spotify", ["open.spotify.com"]],
+    ["apple", "Apple Podcasts", ["podcasts.apple.com"]],
+    ["youtube", "YouTube", ["www.youtube.com"]],
     ["rss", "RSS", null]
-  ].flatMap(([key, label, host]) => {
+  ].flatMap(([key, label, hosts]) => {
     if (!distribution[key]) return [];
     const href = publicWebUrl(distribution[key]);
-    if (!href || (host && new URL(href).hostname !== host)) throw new Error("Invalid podcast distribution URL");
+    if (!href || (hosts && !hosts.includes(new URL(href).hostname))) throw new Error("Invalid podcast distribution URL");
     return [{key, label, href}];
   });
   published.sort((a, b) => b.date.localeCompare(a.date) || a.slug.localeCompare(b.slug));
