@@ -11,8 +11,8 @@
 
 ## Creator account checklist (owner action, desktop preferred)
 
-1. Verify a Patreon creator account and page under **Devon Alan Akins**, including creator eligibility for Patreon Video. Use the approved branded image and an appropriate *public-facing* author email, not a private inbox.
-2. In Patreon desktop: **Settings → Podcasts and audio → New podcast**. Choose **Not now** for syncing an old feed if none exists. Set title **Devon Alan Akins**, 3000×3000-square podcast artwork, show description, author name/email, English, episodic format, and suitable explicit-content and category settings.
+1. Patreon’s logged-in creator dashboard was inspected on 2026-11-21: the **Devon Alan Akins** page exists, and **Podcast and audio** lists an existing show, **The Mark They Make**, with zero published episodes. Its exclusive Spotify toggle was off. This does not establish whether that show is the intended show under an older name or a separate project. Preserve it; resolve that relationship before renaming it or creating another show. Account state may change.
+2. Verify Patreon Video eligibility and prepare approved artwork and a suitable *public-facing* author email. After deciding which show to use, review **Settings → Podcasts and audio** and set the show title **Devon Alan Akins**, square podcast artwork, description, author name/email, language, format, explicit-content and category settings. If a separate new show is intended, use **New podcast** and choose **Not now** for an old feed only after confirming there is no feed to preserve.
 3. In **Distribution**, choose whether public episodes are available on Spotify, enable access to exclusive episodes for members as needed, and enable the private member RSS feature for patrons. **Never copy an individual's private RSS URL into this repository or public website.**
 4. If enabling free public episodes, follow Patreon's public Spotify instructions in **Spotify for Creators** (Add a new show → Find an existing show → Somewhere else, then verify the public RSS), and add the resulting official Spotify show URL back in Patreon. If combining public and paid shows, set up **Synced Feeds** in Spotify for Creators on desktop after both feeds exist. Avoid creating multiple competing public show listings.
 5. Decide whether to offer free following and one simple paid membership; any price, charge, benefit promise or public enrollment requires explicit owner approval and real content. Do not advertise lessons or episodes as published until they are.
@@ -25,6 +25,7 @@
 2. Export audio for a **public audio post** on Patreon. Set **Add to podcast** on and select the show; this is the version intended to become publicly available on Spotify. Validate the actual public feed and the Spotify listing.
 3. Create a **separate paid video post** on Patreon from the same recording. Use Paid access / the intended tier and keep **Add to podcast** off unless a separate paid audio release is intentional. Otherwise Patreon will mirror that post's audio with the video post's restricted access, or duplicate an episode. Test playback both as a member and as a logged-out visitor.
 4. Add a public-safe episode entry to `src/professional/podcast-publication.mjs` only after review of title, date, credited guests, summary, artwork, transcript and links. A member-video entry can set `videoAccess: "members"` and reference a Patreon post as a `playbackLinks` URL; do **not** supply a native video path.
+   A separately approved short public clip may use `videoPreview` with its matching `captions` VTT. It is public and downloadable, so never use the paid full recording or a private link as the preview. The build checks the allowlist and limits first-party MP4/MP3 assets to 2.5 MB.
 5. If an entire bonus episode is Patreon-only, upload as a paid audio/video post with **Add to podcast** enabled so eligible members can listen in Spotify after linking Patreon. Do not infer a public release from that sync.
 
 ## Course library procedure
@@ -44,6 +45,7 @@
 ## Acceptance before public launch
 
 - [ ] Patreon page and show claimed by owner; media eligibility and accurate public creator email confirmed
+- [ ] Owner resolves whether the existing **The Mark They Make** show is the same project before any rename or new show is created
 - [ ] Legitimate Spotify public show URL verified with an actual public episode or trailer
 - [ ] Paid video viewable by eligible members; not viewable by public visitors
 - [ ] Public audio appears on Spotify without duplicating the paid full video post

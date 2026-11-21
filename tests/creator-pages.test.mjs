@@ -62,6 +62,16 @@ test("only approved, dated episodes and configured feeds render, with escaped te
   assert.match(memberPage, /https:\/\/www\.patreon\.com\/posts\/test-123/);
   assert.doesNotMatch(memberPage, /<video|<audio|\/podcast-media\/test\.mp4/);
   assert.deepEqual(memberPublication.outlets.map(outlet => outlet.key), ["patreon"]);
+  const preview = {...member, videoPreview: "/podcast-media/preview.mp4", captions: "/podcast-media/preview.vtt"};
+  const previewPublication = podcastPublication([preview], {}, "2026-11-21");
+  const previewPage = renderCreatorPage("/podcast/test-interview/", previewPublication);
+  assert.match(previewPage, /<h2>Video preview<\/h2>/);
+  assert.match(previewPage, /aria-label="Episode video preview"/);
+  assert.match(previewPage, /Full video is available to eligible Patreon members/);
+  assert.match(previewPage, /https:\/\/www\.patreon\.com\/posts\/test-123/);
+  assert.deepEqual(previewPublication.mediaFiles.sort(), ["/podcast-media/preview.mp4", "/podcast-media/preview.vtt", "/podcast-media/test.webp"].sort());
+  assert.throws(() => podcastPublication([{...preview, captions: undefined}]), /require playable media and captions/);
+  assert.throws(() => podcastPublication([{...episode, videoPreview: "/podcast-media/preview.mp4"}]), /require playable media and captions/);
   assert.throws(() => podcastPublication([{...member, playbackLinks: [{label: "Not Patreon", url: "https://example.org/watch"}]}]), /requires a verified Patreon/);
   assert.throws(() => podcastPublication([{...episode, videoAccess: "members", playbackLinks: member.playbackLinks}]), /Members-only video cannot/);
   assert.throws(() => podcastPublication([], {rss: "https://www.patreon.com/rss/creator?auth=private"}), /Invalid podcast distribution/);

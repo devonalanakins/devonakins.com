@@ -101,9 +101,9 @@ function renderEpisode(episode) {
   const related = episode.links.filter(({url}) => publicWebUrl(url)).map(({label, url}) => '<li>' + external(url, label) + '</li>').join('');
   return '<article class="pc-wrap pc-episode-detail"><header><p class="pc-eyebrow"><a href="/podcast/">Devon Alan Akins podcast</a></p>' +
     '<h1>' + escapeHtml(episode.title) + '</h1>' + episodeMeta(episode) + '<p class="pc-lede">' + escapeHtml(episode.summary) + '</p></header>' +
-    (episode.video ? '<video controls playsinline preload="none" aria-label="Episode video"' +
-      (episode.thumbnail ? ' poster="' + episode.thumbnail + '"' : '') + '><source src="' + episode.video + '" type="video/mp4">' +
-      '<track kind="captions" srclang="en" label="English" src="' + episode.captions + '"><a href="' + episode.video + '">Download video</a></video>' : '') +
+    (episode.video || episode.videoPreview ? (episode.videoPreview ? '<h2>Video preview</h2>' : '') + '<video controls playsinline preload="none" aria-label="' + (episode.videoPreview ? 'Episode video preview' : 'Episode video') + '"' +
+      (episode.thumbnail ? ' poster="' + episode.thumbnail + '"' : '') + '><source src="' + (episode.videoPreview || episode.video) + '" type="video/mp4">' +
+      '<track kind="captions" srclang="en" label="English" src="' + episode.captions + '"><a href="' + (episode.videoPreview || episode.video) + '">Download ' + (episode.videoPreview ? 'video preview' : 'video') + '</a></video>' : '') +
     (episode.audio ? '<audio controls preload="none" aria-label="Episode audio"><source src="' + episode.audio + '" type="audio/mpeg"><a href="' + episode.audio + '">Download audio</a></audio>' : '') +
     (episode.videoAccess === "members" ? '<p class="pc-state">Full video is available to eligible Patreon members. Paid video files are not hosted publicly on this site.</p>' : '') +
     (episode.playbackLinks.length ? '<ul class="pc-media-links">' + episode.playbackLinks.map(({href, label}) => '<li>' + external(href, label) + '</li>').join('') + '</ul>' : '') +

@@ -41,6 +41,7 @@ export function podcastPublication(episodes = approvedEpisodes, distribution = a
     if (!["public", "members"].includes(videoAccess)) throw new Error("Invalid podcast video access");
     const audio = path(episode.audio, ["mp3"]);
     const video = path(episode.video, ["mp4"]);
+    const videoPreview = path(episode.videoPreview, ["mp4"]);
     const captions = path(episode.captions, ["vtt"]);
     const thumbnail = path(episode.thumbnail, ["avif", "webp", "jpg", "png"]);
     const playbackLinks = (episode.playbackLinks ?? []).map(({label, url}) => {
@@ -48,7 +49,7 @@ export function podcastPublication(episodes = approvedEpisodes, distribution = a
       if (!label || !href) throw new Error("Invalid podcast playback link");
       return {label, href};
     });
-    if (Boolean(video) !== Boolean(captions) || (!audio && !video && !playbackLinks.length)) {
+    if ((video && videoPreview) || Boolean(video || videoPreview) !== Boolean(captions) || (!audio && !video && !videoPreview && !playbackLinks.length)) {
       throw new Error("Podcast episodes require playable media and captions for native video");
     }
     if (videoAccess === "members") {
@@ -58,7 +59,7 @@ export function podcastPublication(episodes = approvedEpisodes, distribution = a
       }
     }
     return [{slug, title, summary, date, durationSeconds, format, guests, notes, links, transcript,
-      audio, video, captions, thumbnail, playbackLinks, videoAccess, route: "/podcast/" + slug + "/"}];
+      audio, video, videoPreview, captions, thumbnail, playbackLinks, videoAccess, route: "/podcast/" + slug + "/"}];
   });
   const outlets = [
     ["patreon", "Patreon", ["patreon.com", "www.patreon.com"]],
