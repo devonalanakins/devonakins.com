@@ -102,10 +102,15 @@ try:
                             assert page.locator("a[href=\"/podcast/\"]").count()>=1
                             assert page.locator('.pc-live a[href="/watch/"]').count()>=2
                         else:
-                            assert page.locator(".pc-product").count()==8
+                            assert page.locator(".pc-product").count()==10
                             assert page.locator(".pc-product-status-future").count()==1
                             assert page.locator(".pc-jump").is_visible()
                             assert page.locator(".pc-product-status-considering").count()==7
+                            assert page.locator(".pc-product-status-owned").count()==2
+                            assert page.locator('.pc-product[data-gear-id="existing-iphone"]').count()==1
+                            assert page.locator('.pc-product[data-gear-id="existing-sony-headset"]').count()==1
+                            assert page.locator('.pc-product[data-gear-status="owned"] a').count()==0
+                            assert "model not independently checked" in page.locator('.pc-product[data-gear-id="existing-sony-headset"]').inner_text().lower()
                             assert page.locator(".pc-product a[target='_blank']").count()>=8
                         name=path.strip("/").replace("/","-")
                         page.screenshot(path=str(OUT/f"{engine}-{name}-{width}-light.png"),full_page=True)

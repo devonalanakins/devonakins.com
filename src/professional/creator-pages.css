@@ -100,6 +100,7 @@ body.creator-body { margin: 0; color: var(--pc-ink); background: var(--pc-paper)
 .pc-product-plate svg, .pc-product-plate img { position: relative; display: block; width: 100%; max-width: 260px; height: auto; }
 .pc-product-info { min-width: 0; padding: clamp(16px, 2vw, 27px); }
 .pc-product-status { display: inline-block; font-size: 11px; font-weight: 700; padding: 4px 8px; border: 1px solid var(--pc-line); color: var(--pc-muted); }
+.pc-product-status-owned { border-color: var(--pc-blue); color: var(--pc-ink); background: var(--pc-panel); }
 .pc-product-status-future { border-color: var(--pc-blue); color: var(--pc-blue); }
 .pc-product h3 { font-size: clamp(19px, 1.75vw, 26px); line-height: 1.12; letter-spacing: -.04em; margin: 14px 0 8px; overflow-wrap: anywhere; }
 .pc-product p { font-size: 14px; color: var(--pc-muted); margin: 0 0 12px; }

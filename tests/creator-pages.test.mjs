@@ -172,13 +172,30 @@ test("courses hub is honest about prelaunch status and does not solicit payment"
   assert.doesNotMatch(courses, /<iframe|<video|<audio|<form|Buy now|Enroll now|\/podcast-media\//);
   assert.match(courses, /href="\/podcast\/"/);
 });
-test("setup gives all eight candidates unique, sourced entries and clear states", () => {
+test("setup distinguishes current owner-confirmed field gear from eight unpurchased candidates", () => {
   assert.match(setup, /rel="canonical" href="https:\/\/devonakins\.com\/setup\/"/);
   assert.deepEqual(CREATOR_CATEGORIES.map(category => category.id), ["field", "stage", "control", "lab"]);
-  assert.equal(CREATOR_GEAR.length, 8);
-  assert.equal(new Set(CREATOR_GEAR.map(product => product.id)).size, 8);
+  assert.equal(CREATOR_GEAR.length, 10);
+  assert.equal(new Set(CREATOR_GEAR.map(product => product.id)).size, 10);
+  assert.equal((setup.match(/data-gear-status="owned"/g) || []).length, 2);
   assert.equal((setup.match(/data-gear-status="considering"/g) || []).length, 7);
   assert.equal((setup.match(/data-gear-status="future"/g) || []).length, 1);
+  assert.match(setup,/Owned · owner-confirmed/);
+  assert.match(setup,/My current iPhone/);
+  assert.match(setup,/My Sony headset/);
+  assert.match(setup,/model not independently checked/);
+  assert.match(setup,/specific hardware models and app-level audio compatibility stay unverified/i);
+  assert.ok(setup.indexOf('data-gear-id="existing-iphone"') < setup.indexOf('data-gear-id="p4next"'));
+  assert.ok(setup.indexOf('data-gear-id="existing-sony-headset"') < setup.indexOf('data-gear-id="p4next"'));
+  for (const id of ["existing-iphone","existing-sony-headset"]) {
+    const product=CREATOR_GEAR.find(item=>item.id===id);
+    assert.equal(product.status,"owned");
+    assert.equal(product.url,undefined,"generic owned gear is not linked to a guessed product listing");
+    assert.equal(product.retailer,undefined,"owned gear must not link to a speculative retailer");
+    const card=setup.match(new RegExp('<article class="pc-product" data-gear-id="'+id+'"[\\s\\S]*?<\\/article>'))?.[0];
+    assert.ok(card,id+" card is rendered");
+    assert.doesNotMatch(card, /<a |href=|target="_blank"|Shop now|Buy now/i);
+  }
   assert.equal((setup.match(/Shared with The Stage/g) || []).length, 2);
   for (const category of CREATOR_CATEGORIES) {
     assert.match(setup, new RegExp('id="pc-cat-' + category.id + '"'));

@@ -58,7 +58,12 @@ if(approvedWatchRoutes.size===0)assert.match(watchPage,/No videos published yet/
 
 const setupPage=await(await get(CREATOR_ROUTES.setup)).text();
 assert.equal((setupPage.match(/class="pc-product"/g)||[]).length,CREATOR_GEAR.length);
-assert.match(setupPage,/Phone-first recording is the active production plan/);
+assert.match(setupPage,/My current kit is labeled separately from unpurchased possibilities/);
+assert.match(setupPage,/app-level audio compatibility stay unverified until tested/);
+assert.equal((setupPage.match(/data-gear-status="owned"/g)||[]).length,2);
+assert.equal((setupPage.match(/data-gear-status="considering"/g)||[]).length,7);
+assert.match(setupPage,/My current iPhone/);
+assert.match(setupPage,/My Sony headset/);
 assert.match(setupPage,/Sony headset gets tested as my audio input/);
 assert.equal((setupPage.match(/data-gear-status="future"/g)||[]).length,1);
 const podcastPage=await(await get(CREATOR_ROUTES.podcast)).text();
