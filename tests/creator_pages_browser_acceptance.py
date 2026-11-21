@@ -27,7 +27,7 @@ try:
                     page=context.new_page()
                     errors=[]
                     page.on("pageerror",lambda error:errors.append(str(error)))
-                    for path in ("/podcast/","/courses/","/setup/"):
+                    for path in ("/watch/","/podcast/","/courses/","/setup/"):
                         response=page.goto(BASE+path,wait_until="networkidle")
                         assert response and response.status==200,(engine,width,path,"unavailable")
                         assert page.locator("main#pc-main").is_visible()
@@ -42,7 +42,12 @@ try:
                         assert page.evaluate("getComputedStyle(document.documentElement).backgroundColor")=="rgb(243, 241, 233)",(
                             engine,width,path,"light palette"
                         )
-                        if path=="/podcast/":
+                        if path=="/watch/":
+                            assert page.locator("h1").inner_text().strip()=="Watch."
+                            assert page.locator(".pc-watch-empty").is_visible()
+                            assert "No videos published yet" in page.locator("main").inner_text()
+                            assert page.locator("audio,video,iframe").count()==0
+                        elif path=="/podcast/":
                             assert " ".join(page.locator("h1").inner_text().split())=="Devon Alan Akins"
                             if page.locator(".pc-state").count():
                                 assert page.locator(".pc-state").inner_text()=="No episodes published yet"
