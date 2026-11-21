@@ -7,6 +7,7 @@ import {renderProfessionalPage, renderProfessionalProjectPage, PROFESSIONAL_ROUT
 import {renderOneScreenHome} from "../src/professional/one-screen.mjs";
 import {LABORATORY_ROUTES,LABORATORY_REDIRECTS,laboratoryViewForPath} from "../src/professional/laboratory-routes.mjs";
 import {renderResearchFacilityHome} from "../src/professional/research-facility.mjs";
+import {CREATOR_ROUTES,renderCreatorPage} from "../src/professional/creator-pages.mjs";
 import { pages } from "../src/content.mjs";
 import { approvedPublicProjects as projects } from "../src/publication-manifest.mjs";
 import { promotePortraitHome } from "../src/portrait-home.mjs";
@@ -82,7 +83,7 @@ function repairProfessionalLegacyNavigation(html) {
 await writeFile("index.html", laboratoryCandidate ? renderResearchFacilityHome({portraitAvailable:laboratoryPortraitAvailable}) : oneScreenCandidate ? renderOneScreenHome({datedCapture:datedGptCapture,motionAssetAvailable}) : professionalCandidate ? renderProfessionalPage("home",publicGptContext) : fullV5Candidate ? renderV5PublicPage("home") : v5Candidate ? renderV5PublicHomepage() : home);
 const all = [...new Set([
   ...pages.map(({ path }) => path),
-  ...(laboratoryCandidate?[...Object.values(LABORATORY_ROUTES),...Object.keys(LABORATORY_REDIRECTS),"/listening/"]:[]),
+  ...(laboratoryCandidate?[...Object.values(LABORATORY_ROUTES),...Object.values(CREATOR_ROUTES),...Object.keys(LABORATORY_REDIRECTS),"/listening/"]:[]),
   ...(professionalCandidate ? [...professionalPaths.keys()] : []),
   ...projects.map((project) => "/work/" + project.slug + "/"),
   "/404/",
@@ -97,7 +98,7 @@ for (const path of all) {
   const project=projects.find(p=>path==="/work/"+p.slug+"/");
   const laboratoryPath=LABORATORY_REDIRECTS[path]||path;
   const laboratoryView=laboratoryViewForPath(laboratoryPath)||'portfolio';
-  const html=laboratoryCandidate?renderResearchFacilityHome({initialView:project?'portfolio':path==='/listening/'?'activity':path==='/404/'?'home':laboratoryView,canonicalPath:project?path:laboratoryPath,project,listening:path==='/listening/',notFound:path==='/404/',portraitAvailable:laboratoryPortraitAvailable}):professionalCandidate && professionalPaths.has(path) ? renderProfessionalPage(professionalPaths.get(path),publicGptContext) :
+  const html=laboratoryCandidate && Object.values(CREATOR_ROUTES).includes(path) ? renderCreatorPage(path) : laboratoryCandidate?renderResearchFacilityHome({initialView:project?'portfolio':path==='/listening/'?'activity':path==='/404/'?'home':laboratoryView,canonicalPath:project?path:laboratoryPath,project,listening:path==='/listening/',notFound:path==='/404/',portraitAvailable:laboratoryPortraitAvailable}):professionalCandidate && professionalPaths.has(path) ? renderProfessionalPage(professionalPaths.get(path),publicGptContext) :
     fullV5Candidate && routeKey ? renderV5PublicPage(routeKey) :
     fullV5Candidate && topic ? renderV5PublicPage("knowledge",{topic:topic.slug,publicPath:path}) :
     professionalCandidate && project ? renderProfessionalProjectPage(project.slug) :
