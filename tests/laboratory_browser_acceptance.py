@@ -152,7 +152,8 @@ try:
                         assert abs(geometry['header']['height']-76)<=8
                         assert geometry['signals']['y']-geometry['destinations']['y']>=100
                     (OUT/f'{engine}-landmarks-{width}.json').write_text(json.dumps(geometry,indent=2))
-                    page.mouse.click(width-2,65)
+                    # Clear hover without activating the new site navigation row.
+                    page.mouse.move(width-2,65)
                     page.screenshot(path=str(OUT/f'{engine}-cinematic-{width}x{height}.png'),full_page=True)
                     for key in ('work','experience'):
                         page.locator(f'[data-lab-destination="{key}"]').click()
