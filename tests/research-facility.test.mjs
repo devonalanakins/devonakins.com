@@ -77,12 +77,12 @@ test('laboratory candidate is independently navigable, semantic and source-hones
   assert.doesNotMatch(unknown,/return to the laboratory/i);
 });
 test('the Laboratory exposes the shared site navigation without losing its section tabs',()=>{
-  const primary=page.match(/<nav class="lab-site-nav" aria-label="Site navigation">([\\s\\S]*?)<\\/nav>/)?.[1];
+  const primary=page.match(/<nav class="lab-site-nav" aria-label="Site navigation">([\s\S]*?)<\/nav>/)?.[1];
   assert.ok(primary,'site navigation is present in the Laboratory shell');
   const hrefs=markup=>[...markup.matchAll(/href="([^"]+)"/g)].map(match=>match[1]);
   assert.deepEqual(hrefs(primary),SITE_PRIMARY_LINKS.map(link=>link.href));
   assert.equal((primary.match(/aria-current="page"/g)||[]).length,0,'the da. mark is the Home destination');
-  const menu=page.match(/<div class="lab-creator-menu-links">([\\s\\S]*?)<\\/div>/)?.[1];
+  const menu=page.match(/<div class="lab-creator-menu-links">([\s\S]*?)<\/div>/)?.[1];
   assert.ok(menu,'mobile dialog still exposes destination links');
   assert.deepEqual(hrefs(menu),[...SITE_PRIMARY_LINKS,...SITE_CONTEXT_LINKS].map(link=>link.href));
   assert.equal((page.match(/role="tablist"/g)||[]).length,2,'existing three-tab panel controller survives');
@@ -91,7 +91,7 @@ test('the Laboratory exposes the shared site navigation without losing its secti
   assert.equal(selectedPrimaryHref("/"),null);
   for(const [path,view,expected] of [["/work/","work","/work/"],["/fieldnotes/","writing","/fieldnotes/"],["/research/","experience",null]]){
     const html=renderResearchFacilityHome({initialView:view,canonicalPath:path});
-    const nav=html.match(/<nav class="lab-site-nav" aria-label="Site navigation">([\\s\\S]*?)<\\/nav>/)?.[1];
+    const nav=html.match(/<nav class="lab-site-nav" aria-label="Site navigation">([\s\S]*?)<\/nav>/)?.[1];
     assert.ok(nav,path);
     const selected=[...nav.matchAll(/<a href="([^"]+)" aria-current="page">/g)].map(match=>match[1]);
     assert.deepEqual(selected,expected?[expected]:[],path+" selected primary route");
