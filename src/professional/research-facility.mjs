@@ -18,8 +18,8 @@ const sections=Object.freeze([
   ['home','Home'],['experience','Research'],['systems','Systems'],['work','Work'],['portfolio','Portfolio'],
   ['activity','Activity'],['writing','Fieldnotes'],['contact','Contact'],
 ]);
-// Only three public destinations; historical sections remain addressable for
-// bookmarks, case studies and direct links without cluttering the main nav.
+// Only three in-page section tabs; the six main site destinations are
+// rendered separately. Older panels still support bookmarks and deep links.
 const primarySections=Object.freeze([['home','Home'],['work','Work'],['experience','Research']]);
 /** Actual analytic Lissajous curve: x=sin(a*t), y=sin(b*t+phase).
  * Validated integer frequencies; no random data, inferred experiment or API.
