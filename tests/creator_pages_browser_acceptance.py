@@ -25,6 +25,12 @@ try:
                 for width,height in ((390,844),(768,1024),(1440,900)):
                     context=browser.new_context(viewport={"width":width,"height":height},reduced_motion="reduce",ignore_https_errors=LOCAL_TLS)
                     page=context.new_page()
+                    # This is a static Vite preview, not the deployed Worker API.
+                    # Drive a deterministic prelaunch response and verify its client state.
+                    page.route("**/api/creator/live", lambda route: route.fulfill(
+                        status=200, content_type="application/json",
+                        body='{"state":"prelaunch"}'
+                    ))
                     errors=[]
                     page.on("pageerror",lambda error:errors.append(str(error)))
                     for path in ("/watch/","/podcast/","/courses/","/setup/","/live/"):
@@ -62,6 +68,7 @@ try:
                         elif path=="/live/":
                             assert page.locator("[data-mobile-live]").count()==1
                             assert page.locator("[data-live-status]").count()==1
+                            assert page.locator("[data-live-status]").inner_text().strip()=="NOT BROADCASTING"
                             assert "No broadcast right now." in page.locator("main").inner_text()
                             assert page.locator("[data-live-player] iframe").count()==0
                             assert page.locator("iframe, video, audio").count()==0
