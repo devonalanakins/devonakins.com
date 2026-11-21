@@ -10,7 +10,7 @@ export const CREATOR_CATEGORIES = Object.freeze([
 export const CREATOR_GEAR = Object.freeze([
   {id: "p4next", category: "field", kind: "recorder", name: "Zoom PodTrak P4next", spec: "4 XLR inputs · 4 headphone outputs · 24-bit/48 kHz WAV",
     use: "Separate mic tracks and independent headphone monitoring for the host and guest.", quantity: "1 under consideration", status: "considering",
-    url: "https://zoomcorp.com/en/us/podtrak-recorders/podcast-recorders/podtrak-p4next/", retailer: "https://www.sweetwater.com/store/detail/PodTrakP4next--zoom-podtrak-p4next-audio-interface"},
+    url: "https://zoomcorp.com/en/us/podtrak-recorders/podcast-recorders/podtrak-p4next/", retailer: "https://www.sweetwater.com/store/detail/P4NEXT--zoom-podtrak-p4next-audio-interface"},
   {id: "podmic-usb", category: "field", kind: "mic", name: "RØDE PodMic USB", spec: "Black · dynamic cardioid · XLR and USB-C",
     use: "Use XLR into the recorder for interviews or USB-C into a compatible device for solo recording.", quantity: "2 under consideration", status: "considering", shared: true,
     url: "https://rode.com/en-us/products/podmic-usb", retailer: "https://www.sweetwater.com/store/detail/PodMicUSB--rode-podmic-usb-dynamic-broadcast-microphone"},
