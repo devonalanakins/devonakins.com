@@ -108,32 +108,44 @@ try:
                 sample.locator('#lab-menu [data-one-target="home"]').click()
                 sample.wait_for_url(BASE+'/');selected(sample,'home')
                 context.close()
-                # Test-only approved playback checks the actual outgoing cover request.
+                # Owner-reported Apple Music is metadata, not audio playback or
+                # a browser fetch of Apple artwork. The source must clear on
+                # revocation, and ambient modes are explicitly owner-selected.
                 context=browser.new_context(ignore_https_errors=LOCAL_TLS,viewport={'width':390,'height':844})
                 stamp=datetime.datetime.now(datetime.timezone.utc).isoformat(timespec='milliseconds').replace('+00:00','Z')
-                cover='https://i.scdn.co/image/CinematicPrivacyFixture'
-                playback={'version':1,'mode':'playing','detailsVisible':True,'updatedAt':stamp,
-                          'track':{'title':'TEST FIXTURE — never published','artist':'Synthetic privacy test','url':'https://open.spotify.com/track/0123456789012345678901','image':cover}}
-                context.route('**/api/listening/now',lambda route:route.fulfill(json=playback))
-                requested=[]
-                def image_request(route):
-                    requested.append(route.request.all_headers())
-                    route.fulfill(content_type='image/gif',body=base64.b64decode('R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw=='))
-                context.route(cover,image_request)
+                report={'version':1,'source':'owner-shortcut','state':'reported','kind':'song',
+                        'detailsVisible':True,'reportedAt':stamp,'title':'TEST FIXTURE — never published',
+                        'artist':'Synthetic privacy test',
+                        'url':'https://music.apple.com/us/album/example/123456?i=1234567890'}
+                context.route('**/api/listening/apple',lambda route:route.fulfill(json=report))
+                remote=[]
+                def prevent_remote(route):
+                    remote.append(route.request.url)
+                    route.abort()
+                context.route('https://music.apple.com/**',prevent_remote)
                 page=context.new_page();page.goto(BASE,wait_until='networkidle')
-                wait_for_condition(page,"document.querySelector('[data-spotify-title]').textContent.startsWith('TEST FIXTURE')")
-                page.locator('.lab-signal-spotify summary').click()
-                page.locator('[data-spotify-cover]').scroll_into_view_if_needed()
-                wait_for_condition(page,"document.querySelector('[data-spotify-cover]').complete && document.querySelector('[data-spotify-cover]').naturalWidth>0")
-                assert requested and not requested[0].get('referer'),(engine,requested)
-                # Revocation removes retained metadata and artwork immediately on source refresh.
-                playback={'version':1,'mode':'hidden'}
+                wait_for_condition(page,"document.querySelector('[data-apple-listening-title]')?.textContent?.startsWith('TEST FIXTURE')")
+                page.locator('.lab-signal-apple summary').click()
+                assert 'Synthetic privacy test' in page.locator('.lab-signal-apple').inner_text()
+                assert page.locator('[data-apple-listening-link]').get_attribute('href')=='https://music.apple.com/us/album/example/123456?i=1234567890'
+                assert page.locator('.lab-signal-apple img, .lab-signal-apple audio, .lab-signal-apple iframe').count()==0
+                assert not remote,(engine,remote)
+                # An owner's declared Ambient Music mode does not imply an
+                # identified track, automatic mode discovery or a music player.
+                report={'version':1,'source':'owner-shortcut','state':'reported','kind':'ambient',
+                        'mood':'Chill','reportedAt':stamp}
                 page.evaluate("document.dispatchEvent(new Event('visibilitychange'))")
-                wait_for_condition(page,"document.querySelector('[data-spotify-title]').textContent==='Playback not shared'")
-                assert page.locator('[data-spotify-cover]').is_hidden()
-                assert page.locator('[data-spotify-cover]').get_attribute('src') is None
-                assert 'TEST FIXTURE' not in page.locator('.lab-signal-spotify').inner_text()
-                results.append({'engine':engine,'cover_referrer':'absent','revocation':'cleared'})
+                wait_for_condition(page,"document.querySelector('[data-apple-listening-title]')?.textContent==='Ambient Music · Chill'")
+                assert 'TEST FIXTURE' not in page.locator('.lab-signal-apple').inner_text()
+                assert page.locator('[data-apple-listening-link]').is_hidden()
+                # Revocation removes retained metadata on the next refresh.
+                report={'version':1,'source':'owner-shortcut','state':'hidden'}
+                page.evaluate("document.dispatchEvent(new Event('visibilitychange'))")
+                wait_for_condition(page,"document.querySelector('[data-apple-listening-title]')?.textContent==='Listening is private'")
+                assert page.locator('[data-apple-listening-link]').is_hidden()
+                assert 'TEST FIXTURE' not in page.locator('.lab-signal-apple').inner_text()
+                assert not remote,(engine,remote)
+                results.append({'engine':engine,'apple_metadata_only':'passed','revocation':'cleared','ambient_owner_declared':'passed'})
                 context.close()
             finally:browser.close()
     (OUT/'navigation-and-media-privacy.json').write_text(json.dumps(results,indent=2))
