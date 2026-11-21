@@ -428,7 +428,7 @@ export function createHandler(assets, release, options = {}) {
       // player, and only at the validated customer-specific origin.
       if (status === 200 && isHtml && path === "/live/" && options.laboratoryCandidate === true) {
         const streamOrigin = streamPlaybackOrigin();
-        if (streamOrigin) headers.set("Content-Security-Policy", headers.get("Content-Security-Policy") + " frame-src " + streamOrigin + ";");
+        if (streamOrigin) headers.set("Content-Security-Policy", headers.get("Content-Security-Policy") + "; frame-src " + streamOrigin + ";");
       }
       // The public Watch library is the only other creator route allowed to
       // embed approved public video; every other route keeps its prior CSP.
