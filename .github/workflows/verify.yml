@@ -277,7 +277,7 @@ jobs:
 
   laboratory_candidate:
     # Opt-in personal scientific identity. Does not deploy or modify default V4.
-    if: github.head_ref == 'design/computational-laboratory-2026-11-17' || github.ref == 'refs/heads/design/computational-laboratory-2026-11-17' || github.head_ref == 'fix/restore-live-cinematic-depth-2026-11-17' || github.ref == 'refs/heads/fix/restore-live-cinematic-depth-2026-11-17' || github.head_ref == 'feat/system-aware-light-dark-theme-20261120' || github.ref == 'refs/heads/feat/system-aware-light-dark-theme-20261120' || github.head_ref == 'feature/podcast-studio-setup-20261120' || github.ref == 'refs/heads/feature/podcast-studio-setup-20261120' || github.head_ref == 'feature/apple-identity-integration-20261121' || github.ref == 'refs/heads/feature/apple-identity-integration-20261121'
+    if: github.head_ref == 'design/computational-laboratory-2026-11-17' || github.ref == 'refs/heads/design/computational-laboratory-2026-11-17' || github.head_ref == 'fix/restore-live-cinematic-depth-2026-11-17' || github.ref == 'refs/heads/fix/restore-live-cinematic-depth-2026-11-17' || github.head_ref == 'feat/system-aware-light-dark-theme-20261120' || github.ref == 'refs/heads/feat/system-aware-light-dark-theme-20261120' || github.head_ref == 'feature/podcast-studio-setup-20261120' || github.ref == 'refs/heads/feature/podcast-studio-setup-20261120' || github.head_ref == 'feature/apple-identity-integration-20261121' || github.ref == 'refs/heads/feature/apple-identity-integration-20261121' || github.head_ref == 'feature/phone-first-live-studio-20261121' || github.ref == 'refs/heads/feature/phone-first-live-studio-20261121'
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     permissions:
