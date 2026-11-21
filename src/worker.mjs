@@ -1,4 +1,4 @@
-import {LIVE_STATUS_PATH, readPublicLiveStatus, streamPlaybackOrigin} from "./professional/mobile-live.mjs";
+import {LIVE_STATUS_PATH, createLiveStatusReader, streamPlaybackOrigin} from "./professional/mobile-live.mjs";
 import {LABORATORY_REDIRECTS} from "./professional/laboratory-routes.mjs";
 import { renderPublishedField } from "./v5/field-response.mjs";
 import { createProfessionalGithubReader } from "./professional/github-public.mjs";
@@ -51,6 +51,9 @@ export function createHandler(assets, release, options = {}) {
   const cloudApi = createCloudPresenceApi({clock:()=> (options.now || (()=>new Date()))().getTime()});
   const collectionsApi = createListeningCollections({clock:()=> (options.now || (()=>new Date()))().getTime()});
   const now = options.now || (() => new Date());
+  const liveStatus = createLiveStatusReader({
+    now: () => now().getTime(), fetchImpl: options.streamFetch || fetch,
+  });
   const githubFetch = options.githubFetch || fetch;
   const readProfessionalGithub = createProfessionalGithubReader({
     fetchImpl: githubFetch, clock: now, cache: options.cache,
@@ -215,7 +218,7 @@ export function createHandler(assets, release, options = {}) {
         url.protocol = "https:";
         return redirect(url.href);
       }
-      if (url.pathname === LIVE_STATUS_PATH) return secured(await readPublicLiveStatus(request, env));
+      if (url.pathname === LIVE_STATUS_PATH) return secured(await liveStatus(request, env));
       // Protect all admin and OAuth endpoints at the Worker boundary, not
       // merely with a hidden UI route. No Access identity = no account action.
       if (url.pathname === OBSERVATION_READ_PATH || url.pathname === OBSERVATION_WRITE_PATH)
