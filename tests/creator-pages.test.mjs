@@ -8,6 +8,7 @@ import {FIELDNOTES} from "../src/professional/fieldnotes.mjs";
 
 const podcast = renderCreatorPage(CREATOR_ROUTES.podcast);
 const setup = renderCreatorPage(CREATOR_ROUTES.setup);
+const courses = renderCreatorPage(CREATOR_ROUTES.courses);
 
 test("prelaunch presents the final title and honest format without fictional publication", () => {
   assert.match(podcast, /<title>Devon Alan Akins — Podcast<\/title>/);
@@ -19,7 +20,9 @@ test("prelaunch presents the final title and honest format without fictional pub
   assert.match(podcast, /href="\/setup\/"/);
   assert.match(podcast, /href="#episodes"/);
   assert.doesNotMatch(podcast, /<iframe|<audio|<video|autoplay|class="pc-episode"|application\/rss\+xml|spotify\.com\/show|Cristy Russo|Sam Rosenbaum|Jason Tunick/);
-  assert.deepEqual(creatorPaths, ["/podcast/", "/setup/"]);
+  assert.match(podcast, /href="\/courses\/"/);
+  assert.match(podcast, /Watch and listen/);
+  assert.deepEqual(creatorPaths, ["/podcast/", "/courses/", "/setup/"]);
 });
 
 test("only approved, dated episodes and configured feeds render, with escaped text and accessible playback", () => {
@@ -51,12 +54,35 @@ test("only approved, dated episodes and configured feeds render, with escaped te
   assert.match(detail, /<h2>Transcript<\/h2><p>Speaker: A &lt;sample&gt; transcript\./);
   assert.match(detail, /href="https:\/\/example\.org\/reference"/);
   assert.doesNotMatch(detail, /autoplay|javascript:|<sample>/);
+  const member = {...episode, videoAccess: "members", audio: undefined, video: undefined,
+    captions: undefined, playbackLinks: [{label: "Watch on Patreon", url: "https://www.patreon.com/posts/test-123"}]};
+  const memberPublication = podcastPublication([member], {patreon: "https://www.patreon.com/devonalanakins"}, "2026-11-21");
+  const memberPage = renderCreatorPage("/podcast/test-interview/", memberPublication);
+  assert.match(memberPage, /Full video is available to eligible Patreon members/);
+  assert.match(memberPage, /https:\/\/www\.patreon\.com\/posts\/test-123/);
+  assert.doesNotMatch(memberPage, /<video|<audio|\/podcast-media\/test\.mp4/);
+  assert.deepEqual(memberPublication.outlets.map(outlet => outlet.key), ["patreon"]);
+  assert.throws(() => podcastPublication([{...member, playbackLinks: [{label: "Not Patreon", url: "https://example.org/watch"}]}]), /requires a verified Patreon/);
+  assert.throws(() => podcastPublication([{...episode, videoAccess: "members", playbackLinks: member.playbackLinks}]), /Members-only video cannot/);
+  assert.throws(() => podcastPublication([], {rss: "https://www.patreon.com/rss/creator?auth=private"}), /Invalid podcast distribution/);
+  assert.throws(() => podcastPublication([], {rss: "https://example.org/feed.xml?token=private"}), /Invalid podcast distribution/);
+  assert.throws(() => podcastPublication([], {patreon: "https://patreon.com.evil.example/creator"}), /Invalid podcast distribution/);
   assert.throws(() => podcastPublication([{...episode, captions: undefined}]), /require playable media and captions/);
   assert.throws(() => podcastPublication([{...episode, audio: "/private/guest.mp3"}]), /Invalid podcast asset path/);
   assert.throws(() => podcastPublication([], {spotify: "https://open.spotify.com.example.org/show/something"}), /Invalid podcast distribution/);
   assert.throws(() => renderCreatorPage("/podcast/unapproved/", publication), /Unknown creator path/);
 });
 
+test("courses hub is honest about prelaunch status and does not solicit payment", () => {
+  assert.match(courses, /<title>Courses — Devon Alan Akins<\/title>/);
+  assert.match(courses, /rel="canonical" href="https:\/\/devonakins\.com\/courses\/"/);
+  assert.match(courses, /Mathematical physics, from first principles/);
+  assert.match(courses, /No courses are available for enrollment or purchase yet/);
+  assert.match(courses, /AI-assisted code/);
+  assert.match(courses, /Patreon is the planned home/);
+  assert.doesNotMatch(courses, /<iframe|<video|<audio|<form|Buy now|Enroll now|\/podcast-media\//);
+  assert.match(courses, /href="\/podcast\/"/);
+});
 test("setup gives all eight candidates unique, sourced entries and clear states", () => {
   assert.match(setup, /rel="canonical" href="https:\/\/devonakins\.com\/setup\/"/);
   assert.deepEqual(CREATOR_CATEGORIES.map(category => category.id), ["field", "stage", "control", "lab"]);
@@ -83,7 +109,7 @@ test("setup gives all eight candidates unique, sourced entries and clear states"
 });
 
 test("creator pages are first-party, accessible and connected to the established site", () => {
-  for (const html of [podcast, setup]) {
+  for (const html of [podcast, courses, setup]) {
     assert.match(html, /<html lang="en" class="lab-html"/);
     assert.match(html, /<main id="pc-main" tabindex="-1">/);
     assert.match(html, /aria-label="Primary navigation"/);
@@ -101,6 +127,7 @@ test("creator pages are first-party, accessible and connected to the established
   assert.equal((home.match(/role="tabpanel"/g) || []).length, 8);
   assert.match(home, /href="\/podcast\/">Podcast/);
   assert.match(home, /href="\/setup\/">My Setup/);
+  assert.match(home, /href="\/courses\/">Courses/);
   assert.match(home, /href="\/fieldnotes\/">Writing/);
 });
 
@@ -129,5 +156,6 @@ test("the Vite and page generators use the same gated publication set", async ()
   assert.match(css, /@media \(max-width: 760px\)/);
   assert.match(css, /prefers-reduced-motion: reduce/);
   assert.match(css, /:focus-visible/);
+  assert.match(css, /\.pc-course-steps/);
   assert.doesNotMatch(css, /@import|https:\/\/fonts\.|url\(\s*https?:/);
 });
