@@ -166,7 +166,7 @@ export function renderResearchFacilityHome({initialView='home',canonicalPath='/'
  '<h1 class="da-name">Devon<br>Alan Akins<span>.</span></h1>'+
  '<p class="lab-hero-deck">I build software, write, learn things, and talk to interesting people.</p>'+
  '<p class="lab-portfolio-statement">I also lead nonclinical operations and technology at Nona Neuropsychology.</p>'+
- '<div class="lab-portfolio-actions">'+goto('work','Explore the work',true)+goto('experience','Explore research')+'<a class="lab-action" href="/podcast/">Podcast <span aria-hidden="true">→</span></a></div></div></section>'+
+ '<div class="lab-portfolio-actions">'+goto('work','Explore the work',true)+goto('experience','Explore research')+'<a class="lab-action" href="/podcast/">Podcast <span aria-hidden="true">→</span></a><a class="lab-action" href="/live/">Live studio <span aria-hidden="true">→</span></a></div></div></section>'+
  (portraitAvailable?portraitIntroduction():'')+
  '<section class="lab-focus" aria-label="Current work"><div class="lab-focus-heading"><span>WHAT I DO</span><p>Professional responsibility. Independent work. Original ideas.</p></div><div class="lab-focus-grid">'+
  '<a class="lab-focus-card lab-focus-card--nona" href="/work/operations/"><span class="lab-focus-number">01 / NONCLINICAL OPERATIONS</span><strong>Nona Neuropsychology</strong><p>I lead nonclinical operations and technology supporting reliable, professional care.</p><span class="lab-focus-bottom">OPERATIONS &amp; TECHNOLOGY <b aria-hidden="true">→</b></span></a>'+
