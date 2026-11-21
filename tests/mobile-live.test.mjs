@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {LIVE_PUBLICATION,LIVE_STATUS_PATH,renderMobileLive,readPublicLiveStatus,streamPlaybackOrigin} from '../src/professional/mobile-live.mjs';
+import {LIVE_PUBLICATION,LIVE_STATUS_PATH,renderMobileLive,readPublicLiveStatus,createLiveStatusReader,streamPlaybackOrigin} from '../src/professional/mobile-live.mjs';
 const request=(method='GET')=>new Request('https://devonakins.com'+LIVE_STATUS_PATH,{method});
 const configured={publicEnabled:true,customerCode:'ABCdef12345',inputId:'a'.repeat(32)};
 const provider=(body,status=200)=>new Response(JSON.stringify(body),{status,headers:{'Content-Type':'application/json'}});
@@ -65,4 +65,55 @@ test('idle, connection, malformed and provider failure states never claim live',
  assert.deepEqual(await read(async()=>provider({isInput:false,live:true})),{state:'unavailable'});
  assert.deepEqual(await read(async()=>provider({},401)),{state:'unavailable'});
  assert.deepEqual(await read(async()=>{throw Error('sensitive upstream error')}),{state:'unavailable'});
+});
+
+test('status reader coalesces concurrent viewers, expires promptly and invalidates on privacy or token changes',async()=>{
+ let ticks=1_000_000;
+ let upstream=0;
+ const publication={...configured};
+ const reader=createLiveStatusReader({
+   publication, now:()=>ticks, ttlMs:10_000,
+   fetchImpl:async(url,init)=>{
+     upstream++;
+     assert.equal(init.headers.Authorization.startsWith('Bearer '),true);
+     return provider({isInput:true,live:true,videoUID:'f'.repeat(32)});
+   },
+ });
+ const env={CLOUDFLARE_STREAM_READ_TOKEN:'read-token-one'};
+ const concurrent=await Promise.all(Array.from({length:24},(_,i)=>reader(request(i%2===0?'GET':'HEAD'),env)));
+ assert.equal(upstream,1,'24 simultaneous viewer requests must share one provider call');
+ assert.equal((await concurrent[0].json()).state,'live');
+ assert.equal(await concurrent[1].text(),'');
+ assert.equal(concurrent[0].headers.get('cache-control'),'no-store');
+ assert.equal((await(await reader(request(),env)).json()).state,'live');
+ assert.equal(upstream,1,'short-lived cache avoids repeated provider calls');
+ ticks+=10_001;
+ assert.equal((await(await reader(request(),env)).json()).state,'live');
+ assert.equal(upstream,2,'cache expires within ten seconds');
+ // A different key may not reuse any result fetched using a prior key.
+ assert.equal((await(await reader(request(),{CLOUDFLARE_STREAM_READ_TOKEN:'read-token-two'})).json()).state,'live');
+ assert.equal(upstream,3);
+ assert.deepEqual(await(await reader(request(),{})).json(),{state:'unavailable'});
+ assert.equal(upstream,3,'missing private token must never reuse cached public player');
+ publication.publicEnabled=false;
+ assert.deepEqual(await(await reader(request(),env)).json(),{state:'prelaunch'});
+ assert.equal(upstream,3,'revocation must bypass all cached player results');
+ assert.equal((await reader(request('POST'),env)).status,405);
+});
+
+test('provider failures are short-cached and never presented as live',async()=>{
+ let ticks=500_000,upstream=0;
+ const reader=createLiveStatusReader({
+   publication:configured,now:()=>ticks,ttlMs:10_000,errorTtlMs:2_000,
+   fetchImpl:async()=>{upstream++;throw Error('token or account details cannot be exposed');}
+ });
+ const env={CLOUDFLARE_STREAM_READ_TOKEN:'some-read-token'};
+ for(let i=0;i<10;i++){
+   const response=await reader(request(),env);
+   assert.deepEqual(await response.json(),{state:'unavailable'});
+ }
+ assert.equal(upstream,1);
+ ticks+=2_001;
+ assert.deepEqual(await(await reader(request(),env)).json(),{state:'unavailable'});
+ assert.equal(upstream,2);
 });
