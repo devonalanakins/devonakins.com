@@ -119,6 +119,19 @@ test('Apple platform work links to honestly labeled archived source',()=>{
   assert.doesNotMatch(page,/Dadog.{0,80}(?:available|download|App Store)/i);
 });
 
+test('development stack names platforms without inventing paid membership or sponsorship',()=>{
+  const work=renderResearchFacilityHome({initialView:'work'});
+  const start=work.indexOf('aria-label="Developer stack and collaborations"');
+  const end=work.indexOf('aria-label="All public project overviews"',start);
+  assert.ok(start>0 && end>start, 'Developer stack is present on Work');
+  const stack=work.slice(start,end);
+  for(const name of ['APPLE PLATFORMS','OPENAI','GITHUB','CLOUDFLARE']) assert.match(stack,new RegExp(name));
+  assert.match(stack,/mailto:hello@devonakins\.com\?subject=Independent%20developer%20collaboration/);
+  assert.match(stack,/NO APP STORE RELEASE CLAIMED/);
+  assert.match(stack,/NOT AN OPENAI PARTNERSHIP/);
+  assert.doesNotMatch(stack,/(?:Apple Developer Program member|Apple-certified|official (?:OpenAI|Apple|GitHub|Cloudflare) partner|proudly sponsored by)/i);
+});
+
 test('approved portrait section renders only when a real first-party image is packaged',()=>{
   assert.doesNotMatch(page,/class="lab-personal"|devon-portrait\.avif/,
     'No empty portrait card or broken image may appear in the default candidate');
