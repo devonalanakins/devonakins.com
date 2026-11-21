@@ -331,3 +331,24 @@ html.lab-html{background:#f3f1e9;scroll-padding-top:80px}
 .lab-body .lab-notes .lab-study{padding:clamp(16px,2.5vw,32px)}
 .lab-body .lab-notes .lab-study :is(h2,h3){font:750 clamp(1.3rem,2.6vw,2.1rem)/1.13 Arial,sans-serif;letter-spacing:-.035em;margin:0}
 @media(max-width:880px){.lab-body .lab-notes-grid{grid-template-columns:minmax(0,1fr)}}
+
+/* Site-wide navigation shared with the creator pages. The existing Home / Work /
+   Research panel tabs remain a separate contextual control. */
+.lab-body .lab-site-nav { position: relative; z-index: 10; width: 100%; max-width: 100%; border-bottom: 1px solid var(--line); background: var(--paper); color: var(--ink); }
+.lab-body .lab-site-nav-track { display: flex; align-items: center; justify-content: center; gap: clamp(4px, 1.5vw, 24px); width: 100%; max-width: 1400px; margin-inline: auto; padding-inline: clamp(14px, 4vw, 60px); overflow-x: auto; overscroll-behavior-inline: contain; scrollbar-width: thin; box-sizing: border-box; }
+.lab-body .lab-site-nav a { display: inline-flex; align-items: center; flex: 0 0 auto; min-height: 46px; padding: 10px clamp(9px, 1.2vw, 17px); border-bottom: 2px solid transparent; color: var(--ink); font: 650 13px/1.45 Arial, Helvetica, sans-serif; text-decoration: none; white-space: nowrap; }
+.lab-body .lab-site-nav a:hover, .lab-body .lab-site-nav a[aria-current="page"] { color: var(--blue); border-bottom-color: currentColor; }
+.lab-body .lab-site-nav a:focus-visible { outline: 3px solid var(--blue); outline-offset: -3px; }
+.lab-body #lab-menu .lab-creator-menu-links { gap: 10px; }
+.lab-body #lab-menu .lab-creator-menu-links nav { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; min-width: 0; }
+.lab-body #lab-menu .lab-menu-group-title { margin: 4px 0 0; font: 750 11px/1.5 Arial, sans-serif; letter-spacing: .11em; color: var(--muted); text-transform: uppercase; }
+@media (max-width: 760px) {
+  .lab-body .lab-site-nav-track { justify-content: flex-start; gap: 3px; padding-inline: 12px; }
+  .lab-body .lab-site-nav a { min-height: 44px; padding: 9px 12px; font-size: 12px; }
+}
+@media (max-width: 360px) {
+  .lab-body #lab-menu .lab-creator-menu-links nav { grid-template-columns: minmax(0, 1fr); }
+}
+@media print {
+  .lab-body .lab-site-nav { display: none; }
+}
