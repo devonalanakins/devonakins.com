@@ -82,7 +82,7 @@ for (const module of [
   "presence-preferences", "presence-editor-api",
   "cloud-presence-model", "cloud-presence-api", "activity-tasks", "github-actions-oidc", "live-signal", "activity-history",
   "listening-collections", "threads-public", "threads-public-d1", "threads-owner-probe", "threads-owner-oauth", "threads-meta-lifecycle",
-  "professional/github-public", "professional/laboratory-routes",
+  "professional/github-public", "professional/laboratory-routes", "professional/mobile-live",
 ]) {
   if (module.includes("/")) await mkdir(".release/" + module.split("/")[0], {recursive:true});
   await writeFile(".release/" + module + ".mjs", await readFile("src/" + module + ".mjs"));

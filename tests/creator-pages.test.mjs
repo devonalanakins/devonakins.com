@@ -9,6 +9,7 @@ import {FIELDNOTES} from "../src/professional/fieldnotes.mjs";
 const podcast = renderCreatorPage(CREATOR_ROUTES.podcast);
 const setup = renderCreatorPage(CREATOR_ROUTES.setup);
 const courses = renderCreatorPage(CREATOR_ROUTES.courses);
+const live = renderCreatorPage(CREATOR_ROUTES.live);
 
 test("prelaunch presents the final title and honest format without fictional publication", () => {
   assert.match(podcast, /<title>Devon Alan Akins — Podcast<\/title>/);
@@ -24,7 +25,7 @@ test("prelaunch presents the final title and honest format without fictional pub
   assert.match(podcast, /Watch and listen/);
   assert.match(podcast, /href="https:\/\/www\.patreon\.com\/cw\/DevonAlanAkins" target="_blank" rel="noopener noreferrer">Follow my work on Patreon/);
   assert.match(podcast, /og:image" content="https:\/\/devonakins\.com\/professional\/podcast-share\.jpg"/);
-  assert.deepEqual(creatorPaths, ["/podcast/", "/courses/", "/setup/"]);
+  assert.deepEqual(creatorPaths, ["/podcast/", "/courses/", "/setup/", "/live/"]);
 });
 
 test("only approved, dated episodes and configured feeds render, with escaped text and accessible playback", () => {
@@ -128,7 +129,7 @@ test("setup gives all eight candidates unique, sourced entries and clear states"
 });
 
 test("creator pages are first-party, accessible and connected to the established site", () => {
-  for (const html of [podcast, courses, setup]) {
+  for (const html of [podcast, courses, setup, live]) {
     assert.match(html, /<html lang="en" class="lab-html"/);
     assert.match(html, /<main id="pc-main" tabindex="-1">/);
     assert.match(html, /aria-label="Primary navigation"/);
@@ -148,6 +149,17 @@ test("creator pages are first-party, accessible and connected to the established
   assert.match(home, /href="\/setup\/">My Setup/);
   assert.match(home, /href="\/courses\/">Courses/);
   assert.match(home, /href="\/fieldnotes\/">Writing/);
+});
+
+test("live theater stays offline without publishing an unapproved player or recordings", () => {
+  assert.ok(live.includes('href="https://devonakins.com/live/"'));
+  assert.ok(live.includes("Live from <em>wherever I am"));
+  assert.ok(live.includes("NOT BROADCASTING"));
+  assert.ok(live.includes("There is no archive published here yet"));
+  assert.ok(live.includes("data-live-player hidden"));
+  assert.ok(live.includes("mobile-live-client.ts"));
+  assert.ok(live.includes("mobile-live.css"));
+  assert.doesNotMatch(live, /<iframe|streamKey|token=|autoplay|private recording/i);
 });
 
 test("writing retains its index and renders canonical, directly addressable fieldnotes", () => {

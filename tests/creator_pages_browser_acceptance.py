@@ -27,7 +27,12 @@ try:
                     page=context.new_page()
                     errors=[]
                     page.on("pageerror",lambda error:errors.append(str(error)))
-                    for path in ("/podcast/","/courses/","/setup/"):
+                    for path in ("/podcast/","/courses/","/setup/","/live/"):
+                        # Deterministic prelaunch UI test: the packaged Worker
+                        # endpoint is independently asserted in the release gate.
+                        if path=="/live/":
+                            page.route("**/api/creator/live",lambda route:route.fulfill(
+                                status=200,json={"state":"prelaunch"}))
                         response=page.goto(BASE+path,wait_until="networkidle")
                         assert response and response.status==200,(engine,width,path,"unavailable")
                         assert page.locator("main#pc-main").is_visible()
@@ -54,6 +59,17 @@ try:
                             assert page.locator('a[href="/podcast/"]').count()>=2
                             assert "No courses are available for enrollment" in page.locator("main").inner_text()
                             assert page.locator("audio,video,iframe,form").count()==0
+                        elif path=="/live/":
+                            assert page.locator("[data-mobile-live]").count()==1
+                            assert page.locator("[data-live-status]").count()==1
+                            page.wait_for_function("document.querySelector('[data-mobile-live]')?.dataset.liveState==='prelaunch'")
+                            assert page.locator("[data-live-offline]").is_visible(),(engine,width,"offline stage hidden")
+                            assert page.locator("[data-live-headline]").inner_text().strip()=="No broadcast right now.",(
+                                engine,width,"unexpected prelaunch headline",page.locator("[data-live-headline]").inner_text())
+                            assert page.locator("[data-live-status]").inner_text().strip()=="NOT BROADCASTING"
+                            assert page.locator("[data-live-player] iframe").count()==0
+                            assert page.locator("iframe, video, audio").count()==0
+                            assert page.locator("a[href=\"/podcast/\"]").count()>=1
                         else:
                             assert page.locator(".pc-product").count()==8
                             assert page.locator(".pc-product-status-future").count()==1

@@ -1,6 +1,7 @@
+import {renderMobileLive} from "./mobile-live.mjs";
 import {PATREON_CREATOR_URL, PODCAST_TITLE, PODCAST_DESCRIPTION, PODCAST_SHARE_IMAGE, podcastPublication, publicWebUrl} from "./podcast-publication.mjs";
 
-export const CREATOR_ROUTES = Object.freeze({podcast: "/podcast/", courses: "/courses/", setup: "/setup/"});
+export const CREATOR_ROUTES = Object.freeze({podcast: "/podcast/", courses: "/courses/", setup: "/setup/", live: "/live/"});
 export const CREATOR_CATEGORIES = Object.freeze([
   {id: "field", label: "Field Kit", description: "A portable recording chain for interviews away from the studio."},
   {id: "stage", label: "The Stage", description: "Camera, lighting and stands for a two-person recording room. The room, seating and acoustic treatment are still open decisions."},
@@ -36,7 +37,7 @@ export const CREATOR_GEAR = Object.freeze([
 const statusText = Object.freeze({owned: "Owned and verified", selected: "Selected but not purchased", considering: "Considering", future: "Future"});
 const escapeHtml = value => String(value ?? "").replace(/[&<>"']/g, character => ({"&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;"}[character]));
 const configuredPodcast = podcastPublication();
-export const creatorPaths = [CREATOR_ROUTES.podcast, CREATOR_ROUTES.courses, CREATOR_ROUTES.setup, ...configuredPodcast.episodes.map(episode => episode.route)];
+export const creatorPaths = [CREATOR_ROUTES.podcast, CREATOR_ROUTES.courses, CREATOR_ROUTES.setup, CREATOR_ROUTES.live, ...configuredPodcast.episodes.map(episode => episode.route)];
 export const creatorMediaFiles = configuredPodcast.mediaFiles;
 const podcastFormats = {interview: "Interview", solo: "Solo", trailer: "Trailer"};
 const podcastDate = new Intl.DateTimeFormat("en-US", {dateStyle: "long", timeZone: "UTC"});
@@ -63,6 +64,7 @@ function shell({path, title, description, current, rss, image}, main) {
   const canonical = 'https://devonakins.com' + path;
   const socialImage = 'https://devonakins.com' + (image || '/social-card.jpg');
   const isPodcastCard = image === PODCAST_SHARE_IMAGE;
+  const isLive = path === CREATOR_ROUTES.live;
   return '<!doctype html><html lang="en" class="lab-html"><head>' +
     '<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">' +
     '<meta name="theme-color" content="#f3f1e9"><meta name="color-scheme" content="light dark">' +
@@ -78,11 +80,12 @@ function shell({path, title, description, current, rss, image}, main) {
     '<meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="' + escapeHtml(title) + '">' +
     '<meta name="twitter:description" content="' + escapeHtml(description) + '"><meta name="twitter:image" content="' + escapeHtml(socialImage) + '">' +
     '<link rel="icon" type="image/svg+xml" href="/favicon.svg"><link rel="apple-touch-icon" href="/apple-touch-icon.png">' +
-    '<link rel="stylesheet" href="/src/professional/creator-pages.css"></head>' +
+    '<link rel="stylesheet" href="/src/professional/creator-pages.css">' +
+    (isLive ? '<link rel="stylesheet" href="/src/professional/mobile-live.css"><script type="module" src="/src/professional/mobile-live-client.ts"></script>' : '') + '</head>' +
     '<body class="creator-body"><a class="pc-skip" href="#pc-main">Skip to content</a>' +
     '<header class="pc-header"><div class="pc-wrap pc-header-row"><a class="pc-brand" href="/" aria-label="da. Devon Alan Akins home"><span aria-hidden="true">da.</span><small>Devon Alan Akins</small></a>' +
     '<nav class="pc-nav" aria-label="Primary navigation">' +
-    link("/work/", "Work", current) + link("/research/", "Research", current) + link("/podcast/", "Podcast", current) + link("/courses/", "Courses", current) + link("/setup/", "My Setup", current) +
+    link("/work/", "Work", current) + link("/research/", "Research", current) + link("/live/", "Live", current) + link("/podcast/", "Podcast", current) + link("/courses/", "Courses", current) + link("/setup/", "My Setup", current) +
     '</nav></div></header><main id="pc-main" tabindex="-1">' + main + '</main>' +
     '<footer class="pc-footer pc-wrap"><div><a href="/" aria-label="da. Devon Alan Akins home">da.</a><p>Devon Alan Akins</p></div>' +
     '<nav aria-label="Footer navigation"><a href="/fieldnotes/">Writing</a><a href="/courses/">Courses</a><a href="/about/">About</a><a href="/contact/">Contact</a></nav>' +
@@ -173,11 +176,11 @@ function renderSetup() {
         '<div class="pc-control-empty"><strong>Inventory pending</strong><p>The editing computer, displays, software and storage will go here once I’ve checked what I already have.</p></div>') + '</section>';
   }).join('');
   return '<div class="pc-wrap"><header class="pc-setup-hero"><p class="pc-eyebrow">Studio build</p><h1>My Setup<span>.</span></h1>' +
-    '<div class="pc-setup-intro"><p>What I’m looking at for recording conversations, editing, and eventually running AI and scientific workloads locally.</p>' +
-    '<p>Ownership is still being inventoried. The catalog shows what I’m considering and what’s further out.</p></div></header>' +
+    '<div class="pc-setup-intro"><p>At first, this whole studio runs on my iPhone. The phone records, the Sony headset gets tested as my audio input, and software handles the overlays. Bigger cameras and microphones can wait.</p>' +
+    '<p>Phone-first recording is the active production plan. The catalog below shows unpurchased possibilities, not the equipment needed to start.</p></div></header>' +
     '<nav class="pc-jump" aria-label="Setup sections">' + CREATOR_CATEGORIES.map(category => link('#' + category.id, category.label)).join('') + '</nav>' + groups +
     '<section class="pc-section pc-two-column" id="build-log"><div><h2>Build notes</h2></div><div class="pc-prose">' +
-    '<article><h3>Start with two voices</h3><p>For interviews, XLR to a multitrack recorder gives each person a separate track. For a solo session, one USB-C mic can go straight into a compatible device. The two workflows can share microphones and headphones.</p></article>' +
+    '<article><h3>Start with what I own</h3><p>Film with iPhone Camera, capture narrated tutorials with iPhone Screen Recording, and test PRISM Live Studio for broadcasts. The Sony headset is the first audio test, not a promise that every app will use its mic correctly.</p></article>' +
     '<article><h3>Test the room before adding cameras</h3><p>A single wide shot is simpler to record and edit. Extra angles mean more media, synchronization and editing time. The room and a two-person test will determine what makes sense.</p></article></div></section>' +
     '<section class="pc-section pc-two-column pc-ethics"><h2>Catalog status</h2><div class="pc-prose">' +
     '<dl><dt>Owned and verified</dt><dd>In my inventory and checked.</dd><dt>Selected but not purchased</dt><dd>Chosen for the build and still to be bought.</dd>' +
@@ -209,6 +212,9 @@ export function renderCreatorPage(path, publication = configuredPodcast) {
   }
   if (path === CREATOR_ROUTES.courses) {
     return shell({path, title: "Courses — " + PODCAST_TITLE, description: "Courses in development with Devon Alan Akins, beginning with mathematical physics and AI-assisted scientific simulation.", current: path}, renderCourses());
+  }
+  if (path === CREATOR_ROUTES.live) {
+    return shell({path, title: "Live — " + PODCAST_TITLE, description: "Live conversations, building sessions and narrated screen lessons with Devon Alan Akins.", current: path}, renderMobileLive());
   }
   if (path === CREATOR_ROUTES.setup) {
     return shell({path, title: "My Setup — " + PODCAST_TITLE, description: "Devon Alan Akins’s studio build journal. Gear for interviews, editing and future independent AI computing.", current: path}, renderSetup());
