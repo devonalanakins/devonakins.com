@@ -1,3 +1,4 @@
+import {APPLE_LISTENING_PUBLIC_PATH, APPLE_LISTENING_INGEST_PATH, readPublicAppleListening, ingestAppleListening} from "./apple-listening.mjs";
 import {LABORATORY_REDIRECTS} from "./professional/laboratory-routes.mjs";
 import { renderPublishedField } from "./v5/field-response.mjs";
 import { createProfessionalGithubReader } from "./professional/github-public.mjs";
@@ -214,6 +215,9 @@ export function createHandler(assets, release, options = {}) {
         url.protocol = "https:";
         return redirect(url.href);
       }
+      // Private owner Shortcuts ingestion runs before the read-only public gate.
+      if (url.pathname === APPLE_LISTENING_INGEST_PATH)
+        return secured(await ingestAppleListening(request,env,()=>now().getTime()));
       // Protect all admin and OAuth endpoints at the Worker boundary, not
       // merely with a hidden UI route. No Access identity = no account action.
       if (url.pathname === OBSERVATION_READ_PATH || url.pathname === OBSERVATION_WRITE_PATH)
@@ -268,6 +272,8 @@ export function createHandler(assets, release, options = {}) {
         if(/^\/gpt(?:\/|$)/.test(decodedPath)||['/v2','/v2/','/v2/index.html','/v2/usage-snapshot.json'].includes(decodedPath))
           return new Response(request.method==='HEAD'?null:'Not found',{status:404,headers:{...securityHeaders,'Content-Type':'text/plain; charset=utf-8','Cache-Control':'no-store'}});
       }
+      if(url.pathname === APPLE_LISTENING_PUBLIC_PATH)
+        return secured(await readPublicAppleListening(request,env,()=>now().getTime()),request.method==='HEAD');
       if(url.pathname==='/api/listening/collections') {
         if(request.method==='HEAD')return secured(new Response(null,{headers:{'Cache-Control':'no-store'}}),true);
         return secured(await collectionsApi.public(env));
