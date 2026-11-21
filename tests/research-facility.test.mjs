@@ -126,7 +126,7 @@ test('development stack names platforms without inventing paid membership or spo
   assert.ok(start>0 && end>start, 'Developer stack is present on Work');
   const stack=work.slice(start,end);
   for(const name of ['APPLE PLATFORMS','OPENAI','GITHUB','CLOUDFLARE']) assert.match(stack,new RegExp(name));
-  assert.match(stack,/mailto:hello@devonakins\\.com\\?subject=Independent%20developer%20collaboration/);
+  assert.match(stack,/mailto:hello@devonakins\.com\?subject=Independent%20developer%20collaboration/);
   assert.match(stack,/NO APP STORE RELEASE CLAIMED/);
   assert.match(stack,/NOT AN OPENAI PARTNERSHIP/);
   assert.doesNotMatch(stack,/(?:Apple Developer Program member|Apple-certified|official (?:OpenAI|Apple|GitHub|Cloudflare) partner|sponsored by)/i);
