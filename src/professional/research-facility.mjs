@@ -4,7 +4,7 @@
  * Mathematical figures are analytic, not measured experiments or live telemetry.
  */
 import {FIELDNOTES} from './fieldnotes.mjs';
-import {LABORATORY_ROUTES} from './laboratory-routes.mjs';
+import {LABORATORY_HOME_TITLE, LABORATORY_ROUTES} from './laboratory-routes.mjs';
 import {listeningCollections} from './signal-cards.mjs';
 import {brandIcon} from './brand-icons.mjs';
 import {renderNonaOperatingBrief} from './nona-operating-brief.mjs';
@@ -156,7 +156,7 @@ export function renderResearchFacilityHome({initialView='home',canonicalPath='/'
   const fieldnote=Object.hasOwn(FIELDNOTES,canonicalPath)?FIELDNOTES[canonicalPath]:null;
   const view=(key,content)=>renderView(key,content,initialView);
   const nav=kind=>renderNavigation(kind,initialView);
-  const pageTitle=fieldnote?fieldnote.title+' — Devon Alan Akins':project?project.title+' — Devon Alan Akins':notFound?'Page not found — Devon Alan Akins':listening?'Listening — Devon Alan Akins':initialView==='home'?'Devon Alan Akins — Software, Writing & Research':sections.find(([key])=>key===initialView)[1]+' — Devon Alan Akins';
+  const pageTitle=fieldnote?fieldnote.title+' — Devon Alan Akins':project?project.title+' — Devon Alan Akins':notFound?'Page not found — Devon Alan Akins':listening?'Listening — Devon Alan Akins':initialView==='home'?LABORATORY_HOME_TITLE:sections.find(([key])=>key===initialView)[1]+' — Devon Alan Akins';
   const introductions={home:'Devon Alan Akins builds software, writes, studies mathematics and physics, and is developing a long-form podcast. He also leads nonclinical operations and technology at Nona Neuropsychology.',experience:'Interactive mathematical models, scientific questions, assumptions and citations from Devon Alan Akins.',systems:'Documented software architecture, privacy boundaries and independent infrastructure engineering.',work:'Explore approved public software projects, source links, categories and honest implementation status.',portfolio:'Selected software and nonclinical professional operations, including operational and digital-experience work for Nona Neuropsychology.',activity:'Dated public engineering changes, with source provenance and clear project boundaries.',writing:'Mathematical explanations, engineering notes, original writing and books in development.',contact:'Contact Devon Alan Akins about nonclinical operations, independent software development, and research computing. Do not send protected information.'};
   const introduction=fieldnote?fieldnote.summary:project?project.summary:listening?'Owner-approved Spotify playback and selected public playlists, with independent source and privacy controls.':notFound?'This page is unavailable. Explore Devon Alan Akins’s public software and research portfolio.':introductions[initialView];
   const home=view('home',
