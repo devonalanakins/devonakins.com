@@ -57,12 +57,15 @@ try:
                     assert before>20,(engine,width,before)
                     assert page.evaluate('scrollY')==0
                     navigate(page,'work',width)
+                    assert page.locator('.lab-site-nav a[href="/work/"][aria-current="page"]').count()==1
                     page.locator('[data-lab-project-search]').fill('Merit')
                     length=page.evaluate('history.length')
                     navigate(page,'work',width)
                     assert page.evaluate('history.length')==length,'Duplicate current-view history entry'
                     page.go_back();selected(page,'experience')
+                    assert page.locator('.lab-site-nav a[aria-current="page"]').count()==0
                     page.go_back();selected(page,'home')
+                    assert page.locator('.lab-site-nav a[aria-current="page"]').count()==0
                     wait_for_condition(page,'Math.abs(scrollY-'+str(before)+')<3')
                     wait_for_condition(page,"document.activeElement.dataset.oneView==='home'")
                     assert page.url.endswith('/?keep=query')
@@ -101,6 +104,7 @@ try:
                     assert sample.locator('link[rel="canonical"]').get_attribute('href')=='https://devonakins.com'+canonical
                 sample.goto(BASE+'/work/merit/',wait_until='networkidle')
                 assert sample.locator('.lab-case-study h1').inner_text()=='Merit'
+                assert sample.locator('.lab-site-nav a[href="/work/"][aria-current="page"]').count()==1
                 sample.evaluate(Path('node_modules/axe-core/axe.min.js').read_text())
                 violations=sample.evaluate("async()=> (await axe.run()).violations.filter(v=>['serious','critical'].includes(v.impact)).map(v=>v.id)")
                 assert not violations,(engine,'case study',violations)
