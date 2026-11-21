@@ -37,7 +37,16 @@ assert.match(setupPage,/Ownership is still being inventoried/);
 assert.equal((setupPage.match(/data-gear-status="future"/g)||[]).length,1);
 const podcastPage=await(await get(CREATOR_ROUTES.podcast)).text();
 assert.match(podcastPage,/<title>Devon Alan Akins — Podcast<\/title>/);
-if (creatorPaths.length === 2) assert.match(podcastPage,/No episodes published yet/);
+if (creatorPaths.length === Object.keys(CREATOR_ROUTES).length) assert.match(podcastPage,/No episodes published yet/);
+for (const [path, type, maxBytes] of [
+  ["/professional/podcast-cover.webp", "image/webp", 95_000],
+  ["/professional/podcast-share.jpg", "image/jpeg", 125_000]
+]) {
+  const artwork = await get(path);
+  assert.equal(artwork.status, 200, path);
+  assert.equal(artwork.headers.get("content-type"), type, path);
+  assert.ok((await artwork.arrayBuffer()).byteLength < maxBytes, path);
+}
 for (const path of Object.keys(FIELDNOTES)) {
  const response = await get(path);
  assert.equal(response.status,200,path);

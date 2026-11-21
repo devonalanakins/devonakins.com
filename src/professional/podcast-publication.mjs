@@ -1,7 +1,9 @@
 // This is a public allowlist. Add an entry only after Devon approves the
 // episode, credited guests, media, links and any transcript for publication.
 export const PODCAST_TITLE = "Devon Alan Akins";
-export const PODCAST_DESCRIPTION = "Mostly unscripted interviews and the occasional solo episode with Devon Alan Akins.";
+export const PODCAST_DESCRIPTION = "I’m Devon Alan Akins. I sit down with people I’m curious about and see where the conversation goes. We talk about their work, what they’ve tried, and what changed their minds. Sometimes it’s just me with a question about software, business, science, or writing.";
+export const PODCAST_SHARE_IMAGE = "/professional/podcast-share.jpg";
+export const PATREON_CREATOR_URL = "https://www.patreon.com/cw/DevonAlanAkins";
 const approvedEpisodes = [];
 const approvedDistribution = {};
 
@@ -27,12 +29,12 @@ export function podcastPublication(episodes = approvedEpisodes, distribution = a
   };
   const published = episodes.flatMap(episode => {
     if (episode.approved !== true) return [];
-    const {slug, title, summary, date, durationSeconds, format, guests = [], notes = [], links = [], transcript = []} = episode;
+    const {slug, title, summary, date, durationSeconds, format, guests = [], notes = [], links = [], transcript = [], chapters = []} = episode;
     if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug ?? "") || slugs.has(slug) ||
         !title?.trim() || !summary?.trim() || !/^\d{4}-\d{2}-\d{2}$/.test(date ?? "") ||
         !Number.isFinite(Date.parse(date)) || new Date(date).toISOString().slice(0, 10) !== date ||
         !Number.isSafeInteger(durationSeconds) || durationSeconds < 1 ||
-        !["interview", "solo"].includes(format) || (format === "interview" ? !guests.length : guests.length)) {
+        !["interview", "solo", "trailer"].includes(format) || (format === "interview" ? !guests.length : guests.length)) {
       throw new Error("Invalid approved podcast episode");
     }
     if (date > today) return [];
@@ -58,7 +60,13 @@ export function podcastPublication(episodes = approvedEpisodes, distribution = a
         throw new Error("Members-only video requires a verified Patreon playback link");
       }
     }
-    return [{slug, title, summary, date, durationSeconds, format, guests, notes, links, transcript,
+    if (!Array.isArray(chapters) || chapters.some(({startSeconds, title}, index) =>
+      !Number.isSafeInteger(startSeconds) || startSeconds < 0 || startSeconds >= durationSeconds ||
+      (index === 0 ? startSeconds !== 0 : startSeconds <= chapters[index - 1].startSeconds) ||
+      typeof title !== "string" || !title.trim())) {
+      throw new Error("Podcast chapters must start at zero and increase within the episode duration");
+    }
+    return [{slug, title, summary, date, durationSeconds, format, guests, notes, links, transcript, chapters,
       audio, video, videoPreview, captions, thumbnail, playbackLinks, videoAccess, route: "/podcast/" + slug + "/"}];
   });
   const outlets = [

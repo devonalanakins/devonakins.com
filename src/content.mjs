@@ -106,11 +106,11 @@ export const projects = [
     category: "business",
     label: "Executive · nonclinical practice operations",
     status: "Active nonclinical leadership",
-    role: "CEO · Nonclinical operations & technology",
+    role: "Nonclinical operations & technology",
     icon: "work",
     summary: "Leading the administrative operations and technology supporting a neuropsychology practice, with clinical decisions reserved for licensed professionals.",
     description:
-      "As CEO of Nona Neuropsychology, I focus on the nonclinical work that allows a professional practice to operate reliably: communications, referral coordination, scheduling handoffs, administrative report tracking, staffing workflows and digital experience.",
+      "At Nona Neuropsychology, I focus on the nonclinical work that allows a professional practice to operate reliably: communications, referral coordination, scheduling handoffs, administrative report tracking, staffing workflows and digital experience.",
     detail:
       "The current operating mandate is to establish clear ownership of administrative tasks, improve workflow visibility, document actual capacity and delays, and evaluate reliable technology. Operational targets and proposed staff software are not presented as completed systems or proven performance improvements.",
     boundary:

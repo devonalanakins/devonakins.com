@@ -22,6 +22,8 @@ test("prelaunch presents the final title and honest format without fictional pub
   assert.doesNotMatch(podcast, /<iframe|<audio|<video|autoplay|class="pc-episode"|application\/rss\+xml|spotify\.com\/show|Cristy Russo|Sam Rosenbaum|Jason Tunick/);
   assert.match(podcast, /href="\/courses\/"/);
   assert.match(podcast, /Watch and listen/);
+  assert.match(podcast, /href="https:\/\/www\.patreon\.com\/cw\/DevonAlanAkins" target="_blank" rel="noopener noreferrer">Follow my work on Patreon/);
+  assert.match(podcast, /og:image" content="https:\/\/devonakins\.com\/professional\/podcast-share\.jpg"/);
   assert.deepEqual(creatorPaths, ["/podcast/", "/courses/", "/setup/"]);
 });
 
@@ -32,18 +34,21 @@ test("only approved, dated episodes and configured feeds render, with escaped te
     video: "/podcast-media/test.mp4", captions: "/podcast-media/test.vtt",
     audio: "/podcast-media/test.mp3", thumbnail: "/podcast-media/test.webp",
     notes: ["A <sample> note."], transcript: ["Speaker: A <sample> transcript."],
+    chapters: [{startSeconds: 0, title: "Introduction"}, {startSeconds: 61, title: "A <sample> chapter"}],
     links: [{label: "Safe link", url: "https://example.org/reference"}, {label: "Unsafe", url: "javascript:alert(1)"}]
   };
   const publication = podcastPublication([
     episode,
     {...episode, slug: "unapproved", title: "Hidden title", approved: false},
     {...episode, slug: "future", title: "Future title", date: "2026-12-01"},
-    {...episode, slug: "solo", title: "Test solo", format: "solo", guests: [], date: "2026-11-19"}
+    {...episode, slug: "solo", title: "Test solo", format: "solo", guests: [], date: "2026-11-19"},
+    {...episode, slug: "trailer", title: "Test trailer", format: "trailer", guests: [], date: "2026-11-18"}
   ], {rss: "https://example.org/feed.xml", spotify: "https://open.spotify.com/show/example"}, "2026-11-21");
   const archive = renderCreatorPage("/podcast/", publication);
   const detail = renderCreatorPage(episode.slug.replace(/^/, "/podcast/") + "/", publication);
   assert.match(archive, /Featured episode[\s\S]*Test &amp; interview/);
   assert.match(archive, /Solo · <time/);
+  assert.match(archive, /Trailer · <time/);
   assert.match(archive, /Interview · Test &lt;guest&gt; · <time datetime="2026-11-20">November 20, 2026<\/time> · 2 min 5 sec/);
   assert.match(archive, /<link rel="alternate" type="application\/rss\+xml"/);
   assert.doesNotMatch(archive, /Hidden title|Future title|No episodes published yet/);
@@ -52,6 +57,9 @@ test("only approved, dated episodes and configured feeds render, with escaped te
   assert.match(detail, /<track kind="captions" srclang="en"/);
   assert.match(detail, /<h2>Show notes<\/h2><p>A &lt;sample&gt; note\./);
   assert.match(detail, /<h2>Transcript<\/h2><p>Speaker: A &lt;sample&gt; transcript\./);
+  assert.match(detail, /<time datetime="PT61S">1:01<\/time> A &lt;sample&gt; chapter/);
+  assert.throws(() => podcastPublication([{...episode, chapters: [{startSeconds: 1, title: "Late"}]}]), /Podcast chapters/);
+  assert.throws(() => podcastPublication([{...episode, chapters: [...episode.chapters, {startSeconds: 125, title: "Outside"}]}]), /Podcast chapters/);
   assert.match(detail, /href="https:\/\/example\.org\/reference"/);
   assert.doesNotMatch(detail, /autoplay|javascript:|<sample>/);
   const member = {...episode, videoAccess: "members", audio: undefined, video: undefined,
@@ -87,6 +95,7 @@ test("courses hub is honest about prelaunch status and does not solicit payment"
   assert.match(courses, /<title>Courses — Devon Alan Akins<\/title>/);
   assert.match(courses, /rel="canonical" href="https:\/\/devonakins\.com\/courses\/"/);
   assert.match(courses, /Mathematical physics, from first principles/);
+  assert.match(courses, /Man of the House/);
   assert.match(courses, /No courses are available for enrollment or purchase yet/);
   assert.match(courses, /AI-assisted code/);
   assert.match(courses, /Patreon is the planned home/);

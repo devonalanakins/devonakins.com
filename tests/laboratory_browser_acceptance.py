@@ -52,7 +52,7 @@ try:
                     assert page.evaluate("getComputedStyle(document.querySelector('.one-skip')).clipPath === 'none'")
                     page.locator('.lab-brand').focus()
                     assert page.evaluate("getComputedStyle(document.querySelector('.one-skip')).clipPath !== 'none'")
-                    assert page.title()=='Devon Alan Akins — CEO, Software Engineering & Research'
+                    assert page.title()=='Devon Alan Akins — Software, Writing & Research'
                     assert 'Devon' in page.locator('.lab-portfolio-hero h1').inner_text() and 'Alan Akins' in page.locator('.lab-portfolio-hero h1').inner_text()
                     assert page.locator('.lab-focus-card').count()==3
                     # The personal photograph is an optional packaged first-party
@@ -192,7 +192,7 @@ try:
                             stage.select_option('all')
                         if width in (390,1536): page.screenshot(path=str(OUT/f'{engine}-{key}-{width}.png'),full_page=True)
                         navigate(page,'home',width)
-                        assert page.title()=='Devon Alan Akins — CEO, Software Engineering & Research', (engine,width,'Homepage title must survive tab navigation')
+                        assert page.title()=='Devon Alan Akins — Software, Writing & Research', (engine,width,'Homepage title must survive tab navigation')
                     # Real source details independently expand and retain their provenance.
                     for card in page.locator('.lab-signal-tile').all():
                         card.locator('summary').click()

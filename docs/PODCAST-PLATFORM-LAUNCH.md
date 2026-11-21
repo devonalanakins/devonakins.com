@@ -42,6 +42,12 @@
 - `approvedEpisodes` starts empty. An episode requires `approved: true`, a valid date, and playable verified links/media. Public static assets are intentionally restricted. Never store premium videos, paid audio or private RSS feeds in `public/`.
 - The website stays in a prelaunch state until there is an approved real episode. `/courses/` explicitly indicates no courses are on sale or open for enrollment.
 
+## Episode metadata
+
+Use `interview`, `solo` or `trailer` in the site publication record. Start the optional `chapters` array at zero. Each entry contains `startSeconds` as a strictly increasing whole-second offset within the recording and a short `title`. Copy chapters to the publisher’s supported fields and verify how they appear in the destination app. The website shows them as a readable timestamped list.
+
+Use the 3000 × 3000 show cover for directory upload after owner approval. The podcast webpage uses a lightweight derivative, a separate 1200 × 630 share card and the public creator link. The creator link is available during prelaunch. Listening destinations still require verification against actual published feeds.
+
 ## Acceptance before public launch
 
 - [ ] Patreon page and show claimed by owner; media eligibility and accurate public creator email confirmed
