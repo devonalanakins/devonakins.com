@@ -28,6 +28,11 @@ try:
                     errors=[]
                     page.on("pageerror",lambda error:errors.append(str(error)))
                     for path in ("/podcast/","/courses/","/setup/","/live/"):
+                        # Deterministic prelaunch UI test: the packaged Worker
+                        # endpoint is independently asserted in the release gate.
+                        if path=="/live/":
+                            page.route("**/api/creator/live",lambda route:route.fulfill(
+                                status=200,json={"state":"prelaunch"}))
                         response=page.goto(BASE+path,wait_until="networkidle")
                         assert response and response.status==200,(engine,width,path,"unavailable")
                         assert page.locator("main#pc-main").is_visible()
@@ -57,7 +62,11 @@ try:
                         elif path=="/live/":
                             assert page.locator("[data-mobile-live]").count()==1
                             assert page.locator("[data-live-status]").count()==1
-                            assert "No broadcast right now." in page.locator("main").inner_text()
+                            page.wait_for_function("document.querySelector('[data-mobile-live]')?.dataset.liveState==='prelaunch'")
+                            assert page.locator("[data-live-offline]").is_visible(),(engine,width,"offline stage hidden")
+                            assert page.locator("[data-live-headline]").inner_text().strip()=="No broadcast right now.",(
+                                engine,width,"unexpected prelaunch headline",page.locator("[data-live-headline]").inner_text())
+                            assert page.locator("[data-live-status]").inner_text().strip()=="NOT BROADCASTING"
                             assert page.locator("[data-live-player] iframe").count()==0
                             assert page.locator("iframe, video, audio").count()==0
                             assert page.locator("a[href=\"/podcast/\"]").count()>=1
