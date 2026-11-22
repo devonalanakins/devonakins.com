@@ -61,6 +61,8 @@ try:
                             assert page.locator(".pc-watch-empty").is_visible()
                             assert "No videos published yet" in page.locator("main").inner_text()
                             assert page.locator("audio,video,iframe").count()==0
+                            assert page.locator('a[href*="patreon.com"]').count()==0
+                            assert "A Patreon creator link will appear here after account" in page.locator("main").inner_text()
                         elif path=="/podcast/":
                             assert " ".join(page.locator("h1").inner_text().split())=="Devon Alan Akins"
                             if page.locator(".pc-state").count():
