@@ -66,10 +66,15 @@ if (root) {
   async function refresh() {
     if (document.hidden || checking) return;
     checking = true;
+    // Without a deadline, one hung request blocks every subsequent poll and
+    // can leave a stale LIVE label or iframe visible indefinitely.
+    const controller = new AbortController();
+    const timeout = window.setTimeout(() => controller.abort(), 6_000);
     try {
       const response = await fetch('/api/creator/live', {
         method: 'GET', cache: 'no-store', credentials: 'omit',
         headers: {Accept: 'application/json'},
+        signal: controller.signal,
       });
       if (!response.ok) { show('unavailable'); return; }
       const payload = await response.json() as LivePayload;
@@ -78,7 +83,10 @@ if (root) {
       const url = checkedPlayerUrl(payload.playerUrl);
       show(payload.state === 'live' && !url ? 'unavailable' : payload.state as LiveState, url);
     } catch { show('unavailable'); }
-    finally { checking = false; }
+    finally {
+      window.clearTimeout(timeout);
+      checking = false;
+    }
   }
   void refresh();
   window.setInterval(() => { void refresh(); }, 45_000);
