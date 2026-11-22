@@ -87,6 +87,9 @@ test("only approved, dated episodes and configured feeds render, with escaped te
   assert.match(memberArchive, /href="https:\/\/www\.patreon\.com\/devonalanakins" target="_blank" rel="noopener noreferrer">Patreon/);
   assert.match(memberArchive, /An approved Patreon destination is listed under Follow the show/);
   assert.doesNotMatch(memberArchive, /A public creator link and benefits will appear after account and offer verification/);
+  const memberWatch = renderCreatorPage("/watch/", memberPublication);
+  assert.match(memberWatch, /href="https:\/\/www\.patreon\.com\/devonalanakins" target="_blank" rel="noopener noreferrer">Follow on Patreon/);
+  assert.doesNotMatch(memberWatch, /A Patreon creator link will appear here after account and membership details are verified/);
 
   const preview = {...member, videoPreview: "/podcast-media/preview.mp4", captions: "/podcast-media/preview.vtt"};
   const previewPublication = podcastPublication([preview], {}, "2026-11-21");
@@ -120,6 +123,8 @@ test("Watch has an honest empty library and its own canonical destination", () =
   assert.match(watch, /href="\/podcast\/"/);
   assert.match(watch, /href="\/courses\/"/);
   assert.doesNotMatch(watch, /<iframe|<video|autoplay|youtube\.com|twitch\.tv|fake-player/i);
+  assert.match(watch, /A Patreon creator link will appear here after account and membership details are verified/);
+  assert.doesNotMatch(watch, /href="https:\/\/(?:www\.)?patreon\.com/);
   assert.deepEqual(watchPublication().videos, []);
 });
 
