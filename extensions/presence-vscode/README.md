@@ -60,3 +60,28 @@ sharing until it can be verified again, and refreshing it never invents an edit.
 The catalog and raw Git remotes stay local; requests never transmit repository
 names, source text, file names or paths. The settings command allows automatic
 recognition or keeping all edits private.
+
+## Codex ChatGPT workspace companion (0.4.3)
+
+The optional extension also exposes an official-CLI launcher that keeps **ChatGPT-authenticated Codex** separate from independently billed OpenAI API-key sessions. It is not an AI agent replacement, account-wide analytics API, or automatic token counter.
+
+With the official OpenAI Codex VS Code extension installed, select **Devon Presence: Open Official Codex IDE** from the Command Palette or click the Codex status-bar item. This opens OpenAI's documented sidebar without requiring the standalone CLI. Sign in through the official Codex interface using your intended ChatGPT workspace account. Opening the sidebar does not verify authentication or read usage.
+
+For optional terminal-based coding, first install Codex CLI, then run **Devon Presence: Check Codex ChatGPT Sign-in** and **Devon Presence: Start Codex CLI with ChatGPT**. The launcher only starts a coding session if `codex login status` strictly reports ChatGPT sign-in. If the CLI is missing or not signed in, **Devon Presence: Open Codex ChatGPT Sign-in** invokes the official sign-in flow after confirmation. **Devon Presence: Review ChatGPT Usage** opens ChatGPT for an owner-reviewed, dated metric capture.
+
+This launcher removes API-key and custom-base-url environment overrides from its Codex terminal and refuses sessions explicitly authenticated by an API key; it does not read or save Codex credentials. Check the actual account/workspace, model and provider using `/status` inside Codex before asserting usage attribution. No Code/Prompt content or Codex usage counts are sent through the Presence heartbeat, which remains paused until independently paired and approved.
+
+
+### Actual agent-driven file activity
+
+When the editor is explicitly paired, public sharing enabled and VS Code focused, the companion now watches **real source-file changes** in approved Git repositories. Changes saved directly by the Codex agent or terminal can be observed even if their documents are not open in an editor. Generated/build/dependency files and likely credential files are ignored. Git remote identity and file paths remain local; the site receives only an owner-approved project slug and timestamp. Activity expires after two minutes without another genuine edit.
+
+Opening the Codex sidebar, typing a prompt, launching a terminal, or running a workflow without changed files does **not** manufacture a coding signal. Only a real accepted heartbeat is evidence. The server also requires its existing publication, pairing, allowlist and privacy gates. GitHub history, cloud reporters and OpenAI usage remain separate connections.
+
+### Local lifetime-token reading (optional)
+
+Use **Devon Presence: Read Local ChatGPT Profile Tokens** when the official Codex CLI is available on your computer. This uses the documented local `account/read` and `account/usage/read` app-server requests, with ChatGPT authentication required, to display an actual profile lifetime-token reading and local observation time. It will never upload account data, credentials, email, prompts, raw RPC responses, or usage counts to DevonAkins.com. It does not start a coding task or purchase API credits. The official Codex IDE sidebar remains usable without installing the CLI.
+
+The local reader must be checked on the owner's machine against the displayed ChatGPT profile before trusting the numbers. The public site continues to use its separate protected owner-approved capture/visibility controls; no background syncing or automatic publication has been enabled.
+
+See [the detailed architecture, privacy and acceptance gates](../../docs/CODEX_WORKSPACE_INTEGRATION.md). VS Code / Codex login and end-to-end account usage remain subject to a real owner-device acceptance test.
