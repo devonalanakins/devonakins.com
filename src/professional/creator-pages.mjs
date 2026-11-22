@@ -1,5 +1,5 @@
 import {renderMobileLive} from "./mobile-live.mjs";
-import {PATREON_CREATOR_URL, PODCAST_TITLE, PODCAST_DESCRIPTION, PODCAST_SHARE_IMAGE, podcastPublication, publicWebUrl} from "./podcast-publication.mjs";
+import {PODCAST_TITLE, PODCAST_DESCRIPTION, PODCAST_SHARE_IMAGE, podcastPublication, publicWebUrl} from "./podcast-publication.mjs";
 import {WATCH_KINDS, watchPublication} from "./watch-publication.mjs";
 import {PRACTICAL_START_ROUTE, renderPracticalStartLesson} from "./first-practical-lesson.mjs";
 import {PERSONAL_ABOUT_ROUTE, renderPersonalAbout} from "./about-page.mjs";
@@ -159,7 +159,10 @@ function renderPodcast({episodes, outlets}) {
       outlets.map(({label, href}) => '<li>' + external(href, label) + '</li>').join('') + '</ul></section>' : '') +
     '<section class="pc-section pc-two-column"><div><h2>Watch and listen</h2></div><div class="pc-prose"><p>Public episodes will be watchable here on my website, with the audio on Spotify. Patreon is for member-only material. Episode pages will have listening links, show notes, and transcripts when available.</p>' +
     (outlets.length ? '' : '<p>Listening links will appear here once the show is available.</p>') +
-    '<p>' + external(PATREON_CREATOR_URL, 'Follow my work on Patreon') + '</p></div></section>' +
+    '<p>' + (outlets.some(outlet => outlet.key === "patreon") ?
+      'An approved Patreon destination is listed under Follow the show.' :
+      'Patreon memberships are planned. A public creator link and benefits will appear after account and offer verification.') +
+    '</p></div></section>' +
     '<section class="pc-section pc-two-column pc-studio-teaser"><div><h2>How I’m putting it together</h2></div><div class="pc-prose"><p>I’m working out what I need to record in the field, shoot in a room, and edit afterward.</p>' +
     button('/setup/', 'Explore My Setup') + '</div></section></div>';
 }
