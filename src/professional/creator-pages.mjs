@@ -3,7 +3,7 @@ import {PODCAST_TITLE, PODCAST_DESCRIPTION, PODCAST_SHARE_IMAGE, podcastPublicat
 import {WATCH_KINDS, watchPublication} from "./watch-publication.mjs";
 import {PRACTICAL_START_ROUTE, renderPracticalStartLesson} from "./first-practical-lesson.mjs";
 import {PERSONAL_ABOUT_ROUTE, renderPersonalAbout} from "./about-page.mjs";
-import {SITE_PRIMARY_LINKS, SITE_CONTEXT_LINKS} from "./site-navigation.mjs";
+import {renderSiteHeader} from "./site-navigation.mjs";
 
 export const CREATOR_ROUTES = Object.freeze({watch: "/watch/", podcast: "/podcast/", courses: "/courses/", setup: "/setup/", live: "/live/"});
 export const CREATOR_CATEGORIES = Object.freeze([
@@ -60,9 +60,6 @@ const episodeDuration = seconds => {
   return (minutes ? minutes + " min " : "") + (remainder || !minutes ? remainder + " sec" : "");
 };
 const arrow = '<span aria-hidden="true">→</span>';
-function link(path, label, current) {
-  return '<a href="' + escapeHtml(path) + '"' + (path === current ? ' aria-current="page"' : "") + '>' + escapeHtml(label) + '</a>';
-}
 function external(url, label, context) {
   return '<a href="' + escapeHtml(url) + '" target="_blank" rel="noopener noreferrer"' +
     (context ? ' aria-label="' + escapeHtml(label + " — " + context) + '"' : "") + '>' + escapeHtml(label) + ' ' + arrow + '</a>';
@@ -73,7 +70,7 @@ function button(path, label, primary = false) {
 function themeControl() {
   return '<label class="pc-appearance"><span>Appearance</span><select data-lab-theme-select><option value="system">System</option><option value="light">Light</option><option value="dark">Dark</option></select></label>';
 }
-function shell({path, title, description, current, rss, image}, main) {
+function shell({path, title, description, rss, image}, main) {
   const canonical = 'https://devonakins.com' + path;
   const socialImage = 'https://devonakins.com' + (image || '/social-card.jpg');
   const isPodcastCard = image === PODCAST_SHARE_IMAGE;
@@ -95,17 +92,13 @@ function shell({path, title, description, current, rss, image}, main) {
     '<meta name="twitter:description" content="' + escapeHtml(description) + '"><meta name="twitter:image" content="' + escapeHtml(socialImage) + '">' +
     '<link rel="icon" type="image/svg+xml" href="/favicon.svg"><link rel="apple-touch-icon" href="/apple-touch-icon.png">' +
     '<link rel="stylesheet" href="/src/professional/creator-pages.css">' +
+    '<link rel="stylesheet" href="/src/professional/site-navigation.css">' +
     (isLive ? '<link rel="stylesheet" href="/src/professional/mobile-live.css"><script type="module" src="/src/professional/mobile-live-client.ts"></script>' : '') +
     (isPodcast ? '<script type="module" src="/src/professional/podcast-chapters.mjs"></script>' : '') + '</head>' +
     '<body class="creator-body"><a class="pc-skip" href="#pc-main">Skip to content</a>' +
-    '<header class="pc-header"><div class="pc-wrap pc-header-row"><a class="pc-brand" href="/" aria-label="da. Devon Alan Akins home"><span aria-hidden="true">da.</span><small>Devon Alan Akins</small></a>' +
-    '<nav class="pc-nav" aria-label="Primary navigation">' +
-    SITE_PRIMARY_LINKS.map(({href, label}) => link(href, label, current)).join("") +
-    '</nav></div><nav class="pc-context-nav" aria-label="More destinations"><div class="pc-wrap pc-context-track">' +
-    SITE_CONTEXT_LINKS.map(({href, label}) => link(href, label, current)).join("") +
-    '</div></nav></header><main id="pc-main" tabindex="-1">' + main + '</main>' +
+    renderSiteHeader(path) + '<main id="pc-main" tabindex="-1">' + main + '</main>' +
     '<footer class="pc-footer pc-wrap"><div><a href="/" aria-label="da. Devon Alan Akins home">da.</a><p>Devon Alan Akins</p></div>' +
-    '<nav aria-label="Footer navigation"><a href="/watch/">Watch</a><a href="/live/">Live</a><a href="/fieldnotes/">Writing</a><a href="/courses/">Courses</a><a href="/about/">About</a><a href="/contact/">Contact</a></nav>' +
+    '<nav aria-label="Footer navigation"><a href="/watch/">Watch</a><a href="/live/">Live</a><a href="/fieldnotes/">Writing</a><a href="/courses/">Learn</a><a href="/about/">About</a><a href="/contact/">Contact</a></nav>' +
     themeControl() + '</footer></body></html>';
 }
 function episodeMeta(episode) {
@@ -118,7 +111,7 @@ function episodeCard(episode, featured = false) {
   return '<article class="pc-episode">' +
     (episode.thumbnail ? '<img src="' + episode.thumbnail + '" alt="" loading="lazy" decoding="async">' : '') +
     '<div>' + (featured ? '<p class="pc-eyebrow">Featured episode</p>' : '') + '<h3>' +
-    link(episode.route, episode.title) + '</h3>' + episodeMeta(episode) + '<p>' + escapeHtml(episode.summary) + '</p></div></article>';
+    `<a href="${escapeHtml(episode.route)}">${escapeHtml(episode.title)}</a>` + '</h3>' + episodeMeta(episode) + '<p>' + escapeHtml(episode.summary) + '</p></div></article>';
 }
 function renderEpisode(episode) {
   const related = episode.links.filter(({url}) => publicWebUrl(url)).map(({label, url}) => '<li>' + external(url, label) + '</li>').join('');
@@ -260,7 +253,7 @@ function renderSetup() {
   return '<div class="pc-wrap"><header class="pc-setup-hero"><p class="pc-eyebrow">Studio build</p><h1>My Setup<span>.</span></h1>' +
     '<div class="pc-setup-intro"><p>At first, this whole studio runs on my iPhone. The phone records, the Sony headset gets tested as my audio input, and software handles the overlays. Bigger cameras and microphones can wait.</p>' +
     '<p>My current kit is labeled separately from unpurchased possibilities. Specific hardware models and app-level audio compatibility stay unverified until tested.</p></div></header>' +
-    '<nav class="pc-jump" aria-label="Setup sections">' + CREATOR_CATEGORIES.map(category => link('#' + category.id, category.label)).join('') + '</nav>' + groups +
+    '<nav class="pc-jump" aria-label="Setup sections">' + CREATOR_CATEGORIES.map(({id, label}) => `<a href="#${escapeHtml(id)}">${escapeHtml(label)}</a>`).join('') + '</nav>' + groups +
     '<section class="pc-section pc-two-column" id="build-log"><div><h2>Build notes</h2></div><div class="pc-prose">' +
     '<article><h3>Start with what I own</h3><p>Film with iPhone Camera, capture narrated tutorials with iPhone Screen Recording, and test PRISM Live Studio for broadcasts. The Sony headset is the first audio test, not a promise that every app will use its mic correctly.</p></article>' +
     '<article><h3>Test the room before adding cameras</h3><p>A single wide shot is simpler to record and edit. Extra angles mean more media, synchronization and editing time. The room and a two-person test will determine what makes sense.</p></article></div></section>' +
@@ -293,36 +286,33 @@ function renderCourses() {
 export function renderCreatorPage(path, publication = configuredPodcast, watch = configuredWatch) {
   const rss = publication.outlets.find(outlet => outlet.key === "rss");
   if (path === CREATOR_ROUTES.watch) {
-    return shell({path, title: "Watch — " + PODCAST_TITLE, description: "Original video, conversations, classes and replays on Devon Alan Akins’s own website.", current: path}, renderWatch(watch, publication));
+    return shell({path, title: "Watch — " + PODCAST_TITLE, description: "Original video, conversations, classes and replays on Devon Alan Akins’s own website."}, renderWatch(watch, publication));
   }
   const watchVideo = watch.videos.find(entry => entry.route === path);
   if (watchVideo) {
-    return shell({path, title: watchVideo.title + " — Watch — " + PODCAST_TITLE, description: watchVideo.summary, current: CREATOR_ROUTES.watch}, renderWatchVideo(watchVideo));
+    return shell({path, title: watchVideo.title + " — Watch — " + PODCAST_TITLE, description: watchVideo.summary}, renderWatchVideo(watchVideo));
   }
   if (path === CREATOR_ROUTES.podcast) {
-    return shell({path, title: PODCAST_TITLE + " — Podcast", description: PODCAST_DESCRIPTION, current: path, rss, image: PODCAST_SHARE_IMAGE}, renderPodcast(publication));
+    return shell({path, title: PODCAST_TITLE + " — Podcast", description: PODCAST_DESCRIPTION, rss, image: PODCAST_SHARE_IMAGE}, renderPodcast(publication));
   }
   if (path === CREATOR_ROUTES.courses) {
-    return shell({path, title: "Courses — " + PODCAST_TITLE, description: "Practical life lessons with Devon Alan Akins, starting with a free Man of the House home walk-through. Future mathematics and scientific computing courses are in development.", current: path}, renderCourses());
+    return shell({path, title: "Courses — " + PODCAST_TITLE, description: "Practical life lessons with Devon Alan Akins, starting with a free Man of the House home walk-through. Future mathematics and scientific computing courses are in development."}, renderCourses());
   }
   if (path === PERSONAL_ABOUT_ROUTE) {
     return shell({path, title: "About — " + PODCAST_TITLE,
-      description: "Meet Devon Alan Akins, independent software developer, writer, interviewer, creator and father. Learn what he builds, publishes and values.",
-      current: path}, renderPersonalAbout());
+      description: "Meet Devon Alan Akins, independent software developer, writer, interviewer, creator and father. Learn what he builds, publishes and values."}, renderPersonalAbout());
   }
   if (path === PRACTICAL_START_ROUTE) {
     return shell({path, title: "Start with a walk-through — Man of the House — " + PODCAST_TITLE,
-      description: "A free, practical 15-minute home walk-through lesson about safe observation, useful action and shared household responsibility.",
-      current: CREATOR_ROUTES.courses}, renderPracticalStartLesson());
+      description: "A free, practical 15-minute home walk-through lesson about safe observation, useful action and shared household responsibility."}, renderPracticalStartLesson());
   }
   if (path === CREATOR_ROUTES.live) {
-    return shell({path, title: "Live — " + PODCAST_TITLE, description: "Live conversations, building sessions and narrated screen lessons with Devon Alan Akins.", current: path}, renderMobileLive());
+    return shell({path, title: "Live — " + PODCAST_TITLE, description: "Live conversations, building sessions and narrated screen lessons with Devon Alan Akins."}, renderMobileLive());
   }
   if (path === CREATOR_ROUTES.setup) {
-    return shell({path, title: "My Setup — " + PODCAST_TITLE, description: "Devon Alan Akins’s studio build journal. Gear for interviews, editing and future independent AI computing.", current: path}, renderSetup());
+    return shell({path, title: "My Setup — " + PODCAST_TITLE, description: "Devon Alan Akins’s studio build journal. Gear for interviews, editing and future independent AI computing."}, renderSetup());
   }
   const episode = publication.episodes.find(entry => entry.route === path);
   if (!episode) throw new RangeError("Unknown creator path");
-  return shell({path, title: episode.title + " — " + PODCAST_TITLE, description: episode.summary,
-    current: CREATOR_ROUTES.podcast, image: episode.thumbnail || PODCAST_SHARE_IMAGE, rss}, renderEpisode(episode));
+  return shell({path, title: episode.title + " — " + PODCAST_TITLE, description: episode.summary, image: episode.thumbnail || PODCAST_SHARE_IMAGE, rss}, renderEpisode(episode));
 }

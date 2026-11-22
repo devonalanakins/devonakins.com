@@ -10,9 +10,6 @@ const laboratory=document.body.classList.contains("lab-body");
 const names:TabName[]=laboratory?
   ["home","experience","systems","work","portfolio","activity","writing","contact"]:
   ["home","experience","work","activity","writing","contact"];
-const primaryForView=(view:TabName):TabName=>!laboratory?view:
-  view==="systems"||view==="portfolio"||view==="activity"?"work":
-  view==="writing"?"experience":view==="contact"?"home":view;
 const tabs=[...document.querySelectorAll<HTMLButtonElement>("[data-one-target]")];
 const buttons=[...document.querySelectorAll<HTMLButtonElement|HTMLAnchorElement>("[data-one-go]")];
 const panels=[...document.querySelectorAll<HTMLElement>("[data-one-view]")];
@@ -45,6 +42,7 @@ fitGitHubFeedToViewport();
 window.addEventListener("resize",fitGitHubFeedToViewport);
 const known=(value:string|null|undefined):value is TabName=>!!value&&names.includes(value as TabName);
 const currentHash=():TabName=>{
+  if(laboratory&&document.body.dataset.labNative==='true'&&known(document.body.dataset.labInitial))return document.body.dataset.labInitial;
   let raw=location.hash.slice(1).toLowerCase();
   if(laboratory){
     raw=raw.replace(/^one-panel-/,"");
@@ -72,13 +70,9 @@ function show(next:TabName,focus=false,updateUrl=true){
     // Native detail pages retain the selected parent from their real path.
     const path=document.body.dataset.labNative==='true'?location.pathname:LABORATORY_ROUTES[next];
     const selectedHref=selectedPrimaryHref(path);
-    const brand=document.querySelector<HTMLAnchorElement>('.lab-brand');
-    if(brand){
-      if(path==='/')brand.setAttribute('aria-current','page');
-      else brand.removeAttribute('aria-current');
-    }
-    for(const link of document.querySelectorAll<HTMLAnchorElement>('.lab-site-nav a')){
-      if(link.getAttribute('href')===selectedHref)link.setAttribute('aria-current','page');
+    for(const link of document.querySelectorAll<HTMLAnchorElement>('.site-header a')){
+      const selected=link.closest('.site-primary-nav')?selectedHref:path;
+      if(link.getAttribute('href')===selected)link.setAttribute('aria-current','page');
       else link.removeAttribute('aria-current');
     }
   }
@@ -87,7 +81,9 @@ function show(next:TabName,focus=false,updateUrl=true){
     const title=next==='home'?LABORATORY_HOME_TITLE:label+' — Devon Alan Akins';
     document.title=title;
     document.querySelector('meta[property="og:title"]')?.setAttribute('content',title);
-    document.querySelector('link[rel="canonical"]')?.setAttribute('href','https://devonakins.com'+LABORATORY_ROUTES[next]);
+    const canonical='https://devonakins.com'+LABORATORY_ROUTES[next];
+    document.querySelector('link[rel="canonical"]')?.setAttribute('href',canonical);
+    document.querySelector('meta[property="og:url"]')?.setAttribute('content',canonical);
   }
   for(const panel of panels){
     const selected=panel.dataset.oneView===next;
@@ -96,10 +92,9 @@ function show(next:TabName,focus=false,updateUrl=true){
     if(selected&&focus)panel.focus({preventScroll:true});
   }
   for(const tab of tabs){
-    const selected=tab.dataset.oneTarget===primaryForView(next);
+    const selected=tab.dataset.oneTarget===next;
     tab.setAttribute("aria-selected",String(selected));
     tab.tabIndex=selected?0:-1;
-    if(selected&&tab.closest(".lab-tabs-mobile"))tab.scrollIntoView({block:"nearest",inline:"nearest",behavior:"instant"});
   }
   if(updateUrl){
     const suffix=next==="home"?"":"#"+next;
@@ -122,7 +117,7 @@ tabs.forEach(tab=>{
     const delta=event.key==="ArrowRight"||event.key==="ArrowDown"?1:
       event.key==="ArrowLeft"||event.key==="ArrowUp"?-1:0;
     const target=event.key==="Home"?0:event.key==="End"?groupNames.length-1:
-      delta?(groupNames.indexOf(primaryForView(current))+delta+groupNames.length)%groupNames.length:-1;
+      delta?(groupNames.indexOf(current)+delta+groupNames.length)%groupNames.length:-1;
     if(target<0)return;
     event.preventDefault();
     show(groupNames[target]);

@@ -122,16 +122,13 @@ test("public site uses human-first labels, never release or internal interface n
   }
 });
 
-test("ANEVUM writing and project views do not resurrect the old fictional universe identity", () => {
+test("ANEVUM writing and project views reflect the family studio", () => {
   const writing = renderV5PublicPage("writing");
-  const institute = renderV5ProjectPage("anevum");
-  assert.match(writing,/A separate direction: open learning/);
-  assert.match(writing,/Open Institute project context/);
-  assert.doesNotMatch(writing,/A world for original stories|Creative project context/);
-  assert.match(institute,/ANEVUM — The Open Institute/);
-  assert.match(institute,/free-to-learn STEM institute in development/i);
-  assert.match(institute,/non-accredited/);
-  assert.doesNotMatch(institute,/A creative world for stories, games/);
+  const studio = renderV5ProjectPage("anevum");
+  assert.match(writing,/Stories and worldbuilding/);
+  assert.match(writing,/ANEVUM studio overview/);
+  assert.match(studio,/family creative studio/);
+  assert.match(studio,/historical education prototype/);
 });
 
 test("Work directory filters follow reviewed public presentation categories, not legacy implementation labels", () => {
@@ -148,7 +145,7 @@ test("Work directory filters follow reviewed public presentation categories, not
   const projectDetail = renderV5ProjectPage("merit");
   assert.doesNotMatch(projectDetail, /data-v5-work-live/,
     "Detail pages remain public descriptions rather than unapproved live readers");
-  const categories = ["software", "research", "writing", "operations", "archive"];
+  const categories = ["software", "research", "creative", "writing", "operations", "archive"];
   for (const category of categories)
     assert.ok(work.includes('<option value="' + category + '">'),
       "Missing approved category: " + category);

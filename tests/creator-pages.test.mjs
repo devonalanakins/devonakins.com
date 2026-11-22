@@ -41,7 +41,8 @@ test("only approved, dated episodes and configured feeds render, with escaped te
     audio: "/podcast-media/test.mp3", thumbnail: "/podcast-media/test.webp",
     notes: ["A <sample> note."], transcript: ["Speaker: A <sample> transcript."],
     chapters: [{startSeconds: 0, title: "Introduction"}, {startSeconds: 61, title: "A <sample> chapter"}],
-    links: [{label: "Safe link", url: "https://example.org/reference"}, {label: "Unsafe", url: "javascript:alert(1)"}]
+    links: [{label: "Safe link", url: "https://example.org/reference"}, {label: "Unsafe", url: "javascript:alert(1)"},
+      {label: "Private feed", url: "https://www.patreon.com/rss/example?auth=private-fixture"}]
   };
   const publication = podcastPublication([
     episode,
@@ -71,7 +72,7 @@ test("only approved, dated episodes and configured feeds render, with escaped te
   assert.throws(() => podcastPublication([{...episode, chapters: [{startSeconds: 1, title: "Late"}]}]), /Podcast chapters/);
   assert.throws(() => podcastPublication([{...episode, chapters: [...episode.chapters, {startSeconds: 125, title: "Outside"}]}]), /Podcast chapters/);
   assert.match(detail, /href="https:\/\/example\.org\/reference"/);
-  assert.doesNotMatch(detail, /autoplay|javascript:|<sample>/);
+  assert.doesNotMatch(detail, /autoplay|javascript:|<sample>|private-fixture/);
   const member = {...episode, videoAccess: "members", audio: undefined, video: undefined,
     captions: undefined, playbackLinks: [{label: "Watch on Patreon", url: "https://www.patreon.com/posts/test-123"}]};
   const memberPublication = podcastPublication([member], {patreon: "https://www.patreon.com/devonalanakins"}, "2026-11-21");
@@ -104,6 +105,9 @@ test("only approved, dated episodes and configured feeds render, with escaped te
   assert.throws(() => podcastPublication([{...preview, captions: undefined}]), /require playable media and captions/);
   assert.throws(() => podcastPublication([{...episode, videoPreview: "/podcast-media/preview.mp4"}]), /require playable media and captions/);
   assert.throws(() => podcastPublication([{...member, playbackLinks: [{label: "Not Patreon", url: "https://example.org/watch"}]}]), /requires a verified Patreon/);
+  for (const url of ["https://www.patreon.com/%72ss/example", "https://www.patreon.com/posts/example?auth=private-fixture"]) {
+    assert.throws(() => podcastPublication([{...member, playbackLinks: [{label: "Private", url}]}]), /Invalid podcast playback link/);
+  }
   assert.throws(() => podcastPublication([{...episode, videoAccess: "members", playbackLinks: member.playbackLinks}]), /Members-only video cannot/);
   assert.throws(() => podcastPublication([], {rss: "https://www.patreon.com/rss/creator?auth=private"}), /Invalid podcast distribution/);
   assert.throws(() => podcastPublication([], {rss: "https://example.org/feed.xml?token=private"}), /Invalid podcast distribution/);
@@ -264,12 +268,12 @@ test("creator pages are first-party, accessible and connected to the established
   }
   assert.throws(() => renderCreatorPage("/unknown/"), /Unknown creator path/);
   const home = renderResearchFacilityHome();
-  assert.equal((home.match(/role="tabpanel"/g) || []).length, 8);
+  assert.equal((home.match(/data-one-view=/g) || []).length, 8);
   assert.match(home, /href="\/watch\/">Watch/);
   assert.match(home, /href="\/podcast\/">Podcast/);
   assert.match(home, /href="\/setup\/">My Setup/);
   assert.match(home, /href="\/courses\/">Learn/);
-  assert.match(home, /href="\/fieldnotes\/">Writing/);
+  assert.match(home, /href="\/fieldnotes\/"[^>]*>Writing/);
 });
 
 test("creator navigation keeps the January primary hierarchy and contextual destinations", () => {
@@ -280,17 +284,18 @@ test("creator navigation keeps the January primary hierarchy and contextual dest
     ["/setup/", setup], ["/live/", live], ["/about/", about]
   ];
   for (const [path, html] of pages) {
-    const header = html.match(/<header class="pc-header">([\s\S]*?)<\/header>/)?.[1];
+    const header = html.match(/<header class="site-header">([\s\S]*?)<\/header>/)?.[1];
     assert.ok(header, path + " has a header");
-    const primary = header.match(/<nav class="pc-nav" aria-label="Primary navigation">([\s\S]*?)<\/nav>/)?.[1];
-    const context = header.match(/<nav class="pc-context-nav" aria-label="More destinations">([\s\S]*?)<\/nav>/)?.[1];
+    const primary = header.match(/<nav class="site-primary-nav" aria-label="Primary navigation">([\s\S]*?)<\/nav>/)?.[1];
+    const context = header.match(/<nav class="site-secondary-nav" aria-label="More destinations">([\s\S]*?)<\/nav>/)?.[1];
     assert.ok(primary && context, path + " has both navigation levels");
     const hrefs = section => [...section.matchAll(/href="([^"]+)"/g)].map(match => match[1]);
     assert.deepEqual(hrefs(primary), primaryPaths, path + " primary hierarchy");
     assert.deepEqual(hrefs(context), contextPaths, path + " context hierarchy");
     assert.equal((header.match(/aria-current="page"/g) || []).length, 1, path + " single selected destination");
     assert.ok(header.includes('href="' + path + '" aria-current="page"'), path + " selected destination");
-    assert.ok(header.includes('aria-label="da. Devon Alan Akins home"'), "logo is the home link");
+    assert.match(header, /href="\/" class="site-brand"/);
+    assert.match(header, /<span>da\.<\/span><strong>Devon Alan Akins<\/strong>/);
   }
 });
 

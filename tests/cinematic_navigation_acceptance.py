@@ -21,11 +21,8 @@ def selected(page,key):
     page.locator(f'[data-one-view="{key}"]').wait_for(state='visible')
     assert page.locator('[data-one-view]:visible').count()==1
 
-def navigate(page,key,width):
-    if width<=1100:
-        page.locator('.lab-menu-toggle').click()
-        page.locator(f'#lab-menu [data-one-target="{key}"]').click()
-    else:page.locator(f'.lab-tabs-desktop [data-one-target="{key}"]').click()
+def navigate(page,key):
+    page.locator(f'.site-header [data-one-go="{key}"]').click()
     selected(page,key)
 
 try:
@@ -56,18 +53,19 @@ try:
                     before=page.evaluate('window.beforeLabNavigation')
                     assert before>20,(engine,width,before)
                     assert page.evaluate('scrollY')==0
-                    navigate(page,'work',width)
-                    assert page.locator('.lab-site-nav a[href="/work/"][aria-current="page"]').count()==1
-                    assert page.locator('.lab-brand[aria-current="page"]').count()==0
+                    navigate(page,'work')
+                    assert page.locator('.site-primary-nav a[href="/work/"][aria-current="page"]').count()==1
+                    assert page.locator('.site-brand[aria-current="page"]').count()==0
                     page.locator('[data-lab-project-search]').fill('Merit')
                     length=page.evaluate('history.length')
-                    navigate(page,'work',width)
+                    navigate(page,'work')
                     assert page.evaluate('history.length')==length,'Duplicate current-view history entry'
                     page.go_back();selected(page,'experience')
-                    assert page.locator('.lab-site-nav a[aria-current="page"]').count()==0
+                    assert page.locator('.site-primary-nav a[aria-current="page"]').count()==0
+                    assert page.locator('.site-secondary-nav a[href="/research/"][aria-current="page"]').count()==1
                     page.go_back();selected(page,'home')
-                    assert page.locator('.lab-site-nav a[aria-current="page"]').count()==0
-                    assert page.locator('.lab-brand[aria-current="page"]').count()==1
+                    assert page.locator('.site-primary-nav a[aria-current="page"]').count()==0
+                    assert page.locator('.site-brand[aria-current="page"]').count()==1
                     wait_for_condition(page,'Math.abs(scrollY-'+str(before)+')<3')
                     wait_for_condition(page,"document.activeElement.dataset.oneView==='home'")
                     assert page.url.endswith('/?keep=query')
@@ -75,13 +73,13 @@ try:
                     page.go_forward();selected(page,'work')
                     assert page.locator('[data-lab-project-search]').input_value()=='Merit'
                     # Back with an open dialog must not leave an inert background or focus trap.
-                    page.locator('.lab-menu-toggle' if width<=760 else '.lab-desktop-menu').click()
+                    page.locator('.site-settings').click()
                     assert page.locator('#lab-menu').is_visible()
                     page.go_back();selected(page,'experience')
                     page.locator('#lab-menu').wait_for(state='hidden')
                     wait_for_condition(page,"!document.documentElement.classList.contains('lab-menu-open')")
                     wait_for_condition(page,"document.activeElement.dataset.oneView==='experience'")
-                    navigate(page,'home',width)
+                    navigate(page,'home')
                     # A real modified click retains the browser's native new-tab behavior.
                     with context.expect_page() as opened:
                         page.locator('[data-lab-destination="experience"]').click(modifiers=['Control'])
@@ -89,7 +87,7 @@ try:
                     assert '/research/' in tab.url
                     selected(page,'home');tab.close()
                     # System preference changes update controls without a stale disabled tooltip.
-                    page.locator('.lab-menu-toggle' if width<=760 else '.lab-desktop-menu').click()
+                    page.locator('.site-settings').click()
                     page.emulate_media(reduced_motion='reduce')
                     wait_for_condition(page,"document.querySelector('[data-lab-motion]').disabled")
                     assert 'Reduced motion' in page.locator('[data-lab-motion]').get_attribute('title')
@@ -106,13 +104,12 @@ try:
                     assert sample.locator('link[rel="canonical"]').get_attribute('href')=='https://devonakins.com'+canonical
                 sample.goto(BASE+'/work/merit/',wait_until='networkidle')
                 assert sample.locator('.lab-case-study h1').inner_text()=='Merit'
-                assert sample.locator('.lab-site-nav a[href="/work/"][aria-current="page"]').count()==1
-                assert sample.locator('.lab-brand[aria-current="page"]').count()==0
+                assert sample.locator('.site-primary-nav a[href="/work/"][aria-current="page"]').count()==1
+                assert sample.locator('.site-brand[aria-current="page"]').count()==0
                 sample.evaluate(Path('node_modules/axe-core/axe.min.js').read_text())
                 violations=sample.evaluate("async()=> (await axe.run()).violations.filter(v=>['serious','critical'].includes(v.impact)).map(v=>v.id)")
                 assert not violations,(engine,'case study',violations)
-                sample.locator('.lab-menu-toggle').click()
-                sample.locator('#lab-menu [data-one-target="home"]').click()
+                sample.locator('.site-brand').click()
                 sample.wait_for_url(BASE+'/');selected(sample,'home')
                 context.close()
                 # Test-only approved playback checks the actual outgoing cover request.

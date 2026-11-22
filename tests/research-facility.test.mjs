@@ -9,30 +9,21 @@ import {approvedPublicProjects} from '../src/publication-manifest.mjs';
 const page=renderResearchFacilityHome();
 
 test('laboratory candidate is independently navigable, semantic and source-honest',()=>{
-  assert.equal((page.match(/role="tabpanel"/g)||[]).length,8);
-  assert.equal((page.match(/role="tablist"/g)||[]).length,2);
+  assert.equal((page.match(/data-one-view=/g)||[]).length,8);
   assert.match(page,/aria-label="Primary navigation"/);
-  assert.match(page,/aria-label="Mobile page sections"/);
-  assert.equal((page.match(/aria-label="Section tabs"/g)||[]).length,2);
-  assert.match(page,/aria-label="Page sections"/);
-  assert.doesNotMatch(page,/aria-label="(?:Mobile )?[Ll]aboratory (?:navigation|sections)"/);
+  assert.match(page,/aria-label="More destinations"/);
+  assert.doesNotMatch(page,/role="tab(?:list|panel)?"/);
   assert.equal((page.match(/<h1(?:\s|>)/g)||[]).length,8);
   for(const key of ['home','experience','systems','work','portfolio','activity','writing','contact']){
     assert.match(page,new RegExp('id="one-panel-'+key+'"'));
-  }
-  for(const key of ['home','work','experience']){
-    assert.equal((page.match(new RegExp('data-one-target="'+key+'"','g'))||[]).length,2);
-  }
-  for(const key of ['systems','portfolio','activity','writing','contact']){
-    assert.doesNotMatch(page,new RegExp('data-one-target="'+key+'"'));
   }
   assert.equal(LABORATORY_ROUTES.work,'/work/');
   assert.match(page,/class="lab-work-feature"/);
   assert.match(page,/class="lab-work-method"/);
   assert.match(page,/class="lab-research-journal"/);
   for(const term of ['Devon Alan Akins','MATHEMATICS','PHYSICS','COMPUTATIONAL NEUROSCIENCE',
-    'Independent','Anevum Open Institute','ANALYTIC MODEL',
-    'NO MEASURED DATA','unmerged','Prototype curriculum','scientific computing']){
+    'Independent','ANEVUM Open Institute proposal','ANALYTIC MODEL',
+    'NO MEASURED DATA','unmerged','Historical curriculum prototype','scientific computing']){
     assert.ok(page.replace(/<[^>]*>/g,' ').toLowerCase().includes(term.toLowerCase()),term);
   }
   assert.match(page,/data-public-github-feed/);
@@ -44,11 +35,9 @@ test('laboratory candidate is independently navigable, semantic and source-hones
   assert.equal((page.match(/data-lab-destination="/g)||[]).length,2);
   assert.equal((page.match(/class="lab-focus-card /g)||[]).length,3);
   assert.match(page,/Nona Neuropsychology/);
-  assert.match(page,/03 \/ OPEN EDUCATION/);
-  assert.match(page,/ANEVUM Open Institute/);
-  assert.match(page,/Free STEM learning and practical scientific inquiry/);
-  assert.match(page,/source-level preview/);
-  assert.doesNotMatch(page,/STORIES &amp; CREATIVE WORK|Writing, imagined worlds and interactive experiences/);
+  assert.match(page,/02 \/ CREATIVE STUDIO/);
+  assert.match(page,/<strong>ANEVUM<\/strong><p>A family creative studio/);
+  assert.match(page,/earlier ANEVUM Open Institute proposal/);
   assert.match(page,/Devon<br>Alan Akins/);
   assert.match(page,/Own the model/);
   assert.match(page,/rhen\/pull\/1/);
@@ -77,29 +66,27 @@ test('laboratory candidate is independently navigable, semantic and source-hones
   assert.match(unknown,/Explore the work or return to the homepage\./);
   assert.doesNotMatch(unknown,/return to the laboratory/i);
 });
-test('the Laboratory exposes the shared site navigation without losing its section tabs',()=>{
-  const primary=page.match(/<nav class="lab-site-nav" aria-label="Primary navigation">([\s\S]*?)<\/nav>/)?.[1];
-  assert.ok(primary,'site navigation is present in the Laboratory shell');
+test('site links drive the Laboratory panels and mark canonical destinations',()=>{
+  const navigation=(html,kind)=>html.match(new RegExp(`<nav class="site-${kind}-nav"[^>]*>(.*?)</nav>`))?.[1];
   const hrefs=markup=>[...markup.matchAll(/href="([^"]+)"/g)].map(match=>match[1]);
-  assert.deepEqual(hrefs(primary),SITE_PRIMARY_LINKS.map(link=>link.href));
-  assert.equal((primary.match(/aria-current="page"/g)||[]).length,0,'the da. mark is the Home destination');
-  assert.ok(page.includes('<a href="/" class="lab-brand" aria-current="page" title="Devon Alan Akins home"'));
-  assert.doesNotMatch(page,/class="lab-brand" aria-label=/,'do not override visible brand text with a custom accessible name');
-  const menu=page.match(/<div class="lab-creator-menu-links">([\s\S]*?)<\/div>/)?.[1];
-  assert.ok(menu,'mobile dialog still exposes destination links');
-  assert.deepEqual(hrefs(menu),[...SITE_PRIMARY_LINKS,...SITE_CONTEXT_LINKS].map(link=>link.href));
-  assert.equal((page.match(/role="tablist"/g)||[]).length,2,'existing three-tab panel controller survives');
-  assert.equal(selectedPrimaryHref("/work/merit/"),"/work/");
-  assert.equal(selectedPrimaryHref("/courses/man-of-the-house/start/"),"/courses/");
-  assert.equal(selectedPrimaryHref("/"),null);
-  for(const [path,view,expected] of [["/work/","work","/work/"],["/fieldnotes/","writing","/fieldnotes/"],["/research/","experience",null]]){
+  const selected=markup=>[...markup.matchAll(/href="([^"]+)" aria-current="page"/g)].map(match=>match[1]);
+  assert.deepEqual(hrefs(navigation(page,'primary')),SITE_PRIMARY_LINKS.map(link=>link.href));
+  assert.deepEqual(hrefs(navigation(page,'secondary')),SITE_CONTEXT_LINKS.map(link=>link.href));
+  assert.deepEqual(selected(navigation(page,'primary')),[]);
+  assert.ok(page.includes('<a href="/" class="site-brand" aria-current="page" data-one-go="home"'));
+  assert.doesNotMatch(page,/role="tab(?:list|panel)?"/);
+  assert.match(navigation(page,'primary'),/href="\/work\/" data-one-go="work"/);
+  assert.match(navigation(page,'secondary'),/href="\/research\/" data-one-go="experience"/);
+  for(const [path,view,primary,secondary] of [
+    ["/work/","work",["/work/"],[]], ["/portfolio/","portfolio",["/work/"],[]],
+    ["/fieldnotes/","writing",["/fieldnotes/"],[]], ["/research/","experience",[],["/research/"]],
+  ]){
     const html=renderResearchFacilityHome({initialView:view,canonicalPath:path});
-    const nav=html.match(/<nav class="lab-site-nav" aria-label="Primary navigation">([\s\S]*?)<\/nav>/)?.[1];
-    assert.ok(nav,path);
-    const selected=[...nav.matchAll(/<a href="([^"]+)" aria-current="page">/g)].map(match=>match[1]);
-    assert.deepEqual(selected,expected?[expected]:[],path+" selected primary route");
-    assert.doesNotMatch(html,/<a href="\/" class="lab-brand"[^>]*aria-current="page"/,path+" is not Home");
+    assert.deepEqual(selected(navigation(html,'primary')),primary,path);
+    assert.deepEqual(selected(navigation(html,'secondary')),secondary,path);
   }
+  assert.equal(selectedPrimaryHref('/work/merit/'),'/work/');
+  assert.equal(selectedPrimaryHref('/courses/man-of-the-house/start/'),'/courses/');
 });
 
 test('Nona executive case study is public, nonclinical, and isolated to its approved project',()=>{
@@ -126,7 +113,8 @@ test('owner leadership and proven delivery remain first-class without clinical o
   assert.match(page,/I build software\. I tell stories\. I ask questions\./);
   const hero=page.match(/<section class="lab-portfolio-hero"[\s\S]*?<\/section>/)?.[0];
   assert.ok(hero,'creator-first hero remains a directly readable semantic section');
-  assert.match(hero,/independent software developer, writer, interviewer and lifelong student/);
+  assert.match(hero,/independent software developer, writer and interviewer/);
+  assert.doesNotMatch(hero,/Nona Neuropsychology/);
   assert.equal((hero.match(/class="lab-action/g)||[]).length,2,'hero has exactly two visitor actions');
   assert.match(hero,/href="\/work\//);
   assert.match(hero,/href="\/watch\//);
@@ -134,7 +122,7 @@ test('owner leadership and proven delivery remain first-class without clinical o
   assert.ok(discovery,'the homepage has a direct creator discovery map');
   assert.deepEqual([...discovery.matchAll(/href="([^"]+)"/g)].map(m=>m[1]),
     ['/work/','/watch/','/podcast/','/courses/','/fieldnotes/']);
-  assert.match(page,/lead nonclinical operations and technology at Nona Neuropsychology/);
+  assert.match(page,/<strong>Nona Neuropsychology<\/strong><p>I lead nonclinical operations and technology/);
   assert.match(page,/CURRENT PROFESSIONAL FOCUS/);
   assert.match(page,/Clinical decisions remain with licensed professionals\./);
   assert.match(page,/founder of ANEVUM/);
@@ -221,10 +209,8 @@ test('the candidate uses first-party interactions and an explicit build gate',as
   assert.match(page,/href="\/src\/professional\/research-theme.css"/);
   assert.match(page,/<script src="\/laboratory-theme\.js"><\/script>/);
   assert.match(page,/<meta name="color-scheme" content="light dark">/);
-  assert.equal((page.match(/data-lab-theme-select/g)||[]).length,2);
-  assert.match(stylesheet,/\.lab-header \.lab-tabs-desktop\{display:none\}/);
-  assert.match(stylesheet,/\.lab-body>\.lab-tabs-mobile \.one-tablist\{display:grid/);
-  assert.doesNotMatch(stylesheet,/\.lab-header \.one-tabs-desktop|\.lab-body>\.one-tabs-mobile/);
+  assert.equal((page.match(/data-lab-theme-select/g)||[]).length,1);
+  assert.match(page,/href="\/src\/professional\/site-navigation.css"/);
   assert.doesNotMatch(stylesheet,/@import|url\(\s*["']?https?:|https:\/\/fonts\./);
   assert.doesNotMatch(stylesheet,/laboratory-chamber\.svg|perspective\(|rotateX\(|rotateY\(/);
   assert.doesNotMatch(portfolioStyle,/translate3d\(|preserve-3d|WebGLRenderer/);

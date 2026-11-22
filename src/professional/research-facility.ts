@@ -55,28 +55,21 @@ export {};
 
 // Native modal supplies focus containment, Escape dismissal and background inertness.
 const menu=document.querySelector<HTMLDialogElement>('#lab-menu');
-const menuOpeners=[...document.querySelectorAll<HTMLButtonElement>('[data-lab-menu-open]')];
+const menuOpener=document.querySelector<HTMLButtonElement>('[data-lab-menu-open]');
 const menuClose=document.querySelector<HTMLButtonElement>('[data-lab-menu-close]');
-menuOpeners.forEach(menuOpen=>menuOpen.addEventListener('click',()=>{
+menuOpener?.addEventListener('click',()=>{
   menu?.showModal();
-  menuOpen.setAttribute('aria-expanded','true');
+  menuOpener.setAttribute('aria-expanded','true');
   document.documentElement.classList.add('lab-menu-open');
-}));
+});
 menuClose?.addEventListener('click',()=>menu?.close());
 // Dismiss the modal before the route controller restores focus and scrolling.
 function dismissMenuForHistory(){if(menu?.open)menu.close()}
 window.addEventListener('popstate',dismissMenuForHistory,{capture:true});
 window.addEventListener('hashchange',dismissMenuForHistory,{capture:true});
 menu?.addEventListener('close',()=>{
-  menuOpeners.forEach(opener=>opener.setAttribute('aria-expanded','false'));
+  menuOpener?.setAttribute('aria-expanded','false');
   document.documentElement.classList.remove('lab-menu-open');
-});
-menu?.addEventListener('click',event=>{
-  const target=event.target instanceof Element?event.target.closest<HTMLElement>('[data-one-target]'):null;
-  if(!target)return;
-  menu.close();
-  document.querySelector<HTMLElement>('[data-one-view="'+target.dataset.oneTarget+'"]')?.focus({preventScroll:true});
-  window.scrollTo({top:0,behavior:'instant'});
 });
 const search=document.querySelector<HTMLInputElement>('[data-lab-project-search]');
 const category=document.querySelector<HTMLSelectElement>('[data-lab-project-filter]');

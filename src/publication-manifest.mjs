@@ -26,7 +26,7 @@ const entry = (category, type, stage, approvedDestination = null, shareActivity 
 export const PUBLICATION_POLICY = Object.freeze({
   merit: entry("Software", "Engineering toolkit", "experimental",
     "https://github.com/devonalanakins/merit", true),
-  mizvo: entry("Software", "Founder-led practice", "reviewed-prototype",
+  mizvo: entry("Software", "Parked software prototype", "reviewed-prototype",
     "https://github.com/devonalanakins/mizvo", true),
   "rhen-language": entry("Research", "Programming language experiment", "experimental",
     "https://github.com/devonalanakins/rhen", true),
@@ -37,7 +37,7 @@ export const PUBLICATION_POLICY = Object.freeze({
     "https://github.com/devonalanakins/vesper-legacy"),
   operations: entry("Operations", "Professional support", "maintained"),
   writing: entry("Writing", "Books and manuscripts", "draft"),
-  anevum: entry("Research", "Open STEM education prototype", "draft", "https://anevum.com", true),
+  anevum: entry("Creative", "Family creative studio", "maintained", "https://anevum.com", true),
   ideaflow: entry("Software", "Meeting software", "draft"),
   devonstation: entry("Software", "Private personal workspace", "draft",
     null, true),

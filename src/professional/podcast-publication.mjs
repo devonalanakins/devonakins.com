@@ -7,15 +7,20 @@ export const PODCAST_SHARE_IMAGE = "/professional/podcast-share.jpg";
 // Verified public creator/distribution destinations belong in this allowlist.
 const approvedEpisodes = [];
 const approvedDistribution = {};
+const patreonHosts = ["patreon.com", "www.patreon.com"];
+const isPatreon = hostname => /(?:^|\.)patreon\.com\.?$/.test(hostname);
 
 export function publicWebUrl(value) {
   try {
     const url = new URL(value);
-    if (url.protocol === "https:" && !url.username && !url.password) return url.href;
+    if (url.protocol !== "https:" || url.username || url.password) return null;
+    // This applies to outlets, episode playback links and show notes alike.
+    if (isPatreon(url.hostname) && (url.port || url.search || url.hash ||
+        /^\/rss(?:\/|$)/i.test(decodeURIComponent(url.pathname)))) return null;
+    return url.href;
   } catch {
     return null;
   }
-  return null;
 }
 
 export function podcastPublication(episodes = approvedEpisodes, distribution = approvedDistribution, today = new Date().toISOString().slice(0, 10)) {
@@ -57,7 +62,7 @@ export function podcastPublication(episodes = approvedEpisodes, distribution = a
     }
     if (videoAccess === "members") {
       if (video) throw new Error("Members-only video cannot be shipped as a public asset");
-      if (!playbackLinks.some(({href}) => ["patreon.com", "www.patreon.com"].includes(new URL(href).hostname))) {
+      if (!playbackLinks.some(({href}) => patreonHosts.includes(new URL(href).hostname))) {
         throw new Error("Members-only video requires a verified Patreon playback link");
       }
     }
@@ -71,7 +76,7 @@ export function podcastPublication(episodes = approvedEpisodes, distribution = a
       audio, video, videoPreview, captions, thumbnail, playbackLinks, videoAccess, route: "/podcast/" + slug + "/"}];
   });
   const outlets = [
-    ["patreon", "Patreon", ["patreon.com", "www.patreon.com"]],
+    ["patreon", "Patreon", patreonHosts],
     ["spotify", "Spotify", ["open.spotify.com"]],
     ["apple", "Apple Podcasts", ["podcasts.apple.com"]],
     ["youtube", "YouTube", ["www.youtube.com"]],
@@ -80,11 +85,8 @@ export function podcastPublication(episodes = approvedEpisodes, distribution = a
     if (!distribution[key]) return [];
     const href = publicWebUrl(distribution[key]);
     const url = href ? new URL(href) : null;
-    // Public creator profiles must never become a backdoor for private
-    // Patreon RSS or tokenized feeds through the generic patreon outlet key.
     if (!url || (hosts && !hosts.includes(url.hostname)) ||
-        (key === "rss" && (url.search || url.hash || url.hostname.endsWith("patreon.com"))) ||
-        (key === "patreon" && (url.search || url.hash || /^\/rss(?:\/|$)/i.test(url.pathname)))) {
+        (key === "rss" && (url.search || url.hash || isPatreon(url.hostname)))) {
       throw new Error("Invalid podcast distribution URL");
     }
     return [{key, label, href}];

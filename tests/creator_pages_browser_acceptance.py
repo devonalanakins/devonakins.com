@@ -38,15 +38,15 @@ try:
                         assert response and response.status==200,(engine,width,path,"unavailable")
                         assert page.locator("main#pc-main").is_visible()
                         assert page.locator(".pc-skip").count()==1
-                        assert page.locator('.pc-header a[aria-current="page"]').count()==1
-                        assert page.locator(".pc-nav").is_visible()
-                        assert page.locator(".pc-nav a").count()==6
-                        assert page.locator(".pc-context-nav").is_visible()
-                        assert page.locator(".pc-context-nav a").count()==6
+                        assert page.locator('.site-header a[aria-current="page"]').count()==1
+                        assert page.locator(".site-primary-nav").is_visible()
+                        assert page.locator(".site-primary-nav a").count()==6
+                        assert page.locator(".site-secondary-nav").is_visible()
+                        assert page.locator(".site-secondary-nav a").count()==6
                         if width==320:
-                            page.locator('.pc-nav a[href="/about/"]').focus()
+                            page.locator('.site-primary-nav a[href="/about/"]').focus()
                             assert page.evaluate("document.activeElement.getAttribute('href')")=="/about/"
-                            page.locator('.pc-context-nav a[href="/contact/"]').focus()
+                            page.locator('.site-secondary-nav a[href="/contact/"]').focus()
                             assert page.evaluate("document.activeElement.getAttribute('href')")=="/contact/"
                         assert page.locator("h1").count()==1
                         assert page.evaluate("document.documentElement.scrollWidth<=innerWidth+1"),(
@@ -146,12 +146,12 @@ try:
                         assert not errors,(engine,width,path,errors)
                     if width in (320, 390, 1440):
                         page.goto(BASE+"/", wait_until="networkidle")
-                        assert page.locator(".lab-site-nav a").count()==6
+                        assert page.locator(".site-primary-nav a").count()==6
                         assert page.evaluate("document.documentElement.scrollWidth<=innerWidth+1")
                         # Native cross-document links may commit navigation after
                         # the click resolves in WebKit. Wait for the real URL and
                         # loaded destination instead of sampling a transient URL.
-                        watch_link=page.locator('.lab-site-nav a[href="/watch/"]')
+                        watch_link=page.locator('.site-primary-nav a[href="/watch/"]')
                         assert watch_link.get_attribute("href")=="/watch/"
                         watch_link.click()
                         page.wait_for_url(BASE+"/watch/", wait_until="networkidle", timeout=15000)
@@ -159,9 +159,9 @@ try:
                         assert page.locator("h1").inner_text().strip()=="Watch."
                         assert page.locator('link[rel="canonical"]').get_attribute("href")=="https://devonakins.com/watch/"
                         page.goto(BASE+"/work/", wait_until="networkidle")
-                        assert page.locator('.lab-site-nav a[href="/work/"][aria-current="page"]').count()==1
+                        assert page.locator('.site-primary-nav a[href="/work/"][aria-current="page"]').count()==1
                         page.goto(BASE+"/fieldnotes/", wait_until="networkidle")
-                        assert page.locator('.lab-site-nav a[href="/fieldnotes/"][aria-current="page"]').count()==1
+                        assert page.locator('.site-primary-nav a[href="/fieldnotes/"][aria-current="page"]').count()==1
                     if width==390:
                         # Synthetic approved-media fixture, not a published episode.
                         # Exercise the same built first-party module in both engines.
