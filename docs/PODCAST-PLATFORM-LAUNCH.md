@@ -38,7 +38,7 @@
 
 ## Website publication controls
 
-- Allowed public distribution links are checked in `src/professional/podcast-publication.mjs`. Populate **only verified actual destinations** in `approvedDistribution`. Supported keys: `patreon`, `spotify`, `apple`, `youtube`, and **public** `rss` (no credential querystring). Keep absent sources empty; the Podcast and Watch pages deliberately have **no automatic Patreon creator-link fallback**.
+- Allowed public distribution links are checked in `src/professional/podcast-publication.mjs`. Populate **only verified actual destinations** in `approvedDistribution`. Supported keys: `patreon`, `spotify`, `apple`, `youtube`, and **public** `rss` (no credential querystring). Keep absent sources empty; the Podcast and Watch pages deliberately have **no automatic Patreon creator-link fallback**. The public Patreon destination cannot use an RSS path, query string or URL fragment: those can carry private membership tokens.
 - `approvedEpisodes` starts empty. An episode requires `approved: true`, a valid date, and playable verified links/media. Public static assets are intentionally restricted. Never store premium videos, paid audio or private RSS feeds in `public/`.
 - The website stays in a prelaunch state until there is an approved real episode. `/courses/` explicitly indicates no courses are on sale or open for enrollment.
 
