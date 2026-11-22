@@ -162,8 +162,16 @@ try:
                         # Synthetic approved-media fixture, not a published episode.
                         # Exercise the same built first-party module in both engines.
                         page.goto(BASE+"/podcast/", wait_until="networkidle")
-                        script_path=page.locator('script[src*="podcast-chapters"]').get_attribute("src")
-                        assert script_path, (engine,"chapter module missing from built site")
+                        # Vite rewrites source module names to hashed /assets/page*.js.
+                        # Resolve the compiled entry from the actual generated HTML,
+                        # then independently verify its bytes include the chapter logic.
+                        script_path=page.locator('script[type="module"][src^="/assets/"]').first.get_attribute("src")
+                        assert script_path, (engine,"compiled podcast entry missing")
+                        module_response=page.request.get(BASE+script_path)
+                        assert module_response.ok, (engine,script_path,"module unavailable")
+                        module_source=module_response.text()
+                        assert "data-episode-chapters" in module_source, (engine,script_path,"chapter module missing")
+                        assert "pc-chapter-jump" in module_source, (engine,script_path,"seek controls missing")
                         page.evaluate("""() => {
                             document.querySelector("#pc-main").innerHTML =
                               '<article class="pc-episode-detail"><audio data-episode-audio></audio>' +
