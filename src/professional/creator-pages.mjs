@@ -94,7 +94,8 @@ function shell({path, title, description, rss, image}, main) {
     '<link rel="stylesheet" href="/src/professional/creator-pages.css">' +
     '<link rel="stylesheet" href="/src/professional/site-navigation.css">' +
     (isLive ? '<link rel="stylesheet" href="/src/professional/mobile-live.css"><script type="module" src="/src/professional/mobile-live-client.ts"></script>' : '') +
-    (isPodcast ? '<script type="module" src="/src/professional/podcast-chapters.mjs"></script>' : '') + '</head>' +
+    (isPodcast ? '<script type="module" src="/src/professional/podcast-chapters.mjs"></script>' : '') +
+    '<noscript><style>.pc-appearance{display:none}</style></noscript></head>' +
     '<body class="creator-body"><a class="pc-skip" href="#pc-main">Skip to content</a>' +
     renderSiteHeader(path) + '<main id="pc-main" tabindex="-1">' + main + '</main>' +
     '<footer class="pc-footer pc-wrap"><div><a href="/" aria-label="da. Devon Alan Akins home">da.</a><p>Devon Alan Akins</p></div>' +

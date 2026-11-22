@@ -148,7 +148,9 @@ try:
                                   return journal.top>=bottom-5 && journal.width>container.clientWidth*.75;
                                 }"""),(engine,width,'Research journal must follow the instrument, full width')
                             assert page.locator('.da-directions .da-direction').count()==3
-                            assert 'Anevum Open Institute' in page.locator('.da-directions').inner_text().replace('\n',' ')
+                            directions=page.locator('.da-directions').inner_text()
+                            assert 'earlier ANEVUM Open Institute proposal' in directions
+                            assert 'Historical curriculum prototype' in directions
                             assert not page.locator('.lab-research-instrument').is_visible()
                             page.locator('.da-sketch > summary').click()
                             curve=page.locator('[data-lab-curve="interactive"]')
@@ -227,11 +229,14 @@ try:
                 assert page.locator('[data-one-view]:visible').count()==1
                 assert page.locator('.site-settings').is_hidden()
                 page.screenshot(path=str(OUT/f'{engine}-nojs.png'),full_page=True)
-                for path,key in (('/systems/','systems'),('/fieldnotes/','writing'),('/contact/','contact'),('/work/','work'),('/','home')):
+                for path,key in (('/systems/','systems'),('/fieldnotes/','writing'),('/contact/','contact'),('/work/','work'),('/activity/','activity'),('/','home')):
                     with page.expect_navigation(wait_until='domcontentloaded'):
                         page.locator(f'.site-header a[href="{path}"]').click()
                     assert page.locator(f'[data-one-view="{key}"]').is_visible()
                     assert page.locator('[data-one-view]:visible').count()==1
+                    if key=='activity':
+                        assert page.locator('[data-feed-status]:visible').count()==0
+                        assert page.locator('[data-one-view="activity"] noscript a[href="https://github.com/devonalanakins"]').is_visible()
                 context.close()
                 # Verify system preference changes and persistent manual overrides.
                 theme_context=browser.new_context(ignore_https_errors=LOCAL_TLS,
@@ -296,7 +301,7 @@ try:
                             sample.screenshot(path=str(OUT/f'{engine}-review-{name}-{width}-{scheme}.png'))
                         review.close()
             finally: browser.close()
-    print('Cinematic acceptance passed: Chromium/WebKit, 10 viewports, three primary destinations, two public source cards, historical direct links, no editor/Threads feed requests, modal/Escape/focus, project search, analytic model, reduced motion, no-JS and WCAG audit.')
+    print('Cinematic acceptance passed: Chromium/WebKit, 10 viewports, shared navigation, both themes, modal/Escape/focus, project search, analytic model, reduced motion, no-JavaScript routes and WCAG audit.')
 finally:
     if server:
         server.terminate()

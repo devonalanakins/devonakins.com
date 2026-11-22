@@ -43,7 +43,7 @@ function goto(key,label,primary=false){
 function feed(id,limit){
   return '<div class="one-feed lab-feed" id="'+id+'" data-public-github-feed data-limit="'+
     limit+'"><p role="status" aria-live="polite" data-feed-status>'+
-    'Checking dated public GitHub events…</p><ol data-feed-list></ol>'+
+    'Checking dated public GitHub events…</p><noscript><p>Browse dated changes on <a href="https://github.com/devonalanakins">GitHub</a>.</p></noscript><ol data-feed-list></ol>'+
     '<p class="one-feed-disclosure">Public events only · historical timestamps, not proof of working now.</p></div>';
 }
 function instrument(id,interactive=false){
@@ -99,7 +99,7 @@ function destinationCards(){
 function compactSignals(){return '<section class="lab-portfolio-signals" aria-label="Selected public sources">'+
  '<div class="lab-signals-label"><span class="lab-source-eyebrow">THE PUBLIC RECORD / 01</span><strong>Elsewhere.</strong><small>Source, changes and the occasional soundtrack.</small></div>'+
  '<div class="lab-portfolio-signal-grid">'+
- '<details class="lab-signal-tile lab-signal-github"><summary>'+brandIcon('github')+'<span><strong>Source &amp; changes</strong><small data-github-compact>Checking dated public history</small></span></summary><div class="lab-signal-expanded">'+feed('one-home-github',3)+'<button data-one-go="activity">Explore public record →</button></div></details>'+
+ '<details class="lab-signal-tile lab-signal-github"><summary>'+brandIcon('github')+'<span><strong>Source &amp; changes</strong><small data-github-compact>Checking dated public history</small></span></summary><div class="lab-signal-expanded">'+feed('one-home-github',3)+'<a href="/activity/" data-one-go="activity">Explore public record →</a></div></details>'+
  '<details class="lab-signal-tile lab-signal-spotify" data-public-spotify><summary>'+brandIcon('spotify')+'<span><strong>Listening room</strong><small data-spotify-title>Checking approved playback</small></span></summary><div class="lab-signal-expanded"><span data-spotify-state>Checking source</span><p data-spotify-artist>Only explicitly shared playback.</p><img data-spotify-cover alt="" width="48" height="48" referrerpolicy="no-referrer" decoding="async" loading="lazy" hidden><progress data-spotify-progress aria-label="Track progress" hidden></progress><p data-spotify-note>No autoplay audio.</p><a data-spotify-link href="/listening/">About listening →</a></div></details>'+
  '</div></section>'}
 /** Render this personal photograph only when its original, owner-approved
@@ -274,7 +274,7 @@ export function renderResearchFacilityHome({initialView='home',canonicalPath='/'
     '<script type="module" src="/src/professional/client.ts"></script>'+
     '<script type="module" src="/src/professional/one-screen.ts"></script>'+
     '<script type="module" src="/src/professional/research-facility.ts"></script>'+
-    '<noscript><style>.site-settings{display:none!important}</style></noscript>'+
+    '<noscript><style>.site-settings,[data-feed-status],[data-github-compact],[data-spotify-state],[data-spotify-title],.lab-activity-filters,.lab-project-browser>label,[data-lab-project-search],.lab-project-filters,.lab-controls .lab-control{display:none!important}</style></noscript>'+
     '</head><body class="p-body one-body lab-body" data-lab-initial="'+initialView+'"'+(nativePage?' data-lab-native="true"':'')+'>'+
     '<a class="one-skip lab-skip" href="#one-stage">Skip to content</a>'+
     '<div class="lab-background" aria-hidden="true"><div class="lab-background-grid"></div>'+

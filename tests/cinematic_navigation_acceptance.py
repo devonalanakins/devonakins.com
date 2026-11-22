@@ -83,7 +83,9 @@ try:
                     # A real modified click retains the browser's native new-tab behavior.
                     with context.expect_page() as opened:
                         page.locator('[data-lab-destination="experience"]').click(modifiers=['Control'])
-                    tab=opened.value;tab.wait_for_load_state('networkidle');selected(tab,'experience')
+                    tab=opened.value
+                    tab.wait_for_url(BASE+'/research/',wait_until='domcontentloaded')
+                    selected(tab,'experience')
                     assert '/research/' in tab.url
                     selected(page,'home');tab.close()
                     # System preference changes update controls without a stale disabled tooltip.
