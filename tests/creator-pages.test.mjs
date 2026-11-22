@@ -61,7 +61,11 @@ test("only approved, dated episodes and configured feeds render, with escaped te
   assert.match(detail, /<track kind="captions" srclang="en"/);
   assert.match(detail, /<h2>Show notes<\/h2><p>A &lt;sample&gt; note\./);
   assert.match(detail, /<h2>Transcript<\/h2><p>Speaker: A &lt;sample&gt; transcript\./);
-  assert.match(detail, /<time datetime="PT61S">1:01<\/time> A &lt;sample&gt; chapter/);
+  assert.match(detail, /<li data-chapter-start="61"><time datetime="PT61S">1:01<\/time> <span class="pc-chapter-title">A &lt;sample&gt; chapter<\/span><\/li>/);
+  assert.match(detail, /<ol class="pc-chapters" data-episode-chapters>/);
+  assert.match(detail, /<video controls playsinline preload="none" data-episode-full-video/);
+  assert.match(detail, /<audio controls preload="none" data-episode-audio/);
+  assert.match(detail, /type="module" src="\/src\/professional\/podcast-chapters\.mjs"/);
   assert.throws(() => podcastPublication([{...episode, chapters: [{startSeconds: 1, title: "Late"}]}]), /Podcast chapters/);
   assert.throws(() => podcastPublication([{...episode, chapters: [...episode.chapters, {startSeconds: 125, title: "Outside"}]}]), /Podcast chapters/);
   assert.match(detail, /href="https:\/\/example\.org\/reference"/);
@@ -71,6 +75,8 @@ test("only approved, dated episodes and configured feeds render, with escaped te
   const memberPublication = podcastPublication([member], {patreon: "https://www.patreon.com/devonalanakins"}, "2026-11-21");
   const memberPage = renderCreatorPage("/podcast/test-interview/", memberPublication);
   assert.match(memberPage, /Full video is available to eligible Patreon members/);
+  assert.doesNotMatch(memberPage, /data-episode-chapters|data-episode-full-video|data-episode-audio/);
+  assert.match(memberPage, /<time datetime="PT61S">1:01<\/time>/);
   assert.match(memberPage, /https:\/\/www\.patreon\.com\/posts\/test-123/);
   assert.doesNotMatch(memberPage, /<video|<audio|\/podcast-media\/test\.mp4/);
   assert.deepEqual(memberPublication.outlets.map(outlet => outlet.key), ["patreon"]);
@@ -79,6 +85,8 @@ test("only approved, dated episodes and configured feeds render, with escaped te
   const previewPage = renderCreatorPage("/podcast/test-interview/", previewPublication);
   assert.match(previewPage, /<h2>Video preview<\/h2>/);
   assert.match(previewPage, /aria-label="Episode video preview"/);
+  assert.match(previewPage, /data-episode-preview/);
+  assert.doesNotMatch(previewPage, /data-episode-chapters|data-episode-full-video|data-episode-audio/);
   assert.match(previewPage, /Full video is available to eligible Patreon members/);
   assert.match(previewPage, /https:\/\/www\.patreon\.com\/posts\/test-123/);
   assert.deepEqual(previewPublication.mediaFiles.sort(), ["/podcast-media/preview.mp4", "/podcast-media/preview.vtt", "/podcast-media/test.webp"].sort());
