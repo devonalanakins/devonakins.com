@@ -292,7 +292,7 @@ export function renderCreatorPage(path, publication = configuredPodcast, watch =
     return shell({path, title: PODCAST_TITLE + " — Podcast", description: PODCAST_DESCRIPTION, current: path, rss, image: PODCAST_SHARE_IMAGE}, renderPodcast(publication));
   }
   if (path === CREATOR_ROUTES.courses) {
-    return shell({path, title: "Courses — " + PODCAST_TITLE, description: "Courses in development with Devon Alan Akins, beginning with mathematical physics and AI-assisted scientific simulation.", current: path}, renderCourses());
+    return shell({path, title: "Courses — " + PODCAST_TITLE, description: "Practical life lessons with Devon Alan Akins, starting with a free Man of the House home walk-through. Future mathematics and scientific computing courses are in development.", current: path}, renderCourses());
   }
   if (path === PERSONAL_ABOUT_ROUTE) {
     return shell({path, title: "About — " + PODCAST_TITLE,
