@@ -79,8 +79,12 @@ export function podcastPublication(episodes = approvedEpisodes, distribution = a
   ].flatMap(([key, label, hosts]) => {
     if (!distribution[key]) return [];
     const href = publicWebUrl(distribution[key]);
-    if (!href || (hosts && !hosts.includes(new URL(href).hostname)) ||
-        (key === "rss" && (new URL(href).search || new URL(href).hash || new URL(href).hostname.endsWith("patreon.com")))) {
+    const url = href ? new URL(href) : null;
+    // Public creator profiles must never become a backdoor for private
+    // Patreon RSS or tokenized feeds through the generic patreon outlet key.
+    if (!url || (hosts && !hosts.includes(url.hostname)) ||
+        (key === "rss" && (url.search || url.hash || url.hostname.endsWith("patreon.com"))) ||
+        (key === "patreon" && (url.search || url.hash || /^\\/rss(?:\\/|$)/i.test(url.pathname)))) {
       throw new Error("Invalid podcast distribution URL");
     }
     return [{key, label, href}];
