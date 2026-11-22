@@ -581,7 +581,7 @@ def main():
                 assert page.locator("[data-v5-atlas-select]").count() == 8
                 page.locator("[data-v5-atlas-node-id='project:mizvo'] summary").click()
                 assert page.locator("[data-v5-atlas-node-id='project:mizvo']").get_attribute("open") is not None
-                assert "engineering studio" in page.locator(
+                assert "A parked experiment in open-source project and client collaboration software" in page.locator(
                     "[data-v5-atlas-node-id='project:mizvo'] .v5-atlas-native-summary"
                 ).inner_text()
                 assert "Select a public system" in page.locator("[data-v5-atlas-spotlight]").inner_text()
