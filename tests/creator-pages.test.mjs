@@ -168,7 +168,15 @@ test("courses hub is honest about prelaunch status and does not solicit payment"
   assert.match(courses, /Man of the House/);
   assert.match(courses, /No courses are available for enrollment or purchase yet/);
   assert.match(courses, /AI-assisted code/);
-  assert.match(courses, /Patreon is the planned home/);
+  assert.match(courses, /Patreon is the intended home/);
+  assert.match(courses, /Flagship course \/ in development/);
+  assert.match(courses, /Future learning track \/ planned/);
+  assert.ok(courses.indexOf('Man of the House.') < courses.indexOf('Mathematical physics, from first principles.'), 'actual flagship appears before future physics track');
+  assert.match(courses, /href="\/courses\/man-of-the-house\/start\/"/);
+  assert.match(courses, /No account or payment is needed to read it/);
+  assert.match(courses, /01 \/ Notice/);
+  assert.match(courses, /02 \/ Practice/);
+  assert.match(courses, /03 \/ Review/);
   assert.doesNotMatch(courses, /<iframe|<video|<audio|<form|Buy now|Enroll now|\/podcast-media\//);
   assert.match(courses, /href="\/podcast\/"/);
 });

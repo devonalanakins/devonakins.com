@@ -259,22 +259,23 @@ function renderSetup() {
     '<p>Manufacturer and retailer links are ordinary references. I earn no commission from them.</p>' + button('/podcast/', 'Go to the podcast') + '</div></section></div>';
 }
 function renderCourses() {
-  return '<div class="pc-wrap"><header class="pc-setup-hero pc-courses-hero"><p class="pc-eyebrow">Learning / in development</p><h1>Courses<span>.</span></h1>' +
-    '<div class="pc-setup-intro"><p>I want the research and conversations to become things you can actually work through, not just watch.</p>' +
-    '<p>No courses are available for enrollment or purchase yet. I’m developing the first curriculum, and I’ll publish it when there are real lessons to use.</p></div></header>' +
-    '<section class="pc-section pc-two-column pc-course-feature"><div><p class="pc-eyebrow">First curriculum / planned</p><h2>Mathematical physics, from first principles.</h2></div><div class="pc-prose">' +
-    '<p>Learn the mathematics, use it to understand physical laws, and test what you understand with numerical experiments. AI can help write simulation code, but the models, assumptions, and results still have to make sense.</p>' +
-    '<p>This is a work in progress, not a finished course or a paid offer.</p>' + button("/podcast/", "Explore the podcast") + '</div></section>' +
-    '<section class="pc-section pc-two-column"><div><p class="pc-eyebrow">Proposed course series</p><h2>Man of the House.</h2></div><div class="pc-prose">' +
-    '<p>A course in development on household tools, safety, maintenance, food, organization and shared responsibility. It is about competence and care, not gender performance.</p>' +
-    '<p>The complete written starting lesson is free. The rest of the course is not yet available for enrollment or purchase.</p>' +
-    button(PRACTICAL_START_ROUTE, "Read the free first lesson") + '</div></section>' +
-    '<section class="pc-section"><div class="pc-section-heading"><h2>How I want lessons to work</h2><p>A proposed format for each unit, subject to real course production and testing.</p></div>' +
-    '<div class="pc-course-steps"><article><span>01 / Watch</span><h3>Start with the idea</h3><p>A clear video lesson with mathematical context, not just a collection of prompts.</p></article>' +
-    '<article><span>02 / Experiment</span><h3>Run the model</h3><p>Reproducible simulations and exercises, including AI-assisted code where appropriate.</p></article>' +
-    '<article><span>03 / Verify</span><h3>Check what happened</h3><p>Test units, assumptions, errors, and whether the numerical results agree with the underlying mathematics.</p></article></div></section>' +
+  return '<div class="pc-wrap"><header class="pc-setup-hero pc-courses-hero"><p class="pc-eyebrow">Learning / start with something useful</p><h1>Courses<span>.</span></h1>' +
+    '<div class="pc-setup-intro"><p>Learn something practical. Try it in the real world. Understand why it works.</p>' +
+    '<p>No courses are available for enrollment or purchase yet. A complete first written lesson is available free, and paid access is not active.</p></div></header>' +
+    '<section class="pc-section pc-two-column pc-course-feature" id="man-of-the-house"><div><p class="pc-eyebrow">Flagship course / in development</p><h2>Man of the House.</h2></div><div class="pc-prose">' +
+    '<p>Tools, safe household maintenance, cooking, organization, partnership, fatherhood, responsibility and independence. The point is practical competence, kindness and accountability—not performing a gender role.</p>' +
+    '<p>The first complete written lesson is free: a 15-minute walk-through of one part of your home, with safety boundaries, a low-risk improvement and three clear follow-up actions. No account or payment is needed to read it.</p>' +
+    '<p>The remaining course and video lessons are not yet published, and enrollment is not open.</p>' +
+    button(PRACTICAL_START_ROUTE, "Read the free first lesson", true) + '</div></section>' +
+    '<section class="pc-section pc-two-column"><div><p class="pc-eyebrow">Future learning track / planned</p><h2>Mathematical physics, from first principles.</h2></div><div class="pc-prose">' +
+    '<p>Learn the mathematics behind physical laws, then test what you understand with reproducible numerical experiments. AI-assisted code can help build simulations, but readers must still check assumptions, errors and results.</p>' +
+    '<p>This curriculum is a future project, not an available course or a paid offer.</p>' + button("/podcast/", "Explore the podcast") + '</div></section>' +
+    '<section class="pc-section"><div class="pc-section-heading"><h2>How learning should work</h2><p>A practical method for the real first lesson and the wider curriculum as it develops.</p></div>' +
+    '<div class="pc-course-steps"><article><span>01 / Notice</span><h3>Understand the situation</h3><p>Start with a clear goal, a sensible safety boundary and an observation you can check rather than a guess.</p></article>' +
+    '<article><span>02 / Practice</span><h3>Do one useful thing</h3><p>Apply the lesson with accessible instructions, and stop when a task requires tools or expertise you do not have.</p></article>' +
+    '<article><span>03 / Review</span><h3>Verify and follow through</h3><p>Check what changed, document what remains, and decide who handles the next action and when.</p></article></div></section>' +
     '<section class="pc-section pc-two-column pc-ethics"><div><h2>Where courses will live</h2></div><div class="pc-prose">' +
-    '<p>This website will be the public course library. Patreon is the planned home for member lessons and collection-based access. Paid videos will open in Patreon until secure, membership-verified playback on this site is built and independently tested.</p>' +
+    '<p>This site is the public learning library. Patreon is the intended home for optional member content; private videos remain on Patreon unless independently tested, membership-verified access is built here.</p>' +
     '<p>No purchase buttons, prices, or member-only video files are published here before those services and lessons are ready.</p>' +
     button("/podcast/", "Back to the podcast") + '</div></section></div>';
 }
@@ -291,7 +292,7 @@ export function renderCreatorPage(path, publication = configuredPodcast, watch =
     return shell({path, title: PODCAST_TITLE + " — Podcast", description: PODCAST_DESCRIPTION, current: path, rss, image: PODCAST_SHARE_IMAGE}, renderPodcast(publication));
   }
   if (path === CREATOR_ROUTES.courses) {
-    return shell({path, title: "Courses — " + PODCAST_TITLE, description: "Courses in development with Devon Alan Akins, beginning with mathematical physics and AI-assisted scientific simulation.", current: path}, renderCourses());
+    return shell({path, title: "Courses — " + PODCAST_TITLE, description: "Practical life lessons with Devon Alan Akins, starting with a free Man of the House home walk-through. Future mathematics and scientific computing courses are in development.", current: path}, renderCourses());
   }
   if (path === PERSONAL_ABOUT_ROUTE) {
     return shell({path, title: "About — " + PODCAST_TITLE,

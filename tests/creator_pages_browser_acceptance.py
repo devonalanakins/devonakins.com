@@ -70,6 +70,10 @@ try:
                         elif path=="/courses/":
                             assert page.locator("h1").inner_text().strip()=="Courses."
                             assert page.locator(".pc-course-steps article").count()==3
+                            assert page.locator(".pc-course-feature h2").inner_text().strip()=="Man of the House."
+                            assert page.locator('.pc-course-feature a[href="/courses/man-of-the-house/start/"]').count()==1
+                            assert "No account or payment is needed" in page.locator(".pc-course-feature").inner_text()
+                            assert page.locator("main").inner_text().index("Man of the House.") < page.locator("main").inner_text().index("Mathematical physics")
                             assert page.locator('a[href="/podcast/"]').count()>=2
                             assert "No courses are available for enrollment" in page.locator("main").inner_text()
                             assert page.locator("audio,video,iframe,form").count()==0
