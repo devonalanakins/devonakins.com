@@ -175,6 +175,7 @@ function watchCard(item) {
     '</time> · ' + episodeDuration(item.durationSeconds) + ' · View recording →</span></span></a></article>';
 }
 function renderWatch(watch, podcast) {
+  const patreonOutlet = podcast.outlets.find(outlet => outlet.key === "patreon");
   const items = [
     ...watch.videos.map(video => ({...video, label: WATCH_KINDS[video.kind]})),
     ...podcast.episodes.filter(episode => episode.video || episode.videoPreview).map(episode => ({
@@ -199,7 +200,9 @@ function renderWatch(watch, podcast) {
     '</section><section class="pc-section pc-two-column pc-watch-outlets"><div><h2>The full experience lives here.</h2></div>' +
     '<div class="pc-prose"><p>Video and replays are for this site. I’m using Spotify for podcast audio and Patreon for memberships, not sending everyone to YouTube or Twitch.</p>' +
     '<p>Member-only recordings will remain on Patreon until protected playback is implemented and verified here.</p>' +
-    '<p>' + external(PATREON_CREATOR_URL, 'Follow on Patreon') + '</p></div></section></div>';
+    '<p>' + (patreonOutlet ? external(patreonOutlet.href, 'Follow on Patreon') :
+      'A Patreon creator link will appear here after account and membership details are verified.') +
+    '</p></div></section></div>';
 }
 function renderWatchVideo(video) {
   const notes = video.notes.length ? '<section class="pc-section"><h2>Notes</h2>' +
