@@ -108,6 +108,10 @@ test("only approved, dated episodes and configured feeds render, with escaped te
   assert.throws(() => podcastPublication([], {rss: "https://www.patreon.com/rss/creator?auth=private"}), /Invalid podcast distribution/);
   assert.throws(() => podcastPublication([], {rss: "https://example.org/feed.xml?token=private"}), /Invalid podcast distribution/);
   assert.throws(() => podcastPublication([], {patreon: "https://patreon.com.evil.example/creator"}), /Invalid podcast distribution/);
+  assert.throws(() => podcastPublication([], {patreon: "https://www.patreon.com/rss/creator"}), /Invalid podcast distribution/);
+  assert.throws(() => podcastPublication([], {patreon: "https://www.patreon.com/rss/creator?auth=private"}), /Invalid podcast distribution/);
+  assert.throws(() => podcastPublication([], {patreon: "https://www.patreon.com/cw/DevonAlanAkins?auth=private"}), /Invalid podcast distribution/);
+  assert.throws(() => podcastPublication([], {patreon: "https://www.patreon.com/cw/DevonAlanAkins#private"}), /Invalid podcast distribution/);
   assert.throws(() => podcastPublication([{...episode, captions: undefined}]), /require playable media and captions/);
   assert.throws(() => podcastPublication([{...episode, audio: "/private/guest.mp3"}]), /Invalid podcast asset path/);
   assert.throws(() => podcastPublication([], {spotify: "https://open.spotify.com.example.org/show/something"}), /Invalid podcast distribution/);
