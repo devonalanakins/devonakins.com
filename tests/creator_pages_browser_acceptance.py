@@ -158,6 +158,56 @@ try:
                         assert page.locator('.lab-site-nav a[href="/work/"][aria-current="page"]').count()==1
                         page.goto(BASE+"/fieldnotes/", wait_until="networkidle")
                         assert page.locator('.lab-site-nav a[href="/fieldnotes/"][aria-current="page"]').count()==1
+                    if width==390:
+                        # Synthetic approved-media fixture, not a published episode.
+                        # Exercise the same built first-party module in both engines.
+                        page.goto(BASE+"/podcast/", wait_until="networkidle")
+                        # Vite rewrites source module names to hashed /assets/page*.js.
+                        # Resolve the compiled entry from the actual generated HTML,
+                        # then independently verify its bytes include the chapter logic.
+                        script_path=page.locator('script[type="module"][src^="/assets/"]').first.get_attribute("src")
+                        assert script_path, (engine,"compiled podcast entry missing")
+                        module_response=page.request.get(BASE+script_path)
+                        assert module_response.ok, (engine,script_path,"module unavailable")
+                        module_source=module_response.text()
+                        assert "data-episode-chapters" in module_source, (engine,script_path,"chapter module missing")
+                        assert "pc-chapter-jump" in module_source, (engine,script_path,"seek controls missing")
+                        page.evaluate("""() => {
+                            document.querySelector("#pc-main").innerHTML =
+                              '<article class="pc-episode-detail"><audio data-episode-audio></audio>' +
+                              '<section><ol class="pc-chapters" data-episode-chapters>' +
+                              '<li data-chapter-start="0"><time datetime="PT0S">0:00</time> <span class="pc-chapter-title">Beginning</span></li>' +
+                              '<li data-chapter-start="61"><time datetime="PT61S">1:01</time> <span class="pc-chapter-title">Second part</span></li>' +
+                              '</ol></section></article>';
+                            const audio=document.querySelector('audio');
+                            window.__chapterSeek=-1;
+                            Object.defineProperty(audio,"readyState",{configurable:true,get:()=>1});
+                            Object.defineProperty(audio,"duration",{configurable:true,get:()=>125});
+                            Object.defineProperty(audio,"currentTime",{configurable:true,
+                              get:()=>window.__chapterSeek, set:value=>{window.__chapterSeek=value;}});
+                            audio.play=()=>Promise.resolve();
+                        }""")
+                        assert page.locator(".pc-chapters time").count()==2
+                        assert page.locator(".pc-chapter-jump").count()==0, "no-JavaScript timestamps remain readable"
+                        page.add_script_tag(url=script_path+"?synthetic-chapters=1",type="module")
+                        page.wait_for_function("document.querySelectorAll('.pc-chapter-jump').length===2")
+                        page.get_by_role("button",name="Play from 1:01 — Second part").click()
+                        page.wait_for_function("window.__chapterSeek===61")
+                        page.wait_for_function("document.querySelector('.pc-chapters-feedback').textContent.includes('Playing from 1:01')")
+                        page.evaluate("""() => {
+                            document.querySelector('audio').play=()=>Promise.reject(new Error("synthetic media denied"));
+                        }""")
+                        page.get_by_role("button",name="Play from 0:00 — Beginning").click()
+                        page.wait_for_function("document.querySelector('.pc-chapters-feedback').textContent.includes('Playback could not start')")
+                        assert page.evaluate("window.__chapterSeek") == 0
+                        page.evaluate("""() => {
+                            document.querySelector("#pc-main").innerHTML =
+                              '<article class="pc-episode-detail"><video data-episode-preview></video>' +
+                              '<ol class="pc-chapters"><li data-chapter-start="0"><time datetime="PT0S">0:00</time> <span class="pc-chapter-title">Preview only</span></li></ol></article>';
+                        }""")
+                        page.add_script_tag(url=script_path+"?synthetic-chapters=2",type="module")
+                        assert page.locator(".pc-chapters time").count()==1
+                        assert page.locator(".pc-chapter-jump").count()==0, "a preview cannot expose full-episode seeking"
                     context.close()
             finally:
                 browser.close()

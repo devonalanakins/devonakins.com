@@ -132,6 +132,11 @@ body.creator-body { margin: 0; color: var(--pc-ink); background: var(--pc-paper)
 .pc-chapters { list-style: none; padding: 0; }
 .pc-chapters li + li { margin-top: 8px; }
 .pc-chapters time { display: inline-block; min-width: 5ch; margin-right: 10px; color: var(--pc-muted); font-variant-numeric: tabular-nums; }
+.pc-chapter-jump { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 6px; width: 100%; min-height: 44px; padding: 9px 12px; border: 1px solid var(--pc-line); background: var(--pc-card); color: var(--pc-ink); text-align: left; cursor: pointer; font: inherit; }
+.pc-chapter-jump:hover { border-color: var(--pc-blue); color: var(--pc-blue); }
+.pc-chapter-jump time { color: inherit; }
+.pc-chapters-feedback { color: var(--pc-muted); font-size: 14px; line-height: 1.5; }
+.pc-chapters-feedback:empty { display: none; }
 .pc-media-links { display: flex; flex-wrap: wrap; gap: 10px 24px; padding: 0; list-style: none; }
 .pc-course-feature .pc-button { margin-top: 10px; }
 .pc-course-steps { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }

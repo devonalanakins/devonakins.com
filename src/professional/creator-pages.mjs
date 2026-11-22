@@ -78,6 +78,7 @@ function shell({path, title, description, current, rss, image}, main) {
   const socialImage = 'https://devonakins.com' + (image || '/social-card.jpg');
   const isPodcastCard = image === PODCAST_SHARE_IMAGE;
   const isLive = path === CREATOR_ROUTES.live;
+  const isPodcast = path === CREATOR_ROUTES.podcast || path.startsWith(CREATOR_ROUTES.podcast);
   return '<!doctype html><html lang="en" class="lab-html"><head>' +
     '<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">' +
     '<meta name="theme-color" content="#f3f1e9"><meta name="color-scheme" content="light dark">' +
@@ -94,7 +95,8 @@ function shell({path, title, description, current, rss, image}, main) {
     '<meta name="twitter:description" content="' + escapeHtml(description) + '"><meta name="twitter:image" content="' + escapeHtml(socialImage) + '">' +
     '<link rel="icon" type="image/svg+xml" href="/favicon.svg"><link rel="apple-touch-icon" href="/apple-touch-icon.png">' +
     '<link rel="stylesheet" href="/src/professional/creator-pages.css">' +
-    (isLive ? '<link rel="stylesheet" href="/src/professional/mobile-live.css"><script type="module" src="/src/professional/mobile-live-client.ts"></script>' : '') + '</head>' +
+    (isLive ? '<link rel="stylesheet" href="/src/professional/mobile-live.css"><script type="module" src="/src/professional/mobile-live-client.ts"></script>' : '') +
+    (isPodcast ? '<script type="module" src="/src/professional/podcast-chapters.mjs"></script>' : '') + '</head>' +
     '<body class="creator-body"><a class="pc-skip" href="#pc-main">Skip to content</a>' +
     '<header class="pc-header"><div class="pc-wrap pc-header-row"><a class="pc-brand" href="/" aria-label="da. Devon Alan Akins home"><span aria-hidden="true">da.</span><small>Devon Alan Akins</small></a>' +
     '<nav class="pc-nav" aria-label="Primary navigation">' +
@@ -122,18 +124,21 @@ function renderEpisode(episode) {
   const related = episode.links.filter(({url}) => publicWebUrl(url)).map(({label, url}) => '<li>' + external(url, label) + '</li>').join('');
   return '<article class="pc-wrap pc-episode-detail"><header><p class="pc-eyebrow"><a href="/podcast/">Devon Alan Akins podcast</a></p>' +
     '<h1>' + escapeHtml(episode.title) + '</h1>' + episodeMeta(episode) + '<p class="pc-lede">' + escapeHtml(episode.summary) + '</p></header>' +
-    (episode.video || episode.videoPreview ? (episode.videoPreview ? '<h2>Video preview</h2>' : '') + '<video controls playsinline preload="none" aria-label="' + (episode.videoPreview ? 'Episode video preview' : 'Episode video') + '"' +
+    (episode.video || episode.videoPreview ? (episode.videoPreview ? '<h2>Video preview</h2>' : '') + '<video controls playsinline preload="none" ' + (episode.videoPreview ? 'data-episode-preview' : 'data-episode-full-video') +
+      ' aria-label="' + (episode.videoPreview ? 'Episode video preview' : 'Episode video') + '"' +
       (episode.thumbnail ? ' poster="' + episode.thumbnail + '"' : '') + '><source src="' + (episode.videoPreview || episode.video) + '" type="video/mp4">' +
       '<track kind="captions" srclang="en" label="English" src="' + episode.captions + '"><a href="' + (episode.videoPreview || episode.video) + '">Download ' + (episode.videoPreview ? 'video preview' : 'video') + '</a></video>' : '') +
-    (episode.audio ? '<audio controls preload="none" aria-label="Episode audio"><source src="' + episode.audio + '" type="audio/mpeg"><a href="' + episode.audio + '">Download audio</a></audio>' : '') +
+    (episode.audio ? '<audio controls preload="none" data-episode-audio aria-label="Episode audio"><source src="' + episode.audio + '" type="audio/mpeg"><a href="' + episode.audio + '">Download audio</a></audio>' : '') +
     (episode.videoAccess === "members" ? '<p class="pc-state">Full video is available to eligible Patreon members. Paid video files are not hosted publicly on this site.</p>' : '') +
     (episode.playbackLinks.length ? '<ul class="pc-media-links">' + episode.playbackLinks.map(({href, label}) => '<li>' + external(href, label) + '</li>').join('') + '</ul>' : '') +
     (episode.notes.length ? '<section class="pc-section"><h2>Show notes</h2>' + episode.notes.map(note => '<p>' + escapeHtml(note) + '</p>').join('') + '</section>' : '') +
-    (episode.chapters.length ? '<section class="pc-section"><h2>Chapters</h2><ol class="pc-chapters">' +
+    (episode.chapters.length ? '<section class="pc-section"><h2>Chapters</h2><ol class="pc-chapters"' +
+      (episode.audio || episode.video ? ' data-episode-chapters' : '') + '>' +
       episode.chapters.map(({startSeconds, title}) => {
         const minutes = Math.floor(startSeconds / 60);
         const seconds = String(startSeconds % 60).padStart(2, '0');
-        return '<li><time datetime="PT' + startSeconds + 'S">' + minutes + ':' + seconds + '</time> ' + escapeHtml(title) + '</li>';
+        return '<li data-chapter-start="' + startSeconds + '"><time datetime="PT' + startSeconds +
+          'S">' + minutes + ':' + seconds + '</time> <span class="pc-chapter-title">' + escapeHtml(title) + '</span></li>';
       }).join('') + '</ol></section>' : '') +
     (related ? '<section class="pc-section"><h2>Links</h2><ul>' + related + '</ul></section>' : '') +
     (episode.transcript.length ? '<section class="pc-section"><h2>Transcript</h2>' + episode.transcript.map(line => '<p>' + escapeHtml(line) + '</p>').join('') + '</section>' : '') +
