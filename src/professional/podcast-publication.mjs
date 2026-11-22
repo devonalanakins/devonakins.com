@@ -3,7 +3,8 @@
 export const PODCAST_TITLE = "Devon Alan Akins";
 export const PODCAST_DESCRIPTION = "I’m Devon Alan Akins. I sit down with people I’m curious about and see where the conversation goes. We talk about their work, what they’ve tried, and what changed their minds. Sometimes it’s just me with a question about software, business, science, or writing.";
 export const PODCAST_SHARE_IMAGE = "/professional/podcast-share.jpg";
-export const PATREON_CREATOR_URL = "https://www.patreon.com/cw/DevonAlanAkins";
+// Never publish an assumed Patreon creator URL from a hardcoded fallback.
+// Verified public creator/distribution destinations belong in this allowlist.
 const approvedEpisodes = [];
 const approvedDistribution = {};
 
