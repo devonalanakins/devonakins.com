@@ -1,5 +1,5 @@
 import {renderMobileLive} from "./mobile-live.mjs";
-import {PATREON_CREATOR_URL, PODCAST_TITLE, PODCAST_DESCRIPTION, PODCAST_SHARE_IMAGE, podcastPublication, publicWebUrl} from "./podcast-publication.mjs";
+import {PODCAST_TITLE, PODCAST_DESCRIPTION, PODCAST_SHARE_IMAGE, podcastPublication, publicWebUrl} from "./podcast-publication.mjs";
 import {WATCH_KINDS, watchPublication} from "./watch-publication.mjs";
 import {PRACTICAL_START_ROUTE, renderPracticalStartLesson} from "./first-practical-lesson.mjs";
 import {PERSONAL_ABOUT_ROUTE, renderPersonalAbout} from "./about-page.mjs";
@@ -159,7 +159,10 @@ function renderPodcast({episodes, outlets}) {
       outlets.map(({label, href}) => '<li>' + external(href, label) + '</li>').join('') + '</ul></section>' : '') +
     '<section class="pc-section pc-two-column"><div><h2>Watch and listen</h2></div><div class="pc-prose"><p>Public episodes will be watchable here on my website, with the audio on Spotify. Patreon is for member-only material. Episode pages will have listening links, show notes, and transcripts when available.</p>' +
     (outlets.length ? '' : '<p>Listening links will appear here once the show is available.</p>') +
-    '<p>' + external(PATREON_CREATOR_URL, 'Follow my work on Patreon') + '</p></div></section>' +
+    '<p>' + (outlets.some(outlet => outlet.key === "patreon") ?
+      'An approved Patreon destination is listed under Follow the show.' :
+      'Patreon memberships are planned. A public creator link and benefits will appear after account and offer verification.') +
+    '</p></div></section>' +
     '<section class="pc-section pc-two-column pc-studio-teaser"><div><h2>How I’m putting it together</h2></div><div class="pc-prose"><p>I’m working out what I need to record in the field, shoot in a room, and edit afterward.</p>' +
     button('/setup/', 'Explore My Setup') + '</div></section></div>';
 }
@@ -172,6 +175,7 @@ function watchCard(item) {
     '</time> · ' + episodeDuration(item.durationSeconds) + ' · View recording →</span></span></a></article>';
 }
 function renderWatch(watch, podcast) {
+  const patreonOutlet = podcast.outlets.find(outlet => outlet.key === "patreon");
   const items = [
     ...watch.videos.map(video => ({...video, label: WATCH_KINDS[video.kind]})),
     ...podcast.episodes.filter(episode => episode.video || episode.videoPreview).map(episode => ({
@@ -196,7 +200,9 @@ function renderWatch(watch, podcast) {
     '</section><section class="pc-section pc-two-column pc-watch-outlets"><div><h2>The full experience lives here.</h2></div>' +
     '<div class="pc-prose"><p>Video and replays are for this site. I’m using Spotify for podcast audio and Patreon for memberships, not sending everyone to YouTube or Twitch.</p>' +
     '<p>Member-only recordings will remain on Patreon until protected playback is implemented and verified here.</p>' +
-    '<p>' + external(PATREON_CREATOR_URL, 'Follow on Patreon') + '</p></div></section></div>';
+    '<p>' + (patreonOutlet ? external(patreonOutlet.href, 'Follow on Patreon') :
+      'A Patreon creator link will appear here after account and membership details are verified.') +
+    '</p></div></section></div>';
 }
 function renderWatchVideo(video) {
   const notes = video.notes.length ? '<section class="pc-section"><h2>Notes</h2>' +

@@ -26,7 +26,9 @@ test("prelaunch presents the final title and honest format without fictional pub
   assert.doesNotMatch(podcast, /<iframe|<audio|<video|autoplay|class="pc-episode"|application\/rss\+xml|spotify\.com\/show|Cristy Russo|Sam Rosenbaum|Jason Tunick/);
   assert.match(podcast, /href="\/courses\/"/);
   assert.match(podcast, /Watch and listen/);
-  assert.match(podcast, /href="https:\/\/www\.patreon\.com\/cw\/DevonAlanAkins" target="_blank" rel="noopener noreferrer">Follow my work on Patreon/);
+  assert.match(podcast, /Patreon memberships are planned\. A public creator link and benefits will appear after account and offer verification/);
+  assert.doesNotMatch(podcast, /href="https:\/\/(?:www\.)?patreon\.com/);
+  assert.doesNotMatch(podcast, /Follow my work on Patreon/);
   assert.match(podcast, /og:image" content="https:\/\/devonakins\.com\/professional\/podcast-share\.jpg"/);
   assert.deepEqual(creatorPaths, ["/watch/", "/podcast/", "/courses/", "/setup/", "/live/", "/courses/man-of-the-house/start/", "/about/"]);
 });
@@ -80,6 +82,15 @@ test("only approved, dated episodes and configured feeds render, with escaped te
   assert.match(memberPage, /https:\/\/www\.patreon\.com\/posts\/test-123/);
   assert.doesNotMatch(memberPage, /<video|<audio|\/podcast-media\/test\.mp4/);
   assert.deepEqual(memberPublication.outlets.map(outlet => outlet.key), ["patreon"]);
+  const memberArchive = renderCreatorPage("/podcast/", memberPublication);
+  assert.match(memberArchive, /<h2>Follow the show<\/h2>/);
+  assert.match(memberArchive, /href="https:\/\/www\.patreon\.com\/devonalanakins" target="_blank" rel="noopener noreferrer">Patreon/);
+  assert.match(memberArchive, /An approved Patreon destination is listed under Follow the show/);
+  assert.doesNotMatch(memberArchive, /A public creator link and benefits will appear after account and offer verification/);
+  const memberWatch = renderCreatorPage("/watch/", memberPublication);
+  assert.match(memberWatch, /href="https:\/\/www\.patreon\.com\/devonalanakins" target="_blank" rel="noopener noreferrer">Follow on Patreon/);
+  assert.doesNotMatch(memberWatch, /A Patreon creator link will appear here after account and membership details are verified/);
+
   const preview = {...member, videoPreview: "/podcast-media/preview.mp4", captions: "/podcast-media/preview.vtt"};
   const previewPublication = podcastPublication([preview], {}, "2026-11-21");
   const previewPage = renderCreatorPage("/podcast/test-interview/", previewPublication);
@@ -97,6 +108,10 @@ test("only approved, dated episodes and configured feeds render, with escaped te
   assert.throws(() => podcastPublication([], {rss: "https://www.patreon.com/rss/creator?auth=private"}), /Invalid podcast distribution/);
   assert.throws(() => podcastPublication([], {rss: "https://example.org/feed.xml?token=private"}), /Invalid podcast distribution/);
   assert.throws(() => podcastPublication([], {patreon: "https://patreon.com.evil.example/creator"}), /Invalid podcast distribution/);
+  assert.throws(() => podcastPublication([], {patreon: "https://www.patreon.com/rss/creator"}), /Invalid podcast distribution/);
+  assert.throws(() => podcastPublication([], {patreon: "https://www.patreon.com/rss/creator?auth=private"}), /Invalid podcast distribution/);
+  assert.throws(() => podcastPublication([], {patreon: "https://www.patreon.com/cw/DevonAlanAkins?auth=private"}), /Invalid podcast distribution/);
+  assert.throws(() => podcastPublication([], {patreon: "https://www.patreon.com/cw/DevonAlanAkins#private"}), /Invalid podcast distribution/);
   assert.throws(() => podcastPublication([{...episode, captions: undefined}]), /require playable media and captions/);
   assert.throws(() => podcastPublication([{...episode, audio: "/private/guest.mp3"}]), /Invalid podcast asset path/);
   assert.throws(() => podcastPublication([], {spotify: "https://open.spotify.com.example.org/show/something"}), /Invalid podcast distribution/);
@@ -112,6 +127,8 @@ test("Watch has an honest empty library and its own canonical destination", () =
   assert.match(watch, /href="\/podcast\/"/);
   assert.match(watch, /href="\/courses\/"/);
   assert.doesNotMatch(watch, /<iframe|<video|autoplay|youtube\.com|twitch\.tv|fake-player/i);
+  assert.match(watch, /A Patreon creator link will appear here after account and membership details are verified/);
+  assert.doesNotMatch(watch, /href="https:\/\/(?:www\.)?patreon\.com/);
   assert.deepEqual(watchPublication().videos, []);
 });
 

@@ -3,7 +3,8 @@
 export const PODCAST_TITLE = "Devon Alan Akins";
 export const PODCAST_DESCRIPTION = "I’m Devon Alan Akins. I sit down with people I’m curious about and see where the conversation goes. We talk about their work, what they’ve tried, and what changed their minds. Sometimes it’s just me with a question about software, business, science, or writing.";
 export const PODCAST_SHARE_IMAGE = "/professional/podcast-share.jpg";
-export const PATREON_CREATOR_URL = "https://www.patreon.com/cw/DevonAlanAkins";
+// Never publish an assumed Patreon creator URL from a hardcoded fallback.
+// Verified public creator/distribution destinations belong in this allowlist.
 const approvedEpisodes = [];
 const approvedDistribution = {};
 
@@ -78,8 +79,12 @@ export function podcastPublication(episodes = approvedEpisodes, distribution = a
   ].flatMap(([key, label, hosts]) => {
     if (!distribution[key]) return [];
     const href = publicWebUrl(distribution[key]);
-    if (!href || (hosts && !hosts.includes(new URL(href).hostname)) ||
-        (key === "rss" && (new URL(href).search || new URL(href).hash || new URL(href).hostname.endsWith("patreon.com")))) {
+    const url = href ? new URL(href) : null;
+    // Public creator profiles must never become a backdoor for private
+    // Patreon RSS or tokenized feeds through the generic patreon outlet key.
+    if (!url || (hosts && !hosts.includes(url.hostname)) ||
+        (key === "rss" && (url.search || url.hash || url.hostname.endsWith("patreon.com"))) ||
+        (key === "patreon" && (url.search || url.hash || /^\/rss(?:\/|$)/i.test(url.pathname)))) {
       throw new Error("Invalid podcast distribution URL");
     }
     return [{key, label, href}];
