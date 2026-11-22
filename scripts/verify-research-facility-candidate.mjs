@@ -4,6 +4,7 @@ import {readFile} from 'node:fs/promises';
 import site from '../.release/worker.mjs';
 import {LABORATORY_ROUTES,LABORATORY_REDIRECTS} from '../src/professional/laboratory-routes.mjs';
 import {CREATOR_ROUTES,CREATOR_GEAR,creatorPaths} from '../src/professional/creator-pages.mjs';
+import {watchPublication} from '../src/professional/watch-publication.mjs';
 import {FIELDNOTES} from '../src/professional/fieldnotes.mjs';
 import {approvedPublicProjects} from '../src/publication-manifest.mjs';
 const runtime=process.env.LABORATORY_VERIFY_ORIGIN;
@@ -21,6 +22,9 @@ for(const [view,path] of Object.entries(LABORATORY_ROUTES)){
  assert.match(response.headers.get('content-security-policy'),/connect-src 'self' https:\/\/api\.github\.com;/);
 }
 // The creator pages must be packaged as first-party HTML, not merely generated source.
+// Approved public Watch recordings may have a strict Cloudflare Stream iframe;
+// empty Watch pages and all other creator pages must never embed remote media.
+const approvedWatchRoutes = new Set(watchPublication().videos.map(video=>video.route));
 for(const path of creatorPaths){
  const response=await get(path);
  assert.equal(response.status,200,path);
@@ -29,11 +33,38 @@ for(const path of creatorPaths){
  assert.match(html,new RegExp('rel="canonical" href="https://devonakins.com'+path+'"'));
  assert.match(html,/href="\/podcast\/"/);
  assert.match(html,/href="\/setup\/"/);
- assert.doesNotMatch(html,/<iframe|<form|<script[^>]+src="https?:/);
+ const csp=response.headers.get('content-security-policy')||'';
+ if(path.startsWith(CREATOR_ROUTES.watch)){
+   assert.match(csp,/(?:^|;\s*)frame-src https:\/\/iframe\.videodelivery\.net(?:;|$)/,path);
+ }else assert.doesNotMatch(csp,/iframe\.videodelivery\.net/,path);
+ assert.doesNotMatch(html,/<form|<script[^>]+src="https?:/);
+ if(approvedWatchRoutes.has(path)){
+   assert.match(html,/<iframe\b[^>]*src="https:\/\/iframe\.videodelivery\.net\/[a-f0-9]{32}"/,path);
+   assert.match(html,/<iframe\b[^>]*title="Watch:/,path);
+ }else assert.doesNotMatch(html,/<iframe\b/,path);
 }
+// The anonymous Live API is read-only and stays explicitly prelaunch unless
+// the owner separately activates an authorized external input.
+const liveResponse=await get('/api/creator/live');
+assert.equal(liveResponse.status,200);
+assert.equal(liveResponse.headers.get('cache-control'),'no-store');
+assert.deepEqual(await liveResponse.json(),{state:'prelaunch'});
+const livePage=await(await get(CREATOR_ROUTES.live)).text();
+assert.match(livePage,/No broadcast right now\./);
+assert.match(livePage,/href="\/watch\/"/);
+const watchPage=await(await get(CREATOR_ROUTES.watch)).text();
+assert.match(watchPage,/href="\/live\/"/);
+if(approvedWatchRoutes.size===0)assert.match(watchPage,/No videos published yet/);
+
 const setupPage=await(await get(CREATOR_ROUTES.setup)).text();
 assert.equal((setupPage.match(/class="pc-product"/g)||[]).length,CREATOR_GEAR.length);
-assert.match(setupPage,/Ownership is still being inventoried/);
+assert.match(setupPage,/My current kit is labeled separately from unpurchased possibilities/);
+assert.match(setupPage,/app-level audio compatibility stay unverified until tested/);
+assert.equal((setupPage.match(/data-gear-status="owned"/g)||[]).length,2);
+assert.equal((setupPage.match(/data-gear-status="considering"/g)||[]).length,7);
+assert.match(setupPage,/My current iPhone/);
+assert.match(setupPage,/My Sony headset/);
+assert.match(setupPage,/Sony headset gets tested as my audio input/);
 assert.equal((setupPage.match(/data-gear-status="future"/g)||[]).length,1);
 const podcastPage=await(await get(CREATOR_ROUTES.podcast)).text();
 assert.match(podcastPage,/<title>Devon Alan Akins — Podcast<\/title>/);

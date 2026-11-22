@@ -11,7 +11,7 @@ html.lab-html {
   --pc-grid: #24353a19;
   color-scheme: light;
   background: var(--pc-paper);
-  scroll-padding-top: 115px;
+  scroll-padding-top: 150px;
 }
 html.lab-html[data-theme="dark"] {
   --pc-paper: #0c111a;
@@ -46,14 +46,7 @@ body.creator-body { margin: 0; color: var(--pc-ink); background: var(--pc-paper)
 .pc-wrap { width: min(1360px, 100% - clamp(36px, 9vw, 144px)); margin-inline: auto; }
 .pc-skip { position: absolute; z-index: 25; top: 0; left: 16px; padding: 12px 16px; background: var(--pc-blue); color: var(--pc-blue-on) !important; transform: translateY(-150%); }
 .pc-skip:focus { transform: translateY(8px); }
-.pc-header { position: sticky; top: 0; z-index: 20; border-bottom: 1px solid var(--pc-line); background: var(--pc-paper); background: color-mix(in srgb, var(--pc-paper) 96%, transparent); backdrop-filter: blur(14px); }
-.pc-header-row { display: flex; align-items: center; justify-content: space-between; gap: 15px 30px; min-height: 70px; }
-.pc-brand { display: flex; align-items: center; gap: 15px; text-decoration: none; }
-.pc-brand > span, .pc-footer > div > a { font: 800 38px/.9 Arial, sans-serif; letter-spacing: -.095em; color: var(--pc-blue); }
-.pc-brand small { border-left: 1px solid var(--pc-line); padding-left: 14px; font: 700 12px/1.3 Arial, sans-serif; }
-.pc-nav { display: flex; align-items: center; flex-wrap: wrap; gap: 4px; }
-.pc-nav a { padding: 12px 14px; min-height: 44px; border-bottom: 2px solid transparent; text-decoration: none; font-size: 13px; font-weight: 700; }
-.pc-nav a:hover, .pc-nav a[aria-current="page"] { color: var(--pc-blue); border-color: currentColor; }
+.pc-footer > div > a { font: 800 38px/.9 Arial, sans-serif; letter-spacing: -.095em; color: var(--pc-blue); }
 .pc-eyebrow { margin: 0 0 21px; font-size: 12px; font-weight: 700; letter-spacing: .13em; text-transform: uppercase; color: var(--pc-blue); }
 .pc-hero { display: grid; grid-template-columns: minmax(0, 1.23fr) minmax(0, 1fr); align-items: stretch; min-height: min(660px, 76svh); border-bottom: 1px solid var(--pc-line); }
 .pc-hero-copy { display: flex; align-items: flex-start; flex-direction: column; justify-content: center; padding: 64px clamp(16px, 3.4vw, 52px) 72px 0; min-width: 0; }
@@ -96,13 +89,14 @@ body.creator-body { margin: 0; color: var(--pc-ink); background: var(--pc-paper)
 .pc-product-plate svg, .pc-product-plate img { position: relative; display: block; width: 100%; max-width: 260px; height: auto; }
 .pc-product-info { min-width: 0; padding: clamp(16px, 2vw, 27px); }
 .pc-product-status { display: inline-block; font-size: 11px; font-weight: 700; padding: 4px 8px; border: 1px solid var(--pc-line); color: var(--pc-muted); }
+.pc-product-status-owned { border-color: var(--pc-blue); color: var(--pc-ink); background: var(--pc-panel); }
 .pc-product-status-future { border-color: var(--pc-blue); color: var(--pc-blue); }
 .pc-product h3 { font-size: clamp(19px, 1.75vw, 26px); line-height: 1.12; letter-spacing: -.04em; margin: 14px 0 8px; overflow-wrap: anywhere; }
 .pc-product p { font-size: 14px; color: var(--pc-muted); margin: 0 0 12px; }
 .pc-product .pc-product-spec { font-size: 13px; font-weight: 700; color: var(--pc-ink); }
 .pc-product .pc-product-meta { font-size: 12px; }
 .pc-product-links { display: flex; flex-wrap: wrap; gap: 0 15px; }
-.pc-product-links a { display: inline-flex; align-items: center; gap: 4px; min-height: 36px; font-size: 13px; font-weight: 700; color: var(--pc-blue); text-underline-offset: 4px; }
+.pc-product-links a { display: inline-flex; align-items: center; gap: 4px; min-height: 44px; font-size: 13px; font-weight: 700; color: var(--pc-blue); text-underline-offset: 4px; }
 .pc-control-empty { border: 1px solid var(--pc-line); background: var(--pc-panel); padding: clamp(20px, 4vw, 45px); }
 .pc-control-empty strong { font-size: 1.3rem; }
 .pc-control-empty p { margin-bottom: 0; color: var(--pc-muted); }
@@ -127,6 +121,11 @@ body.creator-body { margin: 0; color: var(--pc-ink); background: var(--pc-paper)
 .pc-chapters { list-style: none; padding: 0; }
 .pc-chapters li + li { margin-top: 8px; }
 .pc-chapters time { display: inline-block; min-width: 5ch; margin-right: 10px; color: var(--pc-muted); font-variant-numeric: tabular-nums; }
+.pc-chapter-jump { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 6px; width: 100%; min-height: 44px; padding: 9px 12px; border: 1px solid var(--pc-line); background: var(--pc-card); color: var(--pc-ink); text-align: left; cursor: pointer; font: inherit; }
+.pc-chapter-jump:hover { border-color: var(--pc-blue); color: var(--pc-blue); }
+.pc-chapter-jump time { color: inherit; }
+.pc-chapters-feedback { color: var(--pc-muted); font-size: 14px; line-height: 1.5; }
+.pc-chapters-feedback:empty { display: none; }
 .pc-media-links { display: flex; flex-wrap: wrap; gap: 10px 24px; padding: 0; list-style: none; }
 .pc-course-feature .pc-button { margin-top: 10px; }
 .pc-course-steps { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
@@ -140,10 +139,6 @@ body.creator-body { margin: 0; color: var(--pc-ink); background: var(--pc-paper)
   .pc-product { grid-template-columns: minmax(110px, .34fr) minmax(0, .66fr); }
 }
 @media (max-width: 760px) {
-  .pc-header-row { flex-wrap: wrap; padding-block: 12px 6px; gap: 8px; }
-  .pc-brand > span { font-size: 31px; }
-  .pc-nav { column-gap: 2px; }
-  .pc-nav a { padding-inline: 9px; }
   .pc-hero { grid-template-columns: 1fr; min-height: 0; }
   .pc-hero-copy { padding: clamp(42px, 10vw, 66px) 0 34px; }
   .pc-hero h1 { font-size: clamp(51px, 15vw, 104px); }
@@ -154,12 +149,159 @@ body.creator-body { margin: 0; color: var(--pc-ink); background: var(--pc-paper)
   .pc-footer { grid-template-columns: 1fr; align-items: start; }
 }
 @media (max-width: 420px) {
-  .pc-nav { width: 100%; }
-  .pc-nav a:first-child { padding-left: 0; }
   .pc-product { grid-template-columns: 1fr; }
-  .pc-product-plate { height: 112px; border-right: 0; border-bottom: 1px solid var(--pc-line); }
-  .pc-product-plate svg { width: 180px; }
+  .pc-product-plate { max-height: 160px; border-right: 0; border-bottom: 1px solid var(--pc-line); }
+  .pc-product-plate:has(svg) { display: none; }
+  .pc-product-info { padding: 16px; }
+  .pc-jump { display: grid; grid-template-columns: 1fr 1fr; }
 }
 @media (prefers-reduced-motion: reduce) {
   .creator-body * { animation: none !important; transition: none !important; }
+}
+
+/* Original-video library: no fake video artwork or remote assets on prelaunch. */
+.pc-watch-hero { display:grid; grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr); border-bottom:1px solid var(--pc-line); min-height: min(625px,80svh); }
+.pc-watch-hero-copy { display:flex; flex-direction:column; align-items:flex-start; justify-content:center; min-width:0; padding:clamp(58px,8vw,110px) clamp(15px,3vw,45px) clamp(48px,7vw,85px) 0; }
+.pc-watch-hero h1 { margin:0 0 28px; font:800 clamp(72px,12vw,178px)/.85 Arial,Helvetica,sans-serif; letter-spacing:-.095em; }
+.pc-watch-hero h1 span { color:var(--pc-blue); }
+.pc-watch-art { position:relative; display:grid; place-items:center; min-height:380px; overflow:hidden; isolation:isolate; border-left:1px solid var(--pc-line); background:radial-gradient(ellipse at 65% 40%,#526bb0 0%,#12233d 36%,#080e19 78%); color:#eef3ff; }
+.pc-watch-art:after { content:""; position:absolute; inset:0; opacity:.18; background:linear-gradient(#b9c9ef38 1px,transparent 1px),linear-gradient(90deg,#b9c9ef38 1px,transparent 1px); background-size:32px 32px; }
+.pc-watch-art-orbit { position:absolute; width:86%; aspect-ratio:1; border:1px solid #9bb9fc80; border-radius:50%; transform:rotateX(63deg) rotateZ(-37deg); }
+.pc-watch-art-orbit-alt { width:72%; transform:rotateY(64deg) rotateZ(31deg); }
+.pc-watch-art-sign { z-index:1; font:800 clamp(100px,17vw,260px)/1 Arial,sans-serif; letter-spacing:-.095em; }
+.pc-watch-art-label,.pc-watch-art-bottom { position:absolute; z-index:1; left:26px; font:700 11px/1.4 Arial,sans-serif; letter-spacing:.16em; }
+.pc-watch-art-label { top:27px; } .pc-watch-art-bottom { bottom:27px; }
+.pc-watch-library { min-height:300px; }
+.pc-watch-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:17px; }
+.pc-watch-card { border:1px solid var(--pc-line); min-width:0; background:var(--pc-card); }
+.pc-watch-card-link { display:block; text-decoration:none; height:100%; }
+.pc-watch-card-link:hover strong { color:var(--pc-blue); text-decoration:underline; text-underline-offset:4px; }
+.pc-watch-card-art { display:flex; align-items:end; padding:20px; aspect-ratio:16/9; background:radial-gradient(ellipse at 65% 40%,#445e98,#17243c 55%,#0a101c); color:#e5ecff; }
+.pc-watch-card-art span { font-size:clamp(38px,6vw,88px); font-weight:800; letter-spacing:-.09em; }
+.pc-watch-card-copy { display:flex; flex-direction:column; gap:12px; padding:25px; }
+.pc-watch-card-kind { font-size:12px; letter-spacing:.11em; text-transform:uppercase; color:var(--pc-blue); font-weight:700; }
+.pc-watch-card-copy strong { font-size:clamp(22px,2vw,31px); line-height:1.13; letter-spacing:-.04em; overflow-wrap:anywhere; }
+.pc-watch-card-summary { color:var(--pc-muted); }
+.pc-watch-card-meta { font-size:12px; color:var(--pc-muted); }
+.pc-watch-empty { max-width:760px; padding:clamp(26px,5vw,64px); border:1px solid var(--pc-line); background:var(--pc-panel); }
+.pc-watch-empty h3 { margin:0 0 12px; font-size:clamp(26px,3vw,44px); letter-spacing:-.05em; }
+.pc-watch-empty p:last-child { max-width:52ch; color:var(--pc-muted); }
+.pc-watch-detail { padding-block:clamp(48px,7vw,110px); }
+.pc-watch-detail h1 { max-width:16ch; font-size:clamp(46px,8vw,110px); line-height:.98; letter-spacing:-.065em; overflow-wrap:anywhere; margin:0 0 22px; }
+.pc-watch-detail .pc-lede { max-width:64ch; }
+.pc-watch-player { position:relative; width:100%; aspect-ratio:16/9; margin-top:clamp(28px,5vw,65px); background:#080e19; }
+.pc-watch-player iframe { display:block; width:100%; height:100%; border:0; }
+.pc-watch-note { color:var(--pc-muted); font-size:13px; }
+.pc-watch-detail .pc-section { max-width:880px; }
+.pc-watch-detail .pc-section p { max-width:76ch; }
+@media (max-width:900px) { .pc-watch-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+@media (max-width:760px) {
+  .pc-watch-hero { grid-template-columns:1fr; min-height:0; }
+  .pc-watch-hero-copy { padding:52px 0 38px; }
+  .pc-watch-hero h1 { font-size:clamp(68px,18vw,122px); }
+  .pc-watch-art { min-height:260px; border:1px solid var(--pc-line); }
+  .pc-watch-grid { grid-template-columns:1fr; }
+  .pc-watch-detail h1 { font-size:clamp(43px,12vw,78px); }
+}
+
+/* Free written lesson. No JS or account is required to read, print or complete it. */
+.pc-lesson { padding-block: clamp(36px, 6vw, 88px) clamp(60px, 9vw, 140px); }
+.pc-lesson-hero { max-width: 960px; padding-bottom: clamp(40px, 6vw, 74px); }
+.pc-lesson-hero .pc-eyebrow a { text-underline-offset: 4px; }
+.pc-lesson-status { display: inline-flex; border: 1px solid var(--pc-line); padding: 7px 12px; margin: 0 0 28px; color: var(--pc-muted); font: 700 12px/1.4 Arial,sans-serif; }
+.pc-lesson-hero h1 { max-width: 13ch; margin: 0 0 30px; font: 700 clamp(49px, 7vw, 112px)/1.03 Georgia, "Times New Roman", serif; letter-spacing: -.065em; text-wrap: balance; overflow-wrap: anywhere; }
+.pc-lesson-hero h1 em { color: var(--pc-blue); font-weight: 500; }
+.pc-lesson-deck { max-width: 31ch; margin: 0 0 22px; font: 400 clamp(22px, 2.3vw, 33px)/1.33 Georgia, serif; }
+.pc-lesson-note { max-width: 70ch; color: var(--pc-muted); font-size: 15px; }
+.pc-lesson-facts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); border-block: 1px solid var(--pc-line); gap: 20px; padding-block: 25px; margin: 44px 0 0; }
+.pc-lesson-facts div { min-width: 0; }
+.pc-lesson-facts dt { margin-bottom: 9px; color: var(--pc-muted); font: 700 11px/1.5 Arial,sans-serif; letter-spacing: .12em; text-transform: uppercase; }
+.pc-lesson-facts dd { margin: 0; font: 600 15px/1.5 Arial,sans-serif; }
+.pc-lesson-layout { display: grid; grid-template-columns: minmax(0, 220px) minmax(0, 1fr); gap: clamp(30px, 6vw, 108px); padding-top: 38px; }
+.pc-lesson-toc { position: sticky; top: 166px; align-self: start; border-top: 2px solid var(--pc-ink); padding-top: 20px; }
+.pc-lesson-toc strong { font: 700 12px/1.4 Arial,sans-serif; text-transform: uppercase; letter-spacing: .09em; }
+.pc-lesson-toc ol { margin: 14px 0 0; padding: 0; list-style: none; }
+.pc-lesson-toc li { border-bottom: 1px solid var(--pc-line); }
+.pc-lesson-toc a { display: block; min-height: 42px; padding: 10px 0; text-underline-offset: 4px; font: 600 13px/1.45 Arial,sans-serif; text-decoration: none; }
+.pc-lesson-toc a:hover { color: var(--pc-blue); text-decoration: underline; }
+.pc-lesson-reading { min-width: 0; max-width: 840px; }
+.pc-lesson-reading section { padding: 28px 0 clamp(33px, 5vw, 68px); border-bottom: 1px solid var(--pc-line); scroll-margin-top: 160px; }
+.pc-lesson-reading section:first-child { padding-top: 0; }
+.pc-lesson-reading h2 { max-width: 22ch; font: 600 clamp(31px, 3.3vw, 52px)/1.13 Georgia, "Times New Roman", serif; letter-spacing: -.035em; margin: 0 0 21px; }
+.pc-lesson-reading p, .pc-lesson-reading li { font-size: clamp(16px, 1.3vw, 18px); line-height: 1.72; }
+.pc-lesson-reading p { max-width: 71ch; margin: 0 0 18px; }
+.pc-lesson-index { color: var(--pc-blue); font: 700 11px/1.5 Arial,sans-serif !important; letter-spacing: .11em; text-transform: uppercase; margin-bottom: 16px !important; }
+.pc-lesson-steps { padding-left: 23px; }
+.pc-lesson-steps li + li { margin-top: 15px; }
+.pc-lesson-safety { margin: 32px 0; padding: clamp(22px, 3vw, 34px); background: var(--pc-panel); border-left: 4px solid var(--pc-blue); }
+.pc-lesson-safety strong { display: block; margin-bottom: 10px; font: 700 17px/1.4 Arial,sans-serif; }
+.pc-lesson-safety p { margin-bottom: 0; font-size: 15px; }
+.pc-lesson-triage { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin: 30px 0; }
+.pc-lesson-triage div { border: 1px solid var(--pc-line); padding: 21px; background: var(--pc-card); }
+.pc-lesson-triage strong { font: 700 15px/1.4 Arial,sans-serif; }
+.pc-lesson-triage p { margin: 10px 0 0; font-size: 14px; line-height: 1.57; color: var(--pc-muted); }
+.pc-lesson-example { padding: clamp(21px, 4vw, 38px); background: var(--pc-panel); margin: 28px 0; }
+.pc-lesson-example ol { padding-left: 23px; margin: 0; }
+.pc-lesson-example li + li { margin-top: 12px; }
+.pc-lesson-complete { background: var(--pc-card); padding-inline: clamp(20px, 4vw, 42px) !important; border: 1px solid var(--pc-line) !important; }
+.pc-lesson-complete ul { padding-left: 25px; margin: 0 0 20px; }
+.pc-lesson-complete li + li { margin-top: 11px; }
+.pc-lesson-end { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; padding-top: 36px; }
+@media (max-width: 900px) {
+  .pc-lesson-layout { grid-template-columns: minmax(0, 1fr); gap: 30px; }
+  .pc-lesson-toc { position: static; }
+  .pc-lesson-toc ol { display: flex; flex-wrap: wrap; gap: 6px 20px; }
+  .pc-lesson-toc li { border: 0; }
+}
+@media (max-width: 620px) {
+  .pc-lesson-facts { grid-template-columns: 1fr; gap: 17px; }
+  .pc-lesson-triage { grid-template-columns: 1fr; }
+  .pc-lesson-end .pc-button { width: 100%; justify-content: space-between; }
+}
+@media print {
+  html.lab-html, body.creator-body { background: white !important; color: black !important; }
+  .pc-footer, .pc-skip, .pc-lesson-toc, .pc-lesson-end { display: none !important; }
+  .pc-wrap { width: 100%; }
+  .pc-lesson { padding: 0; }
+  .pc-lesson-layout { display: block; }
+  .pc-lesson-reading section { break-inside: avoid; }
+  .pc-lesson-safety, .pc-lesson-example, .pc-lesson-triage div { border: 1px solid #555; background: white; }
+}
+
+/* Independent public biography; editorial content without third-party assets. */
+.pc-about { padding-block: clamp(45px, 7vw, 110px) clamp(60px, 8vw, 130px); }
+.pc-about-hero { max-width: 1000px; padding-bottom: clamp(52px, 7vw, 108px); }
+.pc-about-hero h1 { margin: 0 0 35px; max-width: 14ch; font: 600 clamp(54px, 8.2vw, 120px)/1.02 Georgia, "Times New Roman", serif; letter-spacing: -.067em; text-wrap: balance; }
+.pc-about-hero h1 em { color: var(--pc-blue); }
+.pc-about-lede { max-width: 33ch; margin: 0 0 25px; font: 400 clamp(22px, 2.45vw, 36px)/1.39 Georgia, serif; }
+.pc-about-intro { max-width: 73ch; margin: 0 0 32px; color: var(--pc-muted); font: 400 17px/1.76 Arial,sans-serif; }
+.pc-about-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; }
+.pc-about-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 clamp(36px, 7vw, 130px); border-top: 1px solid var(--pc-line); }
+.pc-about-grid section { padding-block: clamp(36px, 5vw, 72px); border-bottom: 1px solid var(--pc-line); }
+.pc-about-grid h2, .pc-about-principles h2, .pc-about-contact h2 { margin: 0 0 24px; font: 600 clamp(34px, 3.8vw, 60px)/1.1 Georgia, "Times New Roman", serif; letter-spacing: -.045em; }
+.pc-about-grid p { max-width: 65ch; font-size: 16px; line-height: 1.78; }
+.pc-about-grid a { color: var(--pc-blue); font-weight: 700; text-underline-offset: 4px; }
+.pc-about-principles { display: grid; grid-template-columns: minmax(0, .75fr) minmax(0, 1.25fr); gap: 30px 80px; margin-block: clamp(60px, 8vw, 130px); }
+.pc-about-principles ol { list-style: none; padding: 0; margin: 0; }
+.pc-about-principles li { display: grid; grid-template-columns: minmax(0, .85fr) minmax(0, 1.15fr); gap: 25px; padding: 23px 0; border-bottom: 1px solid var(--pc-line); }
+.pc-about-principles li:first-child { border-top: 1px solid var(--pc-line); }
+.pc-about-principles li strong { font-size: 15px; }
+.pc-about-principles li span { color: var(--pc-muted); line-height: 1.6; font-size: 14px; }
+.pc-about-contact { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 30px 75px; padding: clamp(28px, 5vw, 70px); background: var(--pc-panel); }
+.pc-about-contact p { max-width: 55ch; color: var(--pc-muted); font-size: 15px; line-height: 1.7; }
+.pc-about-contact a { display: inline-flex; gap: 8px; min-height: 44px; align-items: center; overflow-wrap: anywhere; font-weight: 700; color: var(--pc-blue); text-underline-offset: 4px; }
+.pc-about-contact > div:last-child { min-width: 0; }
+@media (max-width: 800px) {
+  .pc-about-grid, .pc-about-principles, .pc-about-contact { grid-template-columns: minmax(0, 1fr); }
+  .pc-about-grid { gap: 0; }
+  .pc-about-principles li { gap: 15px; }
+}
+@media (max-width: 420px) {
+  .pc-about-actions .pc-button { width: 100%; justify-content: space-between; }
+  .pc-about-principles li { grid-template-columns: 1fr; }
+}
+@media print {
+  .pc-about { padding: 0; }
+  .pc-about-grid section, .pc-about-principles li { break-inside: avoid; }
+  .pc-about-contact { background: white; border: 1px solid #555; }
 }

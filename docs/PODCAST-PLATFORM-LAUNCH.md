@@ -1,6 +1,6 @@
 # Devon Alan Akins — podcast, Patreon, Spotify and courses
 
-**Status (2026-11-21):** Platform setup plan and website candidate. No Patreon or Spotify creator account, audience tier, paid course, episode, or native on-site membership integration is asserted to be connected or published by this repository. The website is under review in PR #142; production release remains separately gated.
+**Status (2026-11-22):** Platform setup notes and website source candidates. The November 21 owner dashboard inspection established an existing Patreon creator page, but the retired podcast show title and public creator URL remain unverified for publication. No connected Spotify distribution, paid tier, published episode, or native on-site member entitlement is asserted by this repository. [January issue #148](https://github.com/devonalanakins/devonakins.com/issues/148) owns release gates; production publication is separately approved.
 
 ## Distribution architecture
 
@@ -30,7 +30,7 @@
 
 ## Course library procedure
 
-- Keep `/courses/` public. The first planned curriculum concerns mathematical physics, first-principles reasoning and AI-assisted numerical experiments.
+- Keep `/courses/` public. The flagship learning series is **Man of the House** (practical household competence, safety, cooking, organization and responsibility), with one complete free written [15-minute starter lesson source](../src/professional/first-practical-lesson.mjs) destined for `/courses/man-of-the-house/start/` after an approved release. The wider course is not open for enrollment or sale. Mathematics, physics and AI-assisted simulations are future learning tracks, not the flagship paid product.
 - Develop lessons as individual Patreon posts, organized into an ordered Collection. A course is a structured collection, not a native LMS with automatic grading, certificates, or verified progress tracking.
 - Patreon supports selling an eligible collection as a one-time purchase when it contains posts; do not publish a purchase control until actual lessons, approved pricing, rights and refunds/terms are ready.
 - On the website, show verified descriptions and links to approved collection pages, not embedded paid video URLs or publicly distributed private files.
@@ -38,15 +38,15 @@
 
 ## Website publication controls
 
-- Allowed public distribution links are checked in `src/professional/podcast-publication.mjs`. Populate **only verified actual destinations** in `approvedDistribution`. Supported keys: `patreon`, `spotify`, `apple`, `youtube`, and **public** `rss` (no credential querystring). Keep absent sources empty.
+- Allowed public distribution links are checked in `src/professional/podcast-publication.mjs`. Populate **only verified actual destinations** in `approvedDistribution`. Supported keys: `patreon`, `spotify`, `apple`, `youtube`, and **public** `rss` (no credential querystring). Keep absent sources empty; the Podcast and Watch pages deliberately have **no automatic Patreon creator-link fallback**. The public Patreon destination cannot use an RSS path, query string or URL fragment: those can carry private membership tokens.
 - `approvedEpisodes` starts empty. An episode requires `approved: true`, a valid date, and playable verified links/media. Public static assets are intentionally restricted. Never store premium videos, paid audio or private RSS feeds in `public/`.
 - The website stays in a prelaunch state until there is an approved real episode. `/courses/` explicitly indicates no courses are on sale or open for enrollment.
 
 ## Episode metadata
 
-Use `interview`, `solo` or `trailer` in the site publication record. Start the optional `chapters` array at zero. Each entry contains `startSeconds` as a strictly increasing whole-second offset within the recording and a short `title`. Copy chapters to the publisher’s supported fields and verify how they appear in the destination app. The website shows them as a readable timestamped list.
+Use `interview`, `solo` or `trailer` in the site publication record. Start the optional `chapters` array at zero. Each entry contains `startSeconds` as a strictly increasing whole-second offset within the recording and a short `title`. Copy chapters to the publisher’s supported fields and verify how they appear in the destination app. The website keeps a readable timestamped list with JavaScript disabled. For an approved public full recording or audio file, the first-party chapter module can add seek buttons after browser initialization; preview-only and Patreon-only full video remain static chapter text. Browser fixtures are synthetic until real owner media is approved and playback tested.
 
-Use the 3000 × 3000 show cover for directory upload after owner approval. The podcast webpage uses a lightweight derivative, a separate 1200 × 630 share card and the public creator link. The creator link is available during prelaunch. Listening destinations still require verification against actual published feeds.
+Use the 3000 × 3000 show cover for directory upload after owner approval. The podcast webpage uses a lightweight derivative, a separate 1200 × 630 share card and the public creator link. Public Patreon and listening links are withheld until their exact destination is approved in `approvedDistribution`. An account observed in a signed-in dashboard does not itself verify a public URL, show name, pricing, or offer. Listening destinations still require verification against actual published feeds.
 
 ## Acceptance before public launch
 

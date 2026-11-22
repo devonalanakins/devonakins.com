@@ -22,18 +22,32 @@ try:
         for engine in ("chromium","webkit"):
             browser=getattr(pw,engine).launch()
             try:
-                for width,height in ((390,844),(768,1024),(1440,900)):
+                for width,height in ((320,760),(390,844),(768,1024),(1440,900)):
                     context=browser.new_context(viewport={"width":width,"height":height},reduced_motion="reduce",ignore_https_errors=LOCAL_TLS)
                     page=context.new_page()
+                    # This is a static Vite preview, not the deployed Worker API.
+                    # Drive a deterministic prelaunch response and verify its client state.
+                    page.route("**/api/creator/live", lambda route: route.fulfill(
+                        status=200, content_type="application/json",
+                        body='{"state":"prelaunch"}'
+                    ))
                     errors=[]
                     page.on("pageerror",lambda error:errors.append(str(error)))
-                    for path in ("/podcast/","/courses/","/setup/"):
+                    for path in ("/watch/","/podcast/","/courses/","/courses/man-of-the-house/start/","/setup/","/live/","/about/"):
                         response=page.goto(BASE+path,wait_until="networkidle")
                         assert response and response.status==200,(engine,width,path,"unavailable")
                         assert page.locator("main#pc-main").is_visible()
                         assert page.locator(".pc-skip").count()==1
-                        assert page.locator('.pc-nav a[aria-current="page"]').count()==1
-                        assert page.locator(".pc-nav").is_visible()
+                        assert page.locator('.site-header a[aria-current="page"]').count()==1
+                        assert page.locator(".site-primary-nav").is_visible()
+                        assert page.locator(".site-primary-nav a").count()==6
+                        assert page.locator(".site-secondary-nav").is_visible()
+                        assert page.locator(".site-secondary-nav a").count()==6
+                        if width==320:
+                            page.locator('.site-primary-nav a[href="/about/"]').focus()
+                            assert page.evaluate("document.activeElement.getAttribute('href')")=="/about/"
+                            page.locator('.site-secondary-nav a[href="/contact/"]').focus()
+                            assert page.evaluate("document.activeElement.getAttribute('href')")=="/contact/"
                         assert page.locator("h1").count()==1
                         assert page.evaluate("document.documentElement.scrollWidth<=innerWidth+1"),(
                             engine,width,path,"horizontal overflow",page.evaluate("document.documentElement.scrollWidth")
@@ -42,25 +56,71 @@ try:
                         assert page.evaluate("getComputedStyle(document.documentElement).backgroundColor")=="rgb(243, 241, 233)",(
                             engine,width,path,"light palette"
                         )
-                        if path=="/podcast/":
+                        if path=="/watch/":
+                            assert page.locator("h1").inner_text().strip()=="Watch."
+                            assert page.locator(".pc-watch-empty").is_visible()
+                            assert "No videos published yet" in page.locator("main").inner_text()
+                            assert page.locator("audio,video,iframe").count()==0
+                            assert page.locator('a[href*="patreon.com"]').count()==0
+                            assert "A Patreon creator link will appear here after account" in page.locator("main").inner_text()
+                        elif path=="/podcast/":
                             assert " ".join(page.locator("h1").inner_text().split())=="Devon Alan Akins"
                             if page.locator(".pc-state").count():
                                 assert page.locator(".pc-state").inner_text()=="No episodes published yet"
                             assert page.locator('a[href="/setup/"]').count()>=2
                             assert page.locator("audio,video,iframe").count()==0
+                            assert page.locator('a[href*="patreon.com"]').count()==0
+                            assert "Patreon memberships are planned" in page.locator("main").inner_text()
                         elif path=="/courses/":
                             assert page.locator("h1").inner_text().strip()=="Courses."
                             assert page.locator(".pc-course-steps article").count()==3
+                            assert page.locator(".pc-course-feature h2").inner_text().strip()=="Man of the House."
+                            assert page.locator('.pc-course-feature a[href="/courses/man-of-the-house/start/"]').count()==1
+                            assert "No account or payment is needed" in page.locator(".pc-course-feature").inner_text()
+                            assert page.locator("main").inner_text().index("Man of the House.") < page.locator("main").inner_text().index("Mathematical physics")
                             assert page.locator('a[href="/podcast/"]').count()>=2
                             assert "No courses are available for enrollment" in page.locator("main").inner_text()
                             assert page.locator("audio,video,iframe,form").count()==0
+                        elif path=="/courses/man-of-the-house/start/":
+                            assert page.locator(".pc-lesson").is_visible()
+                            assert "Start with a" in page.locator("h1").inner_text()
+                            assert page.locator(".pc-lesson-reading section").count()==7
+                            assert page.locator(".pc-lesson-toc a").count()==6
+                            assert page.locator('a[href="/courses/"][aria-current="page"]').count()==1
+                            assert page.locator("audio,video,iframe,form").count()==0
+                            assert "no account tracking or saved course progress" in page.locator("main").inner_text()
+                            if width==320:
+                                page.locator('.pc-lesson-toc a[href="#lesson-finish"]').focus()
+                                assert page.evaluate("document.activeElement.getAttribute('href')")=="#lesson-finish"
+                        elif path=="/about/":
+                            assert page.locator(".pc-about").is_visible()
+                            assert "The person behind" in page.locator("h1").inner_text()
+                            assert page.locator(".pc-about-grid section").count()==4
+                            assert page.locator(".pc-about-principles li").count()==4
+                            assert page.locator('a[href="/about/"][aria-current="page"]').count()==1
+                            assert page.locator("audio,video,iframe,form").count()==0
+                            assert "clinical judgments remain with licensed professionals" in page.locator("main").inner_text()
+                        elif path=="/live/":
+                            assert page.locator("[data-mobile-live]").count()==1
+                            assert page.locator("[data-live-status]").count()==1
+                            assert page.locator("[data-live-status]").inner_text().strip()=="NOT BROADCASTING"
+                            assert "No broadcast right now." in page.locator("main").inner_text()
+                            assert page.locator("[data-live-player] iframe").count()==0
+                            assert page.locator("iframe, video, audio").count()==0
+                            assert page.locator("a[href=\"/podcast/\"]").count()>=1
+                            assert page.locator('.pc-live a[href="/watch/"]').count()>=2
                         else:
-                            assert page.locator(".pc-product").count()==8
+                            assert page.locator(".pc-product").count()==10
                             assert page.locator(".pc-product-status-future").count()==1
                             assert page.locator(".pc-jump").is_visible()
                             assert page.locator(".pc-product-status-considering").count()==7
+                            assert page.locator(".pc-product-status-owned").count()==2
+                            assert page.locator('.pc-product[data-gear-id="existing-iphone"]').count()==1
+                            assert page.locator('.pc-product[data-gear-id="existing-sony-headset"]').count()==1
+                            assert page.locator('.pc-product[data-gear-status="owned"] a').count()==0
+                            assert "model not independently checked" in page.locator('.pc-product[data-gear-id="existing-sony-headset"]').inner_text().lower()
                             assert page.locator(".pc-product a[target='_blank']").count()>=8
-                        name=path.strip("/")
+                        name=path.strip("/").replace("/","-")
                         page.screenshot(path=str(OUT/f"{engine}-{name}-{width}-light.png"),full_page=True)
                         if width==390:
                             page.evaluate(Path("node_modules/axe-core/axe.min.js").read_text())
@@ -84,10 +144,78 @@ try:
                         theme.select_option("system")
                         assert page.evaluate("document.documentElement.dataset.theme")=="light"
                         assert not errors,(engine,width,path,errors)
+                    if width in (320, 390, 1440):
+                        page.goto(BASE+"/", wait_until="networkidle")
+                        assert page.locator(".site-primary-nav a").count()==6
+                        assert page.evaluate("document.documentElement.scrollWidth<=innerWidth+1")
+                        # Native cross-document links may commit navigation after
+                        # the click resolves in WebKit. Wait for the real URL and
+                        # loaded destination instead of sampling a transient URL.
+                        watch_link=page.locator('.site-primary-nav a[href="/watch/"]')
+                        assert watch_link.get_attribute("href")=="/watch/"
+                        watch_link.click()
+                        page.wait_for_url(BASE+"/watch/", wait_until="networkidle", timeout=15000)
+                        assert page.locator("main#pc-main").is_visible()
+                        assert page.locator("h1").inner_text().strip()=="Watch."
+                        assert page.locator('link[rel="canonical"]').get_attribute("href")=="https://devonakins.com/watch/"
+                        page.goto(BASE+"/work/", wait_until="networkidle")
+                        assert page.locator('.site-primary-nav a[href="/work/"][aria-current="page"]').count()==1
+                        page.goto(BASE+"/fieldnotes/", wait_until="networkidle")
+                        assert page.locator('.site-primary-nav a[href="/fieldnotes/"][aria-current="page"]').count()==1
+                    if width==390:
+                        # Synthetic approved-media fixture, not a published episode.
+                        # Exercise the same built first-party module in both engines.
+                        page.goto(BASE+"/podcast/", wait_until="networkidle")
+                        # Vite rewrites source module names to hashed /assets/page*.js.
+                        # Resolve the compiled entry from the actual generated HTML,
+                        # then independently verify its bytes include the chapter logic.
+                        script_path=page.locator('script[type="module"][src^="/assets/"]').first.get_attribute("src")
+                        assert script_path, (engine,"compiled podcast entry missing")
+                        module_response=page.request.get(BASE+script_path)
+                        assert module_response.ok, (engine,script_path,"module unavailable")
+                        module_source=module_response.text()
+                        assert "data-episode-chapters" in module_source, (engine,script_path,"chapter module missing")
+                        assert "pc-chapter-jump" in module_source, (engine,script_path,"seek controls missing")
+                        page.evaluate("""() => {
+                            document.querySelector("#pc-main").innerHTML =
+                              '<article class="pc-episode-detail"><audio data-episode-audio></audio>' +
+                              '<section><ol class="pc-chapters" data-episode-chapters>' +
+                              '<li data-chapter-start="0"><time datetime="PT0S">0:00</time> <span class="pc-chapter-title">Beginning</span></li>' +
+                              '<li data-chapter-start="61"><time datetime="PT61S">1:01</time> <span class="pc-chapter-title">Second part</span></li>' +
+                              '</ol></section></article>';
+                            const audio=document.querySelector('audio');
+                            window.__chapterSeek=-1;
+                            Object.defineProperty(audio,"readyState",{configurable:true,get:()=>1});
+                            Object.defineProperty(audio,"duration",{configurable:true,get:()=>125});
+                            Object.defineProperty(audio,"currentTime",{configurable:true,
+                              get:()=>window.__chapterSeek, set:value=>{window.__chapterSeek=value;}});
+                            audio.play=()=>Promise.resolve();
+                        }""")
+                        assert page.locator(".pc-chapters time").count()==2
+                        assert page.locator(".pc-chapter-jump").count()==0, "no-JavaScript timestamps remain readable"
+                        page.add_script_tag(url=script_path+"?synthetic-chapters=1",type="module")
+                        page.wait_for_function("document.querySelectorAll('.pc-chapter-jump').length===2")
+                        page.get_by_role("button",name="Play from 1:01 — Second part").click()
+                        page.wait_for_function("window.__chapterSeek===61")
+                        page.wait_for_function("document.querySelector('.pc-chapters-feedback').textContent.includes('Playing from 1:01')")
+                        page.evaluate("""() => {
+                            document.querySelector('audio').play=()=>Promise.reject(new Error("synthetic media denied"));
+                        }""")
+                        page.get_by_role("button",name="Play from 0:00 — Beginning").click()
+                        page.wait_for_function("document.querySelector('.pc-chapters-feedback').textContent.includes('Playback could not start')")
+                        assert page.evaluate("window.__chapterSeek") == 0
+                        page.evaluate("""() => {
+                            document.querySelector("#pc-main").innerHTML =
+                              '<article class="pc-episode-detail"><video data-episode-preview></video>' +
+                              '<ol class="pc-chapters"><li data-chapter-start="0"><time datetime="PT0S">0:00</time> <span class="pc-chapter-title">Preview only</span></li></ol></article>';
+                        }""")
+                        page.add_script_tag(url=script_path+"?synthetic-chapters=2",type="module")
+                        assert page.locator(".pc-chapters time").count()==1
+                        assert page.locator(".pc-chapter-jump").count()==0, "a preview cannot expose full-episode seeking"
                     context.close()
             finally:
                 browser.close()
-    print("Creator pages passed Chromium/WebKit at 390, 768, and 1440 px in both color modes.")
+    print("Creator pages passed Chromium/WebKit at 320, 390, 768, and 1440 px in both color modes.")
 finally:
     if server:
         server.terminate()

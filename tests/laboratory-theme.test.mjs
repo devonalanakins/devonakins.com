@@ -73,7 +73,7 @@ test('saved choices, cross-tab updates and blocked storage fail safely',()=>{
   assert.equal(harness({saved:'invalid'}).root.dataset.theme,'light');
 });
 test('dark styles cover reading surfaces, navigation, form controls and focus',()=>{
-  for(const selector of ['.lab-header','.lab-action-primary','.lab-destination--research',
+  for(const selector of ['--paper','.lab-action-primary','.lab-destination--research',
     '.da-process','.da-project-question','.da-sketch','.lab-project-browser input',
     '.lab-research-instrument','focus-visible']){
     assert.ok(style.includes(selector),selector);

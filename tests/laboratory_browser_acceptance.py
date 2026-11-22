@@ -17,16 +17,8 @@ SIZES = ((320,568),(375,667),(390,844),(393,852),(428,926),(768,1024),
          (1024,768),(1440,900),(1536,864),(1920,1080))
 server = None if os.environ.get('LABORATORY_TEST_ORIGIN') else subprocess.Popen(['./node_modules/.bin/vite','preview','--host','127.0.0.1','--port','4179','--strictPort'],stdout=subprocess.DEVNULL,stderr=subprocess.STDOUT)
 
-def navigate(page,key,width):
-    if width<=1100:
-        page.locator('.lab-menu-toggle').click()
-        page.locator(f'#lab-menu [data-one-target="{key}"]').click()
-        assert not page.locator('#lab-menu').is_visible()
-    elif key in ('activity','contact'):
-        page.locator('.lab-desktop-menu').click()
-        page.locator(f'#lab-menu [data-one-target="{key}"]').click()
-    else:
-        page.locator(f'.lab-tabs-desktop [data-one-target="{key}"]').click()
+def navigate(page,key):
+    page.locator(f'.site-header [data-one-go="{key}"]').click()
     assert page.locator(f'[data-one-view="{key}"]').is_visible()
 
 try:
@@ -50,7 +42,7 @@ try:
                     assert page.evaluate("getComputedStyle(document.querySelector('.one-skip')).clipPath !== 'none'")
                     page.locator('.one-skip').focus()
                     assert page.evaluate("getComputedStyle(document.querySelector('.one-skip')).clipPath === 'none'")
-                    page.locator('.lab-brand').focus()
+                    page.locator('.site-brand').focus()
                     assert page.evaluate("getComputedStyle(document.querySelector('.one-skip')).clipPath !== 'none'")
                     assert page.title()=='Devon Alan Akins — Software, Writing & Research'
                     assert 'Devon' in page.locator('.lab-portfolio-hero h1').inner_text() and 'Alan Akins' in page.locator('.lab-portfolio-hero h1').inner_text()
@@ -89,11 +81,16 @@ try:
                     assert page.locator('.lab-footer .one-social-icon--threads').count()==1
                     assert page.locator('.lab-explore-heading').count()==1
                     assert page.locator('[data-public-gpt],a[href="/gpt/"]').count()==0
-                    assert page.locator('.lab-tabs-desktop [data-one-target]').count()==3
-                    assert page.locator('#lab-menu [data-one-target]').count()==3
-                    if width<=1100:
-                        menu_icon=page.locator('.lab-menu-toggle span').first.bounding_box()
-                        assert menu_icon and menu_icon['width']>=20 and menu_icon['height']>=1,(engine,width,'Menu icon has no visible stroke')
+                    for selector in ('.site-primary-nav','.site-secondary-nav'):
+                        nav=page.locator(selector)
+                        assert nav.is_visible() and nav.locator('a').count()==6,(engine,width,selector)
+                        assert all(link.bounding_box()['height']>=44 for link in nav.locator('a').all())
+                    assert page.get_by_role('tablist').count()==0
+                    if width==320:
+                        about=page.locator('.site-primary-nav a[href="/about/"]')
+                        about.focus()
+                        assert about.evaluate("el=>el===document.activeElement && getComputedStyle(el).outlineStyle==='solid'")
+                        page.mouse.move(width-1,0)
                     assert page.locator('.lab-work-feature').count()==1
                     assert page.locator('.lab-research-journal').count()==1
                     assert page.locator('.lab-footer .one-social-icon').count()==4
@@ -109,7 +106,7 @@ try:
                     assert page.locator('.da-name').is_visible()
                     geometry=page.evaluate('''() => {
                       const rect=s=>{const r=document.querySelector(s).getBoundingClientRect();return {x:r.x,y:r.y,width:r.width,height:r.height,bottom:r.bottom}};
-                      return {viewport:innerWidth,scroll:document.documentElement.scrollWidth,header:rect('.lab-header'),hero:rect('.lab-portfolio-hero'),focus:rect('.lab-focus'),signals:rect('.lab-portfolio-signals'),explore:rect('.lab-explore-heading'),selected:rect('.lab-portfolio-selected'),destinations:rect('.lab-destinations'),footer:rect('.lab-footer'),cards:[...document.querySelectorAll('.lab-destination')].map(el=>({x:el.getBoundingClientRect().x,y:el.getBoundingClientRect().y})),signalCards:[...document.querySelectorAll('.lab-signal-tile')].map(el=>({x:el.getBoundingClientRect().x,y:el.getBoundingClientRect().y}))};}''')
+                      return {viewport:innerWidth,scroll:document.documentElement.scrollWidth,header:rect('.site-header'),hero:rect('.lab-portfolio-hero'),focus:rect('.lab-focus'),signals:rect('.lab-portfolio-signals'),explore:rect('.lab-explore-heading'),selected:rect('.lab-portfolio-selected'),destinations:rect('.lab-destinations'),footer:rect('.lab-footer'),cards:[...document.querySelectorAll('.lab-destination')].map(el=>({x:el.getBoundingClientRect().x,y:el.getBoundingClientRect().y})),signalCards:[...document.querySelectorAll('.lab-signal-tile')].map(el=>({x:el.getBoundingClientRect().x,y:el.getBoundingClientRect().y}))};}''')
                     assert geometry['scroll']<=width+1,(engine,width,geometry)
                     assert geometry['hero']['bottom']<=geometry['focus']['y']+3
                     assert geometry['focus']['bottom']<=geometry['explore']['y']+3
@@ -117,34 +114,25 @@ try:
                     assert geometry['explore']['bottom']<=geometry['destinations']['y']+3
                     assert geometry['destinations']['y']<geometry['footer']['y']
                     if width<=760:
-                        assert page.locator('.lab-tabs-desktop').is_hidden()
-                        assert page.locator('.lab-menu-toggle').is_visible()
                         assert len(set(round(c['x']) for c in geometry['cards']))==1
                         assert len(set(round(c['y']) for c in geometry['cards']))==2
                         assert len(set(round(c['x']) for c in geometry['signalCards']))==(1 if width<=350 else 2)
                         assert len(set(round(c['y']) for c in geometry['signalCards']))==(2 if width<=350 else 1)
                         assert page.evaluate("getComputedStyle(document.body).overflowY")!='hidden'
-                        page.locator('.lab-menu-toggle').click()
-                        assert page.locator('#lab-menu').is_visible()
-                        page.keyboard.press('Escape')
-                        assert page.locator('#lab-menu').is_hidden()
-                        wait_for_condition(page,"document.querySelector('.lab-menu-toggle').getAttribute('aria-expanded')==='false'")
-                        assert page.evaluate("document.activeElement.hasAttribute('data-lab-menu-open')")
-                    elif width<=1100:
-                        assert page.locator('.lab-tabs-desktop').is_hidden()
-                        assert page.locator('.lab-menu-toggle').is_visible()
-                        page.locator('.lab-menu-toggle').click()
-                        assert page.locator('#lab-menu').is_visible()
-                        page.keyboard.press('Escape')
-                        assert page.locator('#lab-menu').is_hidden()
-                    else:
-                        assert page.locator('.lab-tabs-desktop').is_visible()
+                    settings=page.get_by_role('button',name='Settings',exact=True)
+                    settings.click()
+                    assert page.get_by_role('dialog',name='Display settings').is_visible()
+                    page.keyboard.press('Escape')
+                    assert page.locator('#lab-menu').is_hidden()
+                    wait_for_condition(page,"document.querySelector('.site-settings').getAttribute('aria-expanded')==='false'")
+                    assert settings.evaluate('el=>el===document.activeElement')
                     if width==1536:
                         # Responsive editorial content flows instead of fixed image-era landmarks.
-                        assert abs(geometry['header']['height']-76)<=8
+                        assert 110<=geometry['header']['height']<=125
                         assert geometry['signals']['y']-geometry['destinations']['y']>=100
                     (OUT/f'{engine}-landmarks-{width}.json').write_text(json.dumps(geometry,indent=2))
-                    page.mouse.click(width-2,65)
+                    # Clear hover without activating the new site navigation row.
+                    page.mouse.move(width-2,65)
                     page.screenshot(path=str(OUT/f'{engine}-cinematic-{width}x{height}.png'),full_page=True)
                     for key in ('work','experience'):
                         page.locator(f'[data-lab-destination="{key}"]').click()
@@ -160,7 +148,9 @@ try:
                                   return journal.top>=bottom-5 && journal.width>container.clientWidth*.75;
                                 }"""),(engine,width,'Research journal must follow the instrument, full width')
                             assert page.locator('.da-directions .da-direction').count()==3
-                            assert 'Anevum Open Institute' in page.locator('.da-directions').inner_text().replace('\n',' ')
+                            directions=page.locator('.da-directions').inner_text()
+                            assert 'earlier ANEVUM Open Institute proposal' in directions
+                            assert 'Historical curriculum prototype' in directions
                             assert not page.locator('.lab-research-instrument').is_visible()
                             page.locator('.da-sketch > summary').click()
                             curve=page.locator('[data-lab-curve="interactive"]')
@@ -191,21 +181,21 @@ try:
                             assert page.locator('[data-lab-project]:visible:not([data-stage="experimental"])').count()==0
                             stage.select_option('all')
                         if width in (390,1536): page.screenshot(path=str(OUT/f'{engine}-{key}-{width}.png'),full_page=True)
-                        navigate(page,'home',width)
+                        navigate(page,'home')
                         assert page.title()=='Devon Alan Akins — Software, Writing & Research', (engine,width,'Homepage title must survive tab navigation')
                     # Real source details independently expand and retain their provenance.
                     for card in page.locator('.lab-signal-tile').all():
                         card.locator('summary').click()
                         assert card.get_attribute('open') is not None
                         card.locator('summary').click()
-                    # Historical routes remain reachable but are not primary tabs.
+                    # Historical routes remain reachable by their canonical URLs.
                     for route,key in (('/systems/','systems'),('/portfolio/','portfolio'),('/fieldnotes/','writing'),('/activity/','activity'),('/contact/','contact')):
                         page.goto(BASE+route,wait_until='networkidle')
                         assert page.locator(f'[data-one-view="{key}"]').is_visible(),(engine,width,route)
                         if key=='writing':
                             assert page.evaluate('document.documentElement.scrollWidth<=innerWidth'),(engine,width,route,'Writing layout overflow')
                     page.goto(BASE,wait_until='networkidle')
-                    page.locator('.lab-menu-toggle' if width<=1100 else '.lab-desktop-menu').click()
+                    page.locator('.site-settings').click()
                     motion=page.locator('#lab-menu [data-lab-motion]')
                     if width==375: assert motion.is_disabled()
                     else:
@@ -215,12 +205,12 @@ try:
                     page.locator('[data-lab-menu-close]').click()
                     if width in (390,1536):
                         for key in ('home','work','experience'):
-                            navigate(page,key,width)
+                            navigate(page,key)
                             page.evaluate(Path('node_modules/axe-core/axe.min.js').read_text())
                             violations=page.evaluate("""async()=> (await axe.run(document,{runOnly:{type:'tag',values:['wcag2a','wcag2aa','wcag21a','wcag21aa','wcag22a','wcag22aa']}})).violations.map(v=>({id:v.id,impact:v.impact,nodes:v.nodes.map(n=>n.target)}))""")
                             (OUT/f'{engine}-axe-{key}-{width}.json').write_text(json.dumps(violations,indent=2))
                             assert not [v for v in violations if v['impact'] in ('serious','critical')],(engine,width,key,violations)
-                        navigate(page,'home',width)
+                        navigate(page,'home')
                     assert not private_feed_requests,(engine,width,private_feed_requests)
                     assert not errors,(engine,width,errors)
                     context.close()
@@ -236,11 +226,19 @@ try:
                 context=browser.new_context(ignore_https_errors=LOCAL_TLS,viewport={'width':390,'height':844},java_script_enabled=False)
                 page=context.new_page();page.goto(BASE,wait_until='networkidle')
                 assert page.locator('.lab-portfolio-hero h1').is_visible()
-                for key in ('systems','portfolio','writing','contact'): assert page.locator(f'[data-one-view="{key}"]').is_visible()
+                assert page.locator('[data-one-view]:visible').count()==1
+                assert page.locator('.site-settings').is_hidden()
                 page.screenshot(path=str(OUT/f'{engine}-nojs.png'),full_page=True)
+                for path,key in (('/systems/','systems'),('/fieldnotes/','writing'),('/contact/','contact'),('/work/','work'),('/activity/','activity'),('/','home')):
+                    with page.expect_navigation(wait_until='domcontentloaded'):
+                        page.locator(f'.site-header a[href="{path}"]').click()
+                    assert page.locator(f'[data-one-view="{key}"]').is_visible()
+                    assert page.locator('[data-one-view]:visible').count()==1
+                    if key=='activity':
+                        assert page.locator('[data-feed-status]:visible').count()==0
+                        assert page.locator('[data-one-view="activity"] noscript a[href="https://github.com/devonalanakins"]').is_visible()
                 context.close()
-                # System preference, live OS changes, persistent manual override and
-                # both menu controls are verified in each supported browser engine.
+                # Verify system preference changes and persistent manual overrides.
                 theme_context=browser.new_context(ignore_https_errors=LOCAL_TLS,
                     viewport={'width':390,'height':844},color_scheme='dark')
                 theme_page=theme_context.new_page()
@@ -252,34 +250,58 @@ try:
                 wait_for_condition(theme_page,"document.documentElement.dataset.theme==='light'")
                 theme_page.emulate_media(color_scheme='dark')
                 wait_for_condition(theme_page,"document.documentElement.dataset.theme==='dark'")
-                theme_page.locator('.lab-menu-toggle').click()
+                theme_page.locator('.site-settings').click()
                 theme_picker=theme_page.locator('#lab-menu [data-lab-theme-select]')
                 assert theme_picker.input_value()=='system'
                 theme_picker.select_option('light')
-                assert theme_page.locator('html').get_attribute('data-theme')=='light'
+                wait_for_condition(theme_page,"document.documentElement.dataset.theme==='light'")
                 assert theme_page.evaluate("localStorage.getItem('devonakins.appearance.v1')")=='light'
                 theme_page.reload(wait_until='networkidle')
                 assert theme_page.locator('html').get_attribute('data-theme')=='light'
-                theme_page.locator('.lab-menu-toggle').click()
+                theme_page.locator('.site-settings').click()
                 theme_picker=theme_page.locator('#lab-menu [data-lab-theme-select]')
                 assert theme_picker.input_value()=='light'
                 theme_picker.select_option('system')
-                assert theme_page.locator('html').get_attribute('data-theme')=='dark'
+                wait_for_condition(theme_page,"document.documentElement.dataset.theme==='dark'")
                 assert theme_page.evaluate("localStorage.getItem('devonakins.appearance.v1')") is None
                 theme_context.close()
                 desktop_theme=browser.new_context(ignore_https_errors=LOCAL_TLS,
                     viewport={'width':1536,'height':900},color_scheme='light')
                 desktop_page=desktop_theme.new_page()
                 desktop_page.goto(BASE,wait_until='networkidle')
-                desktop_picker=desktop_page.locator('.lab-header-end [data-lab-theme-select]')
+                desktop_page.locator('.site-settings').click()
+                desktop_picker=desktop_page.locator('#lab-menu [data-lab-theme-select]')
                 assert desktop_picker.is_visible()
                 desktop_picker.select_option('dark')
-                assert desktop_page.locator('html').get_attribute('data-theme')=='dark'
-                desktop_page.locator('.lab-desktop-menu').click()
-                assert desktop_page.locator('#lab-menu [data-lab-theme-select]').input_value()=='dark'
+                wait_for_condition(desktop_page,"document.documentElement.dataset.theme==='dark'")
                 desktop_theme.close()
+                for width,height in ((320,760),(390,844),(768,1024),(1440,900)):
+                    for scheme in ('light','dark'):
+                        review=browser.new_context(ignore_https_errors=LOCAL_TLS,
+                            viewport={'width':width,'height':height},color_scheme=scheme,reduced_motion='reduce')
+                        sample=review.new_page()
+                        for path in ('/','/work/','/work/merit/','/work/anevum/','/fieldnotes/',
+                                     '/fieldnotes/periodic-signals/','/research/','/activity/','/systems/','/contact/'):
+                            response=sample.goto(BASE+path,wait_until='domcontentloaded')
+                            assert response and response.ok,(engine,width,scheme,path)
+                            assert sample.locator('main h1:visible').count()==1,(engine,width,scheme,path)
+                            assert sample.locator('html').get_attribute('data-theme')==scheme
+                            assert sample.evaluate('document.documentElement.scrollWidth<=innerWidth+1'),(engine,width,scheme,path,'overflow')
+                            assert sample.locator('.site-header a').count()==13
+                            assert sample.locator('.lab-footer').is_visible()
+                            for nav in ('.site-primary-nav','.site-secondary-nav'):
+                                assert sample.locator(nav).evaluate('el=>el.scrollWidth<=el.clientWidth+1'),(engine,width,scheme,path,nav)
+                            if path=='/':
+                                portrait=sample.locator('.lab-personal-portrait img')
+                                if portrait.count():
+                                    portrait.scroll_into_view_if_needed()
+                                    wait_for_condition(sample,"document.querySelector('.lab-personal-portrait img').naturalWidth>0")
+                                    sample.evaluate('scrollTo(0,0)')
+                            name=path.strip('/').replace('/','-') or 'home'
+                            sample.screenshot(path=str(OUT/f'{engine}-review-{name}-{width}-{scheme}.png'))
+                        review.close()
             finally: browser.close()
-    print('Cinematic acceptance passed: Chromium/WebKit, 10 viewports, three primary destinations, two public source cards, historical direct links, no editor/Threads feed requests, modal/Escape/focus, project search, analytic model, reduced motion, no-JS and WCAG audit.')
+    print('Cinematic acceptance passed: Chromium/WebKit, 10 viewports, shared navigation, both themes, modal/Escape/focus, project search, analytic model, reduced motion, no-JavaScript routes and WCAG audit.')
 finally:
     if server:
         server.terminate()

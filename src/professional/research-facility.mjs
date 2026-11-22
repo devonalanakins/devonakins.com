@@ -10,6 +10,7 @@ import {brandIcon} from './brand-icons.mjs';
 import {renderNonaOperatingBrief} from './nona-operating-brief.mjs';
 import {approvedPublicProjects} from '../publication-manifest.mjs';
 import {renderHomeSocialHub, renderSocialChannels} from './social-presence.mjs';
+import {renderSiteHeader} from './site-navigation.mjs';
 
 const escapeHtml=value=>String(value ?? '').replace(/[&<>"']/g,
   c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -17,9 +18,6 @@ const sections=Object.freeze([
   ['home','Home'],['experience','Research'],['systems','Systems'],['work','Work'],['portfolio','Portfolio'],
   ['activity','Activity'],['writing','Fieldnotes'],['contact','Contact'],
 ]);
-// Only three public destinations; historical sections remain addressable for
-// bookmarks, case studies and direct links without cluttering the main nav.
-const primarySections=Object.freeze([['home','Home'],['work','Work'],['experience','Research']]);
 /** Actual analytic Lissajous curve: x=sin(a*t), y=sin(b*t+phase).
  * Validated integer frequencies; no random data, inferred experiment or API.
  */
@@ -33,20 +31,10 @@ export function lissajousPath(a=3,b=4,phase=Math.PI/2) {
   });
   return points.join(' ');
 }
-function renderNavigation(kind,activeView){
-  return '<nav class="one-tabs lab-tabs lab-tabs-'+kind+'" aria-label="'+
-    (kind==='desktop'?'Primary navigation':'Mobile primary navigation')+'">'+
-    '<div class="one-tablist" role="tablist" aria-label="Primary pages">'+
-    primarySections.map(([key,label])=>'<button type="button" role="tab" id="one-'+kind+'-'+key+
-      '" aria-controls="one-panel-'+key+'" aria-selected="'+(key===activeView?'true':'false')+
-      '" tabindex="'+(key===activeView?'0':'-1')+'" data-one-target="'+key+'">'+
-      '<span class="one-tab-label">'+escapeHtml(label)+'</span></button>').join('')+
-    '</div></nav>';
-}
 function renderView(key,content,activeView){
   return '<section class="one-view lab-view lab-view-'+key+'" id="one-panel-'+key+
     '" data-one-view="'+key+'" aria-label="'+sections.find(([id])=>id===key)[1]+
-    '" role="tabpanel" tabindex="-1"'+(key===activeView?'':' hidden')+'>'+content+'</section>';
+    '" tabindex="-1"'+(key===activeView?'':' hidden')+'>'+content+'</section>';
 }
 function goto(key,label,primary=false){
   return '<a href="'+LABORATORY_ROUTES[key]+'" class="lab-action'+(primary?' lab-action-primary':'')+
@@ -55,7 +43,7 @@ function goto(key,label,primary=false){
 function feed(id,limit){
   return '<div class="one-feed lab-feed" id="'+id+'" data-public-github-feed data-limit="'+
     limit+'"><p role="status" aria-live="polite" data-feed-status>'+
-    'Checking dated public GitHub events…</p><ol data-feed-list></ol>'+
+    'Checking dated public GitHub events…</p><noscript><p>Browse dated changes on <a href="https://github.com/devonalanakins">GitHub</a>.</p></noscript><ol data-feed-list></ol>'+
     '<p class="one-feed-disclosure">Public events only · historical timestamps, not proof of working now.</p></div>';
 }
 function instrument(id,interactive=false){
@@ -111,7 +99,7 @@ function destinationCards(){
 function compactSignals(){return '<section class="lab-portfolio-signals" aria-label="Selected public sources">'+
  '<div class="lab-signals-label"><span class="lab-source-eyebrow">THE PUBLIC RECORD / 01</span><strong>Elsewhere.</strong><small>Source, changes and the occasional soundtrack.</small></div>'+
  '<div class="lab-portfolio-signal-grid">'+
- '<details class="lab-signal-tile lab-signal-github"><summary>'+brandIcon('github')+'<span><strong>Source &amp; changes</strong><small data-github-compact>Checking dated public history</small></span></summary><div class="lab-signal-expanded">'+feed('one-home-github',3)+'<button data-one-go="activity">Explore public record →</button></div></details>'+
+ '<details class="lab-signal-tile lab-signal-github"><summary>'+brandIcon('github')+'<span><strong>Source &amp; changes</strong><small data-github-compact>Checking dated public history</small></span></summary><div class="lab-signal-expanded">'+feed('one-home-github',3)+'<a href="/activity/" data-one-go="activity">Explore public record →</a></div></details>'+
  '<details class="lab-signal-tile lab-signal-spotify" data-public-spotify><summary>'+brandIcon('spotify')+'<span><strong>Listening room</strong><small data-spotify-title>Checking approved playback</small></span></summary><div class="lab-signal-expanded"><span data-spotify-state>Checking source</span><p data-spotify-artist>Only explicitly shared playback.</p><img data-spotify-cover alt="" width="48" height="48" referrerpolicy="no-referrer" decoding="async" loading="lazy" hidden><progress data-spotify-progress aria-label="Track progress" hidden></progress><p data-spotify-note>No autoplay audio.</p><a data-spotify-link href="/listening/">About listening →</a></div></details>'+
  '</div></section>'}
 /** Render this personal photograph only when its original, owner-approved
@@ -155,7 +143,8 @@ export function renderResearchFacilityHome({initialView='home',canonicalPath='/'
   if(!Object.hasOwn(LABORATORY_ROUTES,initialView))throw new Error('Unknown cinematic view');
   const fieldnote=Object.hasOwn(FIELDNOTES,canonicalPath)?FIELDNOTES[canonicalPath]:null;
   const view=(key,content)=>renderView(key,content,initialView);
-  const nav=kind=>renderNavigation(kind,initialView);
+  const nativePage=Boolean(project||fieldnote||listening||notFound);
+  const panels=nativePage?{}:Object.fromEntries(Object.entries(LABORATORY_ROUTES).map(([key,path])=>[path,key]));
   const pageTitle=fieldnote?fieldnote.title+' — Devon Alan Akins':project?project.title+' — Devon Alan Akins':notFound?'Page not found — Devon Alan Akins':listening?'Listening — Devon Alan Akins':initialView==='home'?LABORATORY_HOME_TITLE:sections.find(([key])=>key===initialView)[1]+' — Devon Alan Akins';
   const introductions={home:'Devon Alan Akins builds software for the web and Apple platforms, writes, studies mathematics and physics, and is developing a long-form podcast. He also leads nonclinical operations and technology at Nona Neuropsychology.',experience:'Interactive mathematical models, scientific questions, assumptions and citations from Devon Alan Akins.',systems:'Documented software architecture, privacy boundaries and independent infrastructure engineering.',work:'Explore approved public software projects, source links, categories and honest implementation status.',portfolio:'Selected software and nonclinical professional operations, including operational and digital-experience work for Nona Neuropsychology.',activity:'Dated public engineering changes, with source provenance and clear project boundaries.',writing:'Mathematical explanations, engineering notes, original writing and books in development.',contact:'Contact Devon Alan Akins about nonclinical operations, independent software development, and research computing. Do not send protected information.'};
   const introduction=fieldnote?fieldnote.summary:project?project.summary:listening?'Owner-approved Spotify playback and selected public playlists, with independent source and privacy controls.':notFound?'This page is unavailable. Explore Devon Alan Akins’s public software and research portfolio.':introductions[initialView];
@@ -164,17 +153,17 @@ export function renderResearchFacilityHome({initialView='home',canonicalPath='/'
  '<section class="lab-portfolio-hero" aria-label="Personal introduction and current professional focus">'+
  '<div class="lab-portfolio-hero-content"><p class="lab-hero-name">INDEPENDENT SOFTWARE DEVELOPER · WRITER</p>'+
  '<h1 class="da-name">Devon<br>Alan Akins<span>.</span></h1>'+
- '<p class="lab-hero-deck">I build software, write, learn things, and talk to interesting people.</p>'+
- '<p class="lab-portfolio-statement">I also lead nonclinical operations and technology at Nona Neuropsychology.</p>'+
- '<div class="lab-portfolio-actions">'+goto('work','Explore the work',true)+goto('experience','Explore research')+'<a class="lab-action" href="/podcast/">Podcast <span aria-hidden="true">→</span></a></div></div></section>'+
+ '<p class="lab-hero-deck">I build software. I tell stories. I ask questions.</p>'+
+ '<p class="lab-portfolio-statement">I’m an independent software developer, writer and interviewer. This is where I share what I build, lessons from everyday life, and notes on mathematics and physics.</p>'+
+ '<div class="lab-portfolio-actions">'+goto('work','Explore the work',true)+'<a class="lab-action" href="/watch/">Watch the studio <span aria-hidden="true">→</span></a></div></div></section>'+
  (portraitAvailable?portraitIntroduction():'')+
  '<section class="lab-focus" aria-label="Current work"><div class="lab-focus-heading"><span>WHAT I DO</span><p>Professional responsibility. Independent work. Original ideas.</p></div><div class="lab-focus-grid">'+
- '<a class="lab-focus-card lab-focus-card--nona" href="/work/operations/"><span class="lab-focus-number">01 / NONCLINICAL OPERATIONS</span><strong>Nona Neuropsychology</strong><p>I lead nonclinical operations and technology supporting reliable, professional care.</p><span class="lab-focus-bottom">OPERATIONS &amp; TECHNOLOGY <b aria-hidden="true">→</b></span></a>'+
- '<a class="lab-focus-card lab-focus-card--engineering" href="/work/"><span class="lab-focus-number">02 / INDEPENDENT ENGINEERING</span><strong>Software with a purpose</strong><p>Web and Apple platform development, engineering integrity, language experiments and audio.</p><span class="lab-focus-bottom">PROJECTS &amp; SOURCE <b aria-hidden="true">→</b></span></a>'+
- '<a class="lab-focus-card lab-focus-card--research" href="/work/anevum/"><span class="lab-focus-number">03 / OPEN EDUCATION</span><strong>ANEVUM Open Institute</strong><p>Free STEM learning and practical scientific inquiry, beginning with a hands-on engineering curriculum prototype.</p><span class="lab-focus-bottom">EDUCATION &amp; RESEARCH <b aria-hidden="true">→</b></span></a>'+
+ '<a class="lab-focus-card lab-focus-card--engineering" href="/work/"><span class="lab-focus-number">01 / INDEPENDENT ENGINEERING</span><strong>Software with a purpose</strong><p>Web and Apple platform development, engineering integrity, language experiments and audio.</p><span class="lab-focus-bottom">PROJECTS &amp; SOURCE <b aria-hidden="true">→</b></span></a>'+
+ '<a class="lab-focus-card lab-focus-card--research" href="/work/anevum/"><span class="lab-focus-number">02 / CREATIVE STUDIO</span><strong>ANEVUM</strong><p>A family creative studio for original fiction, worldbuilding and experiments with creative technology.</p><span class="lab-focus-bottom">EXPLORE THE STUDIO <b aria-hidden="true">→</b></span></a>'+
+ '<a class="lab-focus-card lab-focus-card--nona" href="/work/operations/"><span class="lab-focus-number">03 / NONCLINICAL OPERATIONS</span><strong>Nona Neuropsychology</strong><p>I lead nonclinical operations and technology supporting reliable, professional care.</p><span class="lab-focus-bottom">OPERATIONS &amp; TECHNOLOGY <b aria-hidden="true">→</b></span></a>'+
  '</div></section>'+
  '<section class="lab-portfolio-selected" aria-label="Two primary destinations"><div class="lab-explore-heading"><div><span>KEEP GOING</span><h2>What exists.<br>What comes next.</h2></div><p>The work has a source. The ambition has a direction.</p></div><div class="lab-destinations">'+destinationCards()+'</div></section>'+
- '<nav class="lab-editorial-links" aria-label="More from Devon"><a href="/fieldnotes/"><strong>Writing</strong><span>Essays, books and manuscripts</span></a><a href="/podcast/"><strong>Podcast</strong><span>Interviews and occasional solo episodes</span></a><a href="/courses/"><strong>Courses</strong><span>Mathematical physics and simulation lessons in development</span></a><a href="/setup/"><strong>My Setup</strong><span>Recording, editing and research gear</span></a></nav>'+
+ '<nav class="lab-editorial-links" aria-label="Explore Devon’s work and content"><a href="/work/"><strong>Work</strong><span>Software and public engineering evidence</span></a><a href="/watch/"><strong>Watch</strong><span>Original videos and interviews as they are published</span></a><a href="/podcast/"><strong>Podcast</strong><span>Long-form conversations and solo episodes in development</span></a><a href="/courses/"><strong>Learn</strong><span>A free practical lesson, with science and computing lessons planned</span></a><a href="/fieldnotes/"><strong>Writing</strong><span>Essays, technical notes and manuscripts</span></a></nav>'+
  compactSignals()+'</div>');
   const research=view('experience',
     '<div class="lab-secondary lab-research da-research">'+
@@ -182,7 +171,7 @@ export function renderResearchFacilityHome({initialView='home',canonicalPath='/'
     '<p>My interests connect mathematics, physics, intelligence and the machines we use to study them. Here is the direction I am pursuing—and where it connects to work you can inspect.</p></div>'+
     '<section class="da-directions" aria-label="Owner-described research directions">'+
     '<article class="da-direction"><span>01 / MODELS &amp; MACHINES</span><h2>Own the model.<br>Understand the machine.</h2><p>I’m studying how GPU architecture, memory and software affect local model training and inference. The longer-term goal is independent research infrastructure. The Blackwell Lab setup documents the hardware I’m considering.</p><small>Research direction · <a href="/setup/#lab">Blackwell Lab build notes</a></small></article>'+
-    '<article class="da-direction"><span>02 / OPEN LEARNING</span><h2>Anevum<br>Open Institute.</h2><p>An independent, free-to-learn STEM initiative spanning AI, computing infrastructure, neuroscience, physics and mathematics. A draft Academy and interactive electronics lessons exist as a source-level preview; the wider institute remains in development.</p><small>Prototype curriculum · not an operating or accredited institution.</small></article>'+
+    '<article class="da-direction"><span>02 / EARLIER EDUCATION WORK</span><h2>Learning<br>through circuits.</h2><p>The earlier ANEVUM Open Institute proposal produced an Academy prototype with introductory electronics, Boolean logic and an interactive AND-gate exercise.</p><small>Historical curriculum prototype. Find current lessons in <a href="/courses/">Learn</a>.</small></article>'+
     '<article class="da-direction"><span>03 / MATHEMATICS &amp; PHYSICS</span><h2>Follow the question<br>past the interface.</h2><p>Mathematics, theoretical physics, scientific computing and computational neuroscience are enduring interests. I want the explanations and the underlying mechanisms—not only the output of a tool.</p><small>Study interests · no new scientific discovery or validated biological model is claimed.</small></article>'+
     '</section>'+
     '<section class="da-investigations" aria-label="Research connected to inspectable engineering"><div class="lab-work-heading"><span>QUESTIONS WITH SOURCE</span><h2>Where inquiry meets code.</h2></div>'+
@@ -280,17 +269,18 @@ export function renderResearchFacilityHome({initialView='home',canonicalPath='/'
     '<link rel="stylesheet" href="/src/professional/research-facility.css">'+
     '<link rel="stylesheet" href="/src/professional/research-portfolio.css">'+
     '<link rel="stylesheet" href="/src/professional/research-studio.css">'+
-     '<link rel="stylesheet" href="/src/professional/research-theme.css">'+
+    '<link rel="stylesheet" href="/src/professional/research-theme.css">'+
+    '<link rel="stylesheet" href="/src/professional/site-navigation.css">'+
     '<script type="module" src="/src/professional/client.ts"></script>'+
     '<script type="module" src="/src/professional/one-screen.ts"></script>'+
     '<script type="module" src="/src/professional/research-facility.ts"></script>'+
-    '<noscript><style>html.lab-html,body.lab-body{height:auto;overflow:auto}.lab-body .lab-stage{height:auto;overflow:visible}.lab-body .lab-stage>.lab-view[hidden]{display:block!important}.lab-body .lab-view{height:auto;min-height:100vh}.lab-body .lab-secondary{height:auto}.lab-tabs,.lab-motion,.lab-menu-toggle,.lab-desktop-menu{display:none!important}</style></noscript>'+
-    '</head><body class="p-body one-body lab-body" data-lab-initial="'+initialView+'"'+(project||fieldnote||listening||notFound?' data-lab-native="true"':'')+'>'+
+    '<noscript><style>.site-settings,[data-feed-status],[data-github-compact],[data-spotify-state],[data-spotify-title],.lab-activity-filters,.lab-project-browser>label,[data-lab-project-search],.lab-project-filters,.lab-controls .lab-control{display:none!important}</style></noscript>'+
+    '</head><body class="p-body one-body lab-body" data-lab-initial="'+initialView+'"'+(nativePage?' data-lab-native="true"':'')+'>'+
     '<a class="one-skip lab-skip" href="#one-stage">Skip to content</a>'+
     '<div class="lab-background" aria-hidden="true"><div class="lab-background-grid"></div>'+
     '<div class="lab-background-glow"></div></div>'+
-    '<header class="lab-header"><a href="/" class="lab-brand" title="Devon Alan Akins home"><span class="da-monogram" aria-hidden="true">da.</span><span class="lab-brand-caption">DEVONAKINS.COM<small>INDEPENDENT / PERSONAL</small></span></a>'+nav('desktop')+'<div class="lab-header-end">'+appearanceControl+'<a class="lab-header-contact" href="/podcast/">Podcast ↗︎</a><a class="lab-header-contact" href="mailto:hello@devonakins.com">Contact ↗︎</a><button type="button" class="lab-desktop-menu" data-lab-menu-open aria-controls="lab-menu" aria-expanded="false" aria-label="Open contact and motion menu">Menu</button></div><button type="button" class="lab-menu-toggle" data-lab-menu-open aria-controls="lab-menu" aria-expanded="false" aria-label="Open navigation menu"><span></span><span></span><span></span></button></header>'+
-    '<dialog id="lab-menu" aria-labelledby="lab-menu-title"><div class="lab-menu-heading"><h2 id="lab-menu-title">Explore</h2><button data-lab-menu-close aria-label="Close navigation menu">Close <span aria-hidden="true">×</span></button></div>'+nav('mobile')+'<div class="lab-creator-menu-links"><a href="/fieldnotes/">Writing</a><a href="/podcast/">Podcast</a><a href="/courses/">Courses</a><a href="/setup/">My Setup</a><a href="/about/">About</a><a href="/contact/">Contact</a></div>'+appearanceControl+'<button type="button" class="lab-motion" data-lab-motion aria-pressed="true">MOTION ON</button><a href="mailto:hello@devonakins.com">hello@devonakins.com</a></dialog>'+
+    renderSiteHeader(canonicalPath,{panels,controls:'<button type="button" class="site-settings" data-lab-menu-open aria-controls="lab-menu" aria-expanded="false">Settings</button>'})+
+    '<dialog id="lab-menu" aria-labelledby="lab-menu-title"><div class="lab-menu-heading"><h2 id="lab-menu-title">Display settings</h2><button type="button" data-lab-menu-close>Close <span aria-hidden="true">×</span></button></div>'+appearanceControl+'<button type="button" class="lab-motion" data-lab-motion aria-pressed="true">MOTION ON</button></dialog>'+
     '<main id="one-stage" class="one-stage lab-stage" tabindex="-1">'+
     (notFound?view('home','<div class="lab-secondary"><div class="lab-section-intro"><p class="lab-overline">404 / WAYFINDING</p><h1>That page is <em>not here.</em></h1><p>Explore the work or return to the homepage.</p><a class="lab-action" href="/">Return home →</a></div></div>'):home)+research+systems+projects+portfolio+activity+notes+contact+'</main>'+
     '<footer class="lab-footer"><div class="lab-footer-identity"><span>Devon Alan Akins</span><small>SCIENCE / SOFTWARE / SYSTEMS / EXPLORATION</small></div>'+renderSocialChannels(true)+'<div class="lab-footer-status"><span aria-hidden="true"></span>DEVON ALAN AKINS<small>Independent software, inquiry &amp; original work</small></div></footer>'+
@@ -300,9 +290,9 @@ export function renderResearchFacilityHome({initialView='home',canonicalPath='/'
 function renderLaboratoryCaseStudy(project){
   const p=project;
   const text=value=>escapeHtml(value||'');
-  const source=p.url&&p.publication?.sourceLinkApproved===true?'<a class="lab-action" href="'+text(p.url)+'" target="_blank" rel="noopener noreferrer">Inspect public source →</a>':'';
+  const destination=p.url?'<a class="lab-action" href="'+text(p.url)+'" target="_blank" rel="noopener noreferrer">'+text(p.urlLabel||'Visit public project')+' →</a>':'';
   const nonaBrief=p.slug==='operations'?renderNonaOperatingBrief():'';
-  return '<article class="lab-secondary lab-case-study"><div class="lab-section-intro"><p class="lab-overline">PORTFOLIO / '+text(p.publication.category)+'</p><h1>'+text(p.title)+'</h1><p>'+text(p.summary)+'</p><div class="lab-portfolio-actions"><a class="lab-action lab-action-primary" href="/projects/">All public projects →</a>'+source+'</div></div><div class="lab-case-sections">'+
+  return '<article class="lab-secondary lab-case-study"><div class="lab-section-intro"><p class="lab-overline">PORTFOLIO / '+text(p.publication.category)+'</p><h1>'+text(p.title)+'</h1><p>'+text(p.summary)+'</p><div class="lab-portfolio-actions"><a class="lab-action lab-action-primary" href="/projects/">All public projects →</a>'+destination+'</div></div><div class="lab-case-sections">'+
     '<section class="lab-study"><span>CONTEXT / PUBLIC SCOPE</span><h2>Purpose & context</h2><p>'+text(p.description)+'</p></section>'+
     '<section class="lab-study"><span>STATUS / '+text(p.publication.stage)+'</span><h2>What exists</h2><p>'+text(p.detail)+'</p><dl><dt>Role</dt><dd>'+text(p.role)+'</dd><dt>Current stage</dt><dd>'+text(p.status)+'</dd></dl></section>'+
     '<section class="lab-study"><span>BOUNDARIES / EVIDENCE</span><h2>What is not claimed</h2><p>'+text(p.boundary)+'</p></section>'+

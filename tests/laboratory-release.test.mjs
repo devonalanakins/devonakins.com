@@ -3,11 +3,12 @@ import assert from 'node:assert/strict';
 import {gzipSync} from 'node:zlib';
 import {createHandler} from '../src/worker.mjs';
 import {renderResearchFacilityHome} from '../src/professional/research-facility.mjs';
+import {renderCreatorPage} from '../src/professional/creator-pages.mjs';
 import {approvedPublicProjects} from '../src/publication-manifest.mjs';
 import {LABORATORY_ROUTES,LABORATORY_REDIRECTS} from '../src/professional/laboratory-routes.mjs';
 import {validatePublicAnalytics} from '../scripts/validate-public-analytics.mjs';
 const asset=(body,type='text/html')=>({type,etag:'"test"',gzip:gzipSync(body).toString('base64')});
-const assets={'/index.html':asset(renderResearchFacilityHome()),'/gpt/index.html':asset('historical source'),'/gpt/snapshots/test.json':asset('{"history":true}','application/json'),'/v2/usage-snapshot.json':asset('{}','application/json'),'/v2/index.html':asset('legacy page'),'/v2/gpt-owner.js':asset('/* protected owner controller */','text/javascript'),'/404/index.html':asset('not found')};
+const assets={'/watch/index.html':asset('<html lang="en"><main>Watch</main></html>'),'/live/index.html':asset('<html lang="en"><main>Live</main></html>'),'/podcast/index.html':asset('<html lang="en"><main>Podcast</main></html>'),'/about/index.html':asset(renderCreatorPage('/about/')),'/index.html':asset(renderResearchFacilityHome()),'/gpt/index.html':asset('historical source'),'/gpt/snapshots/test.json':asset('{"history":true}','application/json'),'/v2/usage-snapshot.json':asset('{}','application/json'),'/v2/index.html':asset('legacy page'),'/v2/gpt-owner.js':asset('/* protected owner controller */','text/javascript'),'/404/index.html':asset('not found')};
 const make=laboratory=>createHandler(assets,{version:'test',commit:'test'},{laboratoryCandidate:laboratory,githubFetch:async()=>new Response('[]',{headers:{'content-type':'application/json'}})});
 const get=(site,path)=>site.fetch(new Request('https://devonakins.com'+path));
 
@@ -35,6 +36,31 @@ test('release retirement is reversible and preserves private owner resources',as
  const oldSignal=await(await get(baseline,'/api/activity/v4')).json();assert.equal(Object.hasOwn(oldSignal,'gpt'),true);
  const response=await get(site,'/');assert.match(response.headers.get('content-security-policy'),/connect-src 'self' https:\/\/api\.github\.com;/);
  assert.doesNotMatch((await get(baseline,'/')).headers.get('content-security-policy'),/api\.github\.com/);
+});
+test('About is a genuine public page, not an alias for the older portfolio',async()=>{
+ const site=make(true);
+ assert.equal(Object.hasOwn(LABORATORY_REDIRECTS,'/about/'),false);
+ assert.equal(LABORATORY_ROUTES.portfolio,'/portfolio/');
+ const response=await get(site,'/about/');
+ assert.equal(response.status,200);
+ const html=await response.text();
+ assert.match(html,/<title>About — Devon Alan Akins<\/title>/);
+ assert.match(html,/rel="canonical" href="https:\/\/devonakins\.com\/about\/"/);
+ assert.match(html,/href="\/about\/" aria-current="page">About<\/a>/);
+});
+
+test('video frame permissions apply only to approved Watch routes, never to unrelated pages',async()=>{
+ const site=make(true),baseline=make(false);
+ const watch=await get(site,'/watch/');
+ assert.equal(watch.status,200);
+ const policy=watch.headers.get('content-security-policy')||'';
+ assert.match(policy,/(?:^|;\s*)frame-src https:\/\/iframe\.videodelivery\.net(?:;|$)/);
+ assert.match(policy,/connect-src 'self' https:\/\/api\.github\.com;/);
+ for(const path of ['/','/podcast/','/live/','/watch/unapproved/']){
+   const response=await get(site,path);
+   assert.doesNotMatch(response.headers.get('content-security-policy')||'',/frame-src|iframe\.videodelivery\.net/,path);
+ }
+ assert.doesNotMatch((await get(baseline,'/watch/')).headers.get('content-security-policy')||'',/frame-src|videodelivery/);
 });
 test('all public routes render their selected section and projects require explicit publication approval',()=>{
  for(const [view,path]of Object.entries(LABORATORY_ROUTES)){

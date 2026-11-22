@@ -1,6 +1,11 @@
-import {PATREON_CREATOR_URL, PODCAST_TITLE, PODCAST_DESCRIPTION, PODCAST_SHARE_IMAGE, podcastPublication, publicWebUrl} from "./podcast-publication.mjs";
+import {renderMobileLive} from "./mobile-live.mjs";
+import {PODCAST_TITLE, PODCAST_DESCRIPTION, PODCAST_SHARE_IMAGE, podcastPublication, publicWebUrl} from "./podcast-publication.mjs";
+import {WATCH_KINDS, watchPublication} from "./watch-publication.mjs";
+import {PRACTICAL_START_ROUTE, renderPracticalStartLesson} from "./first-practical-lesson.mjs";
+import {PERSONAL_ABOUT_ROUTE, renderPersonalAbout} from "./about-page.mjs";
+import {renderSiteHeader} from "./site-navigation.mjs";
 
-export const CREATOR_ROUTES = Object.freeze({podcast: "/podcast/", courses: "/courses/", setup: "/setup/"});
+export const CREATOR_ROUTES = Object.freeze({watch: "/watch/", podcast: "/podcast/", courses: "/courses/", setup: "/setup/", live: "/live/"});
 export const CREATOR_CATEGORIES = Object.freeze([
   {id: "field", label: "Field Kit", description: "A portable recording chain for interviews away from the studio."},
   {id: "stage", label: "The Stage", description: "Camera, lighting and stands for a two-person recording room. The room, seating and acoustic treatment are still open decisions."},
@@ -8,6 +13,14 @@ export const CREATOR_CATEGORIES = Object.freeze([
   {id: "lab", label: "Blackwell Lab", description: "Future local AI and scientific computing hardware."}
 ]);
 export const CREATOR_GEAR = Object.freeze([
+  // Ownership is confirmed by the creator, not by a receipt or a device audit.
+  // Do not infer a specific iPhone or headset model from the generic category.
+  {id: "existing-iphone", category: "field", kind: "camera", name: "My current iPhone", spec: "Phone-first capture · exact model omitted",
+    use: "Current camera, screen recorder, editing and publishing device. Live broadcasts remain a planned workflow until a real end-to-end recording is tested.",
+    quantity: "1 · owner-confirmed", status: "owned"},
+  {id: "existing-sony-headset", category: "field", kind: "headphones", name: "My Sony headset", spec: "Existing headset · model not independently checked",
+    use: "Initial voice and monitoring test. App-specific microphone selection, levels and recording quality still need real-device verification.",
+    quantity: "1 · owner-confirmed", status: "owned"},
   {id: "p4next", category: "field", kind: "recorder", name: "Zoom PodTrak P4next", spec: "4 XLR inputs · 4 headphone outputs · 24-bit/48 kHz WAV",
     use: "Separate mic tracks and independent headphone monitoring for the host and guest.", quantity: "1 under consideration", status: "considering",
     url: "https://zoomcorp.com/en/us/podtrak-recorders/podcast-recorders/podtrak-p4next/", retailer: "https://www.sweetwater.com/store/detail/P4NEXT--zoom-podtrak-p4next-audio-interface"},
@@ -33,10 +46,11 @@ export const CREATOR_GEAR = Object.freeze([
     use: "A future option for local inference and small-scale AI experiments. Check Arm software compatibility and benchmark a real workload before choosing hardware.", status: "future",
     url: "https://www.nvidia.com/en-us/products/workstations/dgx-spark/", retailer: "https://marketplace.nvidia.com/en-us/enterprise/personal-ai-supercomputers/dgx-spark/"}
 ]);
-const statusText = Object.freeze({owned: "Owned and verified", selected: "Selected but not purchased", considering: "Considering", future: "Future"});
+const statusText = Object.freeze({owned: "Owned · owner-confirmed", selected: "Selected but not purchased", considering: "Considering", future: "Future"});
 const escapeHtml = value => String(value ?? "").replace(/[&<>"']/g, character => ({"&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;"}[character]));
 const configuredPodcast = podcastPublication();
-export const creatorPaths = [CREATOR_ROUTES.podcast, CREATOR_ROUTES.courses, CREATOR_ROUTES.setup, ...configuredPodcast.episodes.map(episode => episode.route)];
+const configuredWatch = watchPublication();
+export const creatorPaths = [CREATOR_ROUTES.watch, CREATOR_ROUTES.podcast, CREATOR_ROUTES.courses, CREATOR_ROUTES.setup, CREATOR_ROUTES.live, PRACTICAL_START_ROUTE, PERSONAL_ABOUT_ROUTE, ...configuredPodcast.episodes.map(episode => episode.route), ...configuredWatch.videos.map(video => video.route)];
 export const creatorMediaFiles = configuredPodcast.mediaFiles;
 const podcastFormats = {interview: "Interview", solo: "Solo", trailer: "Trailer"};
 const podcastDate = new Intl.DateTimeFormat("en-US", {dateStyle: "long", timeZone: "UTC"});
@@ -46,9 +60,6 @@ const episodeDuration = seconds => {
   return (minutes ? minutes + " min " : "") + (remainder || !minutes ? remainder + " sec" : "");
 };
 const arrow = '<span aria-hidden="true">→</span>';
-function link(path, label, current) {
-  return '<a href="' + escapeHtml(path) + '"' + (path === current ? ' aria-current="page"' : "") + '>' + escapeHtml(label) + '</a>';
-}
 function external(url, label, context) {
   return '<a href="' + escapeHtml(url) + '" target="_blank" rel="noopener noreferrer"' +
     (context ? ' aria-label="' + escapeHtml(label + " — " + context) + '"' : "") + '>' + escapeHtml(label) + ' ' + arrow + '</a>';
@@ -59,10 +70,12 @@ function button(path, label, primary = false) {
 function themeControl() {
   return '<label class="pc-appearance"><span>Appearance</span><select data-lab-theme-select><option value="system">System</option><option value="light">Light</option><option value="dark">Dark</option></select></label>';
 }
-function shell({path, title, description, current, rss, image}, main) {
+function shell({path, title, description, rss, image}, main) {
   const canonical = 'https://devonakins.com' + path;
   const socialImage = 'https://devonakins.com' + (image || '/social-card.jpg');
   const isPodcastCard = image === PODCAST_SHARE_IMAGE;
+  const isLive = path === CREATOR_ROUTES.live;
+  const isPodcast = path === CREATOR_ROUTES.podcast || path.startsWith(CREATOR_ROUTES.podcast);
   return '<!doctype html><html lang="en" class="lab-html"><head>' +
     '<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">' +
     '<meta name="theme-color" content="#f3f1e9"><meta name="color-scheme" content="light dark">' +
@@ -78,14 +91,15 @@ function shell({path, title, description, current, rss, image}, main) {
     '<meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="' + escapeHtml(title) + '">' +
     '<meta name="twitter:description" content="' + escapeHtml(description) + '"><meta name="twitter:image" content="' + escapeHtml(socialImage) + '">' +
     '<link rel="icon" type="image/svg+xml" href="/favicon.svg"><link rel="apple-touch-icon" href="/apple-touch-icon.png">' +
-    '<link rel="stylesheet" href="/src/professional/creator-pages.css"></head>' +
+    '<link rel="stylesheet" href="/src/professional/creator-pages.css">' +
+    '<link rel="stylesheet" href="/src/professional/site-navigation.css">' +
+    (isLive ? '<link rel="stylesheet" href="/src/professional/mobile-live.css"><script type="module" src="/src/professional/mobile-live-client.ts"></script>' : '') +
+    (isPodcast ? '<script type="module" src="/src/professional/podcast-chapters.mjs"></script>' : '') +
+    '<noscript><style>.pc-appearance{display:none}</style></noscript></head>' +
     '<body class="creator-body"><a class="pc-skip" href="#pc-main">Skip to content</a>' +
-    '<header class="pc-header"><div class="pc-wrap pc-header-row"><a class="pc-brand" href="/" aria-label="da. Devon Alan Akins home"><span aria-hidden="true">da.</span><small>Devon Alan Akins</small></a>' +
-    '<nav class="pc-nav" aria-label="Primary navigation">' +
-    link("/work/", "Work", current) + link("/research/", "Research", current) + link("/podcast/", "Podcast", current) + link("/courses/", "Courses", current) + link("/setup/", "My Setup", current) +
-    '</nav></div></header><main id="pc-main" tabindex="-1">' + main + '</main>' +
+    renderSiteHeader(path) + '<main id="pc-main" tabindex="-1">' + main + '</main>' +
     '<footer class="pc-footer pc-wrap"><div><a href="/" aria-label="da. Devon Alan Akins home">da.</a><p>Devon Alan Akins</p></div>' +
-    '<nav aria-label="Footer navigation"><a href="/fieldnotes/">Writing</a><a href="/courses/">Courses</a><a href="/about/">About</a><a href="/contact/">Contact</a></nav>' +
+    '<nav aria-label="Footer navigation"><a href="/watch/">Watch</a><a href="/live/">Live</a><a href="/fieldnotes/">Writing</a><a href="/courses/">Learn</a><a href="/about/">About</a><a href="/contact/">Contact</a></nav>' +
     themeControl() + '</footer></body></html>';
 }
 function episodeMeta(episode) {
@@ -98,24 +112,27 @@ function episodeCard(episode, featured = false) {
   return '<article class="pc-episode">' +
     (episode.thumbnail ? '<img src="' + episode.thumbnail + '" alt="" loading="lazy" decoding="async">' : '') +
     '<div>' + (featured ? '<p class="pc-eyebrow">Featured episode</p>' : '') + '<h3>' +
-    link(episode.route, episode.title) + '</h3>' + episodeMeta(episode) + '<p>' + escapeHtml(episode.summary) + '</p></div></article>';
+    `<a href="${escapeHtml(episode.route)}">${escapeHtml(episode.title)}</a>` + '</h3>' + episodeMeta(episode) + '<p>' + escapeHtml(episode.summary) + '</p></div></article>';
 }
 function renderEpisode(episode) {
   const related = episode.links.filter(({url}) => publicWebUrl(url)).map(({label, url}) => '<li>' + external(url, label) + '</li>').join('');
   return '<article class="pc-wrap pc-episode-detail"><header><p class="pc-eyebrow"><a href="/podcast/">Devon Alan Akins podcast</a></p>' +
     '<h1>' + escapeHtml(episode.title) + '</h1>' + episodeMeta(episode) + '<p class="pc-lede">' + escapeHtml(episode.summary) + '</p></header>' +
-    (episode.video || episode.videoPreview ? (episode.videoPreview ? '<h2>Video preview</h2>' : '') + '<video controls playsinline preload="none" aria-label="' + (episode.videoPreview ? 'Episode video preview' : 'Episode video') + '"' +
+    (episode.video || episode.videoPreview ? (episode.videoPreview ? '<h2>Video preview</h2>' : '') + '<video controls playsinline preload="none" ' + (episode.videoPreview ? 'data-episode-preview' : 'data-episode-full-video') +
+      ' aria-label="' + (episode.videoPreview ? 'Episode video preview' : 'Episode video') + '"' +
       (episode.thumbnail ? ' poster="' + episode.thumbnail + '"' : '') + '><source src="' + (episode.videoPreview || episode.video) + '" type="video/mp4">' +
       '<track kind="captions" srclang="en" label="English" src="' + episode.captions + '"><a href="' + (episode.videoPreview || episode.video) + '">Download ' + (episode.videoPreview ? 'video preview' : 'video') + '</a></video>' : '') +
-    (episode.audio ? '<audio controls preload="none" aria-label="Episode audio"><source src="' + episode.audio + '" type="audio/mpeg"><a href="' + episode.audio + '">Download audio</a></audio>' : '') +
+    (episode.audio ? '<audio controls preload="none" data-episode-audio aria-label="Episode audio"><source src="' + episode.audio + '" type="audio/mpeg"><a href="' + episode.audio + '">Download audio</a></audio>' : '') +
     (episode.videoAccess === "members" ? '<p class="pc-state">Full video is available to eligible Patreon members. Paid video files are not hosted publicly on this site.</p>' : '') +
     (episode.playbackLinks.length ? '<ul class="pc-media-links">' + episode.playbackLinks.map(({href, label}) => '<li>' + external(href, label) + '</li>').join('') + '</ul>' : '') +
     (episode.notes.length ? '<section class="pc-section"><h2>Show notes</h2>' + episode.notes.map(note => '<p>' + escapeHtml(note) + '</p>').join('') + '</section>' : '') +
-    (episode.chapters.length ? '<section class="pc-section"><h2>Chapters</h2><ol class="pc-chapters">' +
+    (episode.chapters.length ? '<section class="pc-section"><h2>Chapters</h2><ol class="pc-chapters"' +
+      (episode.audio || episode.video ? ' data-episode-chapters' : '') + '>' +
       episode.chapters.map(({startSeconds, title}) => {
         const minutes = Math.floor(startSeconds / 60);
         const seconds = String(startSeconds % 60).padStart(2, '0');
-        return '<li><time datetime="PT' + startSeconds + 'S">' + minutes + ':' + seconds + '</time> ' + escapeHtml(title) + '</li>';
+        return '<li data-chapter-start="' + startSeconds + '"><time datetime="PT' + startSeconds +
+          'S">' + minutes + ':' + seconds + '</time> <span class="pc-chapter-title">' + escapeHtml(title) + '</span></li>';
       }).join('') + '</ol></section>' : '') +
     (related ? '<section class="pc-section"><h2>Links</h2><ul>' + related + '</ul></section>' : '') +
     (episode.transcript.length ? '<section class="pc-section"><h2>Transcript</h2>' + episode.transcript.map(line => '<p>' + escapeHtml(line) + '</p>').join('') + '</section>' : '') +
@@ -127,18 +144,79 @@ function renderPodcast({episodes, outlets}) {
     '<p class="pc-eyebrow">The podcast</p><h1 id="pc-title">Devon <em>Alan Akins</em></h1>' +
     '<p class="pc-lede">I mostly sit down with people I want to talk to. Sometimes it’s just me working through a question or talking about something I’m making.</p>' +
     (!featured ? '<p class="pc-state">No episodes published yet</p>' : '') +
-    '<div class="pc-actions">' + button('#episodes', featured ? 'Browse episodes' : 'About the show', true) + button('/courses/', 'Explore courses') + button('/setup/', 'See my setup') + '</div></div>' +
+    '<div class="pc-actions">' + button('#episodes', featured ? 'Browse episodes' : 'About the show', true) + button('/courses/', 'Explore courses') + button('/setup/', 'See my setup') + button('/watch/', 'Watch videos') + '</div></div>' +
     '<div class="pc-hero-art"><img src="/professional/podcast-cover.webp" width="960" height="960" alt="" decoding="async"></div></section>' +
     '<section class="pc-section pc-two-column" id="episodes" aria-labelledby="pc-episodes-title"><div><h2 id="pc-episodes-title">Episodes</h2></div>' +
     (featured ? '<div class="pc-episodes">' + episodeCard(featured, true) + episodes.slice(1).map(episode => episodeCard(episode)).join('') + '</div>' :
       '<div class="pc-prose"><p>I’m still getting the show going. Interviews will be mostly unscripted. We could get into science, business, games, or whatever comes up.</p><p>Published episodes will appear here.</p></div>') + '</section>' +
     (outlets.length ? '<section class="pc-section pc-two-column"><h2>Follow the show</h2><ul class="pc-media-links">' +
       outlets.map(({label, href}) => '<li>' + external(href, label) + '</li>').join('') + '</ul></section>' : '') +
-    '<section class="pc-section pc-two-column"><div><h2>Watch and listen</h2></div><div class="pc-prose"><p>I plan to release the audio publicly and share full video with eligible Patreon members. Episode pages will have listening links, show notes, and transcripts when available.</p>' +
+    '<section class="pc-section pc-two-column"><div><h2>Watch and listen</h2></div><div class="pc-prose"><p>Public episodes will be watchable here on my website, with the audio on Spotify. Patreon is for member-only material. Episode pages will have listening links, show notes, and transcripts when available.</p>' +
     (outlets.length ? '' : '<p>Listening links will appear here once the show is available.</p>') +
-    '<p>' + external(PATREON_CREATOR_URL, 'Follow my work on Patreon') + '</p></div></section>' +
+    '<p>' + (outlets.some(outlet => outlet.key === "patreon") ?
+      'An approved Patreon destination is listed under Follow the show.' :
+      'Patreon memberships are planned. A public creator link and benefits will appear after account and offer verification.') +
+    '</p></div></section>' +
     '<section class="pc-section pc-two-column pc-studio-teaser"><div><h2>How I’m putting it together</h2></div><div class="pc-prose"><p>I’m working out what I need to record in the field, shoot in a room, and edit afterward.</p>' +
     button('/setup/', 'Explore My Setup') + '</div></section></div>';
+}
+function watchCard(item) {
+  return '<article class="pc-watch-card"><a href="' + escapeHtml(item.route) + '" class="pc-watch-card-link">' +
+    '<span class="pc-watch-card-art" aria-hidden="true"><span>da.</span></span>' +
+    '<span class="pc-watch-card-copy"><span class="pc-watch-card-kind">' + escapeHtml(item.label) + '</span>' +
+    '<strong>' + escapeHtml(item.title) + '</strong><span class="pc-watch-card-summary">' + escapeHtml(item.summary) + '</span>' +
+    '<span class="pc-watch-card-meta"><time datetime="' + item.date + '">' + podcastDate.format(new Date(item.date)) +
+    '</time> · ' + episodeDuration(item.durationSeconds) + ' · View recording →</span></span></a></article>';
+}
+function renderWatch(watch, podcast) {
+  const patreonOutlet = podcast.outlets.find(outlet => outlet.key === "patreon");
+  const items = [
+    ...watch.videos.map(video => ({...video, label: WATCH_KINDS[video.kind]})),
+    ...podcast.episodes.filter(episode => episode.video || episode.videoPreview).map(episode => ({
+      ...episode, label: episode.videoPreview ? 'Podcast preview' : 'Podcast episode'
+    }))
+  ].sort((a,b) => b.date.localeCompare(a.date) || a.title.localeCompare(b.title));
+  return '<div class="pc-wrap pc-watch-wrap"><header class="pc-watch-hero">' +
+    '<div class="pc-watch-hero-copy"><p class="pc-eyebrow">Devonakins.com / original media</p>' +
+    '<h1 id="pc-title">Watch<span>.</span></h1>' +
+    '<p class="pc-lede">Conversations, recordings, lessons, and the things I make. All in one place, on my own website.</p>' +
+    (!items.length ? '<p class="pc-state">No videos published yet</p>' : '') +
+    '<div class="pc-actions">' + button('/podcast/', 'Explore the podcast', true) +
+    button('/courses/', 'Browse courses') + button('/live/', 'Check the live studio') + '</div></div>' +
+    '<div class="pc-watch-art" aria-hidden="true"><span class="pc-watch-art-label">DA / ORIGINAL MEDIA</span>' +
+    '<span class="pc-watch-art-orbit"></span><span class="pc-watch-art-orbit pc-watch-art-orbit-alt"></span>' +
+    '<span class="pc-watch-art-sign">da.</span><span class="pc-watch-art-bottom">01 — PLAYBACK / HERE</span></div></header>' +
+    '<section class="pc-section pc-watch-library" id="videos" aria-labelledby="pc-videos-title">' +
+    '<div class="pc-section-heading"><h2 id="pc-videos-title">The library</h2><p>Public recordings only. New work appears here when it is actually released.</p></div>' +
+    (items.length ? '<div class="pc-watch-grid">' + items.map(watchCard).join('') + '</div>' :
+      '<div class="pc-watch-empty"><p class="pc-eyebrow">Library / prelaunch</p>' +
+      '<h3>Nothing staged as an episode.</h3><p>I’m building the publishing system before putting content in it. Once a recording is approved and playable, it will have a permanent home here.</p></div>') +
+    '</section><section class="pc-section pc-two-column pc-watch-outlets"><div><h2>The full experience lives here.</h2></div>' +
+    '<div class="pc-prose"><p>Video and replays are for this site. I’m using Spotify for podcast audio and Patreon for memberships, not sending everyone to YouTube or Twitch.</p>' +
+    '<p>Member-only recordings will remain on Patreon until protected playback is implemented and verified here.</p>' +
+    '<p>' + (patreonOutlet ? external(patreonOutlet.href, 'Follow on Patreon') :
+      'A Patreon creator link will appear here after account and membership details are verified.') +
+    '</p></div></section></div>';
+}
+function renderWatchVideo(video) {
+  const notes = video.notes.length ? '<section class="pc-section"><h2>Notes</h2>' +
+    video.notes.map(line => '<p>' + escapeHtml(line) + '</p>').join('') + '</section>' : '';
+  const chapters = video.chapters.length ? '<section class="pc-section"><h2>Chapters</h2><ol class="pc-chapters">' +
+    video.chapters.map(chapter => '<li><time datetime="PT' + chapter.startSeconds + 'S">' +
+    Math.floor(chapter.startSeconds / 60) + ':' + String(chapter.startSeconds % 60).padStart(2,'0') +
+    '</time> ' + escapeHtml(chapter.title) + '</li>').join('') + '</ol></section>' : '';
+  const transcript = video.transcript.length ? '<section class="pc-section"><h2>Transcript</h2>' +
+    video.transcript.map(line => '<p>' + escapeHtml(line) + '</p>').join('') + '</section>' : '';
+  return '<article class="pc-wrap pc-watch-detail"><header><p class="pc-eyebrow"><a href="/watch/">Watch / Devon Alan Akins</a></p>' +
+    '<h1>' + escapeHtml(video.title) + '</h1><p class="pc-episode-meta">' +
+    escapeHtml(WATCH_KINDS[video.kind]) + ' · <time datetime="' + video.date + '">' +
+    podcastDate.format(new Date(video.date)) + '</time> · ' + episodeDuration(video.durationSeconds) +
+    '</p><p class="pc-lede">' + escapeHtml(video.summary) + '</p></header>' +
+    '<div class="pc-watch-player"><iframe title="Watch: ' + escapeHtml(video.title) +
+    '" src="https://iframe.videodelivery.net/' + video.streamUid +
+    '" loading="lazy" referrerpolicy="strict-origin-when-cross-origin" allow="encrypted-media; picture-in-picture" allowfullscreen></iframe></div>' +
+    '<p class="pc-watch-note">This public video is hosted for playback on devonakins.com. Captions are provided in the player.</p>' +
+    notes + chapters + transcript + '</article>';
 }
 function glyph(kind){
   const shapes={
@@ -155,13 +233,14 @@ function glyph(kind){
 }
 function renderGear(product) {
   const photo = product.approvedPhoto;
+  const links = [product.url ? external(product.url, product.linkLabel ?? 'Manufacturer', product.name) : '',
+    product.retailer ? external(product.retailer, product.category === "lab" ? "Marketplace" : "Retailer", product.name) : ''].join('');
   return '<article class="pc-product" data-gear-id="' + product.id + '" data-gear-status="' + product.status + '">' +
     '<div class="pc-product-plate">' + (photo ? '<img src="' + escapeHtml(photo.src) + '" alt="' + escapeHtml(photo.alt) + '" loading="lazy" decoding="async">' : glyph(product.kind)) + '</div>' +
     '<div class="pc-product-info"><span class="pc-product-status pc-product-status-' + product.status + '">' + statusText[product.status] + '</span>' +
     '<h3>' + escapeHtml(product.name) + '</h3><p class="pc-product-spec">' + escapeHtml(product.spec) + '</p><p>' + escapeHtml(product.use) + '</p>' +
     (product.quantity ? '<p class="pc-product-meta">' + escapeHtml(product.quantity) + (product.shared ? ' · Shared with The Stage' : '') + '</p>' : '') +
-    '<div class="pc-product-links">' + external(product.url, product.linkLabel ?? 'Manufacturer', product.name) +
-    (product.retailer ? external(product.retailer, product.category === "lab" ? "Marketplace" : "Retailer", product.name) : '') + '</div></div></article>';
+    (links ? '<div class="pc-product-links">' + links + '</div>' : '') + '</div></article>';
 }
 function renderSetup() {
   const groups = CREATOR_CATEGORIES.map(category => {
@@ -173,48 +252,68 @@ function renderSetup() {
         '<div class="pc-control-empty"><strong>Inventory pending</strong><p>The editing computer, displays, software and storage will go here once I’ve checked what I already have.</p></div>') + '</section>';
   }).join('');
   return '<div class="pc-wrap"><header class="pc-setup-hero"><p class="pc-eyebrow">Studio build</p><h1>My Setup<span>.</span></h1>' +
-    '<div class="pc-setup-intro"><p>What I’m looking at for recording conversations, editing, and eventually running AI and scientific workloads locally.</p>' +
-    '<p>Ownership is still being inventoried. The catalog shows what I’m considering and what’s further out.</p></div></header>' +
-    '<nav class="pc-jump" aria-label="Setup sections">' + CREATOR_CATEGORIES.map(category => link('#' + category.id, category.label)).join('') + '</nav>' + groups +
+    '<div class="pc-setup-intro"><p>At first, this whole studio runs on my iPhone. The phone records, the Sony headset gets tested as my audio input, and software handles the overlays. Bigger cameras and microphones can wait.</p>' +
+    '<p>My current kit is labeled separately from unpurchased possibilities. Specific hardware models and app-level audio compatibility stay unverified until tested.</p></div></header>' +
+    '<nav class="pc-jump" aria-label="Setup sections">' + CREATOR_CATEGORIES.map(({id, label}) => `<a href="#${escapeHtml(id)}">${escapeHtml(label)}</a>`).join('') + '</nav>' + groups +
     '<section class="pc-section pc-two-column" id="build-log"><div><h2>Build notes</h2></div><div class="pc-prose">' +
-    '<article><h3>Start with two voices</h3><p>For interviews, XLR to a multitrack recorder gives each person a separate track. For a solo session, one USB-C mic can go straight into a compatible device. The two workflows can share microphones and headphones.</p></article>' +
+    '<article><h3>Start with what I own</h3><p>Film with iPhone Camera, capture narrated tutorials with iPhone Screen Recording, and test PRISM Live Studio for broadcasts. The Sony headset is the first audio test, not a promise that every app will use its mic correctly.</p></article>' +
     '<article><h3>Test the room before adding cameras</h3><p>A single wide shot is simpler to record and edit. Extra angles mean more media, synchronization and editing time. The room and a two-person test will determine what makes sense.</p></article></div></section>' +
     '<section class="pc-section pc-two-column pc-ethics"><h2>Catalog status</h2><div class="pc-prose">' +
-    '<dl><dt>Owned and verified</dt><dd>In my inventory and checked.</dd><dt>Selected but not purchased</dt><dd>Chosen for the build and still to be bought.</dd>' +
+    '<dl><dt>Owned · owner-confirmed</dt><dd>Equipment I have reported owning. Exact model and full recording-chain verification may still be pending.</dd><dt>Selected but not purchased</dt><dd>Chosen for the build and still to be bought.</dd>' +
     '<dt>Considering</dt><dd>On the shortlist while I check fit.</dd><dt>Future</dt><dd>A longer-range idea.</dd></dl>' +
     '<p>Manufacturer and retailer links are ordinary references. I earn no commission from them.</p>' + button('/podcast/', 'Go to the podcast') + '</div></section></div>';
 }
 function renderCourses() {
-  return '<div class="pc-wrap"><header class="pc-setup-hero pc-courses-hero"><p class="pc-eyebrow">Learning / in development</p><h1>Courses<span>.</span></h1>' +
-    '<div class="pc-setup-intro"><p>I want the research and conversations to become things you can actually work through, not just watch.</p>' +
-    '<p>No courses are available for enrollment or purchase yet. I’m developing the first curriculum, and I’ll publish it when there are real lessons to use.</p></div></header>' +
-    '<section class="pc-section pc-two-column pc-course-feature"><div><p class="pc-eyebrow">First curriculum / planned</p><h2>Mathematical physics, from first principles.</h2></div><div class="pc-prose">' +
-    '<p>Learn the mathematics, use it to understand physical laws, and test what you understand with numerical experiments. AI can help write simulation code, but the models, assumptions, and results still have to make sense.</p>' +
-    '<p>This is a work in progress, not a finished course or a paid offer.</p>' + button("/podcast/", "Explore the podcast") + '</div></section>' +
-    '<section class="pc-section pc-two-column"><div><p class="pc-eyebrow">Proposed course series</p><h2>Man of the House.</h2></div><div class="pc-prose">' +
-    '<p>An idea for practical lessons on running a household, keeping things in good repair, and knowing when a job calls for a professional.</p></div></section>' +
-    '<section class="pc-section"><div class="pc-section-heading"><h2>How I want lessons to work</h2><p>A proposed format for each unit, subject to real course production and testing.</p></div>' +
-    '<div class="pc-course-steps"><article><span>01 / Watch</span><h3>Start with the idea</h3><p>A clear video lesson with mathematical context, not just a collection of prompts.</p></article>' +
-    '<article><span>02 / Experiment</span><h3>Run the model</h3><p>Reproducible simulations and exercises, including AI-assisted code where appropriate.</p></article>' +
-    '<article><span>03 / Verify</span><h3>Check what happened</h3><p>Test units, assumptions, errors, and whether the numerical results agree with the underlying mathematics.</p></article></div></section>' +
+  return '<div class="pc-wrap"><header class="pc-setup-hero pc-courses-hero"><p class="pc-eyebrow">Learning / start with something useful</p><h1>Courses<span>.</span></h1>' +
+    '<div class="pc-setup-intro"><p>Learn something practical. Try it in the real world. Understand why it works.</p>' +
+    '<p>No courses are available for enrollment or purchase yet. A complete first written lesson is available free, and paid access is not active.</p></div></header>' +
+    '<section class="pc-section pc-two-column pc-course-feature" id="man-of-the-house"><div><p class="pc-eyebrow">Flagship course / in development</p><h2>Man of the House.</h2></div><div class="pc-prose">' +
+    '<p>Tools, safe household maintenance, cooking, organization, partnership, fatherhood, responsibility and independence. The point is practical competence, kindness and accountability—not performing a gender role.</p>' +
+    '<p>The first complete written lesson is free: a 15-minute walk-through of one part of your home, with safety boundaries, a low-risk improvement and three clear follow-up actions. No account or payment is needed to read it.</p>' +
+    '<p>The remaining course and video lessons are not yet published, and enrollment is not open.</p>' +
+    button(PRACTICAL_START_ROUTE, "Read the free first lesson", true) + '</div></section>' +
+    '<section class="pc-section pc-two-column"><div><p class="pc-eyebrow">Future learning track / planned</p><h2>Mathematical physics, from first principles.</h2></div><div class="pc-prose">' +
+    '<p>Learn the mathematics behind physical laws, then test what you understand with reproducible numerical experiments. AI-assisted code can help build simulations, but readers must still check assumptions, errors and results.</p>' +
+    '<p>This curriculum is a future project, not an available course or a paid offer.</p>' + button("/podcast/", "Explore the podcast") + '</div></section>' +
+    '<section class="pc-section"><div class="pc-section-heading"><h2>How learning should work</h2><p>A practical method for the real first lesson and the wider curriculum as it develops.</p></div>' +
+    '<div class="pc-course-steps"><article><span>01 / Notice</span><h3>Understand the situation</h3><p>Start with a clear goal, a sensible safety boundary and an observation you can check rather than a guess.</p></article>' +
+    '<article><span>02 / Practice</span><h3>Do one useful thing</h3><p>Apply the lesson with accessible instructions, and stop when a task requires tools or expertise you do not have.</p></article>' +
+    '<article><span>03 / Review</span><h3>Verify and follow through</h3><p>Check what changed, document what remains, and decide who handles the next action and when.</p></article></div></section>' +
     '<section class="pc-section pc-two-column pc-ethics"><div><h2>Where courses will live</h2></div><div class="pc-prose">' +
-    '<p>This website will be the public course library. Patreon is the planned home for member lessons and collection-based access. Paid videos will open in Patreon until secure, membership-verified playback on this site is built and independently tested.</p>' +
+    '<p>This site is the public learning library. Patreon is the intended home for optional member content; private videos remain on Patreon unless independently tested, membership-verified access is built here.</p>' +
     '<p>No purchase buttons, prices, or member-only video files are published here before those services and lessons are ready.</p>' +
     button("/podcast/", "Back to the podcast") + '</div></section></div>';
 }
-export function renderCreatorPage(path, publication = configuredPodcast) {
+export function renderCreatorPage(path, publication = configuredPodcast, watch = configuredWatch) {
   const rss = publication.outlets.find(outlet => outlet.key === "rss");
+  if (path === CREATOR_ROUTES.watch) {
+    return shell({path, title: "Watch — " + PODCAST_TITLE, description: "Original video, conversations, classes and replays on Devon Alan Akins’s own website."}, renderWatch(watch, publication));
+  }
+  const watchVideo = watch.videos.find(entry => entry.route === path);
+  if (watchVideo) {
+    return shell({path, title: watchVideo.title + " — Watch — " + PODCAST_TITLE, description: watchVideo.summary}, renderWatchVideo(watchVideo));
+  }
   if (path === CREATOR_ROUTES.podcast) {
-    return shell({path, title: PODCAST_TITLE + " — Podcast", description: PODCAST_DESCRIPTION, current: path, rss, image: PODCAST_SHARE_IMAGE}, renderPodcast(publication));
+    return shell({path, title: PODCAST_TITLE + " — Podcast", description: PODCAST_DESCRIPTION, rss, image: PODCAST_SHARE_IMAGE}, renderPodcast(publication));
   }
   if (path === CREATOR_ROUTES.courses) {
-    return shell({path, title: "Courses — " + PODCAST_TITLE, description: "Courses in development with Devon Alan Akins, beginning with mathematical physics and AI-assisted scientific simulation.", current: path}, renderCourses());
+    return shell({path, title: "Courses — " + PODCAST_TITLE, description: "Practical life lessons with Devon Alan Akins, starting with a free Man of the House home walk-through. Future mathematics and scientific computing courses are in development."}, renderCourses());
+  }
+  if (path === PERSONAL_ABOUT_ROUTE) {
+    return shell({path, title: "About — " + PODCAST_TITLE,
+      description: "Meet Devon Alan Akins, independent software developer, writer, interviewer, creator and father. Learn what he builds, publishes and values."}, renderPersonalAbout());
+  }
+  if (path === PRACTICAL_START_ROUTE) {
+    return shell({path, title: "Start with a walk-through — Man of the House — " + PODCAST_TITLE,
+      description: "A free, practical 15-minute home walk-through lesson about safe observation, useful action and shared household responsibility."}, renderPracticalStartLesson());
+  }
+  if (path === CREATOR_ROUTES.live) {
+    return shell({path, title: "Live — " + PODCAST_TITLE, description: "Live conversations, building sessions and narrated screen lessons with Devon Alan Akins."}, renderMobileLive());
   }
   if (path === CREATOR_ROUTES.setup) {
-    return shell({path, title: "My Setup — " + PODCAST_TITLE, description: "Devon Alan Akins’s studio build journal. Gear for interviews, editing and future independent AI computing.", current: path}, renderSetup());
+    return shell({path, title: "My Setup — " + PODCAST_TITLE, description: "Devon Alan Akins’s studio build journal. Gear for interviews, editing and future independent AI computing."}, renderSetup());
   }
   const episode = publication.episodes.find(entry => entry.route === path);
   if (!episode) throw new RangeError("Unknown creator path");
-  return shell({path, title: episode.title + " — " + PODCAST_TITLE, description: episode.summary,
-    current: CREATOR_ROUTES.podcast, image: episode.thumbnail || PODCAST_SHARE_IMAGE, rss}, renderEpisode(episode));
+  return shell({path, title: episode.title + " — " + PODCAST_TITLE, description: episode.summary, image: episode.thumbnail || PODCAST_SHARE_IMAGE, rss}, renderEpisode(episode));
 }

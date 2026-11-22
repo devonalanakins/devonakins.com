@@ -146,7 +146,8 @@ def check_page(page, origin, path, axe):
             "() => document.querySelector('[data-v5-atlas-spotlight]')?.dataset.v5AtlasSelected === 'project:anevum'",
             timeout=10000,
         )
-        assert "ANEVUM — The Open Institute" in spotlight.inner_text()
+        assert spotlight.get_by_role("heading", name="ANEVUM", exact=True).count() == 1
+        assert "A family creative studio" in spotlight.inner_text()
         assert "anevum.com" in spotlight.locator("a").get_attribute("href")
         search.fill("Merit")
         page.wait_for_function(
@@ -580,7 +581,7 @@ def main():
                 assert page.locator("[data-v5-atlas-select]").count() == 8
                 page.locator("[data-v5-atlas-node-id='project:mizvo'] summary").click()
                 assert page.locator("[data-v5-atlas-node-id='project:mizvo']").get_attribute("open") is not None
-                assert "engineering studio" in page.locator(
+                assert "A parked experiment in open-source project and client collaboration software" in page.locator(
                     "[data-v5-atlas-node-id='project:mizvo'] .v5-atlas-native-summary"
                 ).inner_text()
                 assert "Select a public system" in page.locator("[data-v5-atlas-spotlight]").inner_text()

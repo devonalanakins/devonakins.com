@@ -67,22 +67,17 @@ test("external links must match exact owner-approved destinations to remain publ
   assert.equal(publicProjectBySlug("rhen").publication.activitySharingApproved,false);
 });
 
-test("ANEVUM public identity reflects the developing Open Institute without false launch claims", () => {
-  const institute=publicProjectBySlug("anevum");
-  assert.ok(institute);
-  assert.equal(institute.category,"research");
-  assert.equal(institute.publication.category,"Research");
-  assert.equal(institute.publication.stage,"draft");
-  assert.match(institute.title,/Open Institute/);
-  assert.match(institute.summary,/STEM institute in development/);
-  assert.match(institute.description,/freely accessible, continuing STEM education/);
-  assert.match(institute.detail,/source-level learning prototype/);
-  assert.match(institute.boundary,/non-accredited/);
-  assert.match(institute.boundary,/not operational/);
-  assert.doesNotMatch(institute.summary+" "+institute.description,
-    /family creative project|worldbuilding and games/i);
-  assert.equal(institute.url,"https://anevum.com");
-  assert.match(institute.urlLabel,/not yet launched/);
+test("ANEVUM presents the family studio and preserves the education prototype as history", () => {
+  const studio=publicProjectBySlug("anevum");
+  assert.equal(studio.title,"ANEVUM");
+  assert.equal(studio.publication.category,"Creative");
+  assert.match(studio.summary,/family creative studio/);
+  assert.match(studio.detail,/earlier Open Institute proposal/);
+  assert.match(studio.detail,/historical education prototype/);
+  assert.equal(studio.url,"https://anevum.com");
+  const mizvo=publicProjectBySlug("mizvo");
+  assert.match(mizvo.status,/Parked.*not deployed/);
+  assert.equal(mizvo.url,"https://github.com/devonalanakins/mizvo");
 });
 
 test("published V5 systems atlas cannot resurrect a private source destination", () => {
