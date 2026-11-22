@@ -30,7 +30,7 @@
 
 ## Course library procedure
 
-- Keep `/courses/` public. The flagship learning series is **Man of the House** (practical household competence, safety, cooking, organization and responsibility), with one complete free written [15-minute starter lesson](/courses/man-of-the-house/start/) in the release candidate. The wider course is not open for enrollment or sale. Mathematics, physics and AI-assisted simulations are future learning tracks, not the flagship paid product.
+- Keep `/courses/` public. The flagship learning series is **Man of the House** (practical household competence, safety, cooking, organization and responsibility), with one complete free written [15-minute starter lesson source](../src/professional/first-practical-lesson.mjs) destined for `/courses/man-of-the-house/start/` after an approved release. The wider course is not open for enrollment or sale. Mathematics, physics and AI-assisted simulations are future learning tracks, not the flagship paid product.
 - Develop lessons as individual Patreon posts, organized into an ordered Collection. A course is a structured collection, not a native LMS with automatic grading, certificates, or verified progress tracking.
 - Patreon supports selling an eligible collection as a one-time purchase when it contains posts; do not publish a purchase control until actual lessons, approved pricing, rights and refunds/terms are ready.
 - On the website, show verified descriptions and links to approved collection pages, not embedded paid video URLs or publicly distributed private files.
