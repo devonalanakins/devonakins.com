@@ -67,6 +67,8 @@ try:
                                 assert page.locator(".pc-state").inner_text()=="No episodes published yet"
                             assert page.locator('a[href="/setup/"]').count()>=2
                             assert page.locator("audio,video,iframe").count()==0
+                            assert page.locator('a[href*="patreon.com"]').count()==0
+                            assert "Patreon memberships are planned" in page.locator("main").inner_text()
                         elif path=="/courses/":
                             assert page.locator("h1").inner_text().strip()=="Courses."
                             assert page.locator(".pc-course-steps article").count()==3
