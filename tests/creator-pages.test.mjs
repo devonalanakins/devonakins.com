@@ -26,7 +26,9 @@ test("prelaunch presents the final title and honest format without fictional pub
   assert.doesNotMatch(podcast, /<iframe|<audio|<video|autoplay|class="pc-episode"|application\/rss\+xml|spotify\.com\/show|Cristy Russo|Sam Rosenbaum|Jason Tunick/);
   assert.match(podcast, /href="\/courses\/"/);
   assert.match(podcast, /Watch and listen/);
-  assert.match(podcast, /href="https:\/\/www\.patreon\.com\/cw\/DevonAlanAkins" target="_blank" rel="noopener noreferrer">Follow my work on Patreon/);
+  assert.match(podcast, /Patreon memberships are planned\. A public creator link and benefits will appear after account and offer verification/);
+  assert.doesNotMatch(podcast, /href="https:\/\/(?:www\.)?patreon\.com/);
+  assert.doesNotMatch(podcast, /Follow my work on Patreon/);
   assert.match(podcast, /og:image" content="https:\/\/devonakins\.com\/professional\/podcast-share\.jpg"/);
   assert.deepEqual(creatorPaths, ["/watch/", "/podcast/", "/courses/", "/setup/", "/live/", "/courses/man-of-the-house/start/", "/about/"]);
 });
@@ -80,6 +82,12 @@ test("only approved, dated episodes and configured feeds render, with escaped te
   assert.match(memberPage, /https:\/\/www\.patreon\.com\/posts\/test-123/);
   assert.doesNotMatch(memberPage, /<video|<audio|\/podcast-media\/test\.mp4/);
   assert.deepEqual(memberPublication.outlets.map(outlet => outlet.key), ["patreon"]);
+  const memberArchive = renderCreatorPage("/podcast/", memberPublication);
+  assert.match(memberArchive, /<h2>Follow the show<\/h2>/);
+  assert.match(memberArchive, /href="https:\/\/www\.patreon\.com\/devonalanakins" target="_blank" rel="noopener noreferrer">Patreon/);
+  assert.match(memberArchive, /An approved Patreon destination is listed under Follow the show/);
+  assert.doesNotMatch(memberArchive, /A public creator link and benefits will appear after account and offer verification/);
+
   const preview = {...member, videoPreview: "/podcast-media/preview.mp4", captions: "/podcast-media/preview.vtt"};
   const previewPublication = podcastPublication([preview], {}, "2026-11-21");
   const previewPage = renderCreatorPage("/podcast/test-interview/", previewPublication);
