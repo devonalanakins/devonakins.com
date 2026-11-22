@@ -254,7 +254,7 @@ try:
                 theme_picker=theme_page.locator('#lab-menu [data-lab-theme-select]')
                 assert theme_picker.input_value()=='system'
                 theme_picker.select_option('light')
-                assert theme_page.locator('html').get_attribute('data-theme')=='light'
+                wait_for_condition(theme_page,"document.documentElement.dataset.theme==='light'")
                 assert theme_page.evaluate("localStorage.getItem('devonakins.appearance.v1')")=='light'
                 theme_page.reload(wait_until='networkidle')
                 assert theme_page.locator('html').get_attribute('data-theme')=='light'
@@ -262,7 +262,7 @@ try:
                 theme_picker=theme_page.locator('#lab-menu [data-lab-theme-select]')
                 assert theme_picker.input_value()=='light'
                 theme_picker.select_option('system')
-                assert theme_page.locator('html').get_attribute('data-theme')=='dark'
+                wait_for_condition(theme_page,"document.documentElement.dataset.theme==='dark'")
                 assert theme_page.evaluate("localStorage.getItem('devonakins.appearance.v1')") is None
                 theme_context.close()
                 desktop_theme=browser.new_context(ignore_https_errors=LOCAL_TLS,
@@ -273,7 +273,7 @@ try:
                 desktop_picker=desktop_page.locator('#lab-menu [data-lab-theme-select]')
                 assert desktop_picker.is_visible()
                 desktop_picker.select_option('dark')
-                assert desktop_page.locator('html').get_attribute('data-theme')=='dark'
+                wait_for_condition(desktop_page,"document.documentElement.dataset.theme==='dark'")
                 desktop_theme.close()
                 for width,height in ((320,760),(390,844),(768,1024),(1440,900)):
                     for scheme in ('light','dark'):
