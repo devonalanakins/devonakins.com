@@ -2,15 +2,13 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 import {runInNewContext} from 'node:vm';
-import ts from 'typescript';
+import {stripTypeScriptTypes} from 'node:module';
 
 // Execute the actual compiled browser module with deterministic timers and a
 // status request that never answers until its AbortSignal fires.
 test('hung live-status request times out, hides stale state and permits the next poll', async () => {
   const source = await readFile(new URL('../src/professional/mobile-live-client.ts', import.meta.url), 'utf8');
-  const script = ts.transpileModule(source, {
-    compilerOptions: {target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.None},
-  }).outputText;
+  const script = stripTypeScriptTypes(source);
   const element = (text = '') => ({
     textContent: text, hidden: false,
     replaceChildren() {}, setAttribute() {},
