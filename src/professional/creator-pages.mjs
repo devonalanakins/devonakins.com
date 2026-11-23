@@ -4,6 +4,7 @@ import {WATCH_KINDS, watchPublication} from "./watch-publication.mjs";
 import {PRACTICAL_START_ROUTE, renderPracticalStartLesson} from "./first-practical-lesson.mjs";
 import {PERSONAL_ABOUT_ROUTE, renderPersonalAbout} from "./about-page.mjs";
 import {SITE_PRIMARY_LINKS, SITE_CONTEXT_LINKS} from "./site-navigation.mjs";
+import {renderCreatorResources} from "./creator-resources.mjs";
 
 export const CREATOR_ROUTES = Object.freeze({watch: "/watch/", podcast: "/podcast/", courses: "/courses/", setup: "/setup/", live: "/live/"});
 export const CREATOR_CATEGORIES = Object.freeze([
@@ -260,10 +261,11 @@ function renderSetup() {
   return '<div class="pc-wrap"><header class="pc-setup-hero"><p class="pc-eyebrow">Studio build</p><h1>My Setup<span>.</span></h1>' +
     '<div class="pc-setup-intro"><p>At first, this whole studio runs on my iPhone. The phone records, the Sony headset gets tested as my audio input, and software handles the overlays. Bigger cameras and microphones can wait.</p>' +
     '<p>My current kit is labeled separately from unpurchased possibilities. Specific hardware models and app-level audio compatibility stay unverified until tested.</p></div></header>' +
-    '<nav class="pc-jump" aria-label="Setup sections">' + CREATOR_CATEGORIES.map(category => link('#' + category.id, category.label)).join('') + '</nav>' + groups +
+    '<nav class="pc-jump" aria-label="Setup sections">' + CREATOR_CATEGORIES.map(category => link('#' + category.id, category.label)).join('') + link('#resources', 'Tools I use') + '</nav>' + groups +
     '<section class="pc-section pc-two-column" id="build-log"><div><h2>Build notes</h2></div><div class="pc-prose">' +
     '<article><h3>Start with what I own</h3><p>Film with iPhone Camera, capture narrated tutorials with iPhone Screen Recording, and test PRISM Live Studio for broadcasts. The Sony headset is the first audio test, not a promise that every app will use its mic correctly.</p></article>' +
     '<article><h3>Test the room before adding cameras</h3><p>A single wide shot is simpler to record and edit. Extra angles mean more media, synchronization and editing time. The room and a two-person test will determine what makes sense.</p></article></div></section>' +
+    renderCreatorResources() +
     '<section class="pc-section pc-two-column pc-ethics"><h2>Catalog status</h2><div class="pc-prose">' +
     '<dl><dt>Owned · owner-confirmed</dt><dd>Equipment I have reported owning. Exact model and full recording-chain verification may still be pending.</dd><dt>Selected but not purchased</dt><dd>Chosen for the build and still to be bought.</dd>' +
     '<dt>Considering</dt><dd>On the shortlist while I check fit.</dd><dt>Future</dt><dd>A longer-range idea.</dd></dl>' +
