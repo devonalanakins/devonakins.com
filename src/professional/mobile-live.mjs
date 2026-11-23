@@ -22,6 +22,19 @@ function validChannel(publication) {
   };
 }
 
+// Runtime-only publication configuration: the code is safe to release before
+// activating Stream. All fields must be provided in the personal Worker; the
+// broadcast is never enabled merely because a live input exists.
+export function livePublicationFromEnv(env = {}) {
+  if (env.CLOUDFLARE_STREAM_PUBLIC_ENABLED !== '1') return LIVE_PUBLICATION;
+  return {
+    publicEnabled: true,
+    title: LIVE_PUBLICATION.title,
+    customerCode: env.CLOUDFLARE_STREAM_CUSTOMER_CODE ?? null,
+    inputId: env.CLOUDFLARE_STREAM_INPUT_ID ?? null,
+  };
+}
+
 export function streamPlaybackOrigin(publication = LIVE_PUBLICATION) {
   return validChannel(publication)?.origin ?? null;
 }
@@ -42,8 +55,9 @@ function jsonResponse(request, body, status = 200) {
 // Provider errors must never become a false LIVE state, expose secret data,
 // or infer that the creator has started broadcasting.
 export async function readPublicLiveStatus(request, env = {}, {
-  publication = LIVE_PUBLICATION, fetchImpl = fetch,
+  publication, fetchImpl = fetch,
 } = {}) {
+  publication ??= livePublicationFromEnv(env);
   if (!['GET', 'HEAD'].includes(request.method))
     return jsonResponse(request, {state: 'method-not-allowed'}, 405);
   if (publication?.publicEnabled !== true)
