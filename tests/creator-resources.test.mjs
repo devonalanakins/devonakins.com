@@ -26,6 +26,7 @@ test("commercial links require written provider permission, owner review, channe
     promotion: {
       providerWrittenApproval: true,
       publisherApproved: true,
+      beneficiaryVerified: true,
       approvalBasis: "provider-written",
       approvedChannels: ["website", "livestream"],
       href: "https://mercury.com/r/example-test-only",
@@ -43,6 +44,7 @@ test("commercial links require written provider permission, owner review, channe
   const changes = [
     {providerWrittenApproval: false},
     {publisherApproved: false},
+    {beneficiaryVerified: false},
     {approvalBasis: "customer-referral-terms-only"},
     {approvedChannels: ["private-direct"]},
     {disclosure: ""},
