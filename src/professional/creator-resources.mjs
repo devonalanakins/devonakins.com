@@ -39,6 +39,7 @@ export function approvedCommercialDestination(resource) {
   const promotion = resource?.promotion;
   if (!promotion || promotion.providerWrittenApproval !== true ||
       promotion.publisherApproved !== true ||
+      promotion.beneficiaryVerified !== true ||
       promotion.approvalBasis !== "provider-written" ||
       !Array.isArray(promotion.approvedChannels) ||
       !promotion.approvedChannels.includes("website") ||
