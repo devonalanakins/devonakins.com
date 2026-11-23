@@ -70,11 +70,15 @@ export function renderCreatorResources(resources = CREATOR_RESOURCES) {
       '</article>';
   }).join("");
 
+  const footer = resources.some(resource => approvedCommercialDestination(resource))
+    ? 'Approved compensated links are disclosed next to each recommendation. Stream promotion also requires permission for that channel.'
+    : 'No commercial referral links are active. A stream QR can point to this page once this section is published.';
+
   return '<section class="pc-section pc-two-column" id="resources" aria-labelledby="pc-resources-title">' +
-    '<div><p class="pc-eyebrow">Tools, not advertisements</p>' +
+    '<div><p class="pc-eyebrow">Real tools / transparent links</p>' +
     '<h2 id="pc-resources-title">Tools I actually use</h2>' +
     '<p>Real working tools, in context. I will mark any compensated recommendations beside their links if they are approved.</p>' +
     '</div><div class="pc-prose">' + cards +
-    '<p class="pc-resource-note">The QR code I use on stream will point to this page, not directly to an outside referral. No commercial referral links are live here until the provider permits that distribution.</p>' +
+    '<p class="pc-resource-note">' + footer + '</p>' +
     '</div></section>';
 }
