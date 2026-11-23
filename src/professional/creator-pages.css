@@ -321,3 +321,13 @@ body.creator-body { margin: 0; color: var(--pc-ink); background: var(--pc-paper)
   .pc-about-grid section, .pc-about-principles li { break-inside: avoid; }
   .pc-about-contact { background: white; border: 1px solid #555; }
 }
+
+
+/* Editorial tools section. Commercial state always has an adjacent disclosure. */
+.pc-resource { border-top: 1px solid var(--pc-line); padding: 1.25rem 0 1.5rem; }
+.pc-resource h3 { margin: .1rem 0 .65rem; font-size: clamp(1.35rem, 2.5vw, 1.7rem); }
+.pc-resource .pc-product-spec { margin: 0; color: var(--pc-muted); }
+.pc-resource a { display: inline-block; min-height: 44px; padding: .6rem 0; font-weight: 700; text-decoration-thickness: 1px; text-underline-offset: .2em; }
+.pc-resource-disclosure { padding-left: 1rem; border-left: 3px solid var(--pc-blue); font-weight: 650; }
+.pc-resource-state, .pc-resource-note { font-size: .93rem; color: var(--pc-muted); }
+.pc-resource-note { border-top: 1px solid var(--pc-line); padding-top: 1rem; }
