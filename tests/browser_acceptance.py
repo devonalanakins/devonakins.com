@@ -947,6 +947,11 @@ def check_presence_control(browser, engine, origin, output, axe_source):
                 "verifiedAt":"2020-11-09T20:00:00.000Z"})
             page.evaluate("loadThreadsAuthorization()")
             page.wait_for_function("!document.querySelector('#threads-renew').disabled")
+            # Reauthorization is a non-destructive fallback if a server-side
+            # renewal fails; preserve the previous D1 grant until OAuth succeeds.
+            page.wait_for_function("!document.querySelector('#threads-connect').disabled")
+            assert page.locator("#threads-connect").inner_text() == "Reauthorize Threads privately"
+            assert oauth_changes == [], "Reading status must not start new OAuth or renew a token"
             page.locator("#threads-renew").click()
             page.wait_for_function("document.querySelector('#threads-check-result').textContent.includes('authorization renewed')")
             assert writes == [], "Renewal must not alter sharing controls"

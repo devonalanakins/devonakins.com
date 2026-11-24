@@ -197,7 +197,7 @@ async function finish(request,env,now,fetcher){
     // for the long-lived exchange. Both go ONLY to Meta's fixed HTTPS origin,
     // never to the browser, application URL, logs or any redirect target.
     stage="extend";
-    const exchange=new URL("https://graph.threads.com/access_token");
+    const exchange=new URL("https://graph.threads.net/access_token");
     exchange.search=new URLSearchParams({grant_type:"th_exchange_token",
       client_secret:env.THREADS_APP_SECRET,access_token:short.access_token}).toString();
     const long=await providerJson(await fetcher(exchange.href,{
@@ -221,6 +221,13 @@ async function finish(request,env,now,fetcher){
        typeof identity.username!=="string"||!HANDLE.test(identity.username) ||
        (typeof env.THREADS_PUBLIC_USERNAME==="string" &&
         identity.username.toLowerCase()!==env.THREADS_PUBLIC_USERNAME.toLowerCase()))
+      throw Error("Wrong account");
+    // Reauthorizing a connected account cannot silently switch its identity.
+    // An intentional account switch first requires an explicit disconnect.
+    const previous=await accountRow(db);
+    if(previous?.token_cipher &&
+       (!metaId(previous.threads_user_id) ||
+        metaId(previous.threads_user_id)!==metaId(identity.id)))
       throw Error("Wrong account");
     const key=await importEncryptionKey(env.LISTENING_TOKEN_KEY);
     stage="storage";
@@ -246,6 +253,27 @@ async function finish(request,env,now,fetcher){
     ).bind(stateHash,attempt.nonce_hash).run();
   }
 }
+/** A failed Meta refresh/profile response must never be returned raw. Only
+ * fixed stage names, HTTP status and bounded numeric Graph error codes appear
+ * in private owner diagnostics. No token, request URL or provider text leaks. */
+async function renewalProviderResult(response,stage){
+  if(!response?.ok){
+    const detail=await metaExchangeHttpDetail(response);
+    const match=/^http-([45][0-9]{2})(?:-meta-([0-9]{1,9})(?:-sub-([0-9]{1,9}))?)?$/.exec(detail);
+    const status=match?Number(match[1]):null;
+    const metaCode=match?.[2]||null;
+    const code=metaCode?" (Meta code "+metaCode+(match[3]?", subcode "+match[3]:"")+")":"";
+    if(metaCode==="190" || status===401 || status===403)
+      return {error:ownerError("Meta rejected the saved Threads authorization"+code+". The existing connection was not changed. Test the connection; if invalid, use Reauthorize Threads privately to replace it without deleting the old grant first.",409)};
+    if(status===429 || metaCode==="4" || metaCode==="17")
+      return {error:ownerError("Meta rate-limited Threads "+stage+code+". The saved credential is unchanged; retry after the provider limit clears.",429)};
+    if(status!==null && status>=500)
+      return {error:ownerError("Meta was temporarily unavailable for Threads "+stage+" (HTTP "+status+"). The saved credential is unchanged.",503)};
+    return {error:ownerError("Meta declined Threads "+stage+(status?" (HTTP "+status+code+")":"")+". The saved credential is unchanged.",502)};
+  }
+  try{return {data:await providerJson(response)}}
+  catch{return {error:ownerError("Meta's Threads "+stage+" response was unreadable or malformed. The saved credential is unchanged.",502)}}
+}
 /** Explicit owner-only refresh of an unexpired, >=24-hour-old Threads token.
  * The current revision, ciphertext and issue metadata are optimistic guards.
  * A disconnect or newer OAuth grant wins over this delayed provider request.
@@ -259,14 +287,18 @@ async function renew(env,now,fetcher){
     return ownerError("Threads authorization is not ready for renewal",429);
   // Meta requires the current unexpired long-lived credential in a query.
   // Fixed HTTPS host, no redirect or logging; never return it to owner JS.
-  const endpoint=new URL("https://graph.threads.com/refresh_access_token");
+  const endpoint=new URL("https://graph.threads.net/refresh_access_token");
   endpoint.search=new URLSearchParams({
     grant_type:"th_refresh_token",access_token:current.token,
   }).toString();
-  const result=await providerJson(await fetcher(endpoint.href,{
+  let refreshResponse;
+  try{refreshResponse=await fetcher(endpoint.href,{
     method:"GET",headers:{Accept:"application/json"},cache:"no-store",
     redirect:"manual",signal:AbortSignal.timeout(8000),
-  }));
+  })}catch{return ownerError("Unable to reach Meta for Threads renewal. The saved credential is unchanged.",503)}
+  const refreshed=await renewalProviderResult(refreshResponse,"renewal");
+  if(refreshed.error)return refreshed.error;
+  const result=refreshed.data;
   if(typeof result.access_token!=="string" || result.access_token.length<20 ||
      result.access_token.length>4096 ||
      String(result.token_type||"").toLowerCase()!=="bearer" ||
@@ -274,12 +306,16 @@ async function renew(env,now,fetcher){
      Number(result.expires_in)<3600 ||
      Number(result.expires_in)>90*86400)
     return ownerError("Threads provider did not renew authorization",503);
-  const profile=await providerJson(await fetcher(
+  let profileResponse;
+  try{profileResponse=await fetcher(
     "https://graph.threads.com/v1.0/me?fields=id%2Cusername",{
       method:"GET",
       headers:{Authorization:"Bearer "+result.access_token,Accept:"application/json"},
       cache:"no-store",redirect:"manual",signal:AbortSignal.timeout(8000),
-    }));
+    })}catch{return ownerError("Unable to verify the renewed Threads account with Meta. The saved credential is unchanged.",503)}
+  const identity=await renewalProviderResult(profileResponse,"account verification");
+  if(identity.error)return identity.error;
+  const profile=identity.data;
   if(!metaId(profile.id) ||
      typeof profile.username!=="string" ||
      !HANDLE.test(profile.username) ||
