@@ -63,6 +63,21 @@ test("sanitize untrusted text, truncate bounded, show media-only without fabrica
   assert.ok(!p[0].text.includes("\u0000"));
   assert.equal(p[1].text,"Media post on Threads");
   assert.equal(p[1].media,true);
+  // Meta officially allows a missing or null caption for image and video posts.
+  for(const noCaption of [undefined,null]){
+    const image={...row("1122334455"),media_type:"IMAGE",
+      permalink:"https://www.threads.com/@fixtureDevon/post/ABCDefgh"};
+    if(noCaption===undefined)delete image.text;
+    else image.text=noCaption;
+    assert.deepEqual(publicThreadsPosts(payload(image),"fixtureDevon",now),[{
+      href:"https://www.threads.com/@fixtureDevon/post/ABCDefgh",
+      text:"Media post on Threads",publishedAt:"2026-11-07T19:30:00.000Z",media:true,
+    }]);
+  }
+  assert.equal(publicThreadsPosts(payload({...row(),text:null}),"fixtureDevon",now),null,
+    "Text-only post missing its text cannot be exposed");
+  assert.equal(publicThreadsPosts(payload({...row(),media_type:"VIDEO",text:42}),"fixtureDevon",now),null,
+    "Unexpected types still fail closed");
 });
 test("official fetch is read-only, token stays server-side and 5-minute cache does not forge a new checked date",async()=>{
   let at=now,calls=0,request=null;
