@@ -112,6 +112,7 @@ try:
                             assert page.locator("[data-live-status]").inner_text().strip()=="NOT BROADCASTING"
                             assert "No broadcast right now." in page.locator("main").inner_text()
                             assert page.locator("[data-live-player] iframe").count()==0
+                            assert page.locator('main a[href="/setup/#studio"]').count()==1
                             assert page.locator("iframe, video, audio").count()==0
                             assert page.locator("a[href=\"/podcast/\"]").count()>=1
                             assert page.locator('.pc-live a[href="/watch/"]').count()>=2
@@ -119,6 +120,19 @@ try:
                             assert page.locator(".pc-product").count()==10
                             assert page.locator(".pc-product-status-future").count()==1
                             assert page.locator(".pc-jump").is_visible()
+                            studio=page.locator("#studio")
+                            assert studio.is_visible()
+                            assert studio.locator(".pc-studio-step h3").all_text_contents()==["Capture","Produce","Broadcast","Publish"]
+                            assert studio.locator('a[href="/live/"]').count()==1
+                            assert studio.locator('a[href="/watch/"]').count()==1
+                            assert page.locator('.pc-jump a[href="#studio"]').count()==1
+                            assert page.locator('.pc-jump a[href="#resources"]').count()==1
+                            resources=page.locator("#resources")
+                            assert resources.is_visible()
+                            assert resources.locator('[data-resource-id="mercury"][data-resource-link="editorial"] a[href="https://mercury.com/"]').count()==1
+                            assert resources.locator('[data-resource-link="approved-commercial"],a[rel~="sponsored"]').count()==0
+                            assert studio.evaluate("el=>el.scrollWidth<=el.clientWidth+1")
+                            assert resources.evaluate("el=>el.scrollWidth<=el.clientWidth+1")
                             assert page.locator(".pc-product-status-considering").count()==7
                             assert page.locator(".pc-product-status-owned").count()==2
                             assert page.locator('.pc-product[data-gear-id="existing-iphone"]').count()==1
