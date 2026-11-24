@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {LIVE_PUBLICATION,LIVE_STATUS_PATH,renderMobileLive,readPublicLiveStatus,streamPlaybackOrigin} from '../src/professional/mobile-live.mjs';
+import {LIVE_PUBLICATION,LIVE_STATUS_PATH,renderMobileLive,readPublicLiveStatus,streamPlaybackOrigin,livePublicationFromEnv} from '../src/professional/mobile-live.mjs';
 const request=(method='GET')=>new Request('https://devonakins.com'+LIVE_STATUS_PATH,{method});
 const configured={publicEnabled:true,customerCode:'ABCdef12345',inputId:'a'.repeat(32)};
 const provider=(body,status=200)=>new Response(JSON.stringify(body),{status,headers:{'Content-Type':'application/json'}});
@@ -11,6 +11,9 @@ test('default channel stays offline and never invokes the provider',async()=>{
  const html=renderMobileLive();
  assert.match(html,/<h1 id="pc-live-title">Live from/);
  assert.match(html,/NOT BROADCASTING/);
+ assert.match(html,/FROM LAPTOP TO MOBILE/);
+ assert.match(html,/One studio\. Real work\./);
+ assert.doesNotMatch(html,/IPHONE-FIRST BROADCAST|One phone\. Real work|recorded directly from the iPhone/i);
  assert.match(html,/data-live-player hidden/);
  assert.equal((html.match(/href="\/watch\/"/g)||[]).length,2);
  assert.match(html,/Watch library/);
@@ -68,4 +71,24 @@ test('idle, connection, malformed and provider failure states never claim live',
  assert.deepEqual(await read(async()=>provider({isInput:false,live:true})),{state:'unavailable'});
  assert.deepEqual(await read(async()=>provider({},401)),{state:'unavailable'});
  assert.deepEqual(await read(async()=>{throw Error('sensitive upstream error')}),{state:'unavailable'});
+});
+
+test('runtime activation remains off unless explicitly enabled and configured', async () => {
+ const enabled={CLOUDFLARE_STREAM_PUBLIC_ENABLED:'1',
+   CLOUDFLARE_STREAM_CUSTOMER_CODE:'ABCdef12345',
+   CLOUDFLARE_STREAM_INPUT_ID:'a'.repeat(32),
+   CLOUDFLARE_STREAM_READ_TOKEN:'private'};
+ assert.equal(livePublicationFromEnv({}),LIVE_PUBLICATION);
+ assert.equal(livePublicationFromEnv({...enabled,CLOUDFLARE_STREAM_PUBLIC_ENABLED:'0'}),LIVE_PUBLICATION);
+ assert.equal(streamPlaybackOrigin(livePublicationFromEnv(enabled)),'https://customer-abcdef12345.cloudflarestream.com');
+ const notEnabled=await readPublicLiveStatus(request(),{...enabled,CLOUDFLARE_STREAM_PUBLIC_ENABLED:'0'},{fetchImpl:()=>{throw Error('must not call upstream')}});
+ assert.deepEqual(await notEnabled.json(),{state:'prelaunch'});
+ const notConfigured=await readPublicLiveStatus(request(),{...enabled,CLOUDFLARE_STREAM_CUSTOMER_CODE:'evil.test'},{fetchImpl:()=>{throw Error('must not call upstream')}});
+ assert.deepEqual(await notConfigured.json(),{state:'unavailable'});
+ const noToken=await readPublicLiveStatus(request(),{...enabled,CLOUDFLARE_STREAM_READ_TOKEN:undefined},{fetchImpl:()=>{throw Error('must not call upstream')}});
+ assert.deepEqual(await noToken.json(),{state:'unavailable'});
+ const active=await readPublicLiveStatus(request(),enabled,{fetchImpl:async()=>provider({isInput:true,live:true,videoUID:'b'.repeat(32)})});
+ assert.deepEqual(await active.json(),{state:'live',playerUrl:'https://customer-abcdef12345.cloudflarestream.com/'+'a'.repeat(32)+'/iframe'});
+ const inactive=await readPublicLiveStatus(request(),enabled,{fetchImpl:async()=>provider({isInput:true,live:false})});
+ assert.deepEqual(await inactive.json(),{state:'offline'});
 });

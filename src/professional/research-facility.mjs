@@ -154,16 +154,23 @@ export function renderResearchFacilityHome({initialView='home',canonicalPath='/'
  '<div class="lab-portfolio-hero-content"><p class="lab-hero-name">INDEPENDENT SOFTWARE DEVELOPER · WRITER</p>'+
  '<h1 class="da-name">Devon<br>Alan Akins<span>.</span></h1>'+
  '<p class="lab-hero-deck">I build software. I tell stories. I ask questions.</p>'+
- '<p class="lab-portfolio-statement">I’m an independent software developer, writer and interviewer. This is where I share what I build, lessons from everyday life, and notes on mathematics and physics.</p>'+
+ '<p class="lab-portfolio-statement">I’m an independent software developer, writer and interviewer. I share useful projects, practical lessons, mathematics and physics, and conversations about what other people are creating.</p>'+
  '<div class="lab-portfolio-actions">'+goto('work','Explore the work',true)+'<a class="lab-action" href="/watch/">Watch the studio <span aria-hidden="true">→</span></a></div></div></section>'+
  (portraitAvailable?portraitIntroduction():'')+
+ '<nav class="lab-editorial-links" aria-label="Explore Devon’s work and content">'+
+ '<a href="/work/"><span class="lab-editorial-kicker">01 / BUILD</span><strong>Work</strong><span>Software, experiments and inspectable source.</span></a>'+
+ '<a href="/courses/"><span class="lab-editorial-kicker">02 / LEARN</span><strong>Learn</strong><span>Start with a free practical lesson.</span></a>'+
+ '<a href="/podcast/"><span class="lab-editorial-kicker">03 / LISTEN</span><strong>Podcast</strong><span>Conversations and solo episodes in development.</span></a>'+
+ '<a href="/watch/"><span class="lab-editorial-kicker">04 / WATCH</span><strong>Watch</strong><span>Original videos and interviews as they are published.</span></a>'+
+ '<a href="/fieldnotes/"><span class="lab-editorial-kicker">05 / READ</span><strong>Writing</strong><span>Essays, mathematics, technical notes and manuscripts.</span></a>'+
+ '<a href="/live/"><span class="lab-editorial-kicker">06 / STUDIO</span><strong>Live</strong><span>Check the broadcast status and find the studio.</span></a></nav>'+
  '<section class="lab-focus" aria-label="Current work"><div class="lab-focus-heading"><span>WHAT I DO</span><p>Professional responsibility. Independent work. Original ideas.</p></div><div class="lab-focus-grid">'+
  '<a class="lab-focus-card lab-focus-card--engineering" href="/work/"><span class="lab-focus-number">01 / INDEPENDENT ENGINEERING</span><strong>Software with a purpose</strong><p>Web and Apple platform development, engineering integrity, language experiments and audio.</p><span class="lab-focus-bottom">PROJECTS &amp; SOURCE <b aria-hidden="true">→</b></span></a>'+
  '<a class="lab-focus-card lab-focus-card--research" href="/work/anevum/"><span class="lab-focus-number">02 / CREATIVE STUDIO</span><strong>ANEVUM</strong><p>A family creative studio for original fiction, worldbuilding and experiments with creative technology.</p><span class="lab-focus-bottom">EXPLORE THE STUDIO <b aria-hidden="true">→</b></span></a>'+
  '<a class="lab-focus-card lab-focus-card--nona" href="/work/operations/"><span class="lab-focus-number">03 / NONCLINICAL OPERATIONS</span><strong>Nona Neuropsychology</strong><p>I lead nonclinical operations and technology supporting reliable, professional care.</p><span class="lab-focus-bottom">OPERATIONS &amp; TECHNOLOGY <b aria-hidden="true">→</b></span></a>'+
  '</div></section>'+
  '<section class="lab-portfolio-selected" aria-label="Two primary destinations"><div class="lab-explore-heading"><div><span>KEEP GOING</span><h2>What exists.<br>What comes next.</h2></div><p>The work has a source. The ambition has a direction.</p></div><div class="lab-destinations">'+destinationCards()+'</div></section>'+
- '<nav class="lab-editorial-links" aria-label="Explore Devon’s work and content"><a href="/work/"><strong>Work</strong><span>Software and public engineering evidence</span></a><a href="/watch/"><strong>Watch</strong><span>Original videos and interviews as they are published</span></a><a href="/podcast/"><strong>Podcast</strong><span>Long-form conversations and solo episodes in development</span></a><a href="/courses/"><strong>Learn</strong><span>A free practical lesson, with science and computing lessons planned</span></a><a href="/fieldnotes/"><strong>Writing</strong><span>Essays, technical notes and manuscripts</span></a></nav>'+
+
  compactSignals()+'</div>');
   const research=view('experience',
     '<div class="lab-secondary lab-research da-research">'+

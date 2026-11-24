@@ -96,7 +96,13 @@ try:
                             assert page.locator(".pc-about").is_visible()
                             assert "The person behind" in page.locator("h1").inner_text()
                             assert page.locator(".pc-about-grid section").count()==4
-                            assert page.locator(".pc-about-principles li").count()==4
+                            principles=page.locator('section[aria-labelledby="pc-about-principles-title"]')
+                            ai_principles=page.locator('section[aria-labelledby="pc-about-ai-title"]')
+                            assert principles.is_visible() and ai_principles.is_visible()
+                            assert principles.locator("li").count()==4
+                            assert ai_principles.locator("li").count()==3
+                            assert ai_principles.locator("li strong").all_text_contents()==["Start with a real problem.","Verify the result.","Teach from evidence."]
+                            assert ai_principles.locator('a[href="/setup/"]').count()==1
                             assert page.locator('a[href="/about/"][aria-current="page"]').count()==1
                             assert page.locator("audio,video,iframe,form").count()==0
                             assert "clinical judgments remain with licensed professionals" in page.locator("main").inner_text()
@@ -106,6 +112,7 @@ try:
                             assert page.locator("[data-live-status]").inner_text().strip()=="NOT BROADCASTING"
                             assert "No broadcast right now." in page.locator("main").inner_text()
                             assert page.locator("[data-live-player] iframe").count()==0
+                            assert page.locator('main a[href="/setup/#studio"]').count()==1
                             assert page.locator("iframe, video, audio").count()==0
                             assert page.locator("a[href=\"/podcast/\"]").count()>=1
                             assert page.locator('.pc-live a[href="/watch/"]').count()>=2
@@ -113,6 +120,19 @@ try:
                             assert page.locator(".pc-product").count()==10
                             assert page.locator(".pc-product-status-future").count()==1
                             assert page.locator(".pc-jump").is_visible()
+                            studio=page.locator("#studio")
+                            assert studio.is_visible()
+                            assert studio.locator(".pc-studio-step h3").all_text_contents()==["Capture","Produce","Broadcast","Publish"]
+                            assert studio.locator('a[href="/live/"]').count()==1
+                            assert studio.locator('a[href="/watch/"]').count()==1
+                            assert page.locator('.pc-jump a[href="#studio"]').count()==1
+                            assert page.locator('.pc-jump a[href="#resources"]').count()==1
+                            resources=page.locator("#resources")
+                            assert resources.is_visible()
+                            assert resources.locator('[data-resource-id="mercury"][data-resource-link="editorial"] a[href="https://mercury.com/"]').count()==1
+                            assert resources.locator('[data-resource-link="approved-commercial"],a[rel~="sponsored"]').count()==0
+                            assert studio.evaluate("el=>el.scrollWidth<=el.clientWidth+1")
+                            assert resources.evaluate("el=>el.scrollWidth<=el.clientWidth+1")
                             assert page.locator(".pc-product-status-considering").count()==7
                             assert page.locator(".pc-product-status-owned").count()==2
                             assert page.locator('.pc-product[data-gear-id="existing-iphone"]').count()==1

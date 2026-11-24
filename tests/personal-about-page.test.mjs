@@ -17,8 +17,8 @@ test("About has its own canonical, source-generated destination without losing P
   assert.match(page, /href="\/about\/" aria-current="page">About<\/a>/);
   assert.equal((page.match(/<h1(?:\s|>)/g)||[]).length, 1);
   assert.match(page, /<article class="pc-wrap pc-about" aria-labelledby="pc-title">/);
-  assert.equal((renderPersonalAbout().match(/<section/g)||[]).length, 6);
-  for(const id of ["pc-about-build","pc-about-publish","pc-about-teach","pc-about-boundaries","pc-about-principles-title","pc-about-contact-title"])
+  assert.equal((renderPersonalAbout().match(/<section/g)||[]).length, 7);
+  for(const id of ["pc-about-build","pc-about-publish","pc-about-teach","pc-about-boundaries","pc-about-principles-title","pc-about-contact-title","pc-about-ai-title"])
     assert.match(page,new RegExp('id="'+id+'"'));
 });
 
@@ -30,6 +30,11 @@ test("About tells a human, truthful story without leaking private identity syste
     "Dadog is my developing private AI counterpart"]) assert.ok(page.includes(s),s);
   assert.match(page,/or proof of Apple Developer Program membership/);
   assert.match(page,/home walk-through/);
+  assert.match(page,/Vibe coding, without skipping the engineering/);
+  assert.match(page,/AI-assisted software development/);
+  assert.match(page,/Review the changes, test failure cases/);
+  assert.match(page,/href="\/setup\/">how the studio works<\/a>/);
+  assert.doesNotMatch(page,/24\/7 livestream|always-on monitor|autonomous publication/i);
   assert.match(page,/Do not send medical records/);
   assert.match(page,/rel="noopener noreferrer"/);
   assert.doesNotMatch(page,/<iframe|<audio|<video|<form|secret key|social security|private conversation|patient record|Nona Workspace/i);

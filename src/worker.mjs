@@ -1,4 +1,4 @@
-import {LIVE_STATUS_PATH, readPublicLiveStatus, streamPlaybackOrigin} from "./professional/mobile-live.mjs";
+import {LIVE_STATUS_PATH, readPublicLiveStatus, streamPlaybackOrigin, livePublicationFromEnv} from "./professional/mobile-live.mjs";
 import {LABORATORY_REDIRECTS} from "./professional/laboratory-routes.mjs";
 import { renderPublishedField } from "./v5/field-response.mjs";
 import { createProfessionalGithubReader } from "./professional/github-public.mjs";
@@ -427,7 +427,7 @@ export function createHandler(assets, release, options = {}) {
       // Only the approved public live route may frame the Cloudflare Stream
       // player, and only at the validated customer-specific origin.
       if (status === 200 && isHtml && path === "/live/" && options.laboratoryCandidate === true) {
-        const streamOrigin = streamPlaybackOrigin();
+        const streamOrigin = streamPlaybackOrigin(livePublicationFromEnv(env));
         if (streamOrigin) headers.set("Content-Security-Policy", headers.get("Content-Security-Policy") + "; frame-src " + streamOrigin + ";");
       }
       // The public Watch library is the only other creator route allowed to

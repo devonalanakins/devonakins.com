@@ -108,6 +108,15 @@ try:
                       const rect=s=>{const r=document.querySelector(s).getBoundingClientRect();return {x:r.x,y:r.y,width:r.width,height:r.height,bottom:r.bottom}};
                       return {viewport:innerWidth,scroll:document.documentElement.scrollWidth,header:rect('.site-header'),hero:rect('.lab-portfolio-hero'),focus:rect('.lab-focus'),signals:rect('.lab-portfolio-signals'),explore:rect('.lab-explore-heading'),selected:rect('.lab-portfolio-selected'),destinations:rect('.lab-destinations'),footer:rect('.lab-footer'),cards:[...document.querySelectorAll('.lab-destination')].map(el=>({x:el.getBoundingClientRect().x,y:el.getBoundingClientRect().y})),signalCards:[...document.querySelectorAll('.lab-signal-tile')].map(el=>({x:el.getBoundingClientRect().x,y:el.getBoundingClientRect().y}))};}''')
                     assert geometry['scroll']<=width+1,(engine,width,geometry)
+                    discovery=page.locator('.lab-editorial-links')
+                    assert discovery.is_visible()
+                    assert discovery.locator('a').evaluate_all("links=>links.map(link=>link.getAttribute('href'))")==['/work/','/courses/','/podcast/','/watch/','/fieldnotes/','/live/']
+                    discovery_geometry=discovery.evaluate("""el=>{const r=el.getBoundingClientRect();const focus=document.querySelector('.lab-focus').getBoundingClientRect();const cards=[...el.querySelectorAll('a')].map(a=>{const b=a.getBoundingClientRect();return {x:b.x,w:b.width,h:b.height,overflow:a.scrollWidth>a.clientWidth+1}});return {x:r.x,w:r.width,bottom:r.bottom,focusX:focus.x,focusW:focus.width,focusTop:focus.top,cards}}""")
+                    assert abs(discovery_geometry['w']-discovery_geometry['focusW'])<=2,(engine,width,discovery_geometry)
+                    assert abs(discovery_geometry['x']-discovery_geometry['focusX'])<=2
+                    assert discovery_geometry['bottom']<=discovery_geometry['focusTop']+3
+                    assert all(c['h']>=44 and not c['overflow'] for c in discovery_geometry['cards'])
+                    assert len(set(round(c['x']) for c in discovery_geometry['cards']))==(1 if width<=350 else 2 if width<=1000 else 3)
                     assert geometry['hero']['bottom']<=geometry['focus']['y']+3
                     assert geometry['focus']['bottom']<=geometry['explore']['y']+3
                     assert geometry['selected']['bottom']<=geometry['signals']['y']+3

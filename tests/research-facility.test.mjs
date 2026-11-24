@@ -121,7 +121,11 @@ test('owner leadership and proven delivery remain first-class without clinical o
   const discovery=page.match(/<nav class="lab-editorial-links" aria-label="Explore Devon’s work and content">([\s\S]*?)<\/nav>/)?.[1];
   assert.ok(discovery,'the homepage has a direct creator discovery map');
   assert.deepEqual([...discovery.matchAll(/href="([^"]+)"/g)].map(m=>m[1]),
-    ['/work/','/watch/','/podcast/','/courses/','/fieldnotes/']);
+    ['/work/','/courses/','/podcast/','/watch/','/fieldnotes/','/live/']);
+  assert.ok(page.indexOf('class="lab-editorial-links"')<page.indexOf('class="lab-focus"'),'creator discovery precedes the detailed work sections');
+  assert.equal((discovery.match(/lab-editorial-kicker/g)||[]).length,6);
+  assert.match(discovery,/Check the broadcast status/);
+  assert.doesNotMatch(discovery,/LIVE NOW|Join Patreon|Watch now/i);
   assert.match(page,/<strong>Nona Neuropsychology<\/strong><p>I lead nonclinical operations and technology/);
   assert.match(page,/CURRENT PROFESSIONAL FOCUS/);
   assert.match(page,/Clinical decisions remain with licensed professionals\./);
