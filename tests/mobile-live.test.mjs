@@ -11,6 +11,9 @@ test('default channel stays offline and never invokes the provider',async()=>{
  const html=renderMobileLive();
  assert.match(html,/<h1 id="pc-live-title">Live from/);
  assert.match(html,/NOT BROADCASTING/);
+ assert.match(html,/FROM LAPTOP TO MOBILE/);
+ assert.match(html,/One studio\. Real work\./);
+ assert.doesNotMatch(html,/IPHONE-FIRST BROADCAST|One phone\. Real work|recorded directly from the iPhone/i);
  assert.match(html,/data-live-player hidden/);
  assert.equal((html.match(/href="\/watch\/"/g)||[]).length,2);
  assert.match(html,/Watch library/);
