@@ -50,7 +50,7 @@ if (root) {
     if (offline) offline.hidden = false;
     currentPlayer = null;
     const messages: Record<Exclude<LiveState,'live'>, [string,string,string]> = {
-      prelaunch: ['NOT BROADCASTING', 'No broadcast right now.', 'The phone-first studio is being set up. New conversations and lessons will appear on the site when published.'],
+      prelaunch: ['NOT BROADCASTING', 'No broadcast right now.', 'The studio is being prepared for laptop and mobile broadcasts. New conversations and lessons will appear here when published.'],
       offline: ['OFF AIR', 'No broadcast right now.', 'When the next session starts, it will appear here. Browse the Watch library or courses in the meantime.'],
       starting: ['CONNECTING', 'The broadcast is connecting.', 'The video signal is starting. Check back in a moment.'],
       unavailable: ['STATUS UNAVAILABLE', 'Unable to confirm the live signal.', 'The player is hidden until the broadcast can be verified. Try again shortly.'],
@@ -59,7 +59,7 @@ if (root) {
     setText(status, s);
     setText(title, h);
     setText(description, d);
-    setText(foot, 'IPHONE-FIRST BROADCAST');
+    setText(foot, 'FROM LAPTOP TO MOBILE');
     root?.setAttribute('data-live-state', state);
   }
 
