@@ -22,6 +22,19 @@ function validChannel(publication) {
   };
 }
 
+// Runtime-only publication configuration: the code is safe to release before
+// activating Stream. All fields must be provided in the personal Worker; the
+// broadcast is never enabled merely because a live input exists.
+export function livePublicationFromEnv(env = {}) {
+  if (env.CLOUDFLARE_STREAM_PUBLIC_ENABLED !== '1') return LIVE_PUBLICATION;
+  return {
+    publicEnabled: true,
+    title: LIVE_PUBLICATION.title,
+    customerCode: env.CLOUDFLARE_STREAM_CUSTOMER_CODE ?? null,
+    inputId: env.CLOUDFLARE_STREAM_INPUT_ID ?? null,
+  };
+}
+
 export function streamPlaybackOrigin(publication = LIVE_PUBLICATION) {
   return validChannel(publication)?.origin ?? null;
 }
@@ -42,8 +55,9 @@ function jsonResponse(request, body, status = 200) {
 // Provider errors must never become a false LIVE state, expose secret data,
 // or infer that the creator has started broadcasting.
 export async function readPublicLiveStatus(request, env = {}, {
-  publication = LIVE_PUBLICATION, fetchImpl = fetch,
+  publication, fetchImpl = fetch,
 } = {}) {
+  publication ??= livePublicationFromEnv(env);
   if (!['GET', 'HEAD'].includes(request.method))
     return jsonResponse(request, {state: 'method-not-allowed'}, 405);
   if (publication?.publicEnabled !== true)
@@ -96,17 +110,17 @@ export function renderMobileLive() {
     '<p data-live-description>When I go live, the broadcast will play here. When I’m not, the Watch library is where approved recordings will appear.</p>',
     '</div>',
     '<div class="pc-live-player" data-live-player hidden></div>',
-    '<div class="pc-live-stage-footer"><span>DEVON ALAN AKINS</span><span data-live-stage-label>IPHONE-FIRST BROADCAST</span></div>',
+    '<div class="pc-live-stage-footer"><span>DEVON ALAN AKINS</span><span data-live-stage-label>FROM LAPTOP TO MOBILE</span></div>',
     '</div>',
     '<div class="pc-live-actions"><a class="pc-live-link pc-live-link-primary" href="/watch/">Watch library <span aria-hidden="true">&rarr;</span></a>',
     '<a class="pc-live-link" href="/podcast/">Podcast <span aria-hidden="true">&rarr;</span></a>',
     '<a class="pc-live-link" href="/courses/">Explore courses <span aria-hidden="true">&rarr;</span></a></div>',
     '</section>',
     '<section class="pc-live-below" aria-label="More from the studio">',
-    '<div class="pc-live-below-heading"><p class="pc-live-overline">THE FORMAT</p><h2>One phone. Real work. No production circus.</h2></div>',
+    '<div class="pc-live-below-heading"><p class="pc-live-overline">THE FORMAT</p><h2>One studio. Real work. No production circus.</h2></div>',
     '<div class="pc-live-tiles">',
     '<article><span>01 / BUILD</span><h3>Working sessions</h3><p>Software, systems, research, and the actual decisions behind the work.</p></article>',
-    '<article><span>02 / LEARN</span><h3>Screen lessons</h3><p>Practical explanations recorded directly from the iPhone, with narration first.</p></article>',
+    '<article><span>02 / LEARN</span><h3>Screen lessons</h3><p>Practical screen lessons with narration first, using the tools already at hand.</p></article>',
     '<article><span>03 / TALK</span><h3>Conversations</h3><p>Unscripted interviews and discussions when a guest has agreed to join.</p></article>',
     '</div>',
     '</section>',
