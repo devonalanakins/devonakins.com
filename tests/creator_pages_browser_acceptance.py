@@ -96,7 +96,13 @@ try:
                             assert page.locator(".pc-about").is_visible()
                             assert "The person behind" in page.locator("h1").inner_text()
                             assert page.locator(".pc-about-grid section").count()==4
-                            assert page.locator(".pc-about-principles li").count()==4
+                            principles=page.locator('section[aria-labelledby="pc-about-principles-title"]')
+                            ai_principles=page.locator('section[aria-labelledby="pc-about-ai-title"]')
+                            assert principles.is_visible() and ai_principles.is_visible()
+                            assert principles.locator("li").count()==4
+                            assert ai_principles.locator("li").count()==3
+                            assert ai_principles.locator("li strong").all_text_contents()==["Start with a real problem.","Verify the result.","Teach from evidence."]
+                            assert ai_principles.locator('a[href="/setup/"]').count()==1
                             assert page.locator('a[href="/about/"][aria-current="page"]').count()==1
                             assert page.locator("audio,video,iframe,form").count()==0
                             assert "clinical judgments remain with licensed professionals" in page.locator("main").inner_text()
