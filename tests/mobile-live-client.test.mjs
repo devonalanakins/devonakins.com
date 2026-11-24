@@ -8,6 +8,9 @@ import {stripTypeScriptTypes} from 'node:module';
 // deterministic timers and sequential live, stalled and recovered responses.
 test('hung live-status request times out, hides stale state and permits the next poll', async () => {
   const source = await readFile(new URL('../src/professional/mobile-live-client.ts', import.meta.url), 'utf8');
+  assert.match(source, /FROM LAPTOP TO MOBILE/);
+  assert.match(source, /laptop and mobile broadcasts/);
+  assert.doesNotMatch(source, /IPHONE-FIRST BROADCAST|phone-first studio/i);
   const script = stripTypeScriptTypes(source);
   const element = (text = '') => ({
     textContent: text, hidden: false, children: [],
