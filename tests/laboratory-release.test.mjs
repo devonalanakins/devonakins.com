@@ -73,3 +73,28 @@ test('all public routes render their selected section and projects require expli
  assert.throws(()=>renderResearchFacilityHome({project:{title:'UNAPPROVED'}}),/not approved/);
  for(const project of approvedPublicProjects){const html=renderResearchFacilityHome({initialView:'portfolio',project,canonicalPath:'/work/'+project.slug+'/'});assert.match(html,/lab-case-study/);assert.match(html,/What is not claimed/);assert.doesNotMatch(html,/href="\/gpt\/"/);}
 });
+
+test('personal Stream iframe origin appears only with valid runtime opt-in on /live/', async()=>{
+ const site=make(true);
+ const env={CLOUDFLARE_STREAM_PUBLIC_ENABLED:'1',CLOUDFLARE_STREAM_CUSTOMER_CODE:'ABCdef12345',
+   CLOUDFLARE_STREAM_INPUT_ID:'a'.repeat(32),CLOUDFLARE_STREAM_READ_TOKEN:'synthetic'};
+ const request=path=>new Request('https://devonakins.com'+path);
+ const live=await site.fetch(request('/live/'),env);
+ assert.equal(live.status,200);
+ const policy=live.headers.get('content-security-policy')||'';
+ assert.match(policy,/frame-src https:\/\/customer-abcdef12345\.cloudflarestream\.com;/);
+ assert.doesNotMatch(policy,/frame-src[^;]+(?:evil|iframe\.videodelivery\.net)/);
+ for(const path of ['/','/podcast/','/about/','/watch/unapproved/']){
+   const other=await site.fetch(request(path),env);
+   assert.doesNotMatch(other.headers.get('content-security-policy')||'',/customer-abcdef12345\.cloudflarestream\.com/,path);
+ }
+ const invalid={...env,CLOUDFLARE_STREAM_CUSTOMER_CODE:'evil.test'};
+ const disabled={...env,CLOUDFLARE_STREAM_PUBLIC_ENABLED:'0'};
+ for(const configuration of [invalid,disabled]){
+   const response=await site.fetch(request('/live/'),configuration);
+   assert.doesNotMatch(response.headers.get('content-security-policy')||'',/cloudflarestream\.com/);
+ }
+ const baseline=make(false);
+ const baselineLive=await baseline.fetch(request('/live/'),env);
+ assert.doesNotMatch(baselineLive.headers.get('content-security-policy')||'',/cloudflarestream\.com/);
+});

@@ -1,14 +1,14 @@
-# Devon Alan Akins — phone-first live studio
+# Devon Live — laptop-first stream, iPhone later
 
-**Status — November 21, 2026:** A source-only, offline-first `/live/` page and anonymous status adapter are under review. **No livestream is configured or published.** The linked personal Cloudflare account's Stream API returned `403 / Cloudflare Stream not enabled` when checked on November 21. No Stream subscription, Stream live input, broadcast key, recording, public episode, or paid product was created. Keep Nona Neuropsychology resources entirely separate.
+**Status — November 24, 2026:** The personal website is deployed with an honest OFF AIR state. The runtime Stream activation adapter is under review in PR #159; it defaults OFF and is not yet deployed. The personal Cloudflare Stream API returned 403 / Stream not enabled on November 24. No paid subscription, live input, ingest key, recording or actual public broadcast has been created or verified. Do not use any Nona Neuropsychology account or resource for this personal stream.
 
 ## Owner experience
 
-1. **Record:** iPhone Camera for spoken pieces, built-in iOS Screen Recording for narrated demonstrations, PRISM Live Studio for camera-based lives and custom RTMPS. Validate the Sony headset as the actual mic in *each* application; Bluetooth audio routing and screen-broadcast limitations differ by application.
-2. **Review:** Inspect the actual clip for sound, readability, notifications, sensitive material, and rights/guest consent before publication. Keep original files and a backup. Screen recording a phone **will capture anything visible**; hide notifications and close business/client information first.
-3. **Brand:** Use one composited portrait/landscape overlay per mobile format. The OBS scene pack is design source/reference and is **not** installed in PRISM. On iPhone, screen broadcast with face camera inset cannot be assumed. A voice-over-screen lesson is a complete format.
-4. **Publish:** Use `devonakins.com/live/` for a public broadcast only after the gated first-broadcast acceptance checks. Put approved public videos in `/watch/`, link podcast episodes from `/podcast/`, and develop structured lessons in `/courses/`. Patreon memberships and Spotify audio remain separate services.
-5. **Batch:** A longer recording can become a lesson and a few short excerpts. Publish from a real reviewed content queue; do not promise an automated scheduler or an archive that does not exist.
+1. **Record locally first:** OBS on the existing laptop with a display/window capture and the Sony headset selected as the actual microphone. Make a 60-second local recording, play it back, check voice, dropped frames, screen readability and private information. Turn off notifications and close healthcare, family, business or confidential windows.
+2. **First public stream after approved setup:** OBS Studio over protected RTMPS to a personal Cloudflare Stream input, watched through devonakins.com/live/. Keep a public-safe scene and verify another device can hear it.
+3. **Mobile later:** The iPhone with PRISM custom RTMPS can use a separately tested app route, but microphone routing and face-camera/screen composition must be tested on device. The visual scene pack is design source only; it is not yet installed in OBS or PRISM.
+4. **Replay review:** Automatic recording is required for this provider's RTMPS-to-HLS/DASH website playback. A recording can exist even if no link appears in /watch/; an unlisted recording is not necessarily private. Review access, deletion/retention and guest/media rights before publication.
+5. **Other channels:** Approved videos can later appear in /watch/, audio in /podcast/, and lessons in /courses/. No automatic editing, scheduling, membership access or replay publication is claimed.
 
 ## Website: what this candidate does
 
@@ -19,20 +19,19 @@
 - Allows a customer-specific `frame-src` only on the live page *after* the publication configuration is explicitly approved. The baseline CSP and all private routes remain unchanged.
 - Does **not** provide account signup, authenticated production controls, Stream resource provisioning, automatic course upload, payment, signed playback, replay publication, or recordings management. Those are separate reviewed increments.
 
-The publication gate is in `src/professional/mobile-live.mjs`, `LIVE_PUBLICATION`; it defaults to `publicEnabled:false` with no input/customer identifiers. A missing `CLOUDFLARE_STREAM_READ_TOKEN` Worker secret produces `unavailable`. **Never put API tokens or RTMPS stream keys into source or static site files.** The token should have the least privilege needed to read the live input's lifecycle status. Do not enable public playback until the live-input recording/security policy has been reviewed and approved.
+The runtime publication gate in `src/professional/mobile-live.mjs` defaults to `publicEnabled:false`. It requires the explicit environment flag `CLOUDFLARE_STREAM_PUBLIC_ENABLED=1` plus a validated `CLOUDFLARE_STREAM_CUSTOMER_CODE`, `CLOUDFLARE_STREAM_INPUT_ID`, and a separate protected `CLOUDFLARE_STREAM_READ_TOKEN`. Missing or invalid settings fail closed. Never put read credentials, RTMPS ingest URLs or stream keys into source, browser responses, screenshots or public files. No source merge alone activates the channel.
 
-## One-time activation, *not yet authorized or performed*
+## One-time activation — blocked until paid subscription and publication/access approval
 
-After deciding to subscribe to Cloudflare Stream and accepting the billing implications:
+1. Confirm Cloudflare Stream is available under the **personal** account and review the actual billing screen before activating. As documented in November 2026, storage capacity is prepaid in $5/month per 1,000 stored minutes, and video delivery costs $1 per 1,000 viewer-minutes. Usage must be monitored.
+2. Approve the first broadcast's audience, recording privacy and retention **before creating an input**. For RTMPS video to play in the HLS/DASH iframe, use `recording.mode: automatic`. Cloudflare's `recording.mode: off` also disables HLS/DASH viewing; it cannot be used for a watchable website stream. A public player with unrestricted signed URLs may leave the generated recording accessible via its direct URL even if /watch/ does not list it. Configure and verify the allowed origins and decide recording deletion explicitly. This website does not yet issue signed viewer tokens.
+3. Create a single personal-account live input only after approval; copy its genuine RTMPS server and key into **local OBS configuration**, never GitHub or chat. Retain the verified customer code and live input UID only for server configuration.
+4. Configure OBS: Custom server RTMPS, output 1280×720 at 30 fps, H.264 video roughly 3,000 kbps CBR, AAC audio, 4-second keyframes, auto reconnect enabled. Check the Sony mic actually drives the audio meter and that combined bitrate stays in Cloudflare's supported 2–14 Mbps range. Do a local test before any broadcast.
+5. Store the least-privilege Stream lifecycle read token as a **personal Worker secret**; set the customer code and input UID through protected Worker configuration. Keep `CLOUDFLARE_STREAM_PUBLIC_ENABLED` disabled until a real input and approved public access policy are in place.
+6. The exact PR head must pass ordinary `verify` and the full Laboratory workerd/Chromium/WebKit checks, then receive release review. Only the existing protected manual `laboratory` release workflow may ship the reviewed main SHA; independently verify `/_health`, the routes, CSP, secrets preservation and real live/offline states afterward.
+7. Once explicitly approved for public transmission, do a short public-safe OBS broadcast and independently check the viewer from another device, audio, valid lifecycle status, live-to-OFF AIR behavior and the recorded video's real visibility and deletion state. No automatic publication into /watch/.
 
-1. Confirm Stream can be activated under the **personal** account, not the Nona account. Review current rates, recording retention, viewer-minute charges and limits in the dashboard.
-2. Create **one** named live input with RTMPS support. Choose and test the recording policy deliberately: simplest privacy-preserving first launch is **no automatic public replay**; store a separately captured local master for review. If automatic recordings are desired later, ensure video access and retention are controlled independently.
-3. Store the RTMPS URL and stream key **only in the owner's streaming app**. Store a separate narrowly scoped read token as a Worker secret, not in HTML, JavaScript, GitHub, the site or screenshots.
-4. Verify the customer code and live-input UID from Cloudflare's own dashboard/API. Review the input's `allowedOrigins`, signed-URL settings and actual embed URL before updating `LIVE_PUBLICATION` and allowing a production release.
-5. In PRISM on the iPhone, add the actual custom RTMPS destination and key. Broadcast a non-sensitive test with explicit owner permission. Confirm audio source, resolution, dropout recovery, landscape/portrait behavior and the correct website player.
-6. Turn broadcasting off. Confirm the page actually changes to `OFF AIR`, its iframe unloads, and no replay becomes publicly listed without a separate review.
-
-No purchase, credential configuration, public appearance, or phone streaming has been executed by this code change.
+**If paid activation or actual transmission approval is not available:** stop after local OBS proof and keep the public page in its honest OFF AIR state. Code changes alone cannot establish a working live stream.
 
 ## Local review and acceptance
 
