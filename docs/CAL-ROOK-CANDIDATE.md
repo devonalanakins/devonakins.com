@@ -1,0 +1,9 @@
+# Cal Rook workshop candidate
+
+**Review only.** Build: `LABORATORY_SITE_CANDIDATE=1 CAL_ROOK_SITE_CANDIDATE=1 npm run build`. Ordinary builds and the existing Laboratory candidate remain unchanged. Do not merge or deploy without owner approval and exact-head verification. The new branch builds on the integrated creator candidate, preserving its routes and publication controls.
+
+Devon Alan Akins remains the real author, developer and contact. Cal Rook is an original illustrated fictional workshop guide, not a separate person or an implemented chatbot. No health/recovery details, family information, private writing, patient information, new tracking, contact automation or media activation. The artwork is AI-generated for this brief without a personal reference photograph; original geometry is authored for this candidate. Do not imply trademark clearance or exclusive copyright. Existing repo code license is unchanged. Full-size artwork and merch masters are maintained separately in the design handoff, not in the public web build.
+
+Palette: graphite #171B18, paper #F4EBDD, forest #244237, copper #B56F4A. Copper accent only. Georgia headings, system sans body, mono labels. Workshop After Hours (home), Field Notes (writing/learn), Bench Mark (navigation/favicons). Voice: start with what happened; identify what failed; give a reproducible next step. Rook dialogue is explicitly labeled. “Take what’s useful. Leave the rest. Come inside when dinner’s ready.”
+
+Review gates: exact-head standard verify and explicit opt-in build, actual Worker/browser checks at desktop and phone, keyboard/focus, both appearances, reduced motion, route/canonical/link/media checks, contrast on all existing surfaces. Current PR is not proof of a working deployment. Live remains gated by upstream publication logic. No profile changes or merchandise listing/order.
