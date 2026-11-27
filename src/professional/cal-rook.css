@@ -43,3 +43,11 @@ html[data-cal-rook] .lab-body .lab-action:hover:not(.lab-portfolio-hero .lab-act
 html[data-cal-rook] .rook-about, html[data-cal-rook] .rook-contact { max-width:960px; margin:20px auto 40px; padding:24px; border-top:2px solid #B56F4A; font:16px/1.6 system-ui,sans-serif; color:var(--rook-ink); }
 @media (max-width:760px) { html[data-cal-rook] .lab-body .lab-portfolio-hero { grid-template-columns:minmax(0,1fr); margin-top:16px; padding:24px 18px; gap:22px; } html[data-cal-rook] .lab-body .lab-portfolio-hero h1 { font-size:clamp(40px,9vw,64px); } html[data-cal-rook] .rook-guide { grid-template-columns:100px minmax(0,1fr); align-items:center; padding:12px; gap:14px; } html[data-cal-rook] .rook-tape { display:none; } html[data-cal-rook] .rook-feature { grid-template-columns:1fr; } html[data-cal-rook] .rook-feature-plate { display:flex; align-items:center; justify-content:flex-start; padding:12px 20px; text-align:left; } html[data-cal-rook] .rook-feature-plate svg { width:34px; height:34px; } html[data-cal-rook] .site-brand strong { font-size:14px; } }
 @media (prefers-reduced-motion:reduce) { html[data-cal-rook] *, html[data-cal-rook] *::before, html[data-cal-rook] *::after { animation-duration:.01ms!important; transition-duration:.01ms!important; scroll-behavior:auto!important; } }
+
+/* The broadcast theater remains dark even in light appearance. */
+html[data-cal-rook] .pc-live :is(a,button,summary):focus-visible { outline-color:#F4EBDD!important; }
+html[data-cal-rook] .lab-body .lab-portfolio-hero .lab-portfolio-actions { align-items:center; flex-wrap:wrap; }
+html[data-cal-rook] .lab-body .lab-portfolio-hero .lab-action { max-width:100%; }
+html[data-cal-rook] .lab-body .lab-editorial-links { grid-column:1/-1; }
+html[data-cal-rook] .lab-body .lab-personal { grid-column:1/-1; }
+html[data-cal-rook] .pc-footer > div > a { color:var(--pc-blue); }

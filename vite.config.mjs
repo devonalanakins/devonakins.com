@@ -26,6 +26,9 @@ export default defineConfig({
       name: "exclude-creator-media-from-other-builds",
       apply: "build",
       async writeBundle(options) {
+        if (process.env.CAL_ROOK_SITE_CANDIDATE !== "1" && options.dir) {
+          await rm(resolve(options.dir, "cal-rook"), {recursive: true, force: true});
+        }
         if (!laboratoryCandidate && options.dir) {
           await rm(resolve(options.dir, "podcast-media"), {recursive: true, force: true});
         }
