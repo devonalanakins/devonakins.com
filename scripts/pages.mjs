@@ -1,3 +1,4 @@
+import {decorateCalRook} from "../src/professional/cal-rook.mjs";
 import {FIELDNOTES} from "../src/professional/fieldnotes.mjs";
 // Recreate the checked-in identity assets with the current site palette for every build.
 import "./assets.mjs";
@@ -42,6 +43,9 @@ const professionalCandidate = process.env.PROFESSIONAL_SITE_CANDIDATE === "1";
 const oneScreenCandidate = process.env.ONE_SCREEN_SITE_CANDIDATE === "1";
 // Review-only scientific identity. No change to the protected default V4.
 const laboratoryCandidate = process.env.LABORATORY_SITE_CANDIDATE === "1";
+const calRookCandidate = process.env.CAL_ROOK_SITE_CANDIDATE === "1";
+if (calRookCandidate && !laboratoryCandidate) throw new Error("Cal Rook requires the Laboratory candidate");
+const applyCalRook = (html, path) => calRookCandidate ? decorateCalRook(html, path) : html;
 // A real, locally packaged owner photo is required; absent assets render no
 // portrait block and make no broken or third-party image requests.
 const laboratoryPortraitAvailable = laboratoryCandidate && existsSync('public/professional/devon-portrait.avif');
@@ -99,7 +103,7 @@ if (existsSync("public/podcast-media")) {
 } else if (laboratoryCandidate && creatorMediaFiles.length) {
   throw new Error("Approved podcast assets directory is missing");
 }
-await writeFile("index.html", laboratoryCandidate ? renderResearchFacilityHome({portraitAvailable:laboratoryPortraitAvailable}) : oneScreenCandidate ? renderOneScreenHome({datedCapture:datedGptCapture,motionAssetAvailable}) : professionalCandidate ? renderProfessionalPage("home",publicGptContext) : fullV5Candidate ? renderV5PublicPage("home") : v5Candidate ? renderV5PublicHomepage() : home);
+await writeFile("index.html", applyCalRook(laboratoryCandidate ? renderResearchFacilityHome({portraitAvailable:laboratoryPortraitAvailable}) : oneScreenCandidate ? renderOneScreenHome({datedCapture:datedGptCapture,motionAssetAvailable}) : professionalCandidate ? renderProfessionalPage("home",publicGptContext) : fullV5Candidate ? renderV5PublicPage("home") : v5Candidate ? renderV5PublicHomepage() : home, "/"));
 const all = [...new Set([
   ...pages.map(({ path }) => path),
   ...(laboratoryCandidate?[...Object.values(LABORATORY_ROUTES),...creatorPaths,...Object.keys(FIELDNOTES),...Object.keys(LABORATORY_REDIRECTS),"/listening/"]:[]),
@@ -125,7 +129,7 @@ for (const path of all) {
     renderImmersiveRoute(home,path,projects,gptSnapshot);
   const published = professionalCandidate && !professionalPaths.has(path) && !project
     ? repairProfessionalLegacyNavigation(html) : html;
-  await writeFile(dir+"index.html",published);
+  await writeFile(dir+"index.html",applyCalRook(published,path));
 }
 await writeFile(
   "public/sitemap.xml",

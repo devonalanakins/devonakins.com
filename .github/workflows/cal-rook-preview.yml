@@ -1,0 +1,42 @@
+name: Verify Cal Rook preview
+on:
+  pull_request:
+    branches:
+      - feature/vibe-coding-identity-20261123
+  push:
+    branches:
+      - feature/cal-rook-workshop-20261126
+permissions:
+  contents: read
+jobs:
+  workshop_candidate:
+    if: github.head_ref == 'feature/cal-rook-workshop-20261126' || github.ref == 'refs/heads/feature/cal-rook-workshop-20261126'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - run: npm ci
+      - run: LABORATORY_SITE_CANDIDATE=1 CAL_ROOK_SITE_CANDIDATE=1 npm run build
+      - run: node --test tests/cal-rook.test.mjs
+      - run: python3 -m pip install --disable-pip-version-check playwright==1.57.0
+      - run: python3 -m playwright install --with-deps chromium webkit
+      - run: python3 tests/cal_rook_browser_acceptance.py
+      - name: Preserve preview and review evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cal-rook-preview
+          path: |
+            dist/
+            browser-qa/cal-rook/
+          if-no-files-found: warn
+          retention-days: 14

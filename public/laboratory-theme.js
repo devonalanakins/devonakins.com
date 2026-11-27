@@ -20,7 +20,7 @@
     root.dataset.theme = mode;
     root.dataset.themePreference = preference;
     const themeColor = document.querySelector('meta[name="theme-color"]');
-    if (themeColor) themeColor.setAttribute('content', mode === 'dark' ? '#0c111a' : '#f3f1e9');
+    if (themeColor) themeColor.setAttribute('content', root.hasAttribute('data-cal-rook') ? (mode === 'dark' ? '#171B18' : '#F4EBDD') : (mode === 'dark' ? '#0c111a' : '#f3f1e9'));
     document.querySelectorAll('[data-lab-theme-select]').forEach(control => {
       if (control.value !== preference) control.value = preference;
     });
