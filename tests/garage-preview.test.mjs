@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import {readFileSync,existsSync} from "node:fs";
 import {renderGarageEpisode,injectGarageEpisode} from "../garage/episode-panel.mjs";
 import {podcastPublication} from "../src/professional/podcast-publication.mjs";
+import {garageBuildMode} from "../garage/build-mode.mjs";
 const html=readFileSync(new URL("../garage/index.html",import.meta.url),"utf8");
 const scene=readFileSync(new URL("../garage/scene.mjs",import.meta.url),"utf8");
 test("garage preview is noindex and honest about capture and accounts",()=>{
@@ -39,9 +40,21 @@ test("Garage episode projection follows canonical approvals and escapes title an
   const result=injectGarageEpisode(html,pub);assert.ok(result.includes(projected));assert.ok(!result.includes("GARAGE_EPISODE_START"));
   assert.throws(()=>injectGarageEpisode("missing",{episodes:[]}));
 });
+test("homepage requires both explicit candidate flags",()=>{
+  assert.deepEqual(garageBuildMode({}),{preview:false,home:false});
+  assert.deepEqual(garageBuildMode({LABORATORY_SITE_CANDIDATE:"1"}),{preview:false,home:false});
+  assert.throws(()=>garageBuildMode({GARAGE_HOME_CANDIDATE:"1"}));
+  assert.throws(()=>garageBuildMode({GARAGE_SITE_CANDIDATE:"1"}));
+  assert.throws(()=>garageBuildMode({GARAGE_HOME_CANDIDATE:"1",LABORATORY_SITE_CANDIDATE:"1"}));
+  assert.deepEqual(garageBuildMode({GARAGE_SITE_CANDIDATE:"1",LABORATORY_SITE_CANDIDATE:"1"}),{preview:true,home:false});
+  assert.deepEqual(garageBuildMode({GARAGE_SITE_CANDIDATE:"1",LABORATORY_SITE_CANDIDATE:"1",GARAGE_HOME_CANDIDATE:"1"}),{preview:true,home:true});
+});
 test("built output is explicitly gated and excluded from sitemap",()=>{
   if(!existsSync("dist/index.html"))return;
-  const enabled=process.env.GARAGE_SITE_CANDIDATE==="1"&&process.env.LABORATORY_SITE_CANDIDATE==="1";
+  const {preview:enabled,home}=garageBuildMode();
+  const root=readFileSync("dist/index.html","utf8");
+  assert.equal(root.includes('data-garage-preview="true"'),home);
+  if(home){assert.ok(root.includes(renderGarageEpisode(podcastPublication())));assert.match(root,/name="robots" content="noindex,nofollow"/);assert.ok(!root.includes("GARAGE_EPISODE_START"));}
   assert.equal(existsSync("dist/garage/index.html"),enabled);
   assert.doesNotMatch(readFileSync("dist/sitemap.xml","utf8"),/devonakins\.com\/garage\//);
   if(enabled){const built=readFileSync("dist/garage/index.html","utf8");assert.ok(built.includes(renderGarageEpisode(podcastPublication())));assert.ok(!built.includes("GARAGE_EPISODE_START"));}

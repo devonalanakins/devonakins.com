@@ -8,6 +8,7 @@ import {renderProfessionalPage, renderProfessionalProjectPage, PROFESSIONAL_ROUT
 import {renderOneScreenHome} from "../src/professional/one-screen.mjs";
 import {LABORATORY_ROUTES,LABORATORY_REDIRECTS,laboratoryViewForPath} from "../src/professional/laboratory-routes.mjs";
 import {renderResearchFacilityHome} from "../src/professional/research-facility.mjs";
+import {garageBuildMode} from "../garage/build-mode.mjs";
 import {creatorPaths,creatorMediaFiles,renderCreatorPage} from "../src/professional/creator-pages.mjs";
 import { pages } from "../src/content.mjs";
 import { approvedPublicProjects as projects } from "../src/publication-manifest.mjs";
@@ -42,6 +43,7 @@ const professionalCandidate = process.env.PROFESSIONAL_SITE_CANDIDATE === "1";
 const oneScreenCandidate = process.env.ONE_SCREEN_SITE_CANDIDATE === "1";
 // Review-only scientific identity. No change to the protected default V4.
 const laboratoryCandidate = process.env.LABORATORY_SITE_CANDIDATE === "1";
+const {home:garageHomeCandidate}=garageBuildMode();
 // A real, locally packaged owner photo is required; absent assets render no
 // portrait block and make no broken or third-party image requests.
 const laboratoryPortraitAvailable = laboratoryCandidate && existsSync('public/professional/devon-portrait.avif');
@@ -99,7 +101,7 @@ if (existsSync("public/podcast-media")) {
 } else if (laboratoryCandidate && creatorMediaFiles.length) {
   throw new Error("Approved podcast assets directory is missing");
 }
-await writeFile("index.html", laboratoryCandidate ? renderResearchFacilityHome({portraitAvailable:laboratoryPortraitAvailable}) : oneScreenCandidate ? renderOneScreenHome({datedCapture:datedGptCapture,motionAssetAvailable}) : professionalCandidate ? renderProfessionalPage("home",publicGptContext) : fullV5Candidate ? renderV5PublicPage("home") : v5Candidate ? renderV5PublicHomepage() : home);
+await writeFile("index.html", garageHomeCandidate ? await readFile(new URL("../garage/index.html",import.meta.url),"utf8") : laboratoryCandidate ? renderResearchFacilityHome({portraitAvailable:laboratoryPortraitAvailable}) : oneScreenCandidate ? renderOneScreenHome({datedCapture:datedGptCapture,motionAssetAvailable}) : professionalCandidate ? renderProfessionalPage("home",publicGptContext) : fullV5Candidate ? renderV5PublicPage("home") : v5Candidate ? renderV5PublicHomepage() : home);
 const all = [...new Set([
   ...pages.map(({ path }) => path),
   ...(laboratoryCandidate?[...Object.values(LABORATORY_ROUTES),...creatorPaths,...Object.keys(FIELDNOTES),...Object.keys(LABORATORY_REDIRECTS),"/listening/"]:[]),

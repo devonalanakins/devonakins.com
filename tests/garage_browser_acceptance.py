@@ -2,6 +2,7 @@
 import functools
 import http.server
 import pathlib
+import os
 import threading
 from playwright.sync_api import sync_playwright, expect
 
@@ -14,8 +15,11 @@ origin = f"http://127.0.0.1:{server.server_port}"
 out = ROOT / "browser-qa" / "garage"
 out.mkdir(parents=True, exist_ok=True)
 
-def open_preview(page):
-    response = page.goto(origin + "/garage/")
+HOME = os.environ.get("GARAGE_HOME_CANDIDATE") == "1"
+ENTRY = "/" if HOME else "/garage/"
+
+def open_preview(page, path=ENTRY):
+    response = page.goto(origin + path)
     assert response and response.status == 200
     expect(page.get_by_role("heading", name="The Devon Alan Akins Podcast.")).to_be_visible()
     expect(page.get_by_role("link", name="Explore the podcast")).to_be_visible()
@@ -26,6 +30,9 @@ def open_preview(page):
     overflow = page.evaluate("""() => ({width: innerWidth, scroll: document.documentElement.scrollWidth, offenders: [...document.querySelectorAll("body *")].filter(e => e.getBoundingClientRect().right > innerWidth + 1).slice(0,12).map(e => [e.tagName,e.id,e.className?.baseVal || e.className])})""")
     assert overflow["scroll"] <= overflow["width"], overflow
     assert page.locator("iframe,video").count() == 0
+    assert page.locator("body").get_attribute("data-garage-preview") == "true"
+    assert page.locator('meta[name="robots"]').get_attribute("content") == "noindex,nofollow"
+    assert page.evaluate("""() => {const r=document.querySelector("#viewport").getBoundingClientRect();const p=document.querySelector(".stage").getBoundingClientRect();return r.width<=p.width && r.right<=p.right+1}"""), "Viewport exceeds its stage"
 
 try:
     with sync_playwright() as p:
@@ -40,7 +47,7 @@ try:
                 page.get_by_text("Menu", exact=True).click()
                 page.get_by_role("link", name="Explore the podcast").focus()
                 expect(page.get_by_role("link", name="Explore the podcast")).to_be_focused()
-                for anchor in page.locator(".zones a, .hero-actions a, .episode-link").all():
+                for anchor in page.locator(".zones a, .hero-actions a, .episode-link, .discover a, .menu nav a").all():
                     href = anchor.get_attribute("href")
                     assert page.request.get(origin + href).ok, href
                 page.screenshot(path=str(out / f"{name}-{width}-illustration.png"), full_page=True)
@@ -50,11 +57,18 @@ try:
                     assert not violations, violations
                 page.close()
             page = browser.new_page(java_script_enabled=False, viewport={"width":393,"height":852})
-            page.goto(origin + "/garage/")
+            page.goto(origin + ENTRY)
             expect(page.get_by_text("3D requires JavaScript.", exact=False)).to_be_visible()
             expect(page.get_by_role("link", name="Explore the podcast")).to_be_visible()
             expect(page.get_by_role("link", name="Live ↗", exact=True)).to_be_visible()
             page.close()
+            if HOME:
+                page = browser.new_page(viewport={"width":393,"height":852})
+                open_preview(page, "/garage/")
+                page.get_by_role("link", name="Explore the podcast").click()
+                assert page.url == origin + "/podcast/"
+                assert page.locator("body").get_attribute("data-garage-preview") is None
+                page.close()
             # Simulate a browser denying all WebGL contexts; ordinary links must survive.
             page = browser.new_page()
             page.add_init_script("""const original = HTMLCanvasElement.prototype.getContext;

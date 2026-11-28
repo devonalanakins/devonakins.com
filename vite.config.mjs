@@ -3,6 +3,7 @@ import {LABORATORY_ROUTES,LABORATORY_REDIRECTS} from "./src/professional/laborat
 import {creatorPaths} from "./src/professional/creator-pages.mjs";
 import {podcastPublication} from "./src/professional/podcast-publication.mjs";
 import {injectGarageEpisode} from "./garage/episode-panel.mjs";
+import {garageBuildMode} from "./garage/build-mode.mjs";
 import { defineConfig } from "vite";
 import {PROFESSIONAL_ROUTES} from "./src/professional/site.mjs";
 import { rm } from "node:fs/promises";
@@ -12,8 +13,7 @@ import { publicNotes } from "./src/v5/public-notes.mjs";
 import { pages, projects } from "./src/content.mjs";
 import { v5PreviewPlugin } from "./src/v5/preview-plugin.mjs";
 const laboratoryCandidate = process.env.LABORATORY_SITE_CANDIDATE === "1";
-const garageCandidate = process.env.GARAGE_SITE_CANDIDATE === "1";
-if (garageCandidate && !laboratoryCandidate) throw new Error("Garage preview requires the Laboratory candidate");
+const {preview:garageCandidate,home:garageHomeCandidate}=garageBuildMode();
 const paths = [...new Set([
   ...pages.map((p) => p.path),
   ...(laboratoryCandidate?[...Object.values(LABORATORY_ROUTES),...creatorPaths,...Object.keys(FIELDNOTES),...Object.keys(LABORATORY_REDIRECTS),"/listening/"]:[]),
@@ -30,7 +30,8 @@ export default defineConfig({
     {
       name: "garage-approved-podcast-episode",
       transformIndexHtml(html, context) {
-        if (!garageCandidate || resolve(context.filename) !== resolve("garage/index.html")) return html;
+        const path=resolve(context.filename);
+        if (!garageCandidate || !(path===resolve("garage/index.html") || (garageHomeCandidate && path===resolve("index.html")))) return html;
         return injectGarageEpisode(html, podcastPublication());
       },
     },
