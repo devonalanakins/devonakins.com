@@ -15,9 +15,10 @@ payment, shipping, and return terms. Update the catalog as items sell.
    sheet for IDs, ownership and recall checks, condition, comparables, costs,
    packed dimensions, and live listing URLs. Keep this workbook private in
    iCloud Drive. Use Notes for draft copy if convenient.
-3. After seller verification and approval, use Safari to publish one
-   listing per item on the chosen marketplace. Check the public item URL from
-   a private browsing tab. Confirm the price, photos, and fulfillment terms.
+3. Start with eBay for general resale and Depop for shoes and clothing.
+   Check the relevant seller or payment setup, then publish one listing per
+   item through its marketplace. Open the direct item URL in a private Safari
+   tab and confirm the price, photos, and fulfillment terms.
 4. Add approved item details to the [public catalog template](trading-post-items.csv)
    in Numbers. Use one line per photo in the Photo descriptions cell, in photo
    order. Keep costs, buyer information, pickup addresses, and the private
@@ -29,6 +30,8 @@ payment, shipping, and return terms. Update the catalog as items sell.
 - [Import a workbook in Numbers on iPhone](https://support.apple.com/guide/numbers-iphone/tan9f3c54bdc/ios)
 - [Export CSV from Numbers on iPhone](https://support.apple.com/guide/numbers-iphone/export-to-excel-or-another-file-format-tan3b922d4ad/ios)
 - [Share photos without location data](https://support.apple.com/guide/iphone/share-photos-and-videos-iphf28f17237/ios)
+- [Set up an eBay seller account](https://www.ebay.com/help/selling/getting-paid/introducing-managed-payments-ebay?id=4792)
+- [List an item on Depop](https://depophelp.zendesk.com/hc/en-gb/articles/360032716413-How-to-list-an-item)
 
 ## Prepare a catalog update
 
@@ -73,12 +76,13 @@ In `src/trading-post/inventory.json`, each item has:
 | `tested` / `included` | Actual testing or an explicit untested state, and what comes with it |
 | `priceCents` | Whole cents in US dollars, matching the public listing |
 | `status` | `available` or `sold` |
-| `listingUrl` | The direct eBay or Facebook Marketplace item URL for an available item. Remove the link from sold items. |
+| `listingUrl` | The direct eBay, Depop, or Facebook Marketplace item URL for an available item. Remove the link from sold items. |
 | `photos` | Array of `{ "file": "item-slug-1.jpg", "alt": "Specific view of the item" }` objects |
 
 Commit public-ready records and photos only. The normal build includes the
-shop once the manifest has `published: true` and passes validation. The site’s
-manual deployment workflow covers the approved release. Run `npm run build`
+shop once the manifest has `published: true` and passes validation. An empty
+catalog shows the opening state. The site’s manual deployment workflow covers
+the approved release. Run `npm run build`
 and `npm test`, then open the released listing pages on iPhone before sharing
 the shop link. Set a sold item’s status to `sold` and remove its marketplace link
 to move it into the archive. To unpublish the entire shop, set `published` to

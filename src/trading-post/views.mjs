@@ -81,14 +81,15 @@ export function renderShop(catalog, path, indexable) {
           <p class="meta">Secondhand goods</p>
           <h1 id="hero-heading">Good things deserve a second life.</h1>
           <p>Browse secondhand finds with photos of the actual item and a clear account of its condition.</p>
-          <a class="button hero-button" href="#collection">See what’s available</a>
+          ${available.length ? '<a class="button hero-button" href="#collection">See what’s available</a>' : ""}
         </div>
         <img class="hero-art" src="${assets}workshop.svg" alt="" width="530" height="440">
       </section>
       <section class="collection" id="collection" aria-labelledby="collection-heading">
         <h2 id="collection-heading">Available finds</h2>
         ${available.length ? grid(available, true) :
-          '<div class="empty"><p>There are no items available right now.</p></div>'}
+          `<div class="empty"><p>${catalog.items.length ? "There are no items available right now." :
+            "The first listings are being prepared."}</p></div>`}
       </section>`,
     });
   }

@@ -42,8 +42,11 @@ test("available, sold and empty views expose the right purchasing controls", () 
   assert.doesNotMatch(renderShop(sold, "/shop/", true), /data-listing/);
   const preview = renderShop(validateInventory({ published: false, items: [] }), "/shop/", false);
   assert.match(preview, /noindex, nofollow/);
-  assert.match(preview, /no items available/);
-  assert.throws(() => withItems(), /published/);
+  assert.match(preview, /first listings are being prepared/);
+  const opening = renderShop(withItems(), "/shop/", true);
+  assert.match(opening, /first listings are being prepared/);
+  assert.doesNotMatch(opening, /noindex|See what’s available|data-listing|www\.ebay\.com/);
+  assert.match(renderShop(sold, "/shop/", true), /no items available/);
 });
 
 test("inventory rejects unsafe URLs, duplicate records, private fields, and unsafe photo paths", () => {
@@ -53,6 +56,9 @@ test("inventory rejects unsafe URLs, duplicate records, private fields, and unsa
     "https://www.ebay.com:9999/itm/123456789012",
     "javascript:alert(1)",
     "https://www.ebay.com/signin",
+    "https://www.depop.com.example.com/products/example-sneakers/",
+    "https://www.depop.com/sell/",
+    "https://www.depop.com/products/example-sneakers/checkout/",
   ]) {
     assert.throws(() => withItems({ ...entry, listingUrl }), /listingUrl/);
   }
@@ -65,6 +71,21 @@ test("inventory rejects unsafe URLs, duplicate records, private fields, and unsa
   assert.throws(() => withItems({ ...entry, slug: "../unsafe" }), /slug/);
   assert.throws(() => withItems({ ...entry, photos: [{ file: "../private.jpg", alt: "Photo" }] }), /photo file/);
   assert.throws(() => withItems({ ...entry, status: "sold" }), /remove the listing URL/);
+});
+
+test("Depop item links work through the Numbers import, item view, and sold archive", () => {
+  const listingUrl = "https://depop.com/products/demo_shop-test-sneakers?utm_medium=share#details";
+  const clean = "https://www.depop.com/products/demo_shop-test-sneakers/";
+  const active = withItems({ ...entry, listingUrl });
+  assert.deepEqual(active.items[0].market, { href: clean, name: "Depop" });
+  const html = renderShop(active, itemPath(active.items[0]), true);
+  assert.ok(html.includes('href="' + clean + '"'));
+  assert.match(html, /View on Depop/);
+  assert.doesNotMatch(html, /utm_medium/);
+  const csv = header + "\n" + csvRow.replace("https://www.ebay.com/itm/123456789012?source=remove", listingUrl);
+  assert.equal(inventoryFromCsv(csv).items[0].listingUrl, clean);
+  const sold = withItems({ ...entry, status: "sold", listingUrl: null });
+  assert.doesNotMatch(renderShop(sold, itemPath(sold.items[0]), true), /View on Depop/);
 });
 
 test("only manifest-listed JPEG photos without embedded metadata can be released", async () => {

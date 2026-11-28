@@ -42,13 +42,17 @@ function marketplaceUrl(value) {
   if (["www.facebook.com", "facebook.com", "m.facebook.com"].includes(url.hostname) && facebook) {
     return { href: "https://www.facebook.com/marketplace/item/" + facebook[1] + "/", name: "Facebook Marketplace" };
   }
+  const depop = url.pathname.match(/^\/products\/([a-z0-9_-]{2,180})\/?$/i);
+  if (["www.depop.com", "depop.com"].includes(url.hostname) && depop) {
+    return { href: "https://www.depop.com/products/" + depop[1] + "/", name: "Depop" };
+  }
   fail("listingUrl");
 }
 
 export function validateInventory(source) {
   record(source, ["published", "items"], "root");
   if (typeof source.published !== "boolean" || !Array.isArray(source.items) ||
-      source.items.length > 150 || (source.published && !source.items.length)) fail("items or published");
+      source.items.length > 150) fail("items or published");
 
   const ids = new Set();
   const slugs = new Set();
