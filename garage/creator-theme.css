@@ -1,0 +1,14 @@
+/* Opt-in supporting-page theme. Keep existing light/dark preference and semantics. */
+html.lab-html[data-garage-editorial]{--pc-paper:#f1f0e9;--pc-ink:#232921;--pc-muted:#465346;--pc-line:#bdc6b8;--pc-panel:#e4e9dc;--pc-blue:#365222;--pc-blue-on:#fff;--pc-card:#fbfaf5;--pc-grid:#36522219}
+html.lab-html[data-garage-editorial] .lab-body{--paper:#f1f0e9;--ink:#232921;--muted:#465346;--line:#bdc6b8;--blue:#365222;--accent-solid:#365222}
+html.lab-html[data-garage-editorial][data-theme="dark"]{--pc-paper:#101211;--pc-ink:#f1f0e9;--pc-muted:#b9c2b7;--pc-line:#414943;--pc-panel:#252e26;--pc-blue:#c8f36a;--pc-blue-on:#17200a;--pc-card:#191e1a;--pc-grid:#b9c2b719;background:#101211}
+html.lab-html[data-garage-editorial][data-theme="dark"] .lab-body{--paper:#101211;--ink:#f1f0e9;--muted:#b9c2b7;--line:#414943;--blue:#c8f36a;--accent-solid:#405c29}
+@media(prefers-color-scheme:dark){html.lab-html[data-garage-editorial]:not([data-theme]){--pc-paper:#101211;--pc-ink:#f1f0e9;--pc-muted:#b9c2b7;--pc-line:#414943;--pc-panel:#252e26;--pc-blue:#c8f36a;--pc-blue-on:#17200a;--pc-card:#191e1a;--pc-grid:#b9c2b719}}
+html[data-garage-editorial] .creator-body{font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
+html[data-garage-editorial] .creator-body .pc-button,html[data-garage-editorial] .pc-product,html[data-garage-editorial] .pc-control-empty,html[data-garage-editorial] .pc-course-steps article{border-radius:9px}
+html[data-garage-editorial] .pc-hero-art{background:var(--pc-panel);border-radius:0 10px 10px 0}
+html[data-garage-editorial] .pc-live-intro h1{font-family:system-ui,-apple-system,"Segoe UI",sans-serif;font-weight:650}
+html[data-garage-editorial] .pc-live-intro h1 em{color:#f0cf9b;font-style:normal}
+html[data-garage-editorial] .editorial-photo-note{width:min(760px,calc(100% - 32px));margin:32px auto;padding:16px;border:1px solid var(--pc-line);border-radius:10px;background:var(--pc-panel)}
+html[data-garage-editorial] .editorial-photo-note img{display:block;width:100%;max-height:420px;object-fit:contain;border-radius:6px}
+html[data-garage-editorial] .editorial-photo-note figcaption{padding-top:10px;color:var(--pc-muted);font-size:13px}

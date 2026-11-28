@@ -4,6 +4,7 @@ import {creatorPaths} from "./src/professional/creator-pages.mjs";
 import {podcastPublication} from "./src/professional/podcast-publication.mjs";
 import {injectGarageEpisode} from "./garage/episode-panel.mjs";
 import {garageBuildMode} from "./garage/build-mode.mjs";
+import {injectEditorialHome,injectEditorialTheme,readEditorialAssets} from "./garage/editorial-media.mjs";
 import { defineConfig } from "vite";
 import {PROFESSIONAL_ROUTES} from "./src/professional/site.mjs";
 import { rm } from "node:fs/promises";
@@ -14,6 +15,7 @@ import { pages, projects } from "./src/content.mjs";
 import { v5PreviewPlugin } from "./src/v5/preview-plugin.mjs";
 const laboratoryCandidate = process.env.LABORATORY_SITE_CANDIDATE === "1";
 const {preview:garageCandidate,home:garageHomeCandidate}=garageBuildMode();
+const editorialAssets=garageCandidate?readEditorialAssets():{};
 const paths = [...new Set([
   ...pages.map((p) => p.path),
   ...(laboratoryCandidate?[...Object.values(LABORATORY_ROUTES),...creatorPaths,...Object.keys(FIELDNOTES),...Object.keys(LABORATORY_REDIRECTS),"/listening/"]:[]),
@@ -29,10 +31,18 @@ export default defineConfig({
     v5PreviewPlugin(),
     {
       name: "garage-approved-podcast-episode",
-      transformIndexHtml(html, context) {
-        const path=resolve(context.filename);
-        if (!garageCandidate || !(path===resolve("garage/index.html") || (garageHomeCandidate && path===resolve("index.html")))) return html;
-        return injectGarageEpisode(html, podcastPublication());
+      transformIndexHtml: {
+        order:"pre",
+        handler(html,context) {
+          if(!garageCandidate)return html;
+          const path=resolve(context.filename);
+          if(path===resolve("garage/index.html")||(garageHomeCandidate&&path===resolve("index.html"))){
+            return injectEditorialHome(injectGarageEpisode(html,podcastPublication()),editorialAssets);
+          }
+          if(!garageHomeCandidate)return html;
+          const route=paths.find(p=>resolve("."+p+"index.html")===path);
+          return route?injectEditorialTheme(html,editorialAssets,route):html;
+        },
       },
     },
     {

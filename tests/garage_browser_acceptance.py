@@ -47,9 +47,16 @@ try:
                 page.get_by_text("Menu", exact=True).click()
                 page.get_by_role("link", name="Explore the podcast").focus()
                 expect(page.get_by_role("link", name="Explore the podcast")).to_be_focused()
-                for anchor in page.locator(".zones a, .hero-actions a, .episode-link, .discover a, .menu nav a").all():
+                expect(page.locator(".editorial-grid")).to_be_visible()
+                assert page.locator(".editorial-card").count() == 6
+                for anchor in page.locator(".zones a, .hero-actions a, .episode-link, .discover a, .menu nav a, .editorial-card-link").all():
                     href = anchor.get_attribute("href")
                     assert page.request.get(origin + href).ok, href
+                page.locator("img[loading=lazy]").evaluate_all("(images) => images.forEach(i => i.loading = \"eager\")")
+                for img in page.locator(".hero-portrait img, .editorial-card-media img").all():
+                    expect(img).to_be_visible()
+                    img.evaluate("(img) => img.decode()")
+                    assert img.evaluate("(img) => img.naturalWidth > 0")
                 page.screenshot(path=str(out / f"{name}-{width}-illustration.png"), full_page=True)
                 if name == "chromium" and width == 320:
                     page.add_script_tag(path=str(ROOT / "node_modules" / "axe-core" / "axe.min.js"))
@@ -58,7 +65,9 @@ try:
                 page.close()
             page = browser.new_page(java_script_enabled=False, viewport={"width":393,"height":852})
             page.goto(origin + ENTRY)
-            expect(page.get_by_text("3D requires JavaScript.", exact=False)).to_be_visible()
+            expect(page.locator("#studio-fallback-note")).to_be_visible()
+            expect(page.locator("#enable")).to_be_hidden()
+            expect(page.locator(".fallback")).to_be_visible()
             expect(page.get_by_role("link", name="Explore the podcast")).to_be_visible()
             expect(page.get_by_role("link", name="Live ↗", exact=True)).to_be_visible()
             page.close()
@@ -68,6 +77,7 @@ try:
                 page.get_by_role("link", name="Explore the podcast").click()
                 assert page.url == origin + "/podcast/"
                 assert page.locator("body").get_attribute("data-garage-preview") is None
+                assert page.locator("html").get_attribute("data-garage-editorial") == "true"
                 page.close()
             # Simulate a browser denying all WebGL contexts; ordinary links must survive.
             page = browser.new_page()
