@@ -17,9 +17,14 @@ out.mkdir(parents=True, exist_ok=True)
 def open_preview(page):
     response = page.goto(origin + "/garage/")
     assert response and response.status == 200
-    expect(page.get_by_role("heading", name="The Garage.")).to_be_visible()
+    expect(page.get_by_role("heading", name="The Devon Alan Akins Podcast.")).to_be_visible()
+    expect(page.get_by_role("link", name="Explore the podcast")).to_be_visible()
+    assert page.get_by_role("link", name="Explore the podcast").get_attribute("href") == "/podcast/"
+    expect(page.locator('[data-zone="podcast"]')).to_have_attribute("aria-pressed","true")
+    expect(page.locator("#episode-title")).to_be_visible()
     expect(page.get_by_text("No camera connected")).to_be_visible()
-    assert page.evaluate("document.documentElement.scrollWidth <= window.innerWidth")
+    overflow = page.evaluate("""() => ({width: innerWidth, scroll: document.documentElement.scrollWidth, offenders: [...document.querySelectorAll("body *")].filter(e => e.getBoundingClientRect().right > innerWidth + 1).slice(0,12).map(e => [e.tagName,e.id,e.className?.baseVal || e.className])})""")
+    assert overflow["scroll"] <= overflow["width"], overflow
     assert page.locator("iframe,video").count() == 0
 
 try:
@@ -33,14 +38,21 @@ try:
                 page.get_by_text("Menu", exact=True).click()
                 expect(page.get_by_role("navigation", name="Site navigation")).to_be_visible()
                 page.get_by_text("Menu", exact=True).click()
-                for anchor in page.locator(".zones a").all():
+                page.get_by_role("link", name="Explore the podcast").focus()
+                expect(page.get_by_role("link", name="Explore the podcast")).to_be_focused()
+                for anchor in page.locator(".zones a, .hero-actions a, .episode-link").all():
                     href = anchor.get_attribute("href")
                     assert page.request.get(origin + href).ok, href
                 page.screenshot(path=str(out / f"{name}-{width}-illustration.png"), full_page=True)
+                if name == "chromium" and width == 320:
+                    page.add_script_tag(path=str(ROOT / "node_modules" / "axe-core" / "axe.min.js"))
+                    violations = page.evaluate("""async () => (await axe.run({runOnly:{type:"tag",values:["wcag2a","wcag2aa","wcag21a","wcag21aa"]}})).violations.map(v => ({id:v.id, nodes:v.nodes.map(n => n.target)}))""")
+                    assert not violations, violations
                 page.close()
             page = browser.new_page(java_script_enabled=False, viewport={"width":393,"height":852})
             page.goto(origin + "/garage/")
             expect(page.get_by_text("3D requires JavaScript.", exact=False)).to_be_visible()
+            expect(page.get_by_role("link", name="Explore the podcast")).to_be_visible()
             expect(page.get_by_role("link", name="Live ↗", exact=True)).to_be_visible()
             page.close()
             # Simulate a browser denying all WebGL contexts; ordinary links must survive.

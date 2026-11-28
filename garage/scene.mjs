@@ -1,11 +1,11 @@
 // Review-only procedural room. No camera, microphone, account, network API or telemetry.
 const presets = Object.freeze({
   control: {position:[7,4.6,8],target:[0,1,-2.8],description:"Control room — a proposed home for development and live sessions."},
-  podcast: {position:[4,2.7,5],target:[3,1,-.5],description:"Podcast studio — a proposed recording and conversation space."},
+  podcast: {position:[5.6,3.8,7],target:[0,1.2,-.2],description:"Podcast studio — a proposed recording and conversation space."},
   research: {position:[5,3.2,3.8],target:[3.5,1.4,-3.2],description:"Research lab — a conceptual compute and scientific work area."},
   workshop: {position:[-2,3.1,5],target:[-3.7,1,-2.3],description:"Workshop — a proposed workbench for making and repairing."},
   library: {position:[-1,3.2,4],target:[-3.7,1.5,-4],description:"Library — an imagined area for reading and writing."},
-  recreation: {position:[4,3.6,6],target:[1,.8,2],description:"Recreation — a proposed space for chess and other games."}
+  recreation: {position:[.8,3.6,6],target:[-3.1,.8,2.4],description:"Personal interests — hobbies such as chess and other games, not a separate show."}
 });
 const host=document.querySelector("#canvas-host");
 const viewport=document.querySelector("#viewport");
@@ -14,7 +14,7 @@ const disable=document.querySelector("#disable");
 const status=document.querySelector("#mode-status");
 const description=document.querySelector("#zone-description");
 const buttons=[...document.querySelectorAll("[data-zone]")];
-let selected="control", active=null, generation=0;
+let selected="podcast", active=null, generation=0;
 enable.hidden=false;
 function select(zone){
   if(!Object.hasOwn(presets,zone)) return;
@@ -69,10 +69,19 @@ async function start(){
     for(const x of [-4.65,-2.75])box(x,1.8,-4.45,.08,3.6,.65,metal);
     box(3.8,1.35,-4.1,1.1,2.7,.95,dark);
     for(let i=0;i<7;i++){box(3.8,.45+i*.31,-3.59,.94,.24,.045,metal);box(3.45,.45+i*.31,-3.56,.055,.055,.025,green);}
-    table(3,-.8,2.5,1.5);
-    for(const x of [2.35,3.65]){box(x,1.13,-.8,.20,.06,.20,dark);box(x,1.48,-.8,.055,.65,.055,metal);box(x,1.8,-.8,.28,.12,.12,dark);}
-    table(1,2.2,1.6,1.4);
-    for(let row=0;row<8;row++)for(let col=0;col<8;col++)box(1+(col-3.5)*.12,1.14,2.2+(row-3.5)*.12,.118,.028,.118,(row+col)%2?dark:wood);
+    // Recording table is the primary object in the default view.
+    table(0,-.15,3.4,1.55);
+    for(const x of [-1.05,1.05]){
+      box(x,1.15,-.15,.24,.06,.24,dark);
+      box(x,1.48,-.15,.045,.65,.045,metal);
+      box(x+(x<0?.18:-.18),1.8,-.15,.4,.075,.075,metal);
+      box(x+(x<0?.4:-.4),1.8,-.15,.32,.13,.13,dark);
+      box(x,.76,1.13,.65,.12,.62,dark);box(x,1.13,1.40,.65,.63,.12,dark);box(x,.37,1.13,.10,.74,.10,metal);
+    }
+    box(0,1.16,.18,.44,.12,.3,dark);
+    for(let n=0;n<4;n++)box(-.13+n*.085,1.23,.19,.025,.012,.025,green);
+    table(-3.1,2.4,1.6,1.4);
+    for(let row=0;row<8;row++)for(let col=0;col<8;col++)box(-3.1+(col-3.5)*.12,1.14,2.4+(row-3.5)*.12,.118,.028,.118,(row+col)%2?dark:wood);
     for(const x of [-2.4,2.4]){box(x,3.85,-1.8,.12,.09,3.5,warm);const light=new THREE.PointLight(0xffdfaf,35,12,2);light.position.set(x,3.5,-1.8);scene.add(light);}
     scene.add(new THREE.HemisphereLight(0xdbe8e8,0x4f4741,2.0));
     const fill=new THREE.DirectionalLight(0xc4e1e1,2.2);fill.position.set(5,6,5);scene.add(fill);

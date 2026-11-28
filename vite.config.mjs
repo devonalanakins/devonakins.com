@@ -1,6 +1,8 @@
 import {FIELDNOTES} from "./src/professional/fieldnotes.mjs";
 import {LABORATORY_ROUTES,LABORATORY_REDIRECTS} from "./src/professional/laboratory-routes.mjs";
 import {creatorPaths} from "./src/professional/creator-pages.mjs";
+import {podcastPublication} from "./src/professional/podcast-publication.mjs";
+import {injectGarageEpisode} from "./garage/episode-panel.mjs";
 import { defineConfig } from "vite";
 import {PROFESSIONAL_ROUTES} from "./src/professional/site.mjs";
 import { rm } from "node:fs/promises";
@@ -25,6 +27,13 @@ const paths = [...new Set([
 export default defineConfig({
   plugins: [
     v5PreviewPlugin(),
+    {
+      name: "garage-approved-podcast-episode",
+      transformIndexHtml(html, context) {
+        if (!garageCandidate || resolve(context.filename) !== resolve("garage/index.html")) return html;
+        return injectGarageEpisode(html, podcastPublication());
+      },
+    },
     {
       name: "exclude-creator-media-from-other-builds",
       apply: "build",
