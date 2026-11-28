@@ -10,6 +10,8 @@ import { publicNotes } from "./src/v5/public-notes.mjs";
 import { pages, projects } from "./src/content.mjs";
 import { v5PreviewPlugin } from "./src/v5/preview-plugin.mjs";
 const laboratoryCandidate = process.env.LABORATORY_SITE_CANDIDATE === "1";
+const garageCandidate = process.env.GARAGE_SITE_CANDIDATE === "1";
+if (garageCandidate && !laboratoryCandidate) throw new Error("Garage preview requires the Laboratory candidate");
 const paths = [...new Set([
   ...pages.map((p) => p.path),
   ...(laboratoryCandidate?[...Object.values(LABORATORY_ROUTES),...creatorPaths,...Object.keys(FIELDNOTES),...Object.keys(LABORATORY_REDIRECTS),"/listening/"]:[]),
@@ -17,6 +19,7 @@ const paths = [...new Set([
   ...projects.map((p) => `/work/${p.slug}/`),
   "/404/",
   ...(process.env.V5_PUBLIC_SITE_CANDIDATE === "1" ? [...Object.values(V5_PUBLIC_ROUTES).filter(p=>!pages.some(page=>page.path===p)),...publicNotes.map(n=>"/knowledge/"+n.slug+"/")] : []),
+  ...(garageCandidate ? ["/garage/"] : []),
   "/v2/", // Isolated immersive preview, not the production homepage.
 ])];
 export default defineConfig({
