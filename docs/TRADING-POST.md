@@ -1,9 +1,8 @@
 # Kahlua’s Trading Post
 
 The first release is a catalog at `/shop/`. Each available item links to one
-seller-approved marketplace listing. The marketplace owns availability,
-payment, shipping, and returns. Keep the website’s listing and archive current
-as items sell.
+seller-approved marketplace listing. Buyers follow the listing’s availability,
+payment, shipping, and return terms. Update the catalog as items sell.
 
 ## Prepare the opening batch on iPhone
 
@@ -19,12 +18,30 @@ as items sell.
 3. After seller verification and approval, use Safari to publish one
    listing per item on the chosen marketplace. Check the public item URL from
    a private browsing tab. Confirm the price, photos, and fulfillment terms.
-4. Share only approved item descriptions, prices, public listing links, and
-   selected photo copies for the website update. Keep costs, buyer information,
-   pickup address, and the private workbook out of the repository.
+4. Add approved item details to the [public catalog template](trading-post-items.csv)
+   in Numbers. Use one line per photo in the Photo descriptions cell, in photo
+   order. Keep costs, buyer information, pickup addresses, and the private
+   workbook in iCloud Drive.
+5. Export the single public table as CSV in Numbers. In Files, name the selected
+   JPEG or PNG photo copies by SKU and photo number, such as `KT-0001-1.jpg`
+   for the main photo. Share the CSV and photos for the website update.
 
 - [Import a workbook in Numbers on iPhone](https://support.apple.com/guide/numbers-iphone/tan9f3c54bdc/ios)
+- [Export CSV from Numbers on iPhone](https://support.apple.com/guide/numbers-iphone/export-to-excel-or-another-file-format-tan3b922d4ad/ios)
 - [Share photos without location data](https://support.apple.com/guide/iphone/share-photos-and-videos-iphf28f17237/ios)
+
+## Prepare a catalog update
+
+```sh
+node scripts/prepare-trading-post-batch.mjs /path/to/public-items.csv /path/to/photos /path/to/new-batch
+```
+
+The batch contains `inventory.json` and prepared JPEGs in `photos/`. It uses
+the storefront’s inventory and photo validation, removes tracking parameters
+from listing URLs, and leaves publication off. Review the images and confirm
+each public listing URL and price in Safari. For the first release, copy the
+reviewed manifest and photos into `src/trading-post/`. For later batches, merge
+updates by SKU into the current manifest and review any archive changes.
 
 ## Review and release
 
@@ -50,9 +67,9 @@ In `src/trading-post/inventory.json`, each item has:
 
 | Field | Value |
 | --- | --- |
-| `sku` / `slug` | Stable ID such as `KT-0001` and lowercase URL slug |
-| `name` / `category` | Item name and a shop department |
-| `condition` / `wear` | Condition label and specific wear or defects |
+| `sku` / `slug` | Stable ID such as `KT-0001` and a lowercase, hyphenated URL name |
+| `name` / `category` | Item name and Arcade, Library, Workshop, Tech Vault, Curiosities, Garden, or Clothing & Shoes |
+| `condition` / `wear` | Like new, Very good, Good, Fair, or For parts, plus specific wear or defects |
 | `tested` / `included` | Actual testing or an explicit untested state, and what comes with it |
 | `priceCents` | Whole cents in US dollars, matching the public listing |
 | `status` | `available` or `sold` |

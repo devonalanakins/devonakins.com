@@ -1,10 +1,11 @@
 import assert from "node:assert/strict";
-import { mkdtemp, rm, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, rm, stat, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
 import sharp from "sharp";
 import { validateShopPhotos } from "../scripts/trading-post-pages.mjs";
+import { inventoryFromCsv, prepareBatch } from "../scripts/prepare-trading-post-batch.mjs";
 import { itemPath, validateInventory } from "../src/trading-post/catalog.mjs";
 import { renderShop } from "../src/trading-post/views.mjs";
 
@@ -80,6 +81,61 @@ test("only manifest-listed JPEG photos without embedded metadata can be released
     await source.clone().jpeg().toFile(output);
     await writeFile(join(folder, "original.jpg"), "unapproved file");
     await assert.rejects(validateShopPhotos(items, folder), /Unapproved Trading Post photo/);
+  } finally {
+    await rm(folder, { recursive: true, force: true });
+  }
+});
+
+const header = "SKU,Slug,Name,Category,Condition,Wear,Testing,Includes,Price (USD),Status,Listing URL,Photo descriptions";
+const csvRow = [
+  "KT-0001", "board-game", "Board game", "Arcade", "Good", '"Box, one ""small"" split"',
+  "Counted parts", "Box and contents", '"$1,234.50"', "available",
+  "https://www.ebay.com/itm/123456789012?source=remove", '"Front of box\r\nBack of box"',
+].join(",");
+
+test("Numbers CSV handles quoted cells and leaves the reviewed batch unpublished", () => {
+  const csv = "\ufeff" + header + "\r\n" + csvRow;
+  const result = inventoryFromCsv(csv);
+  assert.equal(result.published, false);
+  assert.equal(result.items[0].wear, 'Box, one "small" split');
+  assert.equal(result.items[0].priceCents, 123450);
+  assert.equal(result.items[0].listingUrl, "https://www.ebay.com/itm/123456789012");
+  assert.deepEqual(result.items[0].photos, [
+    { file: "board-game-1.jpg", alt: "Front of box" },
+    { file: "board-game-2.jpg", alt: "Back of box" },
+  ]);
+  assert.throws(() => inventoryFromCsv(header + "\n" + csvRow + "\n" + csvRow), /sku/);
+  assert.throws(() => inventoryFromCsv(header + "\n" + csvRow.slice(0, -1)), /Invalid CSV/);
+  assert.throws(() => inventoryFromCsv(header.replace("Wear", "Buyer address") + "\n" + csvRow), /column headings/);
+  assert.throws(() => inventoryFromCsv(header + "\n" + csvRow.replace("board-game", "../board-game")), /slug/);
+  assert.throws(() => inventoryFromCsv(header + "\n" + csvRow.replace("$1,234.50", "$1,234.501")), /USD price/);
+});
+
+test("batch preparation strips metadata and rolls back a failed batch without overwriting an existing one", async () => {
+  const folder = await mkdtemp(join(tmpdir(), "trading-post-batch-"));
+  const photos = join(folder, "input");
+  const output = join(folder, "output");
+  const first = join(photos, "KT-0001-1.JPG");
+  const second = join(photos, "KT-0001-2.png");
+  const csv = header + "\n" + csvRow;
+  try {
+    await mkdir(photos);
+    const image = sharp({ create: { width: 1600, height: 1200, channels: 3, background: "#456450" } });
+    await image.clone().withExif({ IFD0: { Artist: "Private name" } }).jpeg().toFile(first);
+    await assert.rejects(prepareBatch(csv, photos, output), /Missing photo copy/);
+    await assert.rejects(stat(output), { code: "ENOENT" });
+    await writeFile(second, "broken image");
+    await assert.rejects(prepareBatch(csv, photos, output), /image format/);
+    await assert.rejects(stat(output), { code: "ENOENT" });
+    await image.clone().png().toFile(second);
+    assert.equal(await prepareBatch(csv, photos, output), 1);
+    const manifest = await readFile(join(output, "inventory.json"), "utf8");
+    assert.equal(JSON.parse(manifest).published, false);
+    const prepared = await sharp(join(output, "photos", "board-game-1.jpg")).metadata();
+    assert.equal(prepared.width, 1400);
+    assert.equal(prepared.exif, undefined);
+    await assert.rejects(prepareBatch(csv, photos, output), { code: "EEXIST" });
+    assert.equal(await readFile(join(output, "inventory.json"), "utf8"), manifest);
   } finally {
     await rm(folder, { recursive: true, force: true });
   }

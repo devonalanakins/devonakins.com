@@ -7,6 +7,14 @@ import { renderShop } from "../src/trading-post/views.mjs";
 const photoSource = "src/trading-post/photos";
 const photoOutput = "public/shop-media";
 
+export async function prepareShopPhoto(source, output) {
+  await sharp(source, { limitInputPixels: 50_000_000 })
+    .autoOrient()
+    .resize({ width: 1400, height: 1400, fit: "inside", withoutEnlargement: true })
+    .jpeg({ quality: 82, mozjpeg: true })
+    .toFile(output);
+}
+
 export async function validateShopPhotos(items, source = photoSource) {
   const approved = new Set(items.flatMap(item => item.photos.map(photo => photo.file)));
   const files = await readdir(source, { withFileTypes: true }).catch(error => {
