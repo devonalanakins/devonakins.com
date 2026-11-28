@@ -9,8 +9,10 @@ import { V5_PUBLIC_ROUTES } from "./src/v5/public-routes.mjs";
 import { publicNotes } from "./src/v5/public-notes.mjs";
 import { pages, projects } from "./src/content.mjs";
 import { v5PreviewPlugin } from "./src/v5/preview-plugin.mjs";
+import { shopPaths } from "./src/trading-post/catalog.mjs";
 const laboratoryCandidate = process.env.LABORATORY_SITE_CANDIDATE === "1";
 const paths = [...new Set([
+  ...shopPaths,
   ...pages.map((p) => p.path),
   ...(laboratoryCandidate?[...Object.values(LABORATORY_ROUTES),...creatorPaths,...Object.keys(FIELDNOTES),...Object.keys(LABORATORY_REDIRECTS),"/listening/"]:[]),
   ...(process.env.PROFESSIONAL_SITE_CANDIDATE === "1" ? Object.values(PROFESSIONAL_ROUTES) : []),

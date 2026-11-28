@@ -18,6 +18,7 @@ import { publicNotes } from "../src/v5/public-notes.mjs";
 import { renderImmersiveRoute } from "../src/immersive-routes.mjs";
 import { validatePublicGptSnapshot } from "../src/gpt-profile.mjs";
 import { validateDatedGptCapture } from "../src/professional/gpt-capture.mjs";
+import { writeTradingPost } from "./trading-post-pages.mjs";
 
 // All public routes use one independently audited cinematic shell. No legacy
 // homepage, navbar or old global CSS is generated for deep-linked pages.
@@ -127,10 +128,11 @@ for (const path of all) {
     ? repairProfessionalLegacyNavigation(html) : html;
   await writeFile(dir+"index.html",published);
 }
+const publishedShopPaths = await writeTradingPost();
 await writeFile(
   "public/sitemap.xml",
   '<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">' +
-    all
+    [...all, ...publishedShopPaths]
       .filter((path) => path !== "/404/" && (!laboratoryCandidate||!Object.hasOwn(LABORATORY_REDIRECTS,path)))
       .map((path) => '<url><loc>https://devonakins.com' + path + "</loc></url>")
       .join("") +
